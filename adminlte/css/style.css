@@ -1,0 +1,15 @@
+.main-sidebar, .main-sidebar::before {
+  transition: margin-left .3s ease-in-out,width .3s ease-in-out;
+  width: 450px;
+}
+
+@media (min-width: 768px) {
+  body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .content-wrapper, body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-footer, body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-header {
+    transition: margin-left .3s ease-in-out;
+    margin-left: 450px;
+  }
+}
+
+.sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before {
+  margin-left: -450px;
+}
