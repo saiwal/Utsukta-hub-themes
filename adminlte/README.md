@@ -6,6 +6,7 @@
 - Built completely from the ground up. 
 - Mobile friendly and responsive.
 
+**Demo available [here](https://hub.utsukta.org/channel/adminlte) **
 
 ## Todo:
 - [x] Implement basic AdminLTE theme.
