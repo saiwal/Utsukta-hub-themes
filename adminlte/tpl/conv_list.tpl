@@ -119,12 +119,12 @@
 						<div class="btn-group">
 							{{if $item.like}}
                                 <button type="button" title="{{$item.like.0}}" class="btn btn-secondary btn-sm" onclick="dolike({{$item.id}},'like'); return false;">
-                                    <i class="bi bi-thumbs-o-up{{if $item.my_responses.like}} ivoted{{/if}}" ></i>
+                                    <i class="bi bi-hands-thumbs-up{{if $item.my_responses.like}} ivoted{{/if}}" ></i>
                                 </button>
                                 {{/if}}
                                 {{if $item.dislike}}
                                 <button type="button" title="{{$item.dislike.0}}" class="btn btn-secondary btn-sm" onclick="dolike({{$item.id}},'dislike'); return false;">
-                                    <i class="bi bi-thumbs-o-down{{if $item.my_responses.dislike}} ivoted{{/if}}" ></i>
+                                    <i class="bi bi-hands-thumbs-down{{if $item.my_responses.dislike}} ivoted{{/if}}" ></i>
                                 </button>
                                 {{/if}}
                                 {{if $item.isevent}}
