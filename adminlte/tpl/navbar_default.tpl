@@ -105,7 +105,7 @@
       {{/if}}
       <li class="nav-item">
         <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-          <i class="bi bi-bars"></i>
+          <i class="bi bi-three-dots-vertical"></i>
         </a>
       </li>      
     </ul>
