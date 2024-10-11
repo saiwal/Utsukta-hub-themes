@@ -3,7 +3,7 @@
     <!-- Left navbar links -->
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="" role="button"><i class="fa fa-bars"></i></a>
+        <a class="nav-link" data-widget="pushmenu" href="" role="button"><i class="bi bi-bars"></i></a>
       </li>
     </ul>
 
@@ -12,7 +12,7 @@
       <!-- Navbar Search -->
       <li class="nav-item">
         <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-          <i class="fa fa-search"></i>
+          <i class="bi bi-search"></i>
         </a>
         <div class="navbar-search-block">
           <form class="form-inline">
@@ -20,10 +20,10 @@
               <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
               <div class="input-group-append">
                 <button class="btn btn-navbar" type="submit">
-                  <i class="fa fa-search"></i>
+                  <i class="bi bi-search"></i>
                 </button>
                 <button class="btn btn-navbar" type="button" data-widget="navbar-search">
-                  <i class="fa fa-times"></i>
+                  <i class="bi bi-times"></i>
                 </button>
               </div>
             </div>
@@ -54,7 +54,7 @@
             {{if $nav.channels}}
             {{foreach $nav.channels as $chan}}
             <li><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
-              <i class="fa fa-circle{{if $localuser == $chan.channel_id}} text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
+              <i class="bi bi-circle{{if $localuser == $chan.channel_id}} text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
             </a></li>
             {{/foreach}}
             <li><hr class="dropdown-divider"></li>
@@ -69,7 +69,7 @@
 
             {{if $settings_url}}
             <li><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="dropdown-item">
-            {{if $sel.name}}{{$sel.name}} {{/if}} <i class="fa fa-fw fa-cog"></i>
+            {{if $sel.name}}{{$sel.name}} {{/if}} <i class="bi bi-cog"></i>
             {{/if}}
 
             {{if $nav.settings}}
@@ -105,7 +105,7 @@
       {{/if}}
       <li class="nav-item">
         <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
-          <i class="fa fa-bars"></i>
+          <i class="bi bi-bars"></i>
         </a>
       </li>      
     </ul>
@@ -150,7 +150,7 @@
             {{foreach $nav_apps as $nav_app}}
               {{$nav_app}}
             {{/foreach}}
-          <a class="nav-header" href="/apps"><i class="fa fa-fw fa-plus"></i> {{$addapps}}</a>
+          <a class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</a>
         {{else}}
           <a class="nav-header" aria-disabled="true">{{$sysapps}}</a>
         {{foreach $nav_apps as $nav_app}}

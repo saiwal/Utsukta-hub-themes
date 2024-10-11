@@ -30,26 +30,26 @@
 					<div class="text-end float-right">
 						<div class="wall-item-ago opacity-75" id="wall-item-ago-{{$item.id}}">
 							{{if $item.editedtime}}
-							<i class="fa fa-pencil"></i>
+							<i class="bi bi-pencil"></i>
 							{{/if}}
 							{{if $item.delayed}}
-							<i class="fa fa-clock-o"></i>
+							<i class="bi bi-clock-o"></i>
 							{{/if}}
 							{{if $item.location}}
 							<small class="wall-item-location p-location" id="wall-item-location-{{$item.id}}">{{$item.location}}</small>
 							{{/if}}
 							{{if $item.verified}}
-							<i class="fa fa-check text-success" title="{{$item.verified}}"></i>
+							<i class="bi bi-check text-success" title="{{$item.verified}}"></i>
 							{{elseif $item.forged}}
-							<i class="fa fa-exclamation text-danger" title="{{$item.forged}}"></i>
+							<i class="bi bi-exclamation text-danger" title="{{$item.forged}}"></i>
 							{{/if}}
 							<small class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.editedtime}}&nbsp;{{$item.editedtime}}{{/if}}{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</small>
 						</div>
 						{{if $item.thr_parent}}
-						<a href="javascript:doscroll('{{$item.thr_parent}}',{{$item.parent}});" class="ms-3" title="{{$item.top_hint}}"><i class="fa fa-angle-double-up"></i></a>
+						<a href="javascript:doscroll('{{$item.thr_parent}}',{{$item.parent}});" class="ms-3" title="{{$item.top_hint}}"><i class="bi bi-angle-double-up"></i></a>
 						{{/if}}
 						{{if $item.pinned}}
-						<div class="wall-item-pinned" title="{{$item.pinned}}" id="wall-item-pinned-{{$item.id}}"><i class="fa fa-thumb-tack"></i></div>
+						<div class="wall-item-pinned" title="{{$item.pinned}}" id="wall-item-pinned-{{$item.id}}"><i class="bi bi-thumb-tack"></i></div>
 						{{/if}}
 					</div>
 					<div class="float-left wall-item-info pr-2" id="wall-item-info-{{$item.id}}" >
@@ -59,10 +59,10 @@
 							{{/if}}
 							<img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown" />
 							{{if $item.author_is_group_actor}}
-							<i class="fa fa-comments-o wall-item-photo-group-actor" title="{{$item.author_is_group_actor}}"></i>
+							<i class="bi bi-comments-o wall-item-photo-group-actor" title="{{$item.author_is_group_actor}}"></i>
 							{{/if}}
 							{{if $item.thread_author_menu}}
-							<i class="fa fa-caret-down wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
+							<i class="bi bi-caret-down wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
 							<div class="dropdown-menu">
 								{{foreach $item.thread_author_menu as $mitem}}
 								<a class="dropdown-item{{if $mitem.class}} {{$mitem.class}}{{/if}}" {{if $mitem.href}}href="{{$mitem.href}}"{{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"{{/if}} {{if $mitem.title}}title="{{$mitem.title}}"{{/if}}{{if $mitem.data}} {{$mitem.data}}{{/if}}>{{$mitem.title}}</a>
@@ -111,7 +111,7 @@
 						{{if $item.toplevel && $item.emojis && $item.reactions}}
 						<div class="btn-group">
 							<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
-								<i class="fa fa-smile-o"></i>
+								<i class="bi bi-smile-o"></i>
 							</button>
 							<div class="dropdown-menu dropdown-menu-end">
 							{{foreach $item.reactions as $react}}
@@ -121,39 +121,39 @@
 						</div>
 						{{/if}}
 						{{if $item.moderate}}
-						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-success"><i class="fa fa-check" ></i> {{$item.moderate_approve}}</a>
-						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-danger"><i class="fa fa-trash-o" ></i> {{$item.moderate_delete}}</a>
+						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-success"><i class="bi bi-check" ></i> {{$item.moderate_approve}}</a>
+						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-danger"><i class="bi bi-trash-o" ></i> {{$item.moderate_delete}}</a>
 						{{else}}
 						<div class="btn-group">
 							{{if $item.like}}
 							<button type="button" title="{{$item.like.0}}" class="btn btn-secondary btn-sm" onclick="dolike({{$item.id}},'like'); return false;">
-								<i class="fa fa-thumbs-o-up{{if $item.my_responses.like}} ivoted{{/if}}" ></i>
+								<i class="bi bi-thumbs-o-up{{if $item.my_responses.like}} ivoted{{/if}}" ></i>
 							</button>
 							{{/if}}
 							{{if $item.dislike}}
 							<button type="button" title="{{$item.dislike.0}}" class="btn btn-secondary btn-sm" onclick="dolike({{$item.id}},'dislike'); return false;">
-								<i class="fa fa-thumbs-o-down{{if $item.my_responses.dislike}} ivoted{{/if}}" ></i>
+								<i class="bi bi-thumbs-o-down{{if $item.my_responses.dislike}} ivoted{{/if}}" ></i>
 							</button>
 							{{/if}}
 							{{if $item.reply_to}}
 							<button type="button" title="{{$item.reply_to.0}}" class="btn btn-secondary btn-sm" onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}} {{$item.name|escape:javascript}}');">
-								<i class="fa fa-reply" ></i>
+								<i class="bi bi-reply" ></i>
 							</button>
 							{{/if}}
 							{{if $item.isevent}}
 							<div class="btn-group">
 								<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-attend-menu-{{$item.id}}" title="{{$item.attend_title}}">
-									<i class="fa fa-calendar-check-o"></i>
+									<i class="bi bi-calendar-check-o"></i>
 								</button>
 								<div class="dropdown-menu dropdown-menu-end">
 									<a class="dropdown-item" href="#" title="{{$item.attend.0}}" onclick="itemAddToCal({{$item.id}}); dolike({{$item.id}},'attendyes'); return false;">
-										<i class="item-act-list fa fa-check{{if $item.my_responses.attend}} ivoted{{/if}}" ></i> {{$item.attend.0}}
+										<i class="item-act-list bi bi-check{{if $item.my_responses.attend}} ivoted{{/if}}" ></i> {{$item.attend.0}}
 									</a>
 									<a class="dropdown-item" href="#" title="{{$item.attend.1}}" onclick="itemAddToCal({{$item.id}}), dolike({{$item.id}},'attendno'); return false;">
-										<i class="item-act-list fa fa-times{{if $item.my_responses.attendno}} ivoted{{/if}}" ></i> {{$item.attend.1}}
+										<i class="item-act-list bi bi-times{{if $item.my_responses.attendno}} ivoted{{/if}}" ></i> {{$item.attend.1}}
 									</a>
 									<a class="dropdown-item" href="#" title="{{$item.attend.2}}" onclick="itemAddToCal({{$item.id}}); dolike({{$item.id}},'attendmaybe'); return false;">
-										<i class="item-act-list fa fa-question{{if $item.my_responses.attendmaybe}} ivoted{{/if}}" ></i> {{$item.attend.2}}
+										<i class="item-act-list bi bi-question{{if $item.my_responses.attendmaybe}} ivoted{{/if}}" ></i> {{$item.attend.2}}
 									</a>
 								</div>
 							</div>
@@ -161,63 +161,63 @@
 							{{if $item.canvote}}
 							<div class="btn-group">
 								<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-consensus-menu-{{$item.id}}" title="{{$item.vote_title}}">
-									<i class="fa fa-check-square-o"></i>
+									<i class="bi bi-check-square-o"></i>
 								</button>
 								<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-consensus-menu-{{$item.id}}">
 									<a class="dropdown-item" href="#" title="{{$item.conlabels.0}}" onclick="dolike({{$item.id}},'agree'); return false;">
-										<i class="item-act-list fa fa-check{{if $item.my_responses.agree}} ivoted{{/if}}" ></i> {{$item.conlabels.0}}
+										<i class="item-act-list bi bi-check{{if $item.my_responses.agree}} ivoted{{/if}}" ></i> {{$item.conlabels.0}}
 									</a>
 									<a class="dropdown-item" href="#" title="{{$item.conlabels.1}}" onclick="dolike({{$item.id}},'disagree'); return false;">
-										 <i class="item-act-list fa fa-times{{if $item.my_responses.disagree}} ivoted{{/if}}" ></i> {{$item.conlabels.1}}
+										 <i class="item-act-list bi bi-times{{if $item.my_responses.disagree}} ivoted{{/if}}" ></i> {{$item.conlabels.1}}
 									</a>
 									<a class="dropdown-item" href="#" title="{{$item.conlabels.2}}" onclick="dolike({{$item.id}},'abstain'); return false;">
-										<i class="item-act-list fa fa-question{{if $item.my_responses.abstain}} ivoted{{/if}}" ></i> {{$item.conlabels.2}}
+										<i class="item-act-list bi bi-question{{if $item.my_responses.abstain}} ivoted{{/if}}" ></i> {{$item.conlabels.2}}
 									</a>
 								</div>
 							</div>
 							{{/if}}
 							<div class="btn-group">
 								<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
-									<i class="fa fa-cog"></i>
+									<i class="bi bi-cog"></i>
 								</button>
 								<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$item.id}}">
 									{{if $item.share}}
-									<a class="dropdown-item" href="#" onclick="jotShare({{$item.id}},{{$item.item_type}}); return false"><i class="generic-icons-nav fa fa-fw fa-retweet" title="{{$item.share.0}}"></i>{{$item.share.0}}</a>
+									<a class="dropdown-item" href="#" onclick="jotShare({{$item.id}},{{$item.item_type}}); return false"><i class="generic-icons-nav bi bi-retweet" title="{{$item.share.0}}"></i>{{$item.share.0}}</a>
 									{{/if}}
 									{{if $item.embed}}
-									<a class="dropdown-item" href="#" onclick="jotEmbed({{$item.id}},{{$item.item_type}}); return false"><i class="generic-icons-nav fa fa-fw fa-share" title="{{$item.embed.0}}"></i>{{$item.embed.0}}</a>
+									<a class="dropdown-item" href="#" onclick="jotEmbed({{$item.id}},{{$item.item_type}}); return false"><i class="generic-icons-nav bi bi-share" title="{{$item.embed.0}}"></i>{{$item.embed.0}}</a>
 									{{/if}}
 									{{if $item.plink}}
-									<a class="dropdown-item" href="{{$item.plink.href}}" title="{{$item.plink.title}}" class="u-url"><i class="generic-icons-nav fa fa-fw fa-external-link"></i>{{$item.plink.title}}</a>
+									<a class="dropdown-item" href="{{$item.plink.href}}" title="{{$item.plink.title}}" class="u-url"><i class="generic-icons-nav bi bi-external-link"></i>{{$item.plink.title}}</a>
 									{{/if}}
 									{{if $item.edpost}}
-									<a class="dropdown-item" href="{{$item.edpost.0}}" title="{{$item.edpost.1}}"><i class="generic-icons-nav fa fa-fw fa-pencil"></i>{{$item.edpost.1}}</a>
+									<a class="dropdown-item" href="{{$item.edpost.0}}" title="{{$item.edpost.1}}"><i class="generic-icons-nav bi bi-pencil"></i>{{$item.edpost.1}}</a>
 									{{/if}}
 									{{if $item.tagger}}
-									<a class="dropdown-item" href="#"  onclick="itemTag({{$item.id}}); return false;"><i id="tagger-{{$item.id}}" class="generic-icons-nav fa fa-fw fa-tag" title="{{$item.tagger.tagit}}"></i>{{$item.tagger.tagit}}</a>
+									<a class="dropdown-item" href="#"  onclick="itemTag({{$item.id}}); return false;"><i id="tagger-{{$item.id}}" class="generic-icons-nav bi bi-tag" title="{{$item.tagger.tagit}}"></i>{{$item.tagger.tagit}}</a>
 									{{/if}}
 									{{if $item.filer}}
-									<a class="dropdown-item" href="#" onclick="itemFiler({{$item.id}}); return false;"><i id="filer-{{$item.id}}" class="generic-icons-nav fa fa-fw fa-folder-open" title="{{$item.filer}}"></i>{{$item.filer}}</a>
+									<a class="dropdown-item" href="#" onclick="itemFiler({{$item.id}}); return false;"><i id="filer-{{$item.id}}" class="generic-icons-nav bi bi-folder-open" title="{{$item.filer}}"></i>{{$item.filer}}</a>
 									{{/if}}
 									{{if $item.pinnable}}
-									<a class="dropdown-item dropdown-item-pinnable" href="#" onclick="dopin({{$item.id}}); return false;" id="item-pinnable-{{$item.id}}"><i class="generic-icons-nav fa fa-fw fa-thumb-tack"></i>{{$item.pinme}}</a>
+									<a class="dropdown-item dropdown-item-pinnable" href="#" onclick="dopin({{$item.id}}); return false;" id="item-pinnable-{{$item.id}}"><i class="generic-icons-nav bi bi-thumb-tack"></i>{{$item.pinme}}</a>
 									{{/if}}
 									{{if $item.bookmark}}
-									<a class="dropdown-item" href="#" onclick="itemBookmark({{$item.id}}); return false;"><i id="bookmarker-{{$item.id}}" class="generic-icons-nav fa fa-fw fa-bookmark" title="{{$item.bookmark}}"></i>{{$item.bookmark}}</a>
+									<a class="dropdown-item" href="#" onclick="itemBookmark({{$item.id}}); return false;"><i id="bookmarker-{{$item.id}}" class="generic-icons-nav bi bi-bookmark" title="{{$item.bookmark}}"></i>{{$item.bookmark}}</a>
 									{{/if}}
 									{{if $item.addtocal}}
-									<a class="dropdown-item" href="#" onclick="itemAddToCal({{$item.id}}); return false;"><i id="addtocal-{{$item.id}}" class="generic-icons-nav fa fa-fw fa-calendar" title="{{$item.addtocal}}"></i>{{$item.addtocal}}</a>
+									<a class="dropdown-item" href="#" onclick="itemAddToCal({{$item.id}}); return false;"><i id="addtocal-{{$item.id}}" class="generic-icons-nav bi bi-calendar" title="{{$item.addtocal}}"></i>{{$item.addtocal}}</a>
 									{{/if}}
 									{{if $item.star}}
-									<a class="dropdown-item" href="#" onclick="dostar({{$item.id}}); return false;"><i id="starred-{{$item.id}}" class="generic-icons-nav fa fa-fw{{if $item.star.isstarred}} starred fa-star{{else}} unstarred fa-star-o{{/if}}" title="{{$item.star.toggle}}"></i>{{$item.star.toggle}}</a>
+									<a class="dropdown-item" href="#" onclick="dostar({{$item.id}}); return false;"><i id="starred-{{$item.id}}" class="generic-icons-nav bi bi-fw{{if $item.star.isstarred}} starred fa-star{{else}} unstarred fa-star-o{{/if}}" title="{{$item.star.toggle}}"></i>{{$item.star.toggle}}</a>
 									{{/if}}
 									{{if $item.thread_action_menu}}
 									{{foreach $item.thread_action_menu as $mitem}}
-									<a class="dropdown-item" {{if $mitem.href}}href="{{$mitem.href}}"{{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"{{/if}} {{if $mitem.title}}title="{{$mitem.title}}"{{/if}} ><i class="generic-icons-nav fa fa-fw fa-{{$mitem.icon}}"></i>{{$mitem.title}}</a>
+									<a class="dropdown-item" {{if $mitem.href}}href="{{$mitem.href}}"{{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"{{/if}} {{if $mitem.title}}title="{{$mitem.title}}"{{/if}} ><i class="generic-icons-nav bi bi-{{$mitem.icon}}"></i>{{$mitem.title}}</a>
 									{{/foreach}}
 									{{/if}}
 									{{if $item.drop.dropping}}
-									<a class="dropdown-item" href="#" onclick="dropItem('item/drop/{{$item.id}}', '#thread-wrapper-{{$item.id}}', '{{$item.mid}}'); return false;" title="{{$item.drop.delete}}" ><i class="generic-icons-nav fa fa-fw fa-trash-o"></i>{{$item.drop.delete}}</a>
+									<a class="dropdown-item" href="#" onclick="dropItem('item/drop/{{$item.id}}', '#thread-wrapper-{{$item.id}}', '{{$item.mid}}'); return false;" title="{{$item.drop.delete}}" ><i class="generic-icons-nav bi bi-trash-o"></i>{{$item.drop.delete}}</a>
 									{{/if}}
 									{{if $item.dropdown_extras}}
 									<div class="dropdown-divider"></div>
@@ -241,19 +241,19 @@
 					<div class="wall-item-tools-left btn-group" id="wall-item-tools-left-{{$item.id}}">
 						{{if $item.star && $item.star.isstarred}}
 						<div class="btn-group" id="star-button-{{$item.id}}">
-							<button type="button" class="btn btn-secondary btn-sm wall-item-like" onclick="dostar({{$item.id}});"><i class="fa fa-star"></i></button>
+							<button type="button" class="btn btn-secondary btn-sm wall-item-like" onclick="dostar({{$item.id}});"><i class="bi bi-star"></i></button>
 						</div>
 						{{/if}}
 						{{if $item.attachments}}
 						<div class="btn-group">
-							<button type="button" class="btn btn-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="fa fa-paperclip"></i></button>
+							<button type="button" class="btn btn-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip"></i></button>
 							<div class="dropdown-menu">{{$item.attachments}}</div>
 						</div>
 						{{/if}}
 						{{foreach $item.responses as $verb=>$response}}
 						{{if $response.count}}
 						<div class="btn-group">
-                            <button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-secondary border-0 btn-sm wall-item-{{$response.button.class}}"{{if $response.modal}} data-bs-toggle="mod    al" data-bs-target="#{{$verb}}Modal-{{$item.id}}"{{else}} data-bs-toggle="dropdown"{{/if}} id="wall-item-{{$verb}}-{{$item.id}}"><i class="fa fa-{{$response.button.icon}}"></i> {{$response.count}}</button>
+                            <button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-secondary border-0 btn-sm wall-item-{{$response.button.class}}"{{if $response.modal}} data-bs-toggle="mod    al" data-bs-target="#{{$verb}}Modal-{{$item.id}}"{{else}} data-bs-toggle="dropdown"{{/if}} id="wall-item-{{$verb}}-{{$item.id}}"><i class="bi bi-{{$response.button.icon}}"></i> {{$response.count}}</button>
 							{{if $response.modal}}
 							<div class="modal" id="{{$verb}}Modal-{{$item.id}}">
 								<div class="modal-dialog">

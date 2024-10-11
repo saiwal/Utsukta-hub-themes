@@ -9,7 +9,7 @@ head_add_css('/library/datetimepicker/jquery.datetimepicker.css');
 head_add_css('/view/css/default.css');
 head_add_css('/view/theme/adminlte/css/adminlte.min.css');
 head_add_css('/view/theme/adminlte/css/style.css');
-head_add_css('/view/theme/adminlte/css/fork-awesome.min.css');
+//head_add_css('/view/theme/adminlte/css/fork-awesome.min.css');
 
 #require_once('view/php/theme_init.php');
 require_once('include/plugin.php');
