@@ -14,13 +14,13 @@
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
     <div class="row">
-      <div class="col-6-lg">
+      <div class="col-md-9 col-lg-6">
       <?php if(x($page,'content')) echo $page['content']; ?>
       </div>
-      <div class="col-3-lg">
+      <div class="col-md-3 col-lg-3">
         <?php if(x($page,'aside')) echo $page['aside']; ?>
       </div>
-      <div class="col-3-lg">
+      <div class="col-lg-3">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
     </div>
