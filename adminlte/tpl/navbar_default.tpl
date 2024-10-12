@@ -136,15 +136,20 @@
 
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-  <!--begin::Sidebar Brand-->
-   <div class="sidebar-brand">
-    <a href="./index.html" class="brand-link logo-switch">
-      <p class="brand-image-xl logo-xs opacity-75 shadow">{{$banner}}
-      </p>
-      <p class="brand-image-xs logo-xl opacity-75">{{$banner}}
-      </p>
+  <!--begin::Brand Link-->
+    <a href="#" class="brand-link">
+      <!--begin::Brand Image-->
+      <img
+        src="./assets/img/AdminLTELogo.png"
+        alt="U"
+        class="brand-image opacity-75 shadow"
+      />
+      <!--end::Brand Image-->
+      <!--begin::Brand Text-->
+      <span class="brand-text fw-light">{{$banner}}</span>
+      <!--end::Brand Text-->
     </a>
-  </div>   <!--end::Sidebar Brand-->
+  <!--end::Brand Link-->
   <!--begin::Sidebar Wrapper-->
   <div class="sidebar-wrapper">
     <nav class="mt-2">
@@ -155,7 +160,12 @@
         role="menu"
         data-accordion="false"
       >
-        <li class="nav-header">Nav Header</li>
+        {{if $navbar_apps.0}}
+        <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
+        {{foreach $navbar_apps as $navbar_app}}
+          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+        {{/foreach}}
+        {{/if}}
         <li class="nav-item">
           <a href="./index.html" class="nav-link">
             <i class="nav-icon bi bi-circle-fill"></i>
