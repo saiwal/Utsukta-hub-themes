@@ -69,6 +69,7 @@
         <!--end::Menu Body-->
         <!--begin::Menu Footer-->
         <li class="user-footer"> 
+          <div class="row">
           {{if $nav.admin}}
   	  			<div class="col-6 text-center">
 			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
@@ -79,7 +80,6 @@
               <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
             </div>
           {{/if}}
-          <div class="row">
           {{if $nav.logout}}
             <div class="col-6 text-center">
             <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
