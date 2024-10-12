@@ -1,5 +1,5 @@
 <div class="mb-1 text-uppercase">
-	<a href="{{$url}}"><i class="bi bi-{{$icon}} generic-icons-nav"></i>{{$label}}</a>
+	<a href="{{$url}}"><i class="bi bi-{{$icon}} generic-icons-nav"></i> {{$label}}</a>
 </div>
 <div id="photo-album" class="mb-4">
 	{{foreach $items as $i}}
