@@ -198,33 +198,3 @@
 </aside>
 <!--end::Sidebar-->
 
-<!--        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-             {{if $navbar_apps.0}}
-              <a class="nav-header" aria-disabled="true">{{$pinned_apps}}</a>
-                {{foreach $navbar_apps as $navbar_app}}
-                {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
-                {{/foreach}}
-            {{/if}}
-            {{if $channel_apps.0}}
-                  <a class="nav-header" aria-disabled="true">{{$channelapps}}</a>
-              {{foreach $channel_apps as $channel_app}}
-                  {{$channel_app}}
-              {{/foreach}}
-            {{/if}}
-
-            {{if $is_owner}}
-              <a class="nav-header" aria-disabled="true">{{$featured_apps}}</a>
-                {{foreach $nav_apps as $nav_app}}
-                  {{$nav_app}}
-                {{/foreach}}
-              <a class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</a>
-            {{else}}
-              <a class="nav-header" aria-disabled="true">{{$sysapps}}</a>
-            {{foreach $nav_apps as $nav_app}}
-                  {{$nav_app}}
-            {{/foreach}}
-            {{/if}} 
-            </ul>
-                </nav>
-            </div><div class="os-scrollbar os-scrollbar-horizontal os-theme-light os-scrollbar-auto-hide os-scrollbar-handle-interactive os-scrollbar-track-interactive os-scrollbar-cornerless os-scrollbar-unusable os-scrollbar-auto-hide-hidden"><div class="os-scrollbar-track"><div class="os-scrollbar-handle" style="width: 100%;"></div></div></div><div class="os-scrollbar os-scrollbar-vertical os-theme-light os-scrollbar-auto-hide os-scrollbar-handle-interactive os-scrollbar-track-interactive os-scrollbar-visible os-scrollbar-cornerless os-scrollbar-auto-hide-hidden"><div class="os-scrollbar-track"><div class="os-scrollbar-handle" style="height: 49.47%; transform: translateY(0%);"></div></div></div></div> 
-        </aside>       -->
