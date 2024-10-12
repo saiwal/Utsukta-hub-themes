@@ -33,10 +33,10 @@
           <!--begin::Profile Row-->
           <div class="row">
             {{foreach $nav.usermenu as $usermenu}}
-            <div class="col-6 text-center"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+            <div class="col-6"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
             {{/foreach}}
             {{if $nav.group}}
-            <div class="col-6 text-center"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
+            <div class="col-6"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
             </div>
             {{/if}}
           </div> <!--end::Row-->
@@ -45,7 +45,7 @@
         <li class="user-body p-0">
           <!--begin::Channels Row-->
           <div class="row">
-            <div class="col-6 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
+            <div class="col-6"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
             </div>
           </div> <!--end::Row-->
         </li>
@@ -55,7 +55,7 @@
           <!--begin::Channel list Row-->
           <div class="row">
             {{foreach $nav.channels as $chan}}
-            <div class="col-6 text-center"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
+            <div class="col-6"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
               <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
             </a></div>
             {{/foreach}}
@@ -64,11 +64,11 @@
         {{if $nav.settings}}
         <li class="user-body p-0">
         <div class="row">
-          <div class="col-6 text-center">
+          <div class="col-6">
    			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
           </div>
           {{if $nav.admin}}
-  	  			<div class="col-6 text-center">
+  	  			<div class="col-6">
 			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
             </div>
 					{{/if}}
