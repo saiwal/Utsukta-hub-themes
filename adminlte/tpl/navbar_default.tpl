@@ -161,6 +161,7 @@
           </li>
         </ul>
       </li>
+      <li class="nav-item"><button class="btn btn-primary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive">Toggle offcanvas</button></li>
     </ul> <!--end::End Navbar Links-->
     {{if $nav.login && !$userinfo}}
       <div class="hstack gap-1 pt-1 pb-1 pr-2">
