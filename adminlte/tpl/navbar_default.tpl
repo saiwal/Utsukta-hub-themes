@@ -111,12 +111,28 @@
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
         {{if $is_owner}}
-        <li class="user-body"> <!--begin::Row-->
+        <li class="user-body">
+          <!--begin::Profile Row-->
           <div class="row">
-            <div class="col-4 text-center"> <a href="#">Followers</a> </div>
-            <div class="col-4 text-center"> <a href="#">Sales</a> </div>
-            <div class="col-4 text-center"> <a href="#">Friends</a> </div>
-            </div> <!--end::Row-->
+            {{foreach $nav.usermenu as $usermenu}}
+            <div class="col-4 text-center"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+            {{/foreach}}
+          </div> <!--end::Row-->
+          {{if $nav.manage}}
+          <!--begin::Channels Row-->
+          <div class="row">
+            <div class="col-4 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item"></a>
+            </div>
+          </div> <!--end::Row-->
+          {{/if}}
+          {{if $nav.channels}}
+          <!--begin::Channel list Row-->
+          <div class="row">
+            <div class="col-4 text-center"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
+              <i class="bi bi-circle{{if $localuser == $chan.channel_id}} text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
+            </a></div>
+          </div> <!--end::Row-->
+          {{/if}}
         </li> <!--end::Menu Body--> <!--begin::Menu Footer-->
         <li class="user-footer"> 
           {{if $nav.profiles}}
@@ -128,11 +144,7 @@
         </li> <!--end::Menu Footer-->
         {{/if}}
 				{{if ! $is_owner}}
-        <li class="user-body"> <!--begin::Row-->
-          <div class="row">
-            <div class="col-4 text-center"> <a href="{{$nav.rusermenu.0}}">{{$nav.rusermenu.1}}</a> </div>
-            </div> <!--end::Row-->
-        </li> <!--end::Menu Body--> <!--begin::Menu Footer-->
+        <!--begin::Menu Footer-->
         <li class="user-footer"> 
           <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
           <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
