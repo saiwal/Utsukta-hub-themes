@@ -18,17 +18,17 @@
       <?php if(x($page,'content')) echo $page['content']; ?>
       </div>
 
-<div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasResponsiveLabel">Responsive offcanvas</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
       <div class="col-md-4 col-lg-3">
-        <?php if(x($page,'aside')) echo $page['aside']; ?>
+        <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasResponsiveLabel">Responsive offcanvas</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+                <?php if(x($page,'aside')) echo $page['aside']; ?>
+          </div>
+        </div>
       </div>
-  </div>
-</div>
       <div class="col-xl-3 d-none d-lg-block">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
