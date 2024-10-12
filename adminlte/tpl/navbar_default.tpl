@@ -86,7 +86,7 @@
           {{/if}}
           {{if $nav.logout}}
             <div class="col-6">
-            <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
+            <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
             </div>
           {{/if}}
           </div> <!--end::Row-->
