@@ -123,6 +123,8 @@
             {{/if}}
           </div> <!--end::Row-->
           {{if $nav.manage}}
+        </li>
+        <li class="user-body">
           <!--begin::Channels Row-->
           <div class="row">
             <div class="col-6 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
@@ -130,6 +132,8 @@
           </div> <!--end::Row-->
           {{/if}}
           {{if $nav.channels}}
+        </li>
+        <li class="user-body">
           <!--begin::Channel list Row-->
           <div class="row">
             {{foreach $nav.channels as $chan}}
@@ -139,7 +143,8 @@
             {{/foreach}}
           </div> <!--end::Row-->
           {{/if}}
-        </li> <!--end::Menu Body--> <!--begin::Menu Footer-->
+        </li> <!--end::Menu Body-->
+        <!--begin::Menu Footer-->
         <li class="user-footer"> 
           {{if $nav.profiles}}
           <a href="{{$nav.profiles.0}}" class="btn btn-default btn-flat">{{$nav.profiles.1}}</a> 
