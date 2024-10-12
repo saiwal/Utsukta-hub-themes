@@ -67,19 +67,21 @@
           <div class="row">
           {{if $nav.settings}}
             <div class="col-6 text-center">
-	  			    <a class="btn btn-default btn-flat{{if $sel.name == Settings}} btn-info{{/if}}" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
+	  			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
             </div>
 					{{/if}}
           {{if $nav.admin}}
   	  			<div class="col-6 text-center">
-			    		<a class="btn btn-default btn-flat{{if $sel.name == Admin}} btn-info{{/if}}" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
+			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
             </div>
 					{{/if}}
           {{if $nav.profiles}}
             <div class="col-6 text-center">
-              <a href="{{$nav.profiles.0}}" class="btn btn-default btn-flat">{{$nav.profiles.1}}</a> 
+              <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
             </div>
           {{/if}}
+          </div>
+          <div class="row">
           {{if $nav.logout}}
             <div class="col-6 text-center">
             <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
