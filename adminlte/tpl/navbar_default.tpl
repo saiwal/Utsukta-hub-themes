@@ -64,12 +64,23 @@
         </li> <!--end::Menu Body-->
         <!--begin::Menu Footer-->
         <li class="user-footer"> 
+          <div class="row"><div class="col-6 text-center">
+        	{{if $nav.settings}}
+					<div class="dropdown-divider"></div>
+					<a class="btn btn-default btn-flat{{if $sel.name == Settings}} btn-info{{/if}}" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
+					{{/if}}</div>
+  				<div class="col-6 text-center">
+          {{if $nav.admin}}
+					<a class="btn btn-default btn-flat{{if $sel.name == Admin}} btn-info{{/if}}" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
+					{{/if}}</div>
+          <div class="col-6 text-center">
           {{if $nav.profiles}}
           <a href="{{$nav.profiles.0}}" class="btn btn-default btn-flat">{{$nav.profiles.1}}</a> 
           {{/if}}
           {{if $nav.logout}}
           <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
-          {{/if}}
+          {{/if}}</div>
+          </div> <!--end::Row-->
         </li> <!--end::Menu Footer-->
         {{/if}}
 				{{if ! $is_owner}}
