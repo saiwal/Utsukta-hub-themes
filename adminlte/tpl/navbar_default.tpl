@@ -122,6 +122,13 @@
           {{if $nav.logout}}
           <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
           {{/if}}
+				{{if ! $is_owner}}
+				<div class="dropdown-menu" role="menu" aria-labelledby="avatar" {{$color_mode}}>
+					<a class="dropdown-item" href="{{$nav.rusermenu.0}}" role="menuitem">{{$nav.rusermenu.1}}</a>
+					<a class="dropdown-item" href="{{$nav.rusermenu.2}}" role="menuitem">{{$nav.rusermenu.3}}</a>
+				</div>
+				{{/if}}
+
         </li> <!--end::Menu Footer-->
       </ul>
     </li> <!--end::User Menu Dropdown-->
