@@ -2,7 +2,7 @@
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="" role="button"><i class="bi bi-layout-sidebar-inset"></i></a>
+        <a class="nav-link" data-lte-toggle="pushmenu" href="#" role="button"><i class="bi bi-layout-sidebar-inset"></i></a>
       </li>
     </ul>
 
