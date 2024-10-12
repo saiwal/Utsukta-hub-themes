@@ -111,7 +111,7 @@
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
         {{if $is_owner}}
-        <li class="user-body">
+        <li class="user-body p-0">
           <!--begin::Profile Row-->
           <div class="row">
             {{foreach $nav.usermenu as $usermenu}}
@@ -124,7 +124,7 @@
           </div> <!--end::Row-->
           {{if $nav.manage}}
         </li>
-        <li class="user-body">
+        <li class="user-body p-0">
           <!--begin::Channels Row-->
           <div class="row">
             <div class="col-6 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
@@ -133,7 +133,7 @@
           {{/if}}
           {{if $nav.channels}}
         </li>
-        <li class="user-body">
+        <li class="user-body p-0">
           <!--begin::Channel list Row-->
           <div class="row">
             {{foreach $nav.channels as $chan}}
