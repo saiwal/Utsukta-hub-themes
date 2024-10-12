@@ -63,6 +63,7 @@
         {{/if}}
         {{if $nav.settings}}
         <li class="user-body p-0">
+        <div class="row">
           <div class="col-6 text-center">
    			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
           </div>
@@ -71,6 +72,7 @@
 			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
             </div>
 					{{/if}}
+          </div>
         </li>
 				{{/if}}
         <!--end::Menu Body-->
