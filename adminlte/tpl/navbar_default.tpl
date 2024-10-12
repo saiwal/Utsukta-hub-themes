@@ -23,7 +23,7 @@
                   <i class="bi bi-search"></i>
                 </button>
                 <button class="btn btn-navbar" type="button" data-widget="navbar-search">
-                  <i class="bi bi-times"></i>
+                  <i class="bi bi-x"></i>
                 </button>
               </div>
             </div>
