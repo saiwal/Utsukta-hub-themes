@@ -56,7 +56,7 @@
           <div class="row">
             {{foreach $nav.channels as $chan}}
             <div class="col-6"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
-              <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
+              <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} text-disabled{{/if}}"></i> {{$chan.channel_name}}
             </a></div>
             {{/foreach}}
         </li>
