@@ -20,7 +20,7 @@
       <div class="col-md-4 col-lg-3">
         <?php if(x($page,'aside')) echo $page['aside']; ?>
       </div>
-      <div class="col-xl-3">
+      <div class="col-xl-3 d-none d-lg-block">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
     </div>

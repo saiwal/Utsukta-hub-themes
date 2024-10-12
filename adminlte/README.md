@@ -10,7 +10,8 @@
 
 ## Todo:
 - [x] Implement basic AdminLTE theme.
-  - [ ] fix editor layout (jot-editor)
+  - [x] Fix editor layout (jot-editor)
+  - [ ] Implement sidebar overlay scrollbar.
 - [ ] Different layout options as schemas.
 - [ ] Implement a custom dashboard (aka HQ)
   - [ ] Individual widgets:
