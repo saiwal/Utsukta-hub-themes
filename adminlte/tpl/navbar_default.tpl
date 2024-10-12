@@ -171,20 +171,20 @@
         {{/foreach}}
         {{/if}}
         {{if $channel_apps.0}}
-            <a class="nav-header" aria-disabled="true">{{$channelapps}}</a>
+            <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
               {{foreach $channel_apps as $channel_app}}
                   {{$channel_app}}
               {{/foreach}}
             {{/if}}
 
             {{if $is_owner}}
-              <a class="nav-header" aria-disabled="true">{{$featured_apps}}</a>
+              <li class="nav-header" aria-disabled="true">{{$featured_apps}}</li>
                 {{foreach $nav_apps as $nav_app}}
                   {{$nav_app}}
                 {{/foreach}}
-              <a class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</a>
+              <li class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</li>
             {{else}}
-              <a class="nav-header" aria-disabled="true">{{$sysapps}}</a>
+              <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
             {{foreach $nav_apps as $nav_app}}
                   {{$nav_app}}
             {{/foreach}}
