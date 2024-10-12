@@ -2,7 +2,7 @@
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-list"></i></a>
+        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar-inset"></i></a>
       </li>
     </ul>
 
@@ -11,6 +11,10 @@
       <!-- Navbar Search -->
       <li class="nav-item">
         <div class="navbar-search-block">
+          <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
+						<input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();" onblur="closeMenu('nav-search'); openMenu('nav-search-btn');"/>
+					</form>
+
           <form class="form-inline">
             <div class="input-group input-group-sm">
               <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
