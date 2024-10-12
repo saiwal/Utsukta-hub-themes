@@ -130,17 +130,12 @@
 				{{if ! $is_owner}}
         <li class="user-body"> <!--begin::Row-->
           <div class="row">
-            <div class="col-4 text-center"> <a href="#">Sales</a> </div>
-            <div class="col-4 text-center"> <a href="#">Friends</a> </div>
+            <div class="col-4 text-center"> <a href="{{$nav.rusermenu.0}}">{{$nav.rusermenu.1}}</a> </div>
             </div> <!--end::Row-->
         </li> <!--end::Menu Body--> <!--begin::Menu Footer-->
         <li class="user-footer"> 
-          {{if $nav.profiles}}
-          <a href="{{$nav.profiles.0}}" class="btn btn-default btn-flat">{{$nav.profiles.1}}</a> 
-          {{/if}}
-          {{if $nav.logout}}
-          <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
-          {{/if}}
+          <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
+          <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
         </li> <!--end::Menu Footer-->
 
         {{/if}}
