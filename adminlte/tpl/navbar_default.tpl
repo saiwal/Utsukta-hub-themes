@@ -40,17 +40,17 @@
             </div>
             {{/if}}
           </div> <!--end::Row-->
-          {{if $nav.manage}}
         </li>
+        {{if $nav.manage}}
         <li class="user-body p-0">
           <!--begin::Channels Row-->
           <div class="row">
             <div class="col-6 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
             </div>
           </div> <!--end::Row-->
-          {{/if}}
-          {{if $nav.channels}}
         </li>
+        {{/if}}
+        {{if $nav.channels}}
         <li class="user-body p-0">
           <!--begin::Channel list Row-->
           <div class="row">
@@ -59,17 +59,16 @@
               <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
             </a></div>
             {{/foreach}}
-          </div> <!--end::Row-->
-          {{/if}}
-        </li> <!--end::Menu Body-->
+        {{/if}}
+        {{if $nav.settings}}
+          <div class="col-6 text-center">
+   			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
+          </div>
+				{{/if}}
+        </li>
+        <!--end::Menu Body-->
         <!--begin::Menu Footer-->
         <li class="user-footer"> 
-          <div class="row">
-          {{if $nav.settings}}
-            <div class="col-6 text-center">
-	  			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
-            </div>
-					{{/if}}
           {{if $nav.admin}}
   	  			<div class="col-6 text-center">
 			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
