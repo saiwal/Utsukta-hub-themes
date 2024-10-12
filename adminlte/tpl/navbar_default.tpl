@@ -126,6 +126,7 @@
           <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
           {{/if}}
         </li> <!--end::Menu Footer-->
+        {{/if}}
 				{{if ! $is_owner}}
         <li class="user-body"> <!--begin::Row-->
           <div class="row">
