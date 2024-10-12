@@ -59,13 +59,15 @@
               <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} invisible{{/if}}"></i> {{$chan.channel_name}}
             </a></div>
             {{/foreach}}
+        </li>
         {{/if}}
         {{if $nav.settings}}
+        <li class="user-body p-0">
           <div class="col-6 text-center">
    			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
           </div>
-				{{/if}}
         </li>
+				{{/if}}
         <!--end::Menu Body-->
         <!--begin::Menu Footer-->
         <li class="user-footer"> 
