@@ -139,9 +139,9 @@
   <!--begin::Sidebar Brand-->
    <div class="sidebar-brand">
     <a href="./index.html" class="brand-link logo-switch">
-      <p class="brand-image-xl logo-xs opacity-75 shadow">{{ $banner }}
+      <p class="brand-image-xl logo-xs opacity-75 shadow">{{$banner}}
       </p>
-      <p class="brand-image-xs logo-xl opacity-75">{{ $banner }}
+      <p class="brand-image-xs logo-xl opacity-75">{{$banner}}
       </p>
     </a>
   </div>   <!--end::Sidebar Brand-->
