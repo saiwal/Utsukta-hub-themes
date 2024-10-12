@@ -80,12 +80,12 @@
         <li class="user-footer"> 
           <div class="row">
           {{if $nav.profiles}}
-            <div class="col-6 text-center">
+            <div class="col-6">
               <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
             </div>
           {{/if}}
           {{if $nav.logout}}
-            <div class="col-6 text-center">
+            <div class="col-6">
             <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
             </div>
           {{/if}}
