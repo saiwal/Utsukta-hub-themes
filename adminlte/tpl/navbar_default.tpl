@@ -136,12 +136,14 @@
 
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-  <!--begin::Brand Link-->
-    <a href="#" class="brand-link">
+  <!--begin::Sidebar Brand-->
+  <div class="sidebar-brand">
+    <!--begin::Brand Link-->
+    <a href="./index.html" class="brand-link">
       <!--begin::Brand Image-->
       <img
         src="./assets/img/AdminLTELogo.png"
-        alt="U"
+        alt="AdminLTE Logo"
         class="brand-image opacity-75 shadow"
       />
       <!--end::Brand Image-->
@@ -149,7 +151,9 @@
       <span class="brand-text fw-light">{{$banner}}</span>
       <!--end::Brand Text-->
     </a>
-  <!--end::Brand Link-->
+    <!--end::Brand Link-->
+  </div>
+  <!--end::Sidebar Brand-->
   <!--begin::Sidebar Wrapper-->
   <div class="sidebar-wrapper">
     <nav class="mt-2">
