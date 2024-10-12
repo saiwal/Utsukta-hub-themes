@@ -182,15 +182,6 @@
       <div class="os-padding">
         <div class="os-viewport os-viewport-native-scrollbars-invisible os-viewport-native-scrollbars-overlaid" style="overflow-y: scroll;">
           <div class="os-content" style="padding: 0px 8px; height: 100%; width: 100%;">
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-              <div class="image">
-                <img src="dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
-              </div>
-              <div class="info">
-                <a href="#" class="d-block">Alexander Pierce</a>
-              </div>
-            </div>
-
             <div class="form-inline">
               <div class="input-group" data-widget="sidebar-search">
                 <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
@@ -214,42 +205,31 @@
 
           <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-              <li class="nav-item menu-open">
-                <a href="#" class="nav-link active">
-                <i class="nav-icon fas fa-tachometer-alt"></i>
-                <p>
-                Dashboard
-                <i class="right fas fa-angle-left"></i>
-                </p>
-                </a>
-                <ul class="nav nav-treeview">
-                  <li class="nav-item">
-                  <a href="./index.html" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Dashboard v1</p>
-                  </a>
-                  </li>
-                </ul>
-              </li>
-              <li class="nav-item">
-                <a href="pages/widgets.html" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                Widgets
-                <span class="right badge badge-danger">New</span>
-                </p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                <i class="nav-icon fas fa-copy"></i>
-                <p>
-                Layout Options
-                <i class="fas fa-angle-left right"></i>
-                <span class="badge badge-info right">6</span>
-                </p>
-                </a>
-              </li>
+             {{if $navbar_apps.0}}
+              <a class="nav-header" aria-disabled="true">{{$pinned_apps}}</a>
+                {{foreach $navbar_apps as $navbar_app}}
+                {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+                {{/foreach}}
+            {{/if}}
+            {{if $channel_apps.0}}
+                  <a class="nav-header" aria-disabled="true">{{$channelapps}}</a>
+              {{foreach $channel_apps as $channel_app}}
+                  {{$channel_app}}
+              {{/foreach}}
+            {{/if}}
+
+            {{if $is_owner}}
+              <a class="nav-header" aria-disabled="true">{{$featured_apps}}</a>
+                {{foreach $nav_apps as $nav_app}}
+                  {{$nav_app}}
+                {{/foreach}}
+              <a class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</a>
+            {{else}}
+              <a class="nav-header" aria-disabled="true">{{$sysapps}}</a>
+            {{foreach $nav_apps as $nav_app}}
+                  {{$nav_app}}
+            {{/foreach}}
+            {{/if}} 
             </ul>
           </nav>
         </div>
