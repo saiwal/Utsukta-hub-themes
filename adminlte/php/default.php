@@ -12,9 +12,9 @@
   <?php if(x($page,'nav')) echo $page['nav']; ?>
 
    <!-- Content Wrapper. Contains page content -->
-  <div class="app-main px-3 py-3">
+  <main class="app-main px-3 py-3">
       <?php if(x($page,'content')) echo $page['content']; ?>
-  </div>
+  </main>
   <!-- /.content-wrapper -->
 
 
