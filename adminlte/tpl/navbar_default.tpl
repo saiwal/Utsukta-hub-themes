@@ -79,7 +79,6 @@
               <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
             </div>
           {{/if}}
-          </div>
           <div class="row">
           {{if $nav.logout}}
             <div class="col-6 text-center">
@@ -95,7 +94,6 @@
           <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
           <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
         </li> <!--end::Menu Footer-->
-
         {{/if}}
       </ul>
     </li>
