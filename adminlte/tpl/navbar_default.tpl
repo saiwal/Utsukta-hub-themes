@@ -115,13 +115,17 @@
           <!--begin::Profile Row-->
           <div class="row">
             {{foreach $nav.usermenu as $usermenu}}
-            <div class="col-4 text-center"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+            <div class="col-6 text-center"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
             {{/foreach}}
+            {{if $nav.group}}
+            <div class="col-6 text-center"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
+            </div>
+            {{/if}}
           </div> <!--end::Row-->
           {{if $nav.manage}}
           <!--begin::Channels Row-->
           <div class="row">
-            <div class="col-4 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item"></a>
+            <div class="col-4 text-center"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
             </div>
           </div> <!--end::Row-->
           {{/if}}
