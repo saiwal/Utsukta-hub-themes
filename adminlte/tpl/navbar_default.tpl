@@ -139,16 +139,10 @@
   <!--begin::Sidebar Brand-->
    <div class="sidebar-brand">
     <a href="./index.html" class="brand-link logo-switch">
-      <img
-        src="./assets/img/AdminLTELogo.png"
-        alt="AdminLTE Logo Small"
-        class="brand-image-xl logo-xs opacity-75 shadow"
-      />
-      <img
-        src="./assets/img/AdminLTEFullLogo.png"
-        alt="AdminLTE Logo Large"
-        class="brand-image-xs logo-xl opacity-75"
-      />
+      <p class="brand-image-xl logo-xs opacity-75 shadow">{{ $banner }}
+      </p>
+      <p class="brand-image-xs logo-xl opacity-75">{{ $banner }}
+      </p>
     </a>
   </div>   <!--end::Sidebar Brand-->
   <!--begin::Sidebar Wrapper-->
