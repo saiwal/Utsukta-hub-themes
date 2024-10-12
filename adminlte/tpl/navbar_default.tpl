@@ -143,7 +143,7 @@
       <!--begin::Brand Image-->
       <img
         src="./assets/img/AdminLTELogo.png"
-        alt="AdminLTE Logo"
+        alt="U"
         class="brand-image opacity-75 shadow"
       />
       <!--end::Brand Image-->
@@ -170,72 +170,26 @@
           {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
         {{/foreach}}
         {{/if}}
-        <li class="nav-item">
-          <a href="./index.html" class="nav-link">
-            <i class="nav-icon bi bi-circle-fill"></i>
-            <p>Level 1</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon bi bi-circle-fill"></i>
-            <p>
-              Treeview
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="./index.html" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>
-                  Level 2 (Badge)
-                  <span
-                    class="nav-badge badge text-bg-secondary me-3"
-                  >
-                    6
-                  </span>
-                </p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="./index.html" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Level 2</p>
-              </a>
-            </li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a href="./index.html" class="nav-link active">
-            <i class="nav-icon bi bi-circle-fill"></i>
-            <p>Level 1 Active</p>
-          </a>
-        </li>
+        {{if $channel_apps.0}}
+            <a class="nav-header" aria-disabled="true">{{$channelapps}}</a>
+              {{foreach $channel_apps as $channel_app}}
+                  {{$channel_app}}
+              {{/foreach}}
+            {{/if}}
 
-        <li class="nav-item menu-open">
-          <a href="#" class="nav-link active">
-            <i class="nav-icon bi bi-circle-fill"></i>
-            <p>
-              Treeview Menu Open
-              <i class="nav-arrow bi bi-chevron-right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="./index.html" class="nav-link active">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Level 2 Active</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="./index.html" class="nav-link">
-                <i class="nav-icon bi bi-circle"></i>
-                <p>Level 2</p>
-              </a>
-            </li>
-          </ul>
-        </li>
+            {{if $is_owner}}
+              <a class="nav-header" aria-disabled="true">{{$featured_apps}}</a>
+                {{foreach $nav_apps as $nav_app}}
+                  {{$nav_app}}
+                {{/foreach}}
+              <a class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</a>
+            {{else}}
+              <a class="nav-header" aria-disabled="true">{{$sysapps}}</a>
+            {{foreach $nav_apps as $nav_app}}
+                  {{$nav_app}}
+            {{/foreach}}
+            {{/if}} 
+
       </ul>
       <!--end::Sidebar Menu-->
     </nav>
