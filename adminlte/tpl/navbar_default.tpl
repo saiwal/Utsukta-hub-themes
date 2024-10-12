@@ -116,7 +116,7 @@
           <span class="theme-icon-active">
             <i class="my-1"></i>
           </span>
-          <span class="d-none d-md-block ms-2" id="bd-theme-text"> </span>
+          <span class="d-none ms-2" id="bd-theme-text">Toggle theme</span>
         </button>
         <ul
           class="dropdown-menu dropdown-menu-end"
