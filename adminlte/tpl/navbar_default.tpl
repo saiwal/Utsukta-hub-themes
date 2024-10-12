@@ -99,7 +99,9 @@
       </li>
       {{/if}}
 
-    <li class="nav-item"> <a class="nav-link" href="#" data-lte-toggle="fullscreen"> <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i> <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none;"></i> </a> </li> <!--end::Fullscreen Toggle--> <!--begin::User Menu Dropdown-->
+    <li class="nav-item"> <a class="nav-link" href="#" data-lte-toggle="fullscreen"> <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i> <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none;"></i> </a> </li> <!--end::Fullscreen Toggle--> 
+    {{if $userinfo}}
+    <!--begin::User Menu Dropdown-->
     <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
       <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
         <li class="user-header text-bg-primary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
@@ -108,6 +110,7 @@
             <small>Member since Nov. 2023</small>
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
+        {{if $is_owner}}
         <li class="user-body"> <!--begin::Row-->
           <div class="row">
             <div class="col-4 text-center"> <a href="#">Followers</a> </div>
@@ -122,16 +125,29 @@
           {{if $nav.logout}}
           <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
           {{/if}}
-				{{if ! $is_owner}}
-				<div class="dropdown-menu" role="menu" aria-labelledby="avatar" {{$color_mode}}>
-					<a class="dropdown-item" href="{{$nav.rusermenu.0}}" role="menuitem">{{$nav.rusermenu.1}}</a>
-					<a class="dropdown-item" href="{{$nav.rusermenu.2}}" role="menuitem">{{$nav.rusermenu.3}}</a>
-				</div>
-				{{/if}}
-
         </li> <!--end::Menu Footer-->
+				{{if ! $is_owner}}
+        <li class="user-body"> <!--begin::Row-->
+          <div class="row">
+            <div class="col-4 text-center"> <a href="#">Followers</a> </div>
+            <div class="col-4 text-center"> <a href="#">Sales</a> </div>
+            <div class="col-4 text-center"> <a href="#">Friends</a> </div>
+            </div> <!--end::Row-->
+        </li> <!--end::Menu Body--> <!--begin::Menu Footer-->
+        <li class="user-footer"> 
+          {{if $nav.profiles}}
+          <a href="{{$nav.profiles.0}}" class="btn btn-default btn-flat">{{$nav.profiles.1}}</a> 
+          {{/if}}
+          {{if $nav.logout}}
+          <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat float-end">{{$nav.logout.1}}</a>
+          {{/if}}
+        </li> <!--end::Menu Footer-->
+
+        {{/if}}
       </ul>
-    </li> <!--end::User Menu Dropdown-->
+    </li>
+    {{/if}}
+    <!--end::User Menu Dropdown-->
     <ul class="navbar-nav ms-auto">
       <li class="nav-item dropdown">
         <button
