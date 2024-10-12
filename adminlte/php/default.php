@@ -13,7 +13,17 @@
 
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
+    <div class="row">
+      <div class="col-6-lg">
       <?php if(x($page,'content')) echo $page['content']; ?>
+      </div>
+      <div class="col-3-lg">
+        <?php if(x($page,'aside')) echo $page['aside']; ?>
+      </div>
+      <div class="col-3-lg">
+        <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
+      </div>
+    </div>
   </main>
   <!-- /.content-wrapper -->
 
