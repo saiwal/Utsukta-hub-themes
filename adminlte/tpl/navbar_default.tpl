@@ -25,7 +25,7 @@
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
-            <small>Member since Nov. 2023</small>
+            <small>{{$sitelocation}}</small>
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
         {{if $is_owner}}
