@@ -8,7 +8,7 @@ Based on [AdminLTE](https://adminlte.io/)
 
 ### Features:
 - This theme is in very early alpha stages and a lot of major functionality is broken/missing. 
-- Based on [AdminLTEv3](https://adminlte.io/).
+- Based on [AdminLTEv4](https://adminlte.io/).
 - Built completely from the ground up. 
 - Mobile friendly and responsive.
 
