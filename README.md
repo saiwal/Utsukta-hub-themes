@@ -2,7 +2,6 @@
 
 A collection of custom themes developed for hubzilla:
 
----
 ## AdminLTE
 Based on [AdminLTE](https://adminlte.io/) 
 
@@ -14,4 +13,3 @@ Based on [AdminLTE](https://adminlte.io/)
 
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
----
