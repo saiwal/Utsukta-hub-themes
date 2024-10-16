@@ -1,5 +1,6 @@
 <?php
 
+use Zotlabs\Lib\Config;
 // Add your custom CSS files here.
 //head_add_css('/vendor/twbs/bootstrap/dist/css/bootstrap.min.css');
 //head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
@@ -20,5 +21,6 @@ head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 head_add_js('/view/theme/redbasic/js/redbasic.js');
 head_add_js('/view/theme/adminlte/js/custom.js');
 //head_add_js('view/theme/adminlte/js/jquery.min.js');
-head_add_js('view/theme/adminlte/js/bootstrap.bundle.min.js');
+head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
+//head_add_js('view/theme/adminlte/js/bootstrap.bundle.min.js');
 head_add_js('view/theme/adminlte/js/adminlte.min.js');
