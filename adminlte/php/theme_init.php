@@ -2,7 +2,7 @@
 
 use Zotlabs\Lib\Config;
 
-/*require_once('theme_init_base.php');*/
+require_once('theme_init_base.php');
 
 // Add your custom CSS files here.
 head_add_css('/vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
