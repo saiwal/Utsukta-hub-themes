@@ -10,7 +10,7 @@ head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 
 head_add_css('/view/theme/adminlte/css/adminlte.min.css');
-head_add_css('/view/theme/adminlte/css/style.css');
+/*head_add_css('/view/theme/adminlte/css/style.css');*/
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootbox/bootbox.min.js');
