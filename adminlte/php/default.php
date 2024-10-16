@@ -14,10 +14,6 @@
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
     <div class="row">
-      <div class="col-12 col-md-8 col-lg-6">
-      <?php if(x($page,'content')) echo $page['content']; ?>
-      </div>
-
       <div class="col-md-4 d-none d-md-block col-lg-3">
         <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
           <div class="offcanvas-header">
@@ -30,6 +26,11 @@
           </div>
         </div>
       </div>
+
+      <div class="col-12 col-md-8 col-lg-6">
+        <?php if(x($page,'content')) echo $page['content']; ?>
+      </div>
+
       <div class="col-lg-3 d-none d-lg-block">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
