@@ -18,4 +18,4 @@ head_add_js('/library/bootstrap-tagsinput/bootstrap-tagsinput.js');
 head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
 head_add_js('view/theme/adminlte/js/adminlte.min.js');
-head_add_js('/view/theme/adminlte/js/custom.js');
+/*head_add_js('/view/theme/adminlte/js/custom.js');*/
