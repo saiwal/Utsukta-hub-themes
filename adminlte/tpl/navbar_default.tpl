@@ -220,8 +220,8 @@
         <!-- Channel apps; needs fixing -->
         {{if $channel_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
-        {{foreach $channel_app as $channelapp}}
-          {{$channelapps}}
+        {{foreach $channel_apps as $channel_app}}
+          {{$channel_app}} <br>
         {{/foreach}}
         {{/if}}
 
