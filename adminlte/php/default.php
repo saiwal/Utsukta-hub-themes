@@ -6,7 +6,7 @@
   <title><?php if(x($page,'title')) echo $page['title'] ?></title>
   <?php if(x($page,'htmlhead')) echo $page['htmlhead'] ?>
 </head>
-<body class="layout-fixed sidebar-expand-lg sidebar-mini sidebar-collapse bg-body-tertiary app-loaded">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary app-loaded">
 <div class="app-wrapper">
 
   <?php if(x($page,'nav')) echo $page['nav']; ?>
