@@ -217,11 +217,11 @@
         {{/foreach}}
         {{/if}}
 
-        <!-- Channel apps -->
+        <!-- Channel apps; needs fixing -->
         {{if $channel_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
         {{foreach $channel_apps as $channel_app}}
-          <li class="nav-item>"{{$channel_app}}</li>
+          {{$channel_apps}}
         {{/foreach}}
         {{/if}}
 
