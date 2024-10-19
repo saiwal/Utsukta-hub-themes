@@ -209,23 +209,23 @@
         role="menu"
         data-accordion="false"
       >
-        <!-- app list 1 -->
+        <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
         {{foreach $navbar_apps as $navbar_app}}
-          <li class="nav-item">{{$navbar_app|replace:'fa':'generic-icons-nav fa'}}</li>
+          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
         {{/foreach}}
         {{/if}}
 
-        <!-- app list 2 -->
+        <!-- Channel apps -->
         {{if $channel_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
         {{foreach $channel_apps as $channel_app}}
-          {{$channel_app}}
+          <li class="nav-item>"{{$channel_app}}</li>
         {{/foreach}}
         {{/if}}
 
-        <!-- app list 3 -->
+        <!-- Starred user apps -->
         {{if $is_owner}}
         <li class="nav-header" aria-disabled="true">{{$featured_apps}}</li>
         {{foreach $nav_apps as $nav_app}}
@@ -234,7 +234,7 @@
         <li class="nav-header" href="/apps"><i class="bi bi-plus"></i> {{$addapps}}</li>
         {{else}}
         <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
-        <!-- app list 4 -->
+        <!-- System apps -->
         {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
         {{/foreach}}
