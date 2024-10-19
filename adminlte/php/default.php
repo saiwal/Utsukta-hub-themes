@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php if(x($page,'title')) echo $page['title'] ?></title>
   <?php if(x($page,'htmlhead')) echo $page['htmlhead'] ?>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.3.0/styles/overlayscrollbars.min.css" >
 </head>
 <body class="layout-fixed sidebar-expand-lg sidebar-mini sidebar-collapse bg-body-tertiary app-loaded">
 <div class="app-wrapper">
@@ -15,6 +14,10 @@
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
     <div class="row">
+      <div class="col-12 col-md-8 col-lg-6">
+      <?php if(x($page,'content')) echo $page['content']; ?>
+      </div>
+
       <div class="col-md-4 d-none d-md-block col-lg-3">
         <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
           <div class="offcanvas-header">
@@ -27,11 +30,6 @@
           </div>
         </div>
       </div>
-
-      <div class="col-12 col-md-8 col-lg-6">
-        <?php if(x($page,'content')) echo $page['content']; ?>
-      </div>
-
       <div class="col-lg-3 d-none d-lg-block">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
@@ -130,7 +128,6 @@
   });
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.3.0/browser/overlayscrollbars.browser.es6.min.js"></script>
 </body>
 </html>
 
