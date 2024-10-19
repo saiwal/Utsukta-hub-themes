@@ -212,7 +212,7 @@
         {{if $navbar_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
         {{foreach $navbar_apps as $navbar_app}}
-          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+          <li class="nav-item">{{$navbar_app|replace:'fa':'generic-icons-nav fa'}}</li>
         {{/foreach}}
         {{/if}}
         {{if $channel_apps.0}}
