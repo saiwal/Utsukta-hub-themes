@@ -14,6 +14,7 @@
   - [x] Fix input areas.
   - [x] Fix contact suggest on tagging user.
   - [x] Implement sidebar overlay scrollbar.
+  - [ ] Debug Offcanvas display
 - [ ] Different layout options as schemas.
 - [ ] Implement a custom dashboard (aka HQ)
   - [ ] Individual widgets:
