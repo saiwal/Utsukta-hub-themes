@@ -22,7 +22,7 @@
     <!--begin::User Menu Dropdown-->
     <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
       <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
-        <li class="user-header text-bg-secondary"> <img src="{{$profile.thumb}}?rev={{$profile.picdate}}"{$profile.thumb}}" class="rounded-circle shadow" alt="User Image">
+        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
             <small>{{$sitelocation}}</small>
