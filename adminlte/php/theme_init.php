@@ -21,7 +21,7 @@ head_add_css('/view/css/colorbox.css');
 head_add_css('/library/justifiedGallery/justifiedGallery.min.css');
 head_add_css('/library/datetimepicker/jquery.datetimepicker.css');
 
-head_add_js('/view/theme/adminlte/js/jquery.min.js');
+head_add_js('jquery.min.js');
 head_add_js('/library/datetimepicker/jquery.datetimepicker.js');
 
 head_add_js('/library/justifiedGallery/jquery.justifiedGallery.min.js');
