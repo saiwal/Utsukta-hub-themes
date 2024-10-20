@@ -1,12 +1,12 @@
 <div class="widget">
-	<h3 class="d-flex justify-content-between align-items-center">
+	<h5 class="d-flex justify-content-between align-items-center">
 		{{$title}}
 		{{if $reset}}
 		<a href="{{$reset.url}}" class="text-muted" title="{{$reset.title}}">
 			<i class="bi bi-{{$reset.icon}}"></i>
 		</a>
 		{{/if}}
-	</h3>
+	</h5>
 	{{$content}}
 	{{if $name}}
 	<div id="cid-filter-wrapper" class="notifications-textinput">
