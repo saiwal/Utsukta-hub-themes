@@ -9,11 +9,11 @@
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
 ## Todo:
-- [ ] Implement basic AdminLTE theme.
+- [x] Implement basic AdminLTE theme.
   - [x] Fix editor layout (jot-editor).
-  - [ ] Fix input areas.
-  - [ ] Fix contact suggest on tagging user.
-  - [ ] Implement sidebar overlay scrollbar.
+  - [x] Fix input areas.
+  - [x] Fix contact suggest on tagging user.
+  - [x] Implement sidebar overlay scrollbar.
 - [ ] Different layout options as schemas.
 - [ ] Implement a custom dashboard (aka HQ)
   - [ ] Individual widgets:
