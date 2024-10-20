@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php if(x($page,'title')) echo $page['title'] ?></title>
+  <script>var baseurl="<?php echo z_root() ?>";</script>
   <?php if(x($page,'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary app-loaded">
