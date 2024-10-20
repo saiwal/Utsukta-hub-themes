@@ -1,4 +1,4 @@
-<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card clearfix generic-content-wrapper mt-2 mb-2{{/if}}" data-b64mids='{{$item.mids}}'>
+<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-primary clearfix generic-content-wrapper mt-2 mb-2{{/if}}" data-b64mids='{{$item.mids}}'>
 	<a name="{{$item.id}}" ></a>
 	<div class="clearfix wall-item-outside-wrapper {{$item.indent}}{{$item.previewing}}{{if $item.owner_url}} wallwall{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
 		<div class="wall-item-content-wrapper {{$item.indent}}" id="wall-item-content-wrapper-{{$item.id}}">
@@ -13,8 +13,8 @@
 			</div>
 			{{/if}}
 			{{if $item.title && !$item.event}}
-			<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} wall-item-title h3{{if !$item.photo}} rounded-top{{/if}}" id="wall-item-title-{{$item.id}}">
-				{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" title="{{$item.title}} ({{$item.plink.title}})">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
+			<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title h3{{if !$item.photo}} rounded-top{{/if}}" id="wall-item-title-{{$item.id}}">
+				{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title" title="{{$item.title}} ({{$item.plink.title}})">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 			</div>
 			{{if ! $item.is_new}}
 			<hr class="m-0">
