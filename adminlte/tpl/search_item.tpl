@@ -13,14 +13,14 @@
 			</div>
 			{{/if}}
 			{{if $item.title && !$item.event}}
-			<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title h3{{if !$item.photo}} rounded-top{{/if}}" id="wall-item-title-{{$item.id}}">
+			<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title h3" id="wall-item-title-{{$item.id}}">
 				{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title" title="{{$item.title}} ({{$item.plink.title}})">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 			</div>
 			{{if ! $item.is_new}}
 			<hr class="m-0">
 			{{/if}}
 			{{/if}}
-			<div class="p-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}}{{if $item.is_new && !$item.event && !$item.is_comment}} wall-item-head-new{{/if}}" >
+			<div class="p-2 wall-item-head{{/if}}{{if $item.is_new && !$item.event && !$item.is_comment}} wall-item-head-new{{/if}}" >
 				<div class="lh-sm text-end float-end">
 					<div class="wall-item-ago opacity-75" id="wall-item-ago-{{$item.id}}">
 						{{if $item.location}}
