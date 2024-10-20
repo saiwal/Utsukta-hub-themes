@@ -231,7 +231,7 @@
         {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
         {{/foreach}}
-        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i> {{$addapps}}</a></li>
+        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i><p>{{$addapps}}</p></a></li>
         {{else}}
         <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
         <!-- System apps -->
