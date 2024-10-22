@@ -27,8 +27,8 @@ head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
 head_add_js('view/theme/picard/scripts/pi-hole/js/footer.js');
 /*head_add_js('view/theme/picard/js/style/vendor/js-warn.css');*/
-head_add_js('view/theme/picard/scripts/vendor/jquery.min.js');
-head_add_js('view/theme/picard/style/vendor/bootstrap/js/bootstrap.min.js');
+/*head_add_js('view/theme/picard/scripts/vendor/jquery.min.js');*/
+/*head_add_js('view/theme/picard/style/vendor/bootstrap/js/bootstrap.min.js');*/
 head_add_js('view/theme/picard/scripts/vendor/adminlte.min.js');
 head_add_js('view/theme/picard/scripts/vendor/bootstrap-notify.min.js');
 head_add_js('view/theme/picard/scripts/vendor/select2.min.js');
