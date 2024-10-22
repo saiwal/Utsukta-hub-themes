@@ -87,7 +87,7 @@
                   <li class="user-header">
                     <img
                       class="logo-img"
-                      src="img/logo.svg"
+                      src="/view/theme/picard/img/logo.svg"
                       alt="Pi-hole Logo"
                       style="border: 0"
                       width="90"
@@ -109,7 +109,7 @@
                         class="svg-inline--fa fa-fw menu-icon"
                         style="height: 1.25em"
                       >
-                        <use xlink:href="img/pihole_icon.svg#pihole-svg-logo" />
+                        <use xlink:href="/view/theme/picard/img/pihole_icon.svg#pihole-svg-logo" />
                       </svg>
                       Pi-hole Website
                     </a>
@@ -164,7 +164,7 @@
           <!-- Sidebar user panel -->
           <div class="user-panel">
             <div class="pull-left image">
-              <img class="logo-img" src="img/logo.svg" alt="Pi-hole logo" />
+              <img class="logo-img" src="/view/theme/picard/img/logo.svg" alt="Pi-hole logo" />
             </div>
             <div class="pull-left info">
               <p>Status</p>
@@ -396,7 +396,7 @@
                       class="svg-inline--fa fa-fw menu-icon"
                       style="height: 1.25em"
                     >
-                      <use xlink:href="img/pihole_icon.svg#pihole-svg-logo" />
+                      <use xlink:href="/view/theme/picard/img/pihole_icon.svg#pihole-svg-logo" />
                     </svg>
                     Tail pihole.log
                   </a>
@@ -408,7 +408,7 @@
                       class="svg-inline--fa fa-fw menu-icon"
                       style="height: 1.25em"
                     >
-                      <use xlink:href="img/pihole_icon.svg#pihole-svg-logo" />
+                      <use xlink:href="/view/theme/picard/img/pihole_icon.svg#pihole-svg-logo" />
                     </svg>
                     Tail FTL.log
                   </a>
@@ -757,7 +757,6 @@
           </div>
           <!-- /.row -->
 
-          <script src="scripts/pi-hole/js/index.js?v=1720203623"></script>
         </section>
         <!-- /.content -->
       </div>
@@ -886,6 +885,5 @@
       </footer>
     </div>
     <!-- ./wrapper -->
-    <script src="scripts/pi-hole/js/footer.js?v=1720203623"></script>
   </body>
 </html>
