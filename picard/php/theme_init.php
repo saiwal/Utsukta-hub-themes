@@ -18,7 +18,6 @@ head_add_css('/view/theme/picard/style/vendor/select2.min.css');
 head_add_css('view/theme/picard/style/pi-hole.css');
 head_add_css('/view/theme/picard/style/themes/lcars-picard.css');
 head_add_css('/view/theme/picard/style/vendor/js-warn.css');
-head_add_css('/view/theme/picard/');
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootbox/bootbox.min.js');
