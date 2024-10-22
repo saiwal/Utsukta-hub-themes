@@ -9,7 +9,7 @@ head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 head_add_css('/view/theme/picard/style/vendor/fonts/ubuntu-mono/ubuntu-mono.css');
 head_add_css('/view/theme/picard/style/vendor/fonts/antonio/antonio.css');
-/*head_add_css('/view/theme/picard/style/vendor/bootstrap/css/bootstrap.min.css');*/
+head_add_css('/vendor/twbs/bootstrap/dist/css/bootstrap.min.css');
 head_add_css('/view/theme/picard/style/vendor/datatables.min.css');
 head_add_css('/view/theme/picard/style/vendor/datatables_extensions.min.css');
 head_add_css('/view/theme/picard/style/vendor/daterangepicker.min.css');
