@@ -1,7 +1,7 @@
 # AdminLTE theme for hubzilla
 
 ## Features:
-- This theme is in very early alpha stages and a lot of major functionality is broken/missing. 
+- This theme is in alpha stage and some functionality/layout is broken/missing. 
 - Based on [AdminLTEv3](https://adminlte.io/).
 - Built completely from the ground up. 
 - Mobile friendly and responsive.
