@@ -75,4 +75,4 @@ head_add_js('view/theme/picard/scripts/vendor/moment.min.js');
 head_add_js('view/theme/picard/scripts/vendor/chartjs-adapter-moment.js');
 head_add_js('view/theme/picard/style/vendor/font-awesome/js/all.min.js');
 head_add_js('view/theme/picard/scripts/pi-hole/js/utils.js');
-head_add_js('scripts/pi-hole/js/index.js');
+head_add_js('view/theme/picard/scripts/pi-hole/js/index.js');
