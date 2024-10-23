@@ -41,10 +41,10 @@ require_once('include/plugin.php');
 /*head_add_js('/vendor/desandro/imagesloaded/imagesloaded.pkgd.min.js');*/
 /**/
 // Add your custom CSS files here.
-head_add_css('vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
+/*head_add_css('vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');*/
 
-head_add_css('library/bootstrap-tagsinput/bootstrap-tagsinput.css');
-head_add_css('library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
+/*head_add_css('library/bootstrap-tagsinput/bootstrap-tagsinput.css');*/
+/*head_add_css('library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');*/
 head_add_css('view/theme/picard/style/vendor/fonts/ubuntu-mono/ubuntu-mono.css');
 head_add_css('view/theme/picard/style/vendor/fonts/antonio/antonio.css');
 head_add_css('view/theme/picard/style/vendor/bootstrap/css/bootstrap.min.css');
