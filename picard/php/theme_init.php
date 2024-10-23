@@ -13,7 +13,7 @@ head_add_css('/view/css/colorbox.css');
 head_add_css('/library/justifiedGallery/justifiedGallery.min.css');
 head_add_css('/library/datetimepicker/jquery.datetimepicker.css');
 
-/*head_add_js('jquery.js');*/
+head_add_js('jquery.js');
 head_add_js('/library/datetimepicker/jquery.datetimepicker.js');
 
 head_add_js('/library/justifiedGallery/jquery.justifiedGallery.min.js');
@@ -65,7 +65,7 @@ head_add_js('library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
 head_add_js('view/theme/picard/scripts/pi-hole/js/footer.js');
 /*head_add_js('view/theme/picard/js/style/vendor/js-warn.css');*/
-head_add_js('view/theme/picard/scripts/vendor/jquery.min.js');
+/*head_add_js('view/theme/picard/scripts/vendor/jquery.min.js');*/
 head_add_js('view/theme/picard/style/vendor/bootstrap/js/bootstrap.min.js');
 head_add_js('view/theme/picard/scripts/vendor/adminlte.min.js');
 head_add_js('view/theme/picard/scripts/vendor/bootstrap-notify.min.js');
