@@ -15,11 +15,11 @@
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
     <div class="row">
-      <div class="col-12 col-md-8 col-lg-6">
+      <div class="col-12 col-md-8 col-lg-8 col-xl-6">
       <?php if(x($page,'content')) echo $page['content']; ?>
       </div>
 
-      <div class="col-md-4 d-md-block col-lg-3">
+      <div class="col-md-4 d-md-block col-lg-4 col-xl-3">
         <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
           <div class="offcanvas-header">
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
@@ -31,7 +31,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-3 d-none d-lg-block">
+      <div class="d-lg-block col-xl-3">
         <?php if(x($page,'right_aside')) echo $page['right_aside']; ?>
       </div>
     </div>
