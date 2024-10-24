@@ -54,7 +54,7 @@
 		<div id="jot-text-wrap">
 			<div id="profile-jot-tools" class="btn-group d-none">
 				{{if $is_owner}}
-				<a id="profile-jot-settings" class="btn btn-outline-secondary btn-sm border-2" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-cog"></i></a>
+				<a id="profile-jot-settings" class="btn btn-outline-secondary btn-sm border-2" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
 				{{/if}}
 				{{if $reset}}
 				<button type="button" id="profile-jot-reset" class="btn btn-outline-secondary btn-sm border-2" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
