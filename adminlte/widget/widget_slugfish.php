@@ -2,6 +2,8 @@
 
 function widget_slugfish($args) {
 
-  <h2>some content</h2>
+  $temp = '<h2>some content</h2>';
+  return $temp;
+
 
 }
