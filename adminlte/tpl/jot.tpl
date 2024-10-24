@@ -58,7 +58,7 @@
 				{{/if}}
 				{{if $reset}}
 				<button type="button" id="profile-jot-reset" class="btn btn-outline-secondary btn-sm border-2" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
-					<i class="bi bi-close"></i>
+					<i class="bi bi-x"></i>
 				</button>
 				{{/if}}
 			</div>
@@ -127,19 +127,19 @@
 				{{if $bbcode}}
 				<div class="btn-group me-2">
 					<button type="button" id="main-editor-bold" class="btn btn-outline-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'profile-jot-text'); return false;">
-						<i class="bi bi-bold jot-icons"></i>
+						<i class="bi bi-type-bold jot-icons"></i>
 					</button>
 					<button type="button" id="main-editor-italic" class="btn btn-outline-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'profile-jot-text'); return false;">
-						<i class="bi bi-italic jot-icons"></i>
+						<i class="bi bi-type-italic jot-icons"></i>
 					</button>
 					<button type="button" id="main-editor-underline" class="btn btn-outline-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'profile-jot-text'); return false;">
-						<i class="bi bi-underline jot-icons"></i>
+						<i class="bi bi-type-underline jot-icons"></i>
 					</button>
 					<button type="button" id="main-editor-quote" class="btn btn-outline-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'profile-jot-text'); return false;">
-						<i class="bi bi-quote-left jot-icons"></i>
+						<i class="bi bi-quote jot-icons"></i>
 					</button>
 					<button type="button" id="main-editor-code" class="btn btn-outline-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'profile-jot-text'); return false;">
-						<i class="bi bi-terminal jot-icons"></i>
+						<i class="bi bi-code jot-icons"></i>
 					</button>
 				</div>
 				{{/if}}
@@ -205,7 +205,7 @@
 				{{if $writefiles || $weblink || $setloc || $clearloc || $feature_expire || $feature_encrypt || $custommoretoolsdropdown}}
 				<div class="btn-group d-lg-none">
 					<button type="button" id="more-tools" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-						<i id="more-tools-icon" class="bi bi-cog jot-icons"></i>
+						<i id="more-tools-icon" class="bi bi-gear jot-icons"></i>
 					</button>
 					<div class="dropdown-menu">
 						{{if $visitor}}
