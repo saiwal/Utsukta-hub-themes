@@ -212,8 +212,7 @@
       >
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
-        <li class="nav-header" aria-disabled="true"> <i class="nav-icon bi bi-pin-angle"></i>
-{{$pinned_apps}}</li>
+        <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
         {{foreach $navbar_apps as $navbar_app}}
           {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
         {{/foreach}}
