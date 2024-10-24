@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card mb-3">
 <div class="section-subtitle-wrapper clearfix card-header">
 	<div class="float-end">
 		{{if $app.type !== 'system'}}
@@ -22,7 +22,7 @@
 		{{/if}}
 		{{/if}}
 	</div>
-	<h3>{{$app.name}}{{if $app.price}} ({{$app.price}}){{/if}}</h3>
+	<h5>{{$app.name}}{{if $app.price}} ({{$app.price}}){{/if}}</h5>
 </div>
 <div class="section-content-tools-wrapper container card-body">
 	<div class="{{if $deleted}} app-deleted{{/if}} mb-3">
