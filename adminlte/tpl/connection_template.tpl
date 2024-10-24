@@ -2,7 +2,7 @@
   <div class="row g-0">
 
 <div id="contact-entry-wrapper-{{$contact.id}}">
-	<div class="section-subtitle-wrapper clearfix">
+	<div class="section-subtitle-wrapper clearfix card-header">
 		<div class="float-end">
 			{{if $contact.status}}
 			{{foreach $contact.states as $state}}
@@ -19,7 +19,7 @@
 		</div>
 		<h5>{{include "connstatus.tpl" perminfo=$contact.perminfo}}{{if $contact.public_forum}}<i class="fa fa-comments-o" title="{{$group_label}}"></i>&nbsp;{{/if}}<a href="{{$contact.url}}" title="{{$contact.img_hover}}" >{{$contact.name}}</a>{{if $contact.phone}}&nbsp;<a class="btn btn-outline-secondary btn-sm" href="tel:{{$contact.phone}}" title="{{$contact.call}}"><i class="fa fa-phone connphone"></i></a>{{/if}}</h5>
 	</div>
-	<div class="section-content-tools-wrapper">
+	<div class="section-content-tools-wrapper card-body">
 		<div class="contact-photo-wrapper" >
 			<a href="{{$contact.url}}" title="{{$contact.img_hover}}" >
 				<img class="directory-photo-img {{if $contact.classes}}{{$contact.classes}}{{/if}}" src="{{$contact.thumb}}" alt="{{$contact.name}}" loading="lazy" />
