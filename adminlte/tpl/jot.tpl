@@ -182,7 +182,7 @@
 				{{/if}}
 				{{if $feature_future}}
 					<button type="button" id="profile-future-wrapper" class="btn btn-outline-secondary btn-sm" title="{{$future_txt}}" onclick="jotGetPubDate();return false;">
-						<i id="profile-future" class="bi bi-clock-o jot-icons"></i>
+						<i id="profile-future" class="bi bi-clock jot-icons"></i>
 					</button>
 				{{/if}}
 				{{if $feature_encrypt}}
@@ -195,7 +195,7 @@
 					</button>
 				{{if $feature_nocomment}}
 					<button type="button" id="profile-nocomment-wrapper" class="btn btn-outline-secondary btn-sm" title="{{$nocommenttitle}}" onclick="toggleNoComment();return false;">
-						<i id="profile-nocomment" class="bi bi-comments jot-icons"></i>
+						<i id="profile-nocomment" class="bi bi-chat jot-icons"></i>
 					</button>
 				{{/if}}
 				{{if $custommoretoolsbuttons}}
@@ -216,7 +216,7 @@
 						<a class="dropdown-item" href="#" onclick="jotGetLink(); return false;"><i class="bi bi-link"></i>&nbsp;{{$weblink}}</a>
 						{{/if}}
 						{{if $embedPhotos}}
-						<a class="dropdown-item" href="#" onclick="initializeEmbedPhotoDialog(); return false;"><i class="bi bi-file-image-o jot-icons"></i>&nbsp;{{$embedPhotos}}</a>
+						<a class="dropdown-item" href="#" onclick="initializeEmbedPhotoDialog(); return false;"><i class="bi bi-file-image jot-icons"></i>&nbsp;{{$embedPhotos}}</a>
 						{{/if}}
 						{{if $setloc}}
 						<a class="dropdown-item" href="#" onclick="jotGetLocation(); return false;"><i class="bi bi-globe"></i>&nbsp;{{$setloc}}</a>
