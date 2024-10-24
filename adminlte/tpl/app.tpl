@@ -1,5 +1,5 @@
 <div class="card mb-3">
-<div class="section-subtitle-wrapper clearfix card-header">
+<div class="section-subtitle-wrapper clearfix card-header pb-0 border-bottom-0">
 	<div class="float-end">
 		{{if $app.type !== 'system'}}
 		{{if $purchase}}

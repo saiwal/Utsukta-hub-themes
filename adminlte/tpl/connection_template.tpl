@@ -2,7 +2,7 @@
   <div class="row g-0">
 
 <div id="contact-entry-wrapper-{{$contact.id}}">
-	<div class="section-subtitle-wrapper clearfix card-header">
+	<div class="section-subtitle-wrapper clearfix card-header pb-0 border-bottom-0">
 		<div class="float-end">
 			{{if $contact.status}}
 			{{foreach $contact.states as $state}}
