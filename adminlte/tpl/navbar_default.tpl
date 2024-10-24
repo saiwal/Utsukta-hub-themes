@@ -226,12 +226,33 @@
         {{/foreach}}
         {{/if}}
 
-        <!-- Starred user apps -->
         {{if $is_owner}}
-        <li class="nav-header" aria-disabled="true">{{$featured_apps}}</li>
+        <!-- Starred user apps -->
+        <li class="nav-item"> 
+        <a href="#" class="nav-link"> <i class="nav-icon bi bi-box-seam-fill"></i>
+          <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+        </a>
+        <ul class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+          <li class="nav-item">
+            <a href="./widgets/small-box.html" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
+              <p>Small Box</p>
+            </a>
+          </li>
+          <li class="nav-item"> 
+            <a href="./widgets/info-box.html" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
+              <p>info Box</p>
+            </a>
+          </li>
+          <li class="nav-item"> 
+            <a href="./widgets/cards.html" class="nav-link"> <i class="nav-icon bi bi-circle"></i>
+              <p>Cards</p>
+            </a>
+          </li>
         {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
         {{/foreach}}
+        </ul>
+        </li>        
         <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i><p>{{$addapps}}</p></a></li>
         {{else}}
         <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
