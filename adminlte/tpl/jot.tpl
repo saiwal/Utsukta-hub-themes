@@ -157,7 +157,7 @@
 					{{/if}}
 					{{if $embedPhotos}}
 					<button type="button" id="embed-photo-wrapper" class="btn btn-outline-secondary btn-sm" title="{{$embedPhotos}}" onclick="initializeEmbedPhotoDialog();return false;">
-						<i id="embed-photo" class="bi bi-file-image-o jot-icons"></i>
+						<i id="embed-photo" class="bi bi-file-image jot-icons"></i>
 					</button>
 					{{/if}}
 				</div>
