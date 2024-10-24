@@ -31,19 +31,19 @@
 
 
 		<div id="jot-title-wrap" class="jothidden border-0">
-			<input class="w-100 border-2 rounded-top form-control" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
+			<input class="w-100 border-1 rounded-top form-control" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
 		</div>
 		<div id="jot-summary-wrap" class="jothidden border-0">
-			<input class="w-100 border-2 form-control" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">
+			<input class="w-100 border-1 form-control" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">
 		</div>
 		{{if $catsenabled}}
 		<div id="jot-category-wrap" class="jothidden border-0">
-			<input class="w-100 border-2 form-control" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
+			<input class="w-100 border-1 form-control" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
 		</div>
 		{{/if}}
 		{{if $webpage}}
 		<div id="jot-pagetitle-wrap" class="jothidden border-0">
-			<input class="w-100 border-2 rounded-top form-control" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
+			<input class="w-100 border-1 rounded-top form-control" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
 		</div>
 		{{/if}}
 		{{if $customjotheaders}}
@@ -54,15 +54,15 @@
 		<div id="jot-text-wrap">
 			<div id="profile-jot-tools" class="btn-group d-none">
 				{{if $is_owner}}
-				<a id="profile-jot-settings" class="btn btn-outline-secondary btn-sm border-2" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
+				<a id="profile-jot-settings" class="btn btn-outline-secondary btn-sm border-1" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
 				{{/if}}
 				{{if $reset}}
-				<button type="button" id="profile-jot-reset" class="btn btn-outline-secondary btn-sm border-2" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
+				<button type="button" id="profile-jot-reset" class="btn btn-outline-secondary btn-sm border-1" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
 					<i class="bi bi-x"></i>
 				</button>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-2 rounded form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
+			<textarea class="profile-jot-text border-1 rounded form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">
@@ -72,10 +72,10 @@
 		<div id="jot-poll-wrap" class="p-2 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 border-2 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 border-1 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 border-2 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 border-1 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
