@@ -244,6 +244,7 @@
       </ul>
       <!--end::Sidebar Menu-->
     </nav>
+              <?php if(x($page,'aside')) echo $page['aside']; ?>
   </div>
   <!--end::Sidebar Wrapper-->
 </aside>
