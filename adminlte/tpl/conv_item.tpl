@@ -97,7 +97,7 @@
 				{{if $item.has_tags}}
 				<div class="p-2 wall-item-tools clearfix">
 					<div class="body-tags">
-						<span class="tag text-decoration-none">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
+						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
 					</div>
 				</div>
 				{{/if}}
