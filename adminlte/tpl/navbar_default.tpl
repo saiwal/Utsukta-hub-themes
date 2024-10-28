@@ -192,7 +192,7 @@
           {{$nav_app}}
         {{/foreach}}
         {{/if}} 
-        <li class="nav-item dropdown">
+        <li class="nav-header dropdown">
           <button
             class="btn btn-link nav-link py-2 ms-2 px-lg-2 dropdown-toggle d-flex align-items-center"
             id="bd-theme"
