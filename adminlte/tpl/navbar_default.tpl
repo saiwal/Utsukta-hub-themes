@@ -25,13 +25,13 @@
     <!--begin::User Menu Dropdown-->
     <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
       <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
+				{{if $is_owner}}
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
             <small>{{$sitelocation}}</small>
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
-        {{if $is_owner}}
         <li class="user-body p-0">
           <!--begin::Profile Row-->
           <div class="row">
@@ -96,6 +96,12 @@
         </li> <!--end::Menu Footer-->
         {{/if}}
 				{{if ! $is_owner}}
+        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
+          <p>
+            {{$userinfo.name}}
+            <small>{{$sitelocation}}</small>
+          </p>
+        </li> <!--end::User Image--> <!--begin::Menu Body-->
         <!--begin::Menu Footer-->
         <li class="user-footer"> 
           <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
