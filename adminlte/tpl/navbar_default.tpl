@@ -58,7 +58,7 @@
           <!--begin::Channel list Row-->
           <div class="row">
             {{foreach $nav.channels as $chan}}
-            <div class="col-6"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
+            <div class="col-12"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
               <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} text-disabled{{/if}}"></i> {{$chan.channel_name}}
             </a></div>
             {{/foreach}}
