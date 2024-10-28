@@ -7,7 +7,7 @@
   <script>var baseurl="<?php echo z_root() ?>";</script>
   <?php if(x($page,'htmlhead')) echo $page['htmlhead'] ?>
 </head>
-<body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-open">
+<body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-collapse">
 <div class="app-wrapper">
 
   <?php if(x($page,'nav')) echo $page['nav']; ?>
