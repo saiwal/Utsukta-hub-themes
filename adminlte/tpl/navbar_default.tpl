@@ -194,7 +194,7 @@
         {{/if}} 
         <li class="nav-item dropdown">
           <button
-            class="btn btn-link nav-link py-2 px-2 px-lg-2 dropdown-toggle d-flex align-items-center"
+            class="btn btn-link nav-link py-2 ms-2 px-lg-2 dropdown-toggle d-flex align-items-center"
             id="bd-theme"
             type="button"
             aria-expanded="false"
