@@ -95,7 +95,7 @@
         </li> <!--end::Menu Footer-->
         {{/if}}
 				{{if ! $is_owner}}
-        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
+        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
           </p>
