@@ -29,7 +29,6 @@
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
-            <small>{{$sitelocation}}</small>
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
         <li class="user-body p-0">
@@ -99,7 +98,6 @@
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="rounded-circle shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
-            <small>{{$sitelocation}}</small>
           </p>
         </li> <!--end::User Image--> <!--begin::Menu Body-->
         <!--begin::Menu Footer-->
