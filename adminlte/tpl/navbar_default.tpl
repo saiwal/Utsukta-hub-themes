@@ -197,16 +197,16 @@
         {{/foreach}}
         {{/if}} 
         <li class="nav-header">
-<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-  <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto">
-  <label class="btn btn-outline-primary" for="btnradio1">Auto</label>
+          <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto" checked>
+            <label class="btn btn-outline-primary" for="btnradio1">Auto</label>
 
-  <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" checked data-bs-theme-value="dark">
-  <label class="btn btn-outline-primary" for="btnradio2">Dark</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" checked data-bs-theme-value="dark">
+            <label class="btn btn-outline-primary" for="btnradio2">Dark</label>
 
-  <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" checked data-bs-theme-value="light">
-  <label class="btn btn-outline-primary" for="btnradio3">Light</label>
-</div>        
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" checked data-bs-theme-value="light">
+            <label class="btn btn-outline-primary" for="btnradio3">Light</label>
+          </div>        
         </li>
       </ul>
       <!--end::Sidebar Menu-->
