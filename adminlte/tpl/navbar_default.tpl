@@ -196,6 +196,19 @@
           {{$nav_app}}
         {{/foreach}}
         {{/if}} 
+        <li class="nav-item">
+<div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+  <input type="button" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto">
+  <label class="btn btn-outline-primary" for="btnradio1">Auto</label>
+
+  <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" checked data-bs-theme-value="dark">
+  <label class="btn btn-outline-primary" for="btnradio2">Dark</label>
+
+  <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" checked data-bs-theme-value="light">
+  <label class="btn btn-outline-primary" for="btnradio3">Light</label>
+</div>        
+        </li>
+
         <li class="nav-header dropdown">
           <button
             class="btn btn-link nav-link py-2 ms-2 px-lg-2 dropdown-toggle d-flex align-items-center"
