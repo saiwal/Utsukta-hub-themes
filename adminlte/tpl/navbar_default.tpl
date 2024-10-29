@@ -199,7 +199,7 @@
         <li class="nav-header">
           <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto">
-            <label class="btn btn-outline-secondary" for="btnradio1">Auto</label>
+            <label class="btn btn-outline-secondary" for="btnradio1"><i class="bi bi-circle-half me-2"></i></label>
 
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" data-bs-theme-value="dark">
             <label class="btn btn-outline-secondary" for="btnradio2"><i class="bi bi-moon-fill me-2"></i></label>
