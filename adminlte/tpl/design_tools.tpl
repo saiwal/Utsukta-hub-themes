@@ -1,9 +1,13 @@
-<div id="design-tools" class="widget design-tools card">
-	<h5 class="card-header">{{$title}}</h5>
-	<div class="nav nav-pills flex-column card-body">
-		<a class="nav-link" href="blocks/{{$who}}">{{$blocks}}</a>
-		<a class="nav-link" href="menu/{{$who}}">{{$menus}}</a>
-		<a class="nav-link" href="layouts/{{$who}}">{{$layout}}</a>
-		<a class="nav-link" href="webpages/{{$who}}">{{$pages}}</a>
-	</div>
+<div id="design-tools" class="card">
+  <div class="card-header">
+    <div class="card-title">{{$title}}</div>
+  </div>
+  <div class="card-body">
+    <div class="list-group list-group-flush">
+      <a class="list-group-item" href="blocks/{{$who}}">{{$blocks}}</a>
+      <a class="list-group-item" href="menu/{{$who}}">{{$menus}}</a>
+      <a class="list-group-item" href="layouts/{{$who}}">{{$layout}}</a>
+      <a class="list-group-item" href="webpages/{{$who}}">{{$pages}}</a>
+    </div>  
+  </div>
 </div>
