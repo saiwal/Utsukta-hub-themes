@@ -32,7 +32,8 @@
   
   <div class="card collapsed-card mb-2">
     <div class="card-header">
-      {{$export_label}}
+      <h3 class="card-title">{{$export_label}}</h3>
+      <div class="card-tools"> <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse"> <i data-lte-icon="expand" class="bi bi-plus-lg"></i> <i data-lte-icon="collapse" class="bi bi-dash-lg"></i> </button> </div> <!-- /.card-tools -->                                
     </div>
   	<div class="nav nav-pills flex-column card-body">
       <div id="export-form" class="sub-menu-wrapper">
