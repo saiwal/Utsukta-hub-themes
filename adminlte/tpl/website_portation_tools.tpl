@@ -1,5 +1,5 @@
-<div id="website-portation-tools" class="card">
-  <div class="card-body">
+<div id="website-portation-tools">
+  <div class="card card-body mb-2">
   <div class="nav nav-pills flex-column">
 		<a class="nav-link"  href="#" onclick="openClose('import-form'); return false;"><i class="bi bi-upload generic-icons"></i> {{$import_label}}</a>
 		<div id="import-form" class="sub-menu-wrapper">
@@ -25,6 +25,8 @@
 			</div>
 		</div>
 	</div>
+  </div>
+  <div class="card card-body mb-2">
 	<div class="nav nav-pills flex-column">
 		<a class="nav-link" href="#" onclick="openClose('export-form'); openClose('export-cloud-form'); return false;"><i class="bi bi-download generic-icons"></i> {{$export_label}}</a>
 		<div id="export-form" class="sub-menu-wrapper">
