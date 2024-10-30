@@ -1,5 +1,6 @@
-<div id="website-portation-tools" class="widget">
-	<div class="nav nav-pills flex-column">
+<div id="website-portation-tools" class="card">
+  <div class="card-body">
+  <div class="nav nav-pills flex-column">
 		<a class="nav-link"  href="#" onclick="openClose('import-form'); return false;"><i class="bi bi-upload generic-icons"></i> {{$import_label}}</a>
 		<div id="import-form" class="sub-menu-wrapper">
 			<div class="sub-menu">
@@ -57,4 +58,5 @@
 			</div>
 		</div>
 	</div>
+  </div>
 </div>
