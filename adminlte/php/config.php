@@ -2,7 +2,11 @@
 
 namespace Zotlabs\Theme;
 
-class RedbasicConfig {
+use ScssPhp\ScssPhp\Compiler;
+use ScssPhp\ScssPhp\OutputStyle;
+
+
+class AdminLTEConfig {
 
 	function get_schemas() {
 		$files = glob('view/theme/adminlte/schema/*.php');
