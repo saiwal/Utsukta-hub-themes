@@ -1,5 +1,4 @@
-{{include file="field_checkbox.tpl" field=$dark_mode}}
-{{include file="field_checkbox.tpl" field=$narrow_navbar}}
+{{include file="field_checkbox.tpl" field=$sidebar}}
 {{include file="field_input.tpl" field=$converse_width}}
 {{include file="field_input.tpl" field=$font_size}}
 {{include file="field_checkbox.tpl" field=$advanced_theming}}
