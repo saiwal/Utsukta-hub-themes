@@ -6,7 +6,7 @@
 	</div>
 </div>
 
-<div id="pdledit_gui_offcanvas_edit" class="offcanvas offcanvas-bottom " tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true" style="min-width: 300px">
+<div id="pdledit_gui_offcanvas_edit" class="offcanvas offcanvas-bottom shadow border rounded-top start-50 translate-middle-x" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true" style="min-width: 300px">
 	<div id="pdledit_gui_offcanvas_edit_body" class="offcanvas-body">
 		<textarea id="pdledit_gui_offcanvas_edit_textarea" class="form-control font-monospace h-100"></textarea>
 	</div>
