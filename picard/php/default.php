@@ -43,9 +43,10 @@
     <div id="token" hidden>0FqRhnvxXSaVCLHlFLFGxbtpxnxMwv1Aa4izR8p+XrI=</div>
     <!-- Send token to JS -->
     <div id="enableTimer" hidden></div>
-    <main class="wrapper">
+    <div class="wrapper">
 
-      <?php if(x($page,'nav')) echo $page['nav']; ?>
+  <?php if(x($page,'nav')) echo $page['nav']; ?>
+      <main>
       <!-- Content Wrapper. Contains page content -->
       <div class="content-wrapper">
         <!-- Main content -->
@@ -76,7 +77,7 @@
         </section>
       </div>
       <!-- /.content-wrapper -->
-
+      </main>
       <footer class="main-footer">
         <div class="row row-centered text-center">
           <div class="col-xs-12 col-sm-6">
@@ -137,7 +138,7 @@
           </div>
         </div>
       </footer>
-    </main>
+    </div>
     <!-- ./wrapper -->
   </body>
 </html>
