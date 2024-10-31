@@ -43,7 +43,7 @@
     <div id="token" hidden>0FqRhnvxXSaVCLHlFLFGxbtpxnxMwv1Aa4izR8p+XrI=</div>
     <!-- Send token to JS -->
     <div id="enableTimer" hidden></div>
-    <div class="wrapper">
+    <main class="wrapper">
       <header class="main-header">
         <!-- Logo -->
         <a href="index.php" class="logo">
@@ -516,7 +516,7 @@
           </div>
         </div>
       </footer>
-    </div>
+    </main>
     <!-- ./wrapper -->
   </body>
 </html>
