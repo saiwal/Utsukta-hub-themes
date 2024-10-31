@@ -6,7 +6,7 @@ use ScssPhp\ScssPhp\Compiler;
 use ScssPhp\ScssPhp\OutputStyle;
 
 
-class AdminLTEConfig {
+class RedbasicConfig {
 
 	function get_schemas() {
 		$files = glob('view/theme/adminlte/schema/*.php');
