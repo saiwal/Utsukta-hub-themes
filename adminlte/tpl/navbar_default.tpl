@@ -116,12 +116,12 @@
         <a class="btn btn-info btn-sm" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal" data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
       </li>
       {{else}}
-      <li class="nav-item mt-1 px-2">
+      <li class="nav-item mt-1 px-1">
         <a class="btn btn-primary btn-sm" href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
       </li>
       {{/if}}
       {{if $nav.register}}
-      <li class="nav-item mt-1 px-2">
+      <li class="nav-item mt-1 px-1">
         <a class="btn btn-success btn-sm" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
       </li>
       {{/if}}
