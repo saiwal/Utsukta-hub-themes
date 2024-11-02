@@ -48,11 +48,11 @@
   <?php if(x($page,'nav')) echo $page['nav']; ?>
       <main>
       <!-- Content Wrapper. Contains page content -->
-      <div class="content-wrapper">
+      <div class="content-wrapper row">
         <!-- Main content -->
         <section class="content">
           <div class="columns">
-            <aside id="region_1" class="d-none d-lg-block">
+            <aside id="region_1" class="col-md-4 d-md-block col-lg-4 col-xl-3 d-none d-lg-block">
               <div class="aside_spacer_top_left"></div>
               <div class="aside_spacer_left">
                 <div id="left_aside_wrapper" class="aside_wrapper">
@@ -60,12 +60,12 @@
                 </div>
               </div>
             </aside>
-            <section id="region_2">
+            <section id="region_2" class="col-12 col-md-8 col-lg-8 col-xl-6">
               <?php if(x($page,'content')) echo $page['content']; ?>
               <div id="page-footer"></div>
               <div id="pause"></div>
             </section>
-            <aside id="region_3" class="d-none d-xl-block">
+            <aside id="region_3" class="d-lg-block col-xl-3 d-none d-xl-block">
               <div class="aside_spacer_top_right"></div>
               <div class="aside_spacer_right">
                 <div id="right_aside_wrapper" class="aside_wrapper">
