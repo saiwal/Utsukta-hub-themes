@@ -15,6 +15,7 @@
 }
 
 .blockquote {
-  border-left: 2px;
-  border-color: var(--bs-info-rgb);
+  border-left: 8px solid var(--bs-info); /* Bootstrap info color variable */
+  padding-left: 15px; /* Add padding to create space between the border and text */
+  margin: 1.5rem 0; /* Optional: adjust margins for better spacing */
 }
