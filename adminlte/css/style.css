@@ -13,3 +13,8 @@
 .sidebar-collapse .main-sidebar, .sidebar-collapse .main-sidebar::before {
   margin-left: -250px;
 }
+
+.blockquote {
+  border-left: 2px;
+  border-color: var(--bs-info-rgb);
+}
