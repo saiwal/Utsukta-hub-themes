@@ -10,13 +10,12 @@
     <table class="table">
         <tbody>
 	          {{foreach $items as $i}}
-            <tr class="align-middle"><a href="{{$i.url}}">
+            <tr class="align-middle">
 					      {{if $i.title}}
-                <td>{{$i.title}}</td>
+                <td><a href="{{$i.url}}">{{$i.title}}</a></td>
                 {{/if}}
-                <td>{{$i.summary}}</td>
+                <td><a href="{{$i.url}}">{{$i.summary}}</a></td>
                 <td>{{$i.footer}}</td>
-                </a>
             </tr>
             {{/foreach}}
         </tbody>
