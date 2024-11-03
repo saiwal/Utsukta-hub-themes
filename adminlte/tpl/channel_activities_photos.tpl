@@ -7,7 +7,7 @@
       </div> <!-- /.card-tools -->
     </div> <!-- /.card-header -->
     <div class="card-body" style="display: block; box-sizing: border-box;">
-      <table class="table table-striped">
+      <table class="table">
         <thead>
             <tr>
                 <th>Title</th>
