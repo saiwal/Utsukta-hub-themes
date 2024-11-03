@@ -8,13 +8,6 @@
     </div> <!-- /.card-header -->
     <div class="card-body" style="display: block; box-sizing: border-box;">
     <table class="table">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Date</th>
-            </tr>
-        </thead>
         <tbody>
 	          {{foreach $items as $i}}
             <tr class="align-middle">
