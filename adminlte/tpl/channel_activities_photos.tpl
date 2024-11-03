@@ -7,11 +7,6 @@
       </div> <!-- /.card-tools -->
     </div> <!-- /.card-header -->
     <div class="card-body" style="display: block; box-sizing: border-box;">
-      <div class="list-group">
-	      {{foreach $items as $i}}
-        <a href="{{$i.url}}" class="list-group-item list-group-item-action">{{$i.alt}}</a>
-        {{/foreach}}
-      </div>
       <table class="table table-striped">
         <thead>
             <tr>
@@ -31,22 +26,4 @@
     </div> <!-- /.card-body -->
   </div> <!-- /.card -->
 </div>
-<div class="mb-1 text-uppercase">
-	<a href="{{$url}}"><i class="bi bi-{{$icon}} generic-icons-nav"></i> {{$label}}</a>
-</div>
-<div id="photo-album" class="mb-4">
-	{{foreach $items as $i}}
-	<a href="{{$i.url}}" title="{{$i.alt}}">
-		<img src="{{$i.src}}" width="{{$i.width}}" height="{{$i.height}}" alt="{{$i.alt}}">
-		<div class='jg-caption rounded text-truncate autotime' title="{{$i.edited}}"></div>
-	</a>
-	{{/foreach}}
-</div>
-<script>
-	$('#photo-album').justifiedGallery({
-		border: 0,
-		margins: 3,
-		maxRowsCount: 1,
-		waitThumbnailsLoad: false
-	});
-</script>
+
