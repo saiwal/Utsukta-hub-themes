@@ -1,5 +1,5 @@
 <div class="col">
-  <div class="card card-primary mb-4">
+  <div class="card card-outline mb-4">
     <div class="card-header">
       <h3 class="card-title"><i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a></h3>
         <div class="card-tools">
