@@ -1,3 +1,16 @@
+<div class="col-md-3">
+  <div class="card card-primary">
+    <div class="card-header">
+      <h3 class="card-title">Expandable</h3>
+      <div class="card-tools"> 
+        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse"> <i data-lte-icon="expand" class="bi bi-plus-lg"></i> <i data-lte-icon="collapse" class="bi bi-dash-lg"></i> </button> 
+      </div> <!-- /.card-tools -->
+    </div> <!-- /.card-header -->
+    <div class="card-body" style="display: block; box-sizing: border-box;">
+      The body of the card
+    </div> <!-- /.card-body -->
+  </div> <!-- /.card -->
+</div>
 <div class="mb-1 text-uppercase">
 	<a href="{{$url}}"><i class="bi bi-{{$icon}} generic-icons-nav"></i> {{$label}}</a>
 </div>
