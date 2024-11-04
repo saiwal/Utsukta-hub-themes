@@ -1,17 +1,4 @@
-<nav class="app-header navbar navbar-expand bg-body border-0 sticky-top"> <!--begin::Container-->
-  <div class="container-fluid"> <!--begin::Start Navbar Links-->
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
-      </li>
-    </ul>
-
-    <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
-      <!-- Navbar Search -->
+      <!-- Navbar Search
       <li class="nav-item">
         <div class="navbar-search-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
@@ -31,17 +18,16 @@
 			{{/if}}
 
     {{if $userinfo}}
-    <!--begin::User Menu Dropdown-->
+
     <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
-      <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
+      <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
 				{{if $is_owner}}
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
           </p>
-        </li> <!--end::User Image--> <!--begin::Menu Body-->
+        </li>
         <li class="user-body p-0">
-          <!--begin::Profile Row-->
           <div class="row">
             {{foreach $nav.usermenu as $usermenu}}
             <div class="col-6"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
@@ -50,20 +36,18 @@
             <div class="col-6"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
             </div>
             {{/if}}
-          </div> <!--end::Row-->
+          </div>
         </li>
         {{if $nav.manage}}
         <li class="user-body p-0">
-          <!--begin::Channels Row-->
           <div class="row">
             <div class="col-6"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
             </div>
-          </div> <!--end::Row-->
+          </div>
         </li>
         {{/if}}
         {{if $nav.channels}}
         <li class="user-body p-0">
-          <!--begin::Channel list Row-->
           <div class="row">
             {{foreach $nav.channels as $chan}}
             <div class="col-12"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
@@ -86,8 +70,6 @@
           </div>
         </li>
 				{{/if}}
-        <!--end::Menu Body-->
-        <!--begin::Menu Footer-->
         <li class="user-footer"> 
           <div class="row">
           {{if $nav.profiles}}
@@ -100,25 +82,23 @@
             <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
             </div>
           {{/if}}
-          </div> <!--end::Row-->
-        </li> <!--end::Menu Footer-->
+          </div>
+        </li> 
         {{/if}}
 				{{if ! $is_owner}}
         <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
           <p>
             {{$userinfo.name}}
           </p>
-        </li> <!--end::User Image--> <!--begin::Menu Body-->
-        <!--begin::Menu Footer-->
+        </li>
         <li class="user-footer"> 
           <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
           <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
-        </li> <!--end::Menu Footer-->
+        </li>
         {{/if}}
       </ul>
     </li>
     {{/if}}
-    <!--end::User Menu Dropdown-->
     {{if $nav.login && !$userinfo}}
       {{if $nav.loginmenu.1.4}}
       <li class="nav-item mt-1 ps-2 pe-1">
@@ -135,9 +115,7 @@
       </li>
       {{/if}}
     {{/if}}
-    </ul> <!--end::End Navbar Links-->
-  </div> <!--end::Container-->
-</nav>
+    </ul> 
 
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">

@@ -9,6 +9,23 @@
 </head>
 <body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-collapse">
 <div class="app-wrapper">
+  <nav class="app-header navbar navbar-expand bg-body border-0 sticky-top"> <!--begin::Container-->
+    <div class="container-fluid"> <!--begin::Start Navbar Links-->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
+        </li>
+      </ul>
+
+      <?php if(x($page,'topnav')) echo $page['topnav']; ?>
+
+    </div>
+  </nav>
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
 
   <?php if(x($page,'nav')) echo $page['nav']; ?>
 
@@ -23,7 +40,6 @@
           </div>
           <div class="offcanvas-body">
             <div class="container">
-              <?php if(x($page,'navbar')) echo $page['navbar']; ?>
               <?php if(x($page,'aside')) echo $page['aside']; ?>
             </div>
           </div>
