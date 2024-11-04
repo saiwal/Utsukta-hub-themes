@@ -333,7 +333,7 @@ function nav($template = 'default') {
 		$tpl = get_markup_template('topnav.tpl');
 	}
 
-	App::$page['nav'] .= replace_macros($tpl, [
+	App::$page['topnav'] .= replace_macros($tpl, [
 		'$baseurl'            => z_root(),
 		'$color_mode'         => App::$page['color_mode'] ?? '',
 		'$navbar_color_mode'  => App::$page['navbar_color_mode'] ?? '',
