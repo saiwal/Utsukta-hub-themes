@@ -26,7 +26,7 @@
 			</button>
 
       <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="dropdown" href="/notifications"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
+        <a class="nav-link" href="/notifications"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
       </li>
 			{{/if}}
 
