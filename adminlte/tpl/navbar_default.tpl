@@ -26,34 +26,7 @@
 			</button>
 
       <li class="nav-item">
-        <a class="nav-link" data-bs-toggle="dropdown" href="/notifications"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-        <div class="section-title-wrapper clearfix">
-		{{if $notifications_available}}
-		<a href="#" class="btn btn-outline-secondary btn-sm float-end" onclick="markRead('notify'); setTimeout(function() { window.location.href=window.location.href; },1500); return false;">{{$notif_link_mark_seen}}</a>
-		{{/if}}
-		<h2>{{$notif_header}}</h2>
-	</div>
-	<div class="section-content-wrapper">
-		{{$notif_content}}
-	</div>
-
-          <span class="dropdown-item dropdown-header">{{$notifications}}15 Notifications</span>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item"> <i class="bi bi-envelope me-2"></i> 4 new messages
-            <span class="float-end text-secondary fs-7">3 mins</span> 
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item"> <i class="bi bi-people-fill me-2"></i> 8 friend requests
-            <span class="float-end text-secondary fs-7">12 hours</span> 
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item"> <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
-            <span class="float-end text-secondary fs-7">2 days</span> 
-          </a>
-          <div class="dropdown-divider"></div> 
-          <a href="#" class="dropdown-item dropdown-footer"> See All Notifications</a>
-        </div>        
+        <a class="nav-link" href="/notifications"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
       </li>
 			{{/if}}
 
