@@ -11,6 +11,7 @@
 <div class="app-wrapper">
 
       <?php if(x($page,'topnav')) echo $page['topnav']; ?>
+
       <?php if(x($page,'nav')) echo $page['nav']; ?>
 
    <!-- Content Wrapper. Contains page content -->
