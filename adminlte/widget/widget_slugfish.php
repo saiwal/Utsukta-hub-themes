@@ -1,8 +1,13 @@
 <?php
 
-function widget_slugfish() {
+namespace Zotlabs\Widget;
 
-  $temp = '<h2>some content</h2>';
-  return $temp;
 
+class Slugfish {
+
+    function widget($args) {
+      $temp = '<h2>some content</h2>';
+      return $temp;
+    }
 }
+
