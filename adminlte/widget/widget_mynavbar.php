@@ -7,7 +7,7 @@ use \Zotlabs\Lib\Config;
 require_once('include/security.php');
 require_once('include/menu.php');
 
-function widget_topnav($args)
+function widget_mynavbar($args)
 {
 
   /**
