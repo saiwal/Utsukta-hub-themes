@@ -4,8 +4,8 @@ use \Zotlabs\Lib\Apps;
 use \Zotlabs\Lib\Chatroom;
 use \Zotlabs\Lib\Config;
 
-require_once('include/security.php');
-require_once('include/menu.php');
+/*require_once('include/security.php');*/
+/*require_once('include/menu.php');*/
 
 function widget_slugfish($template = 'default') {
 
