@@ -23,6 +23,7 @@
           </div>
           <div class="offcanvas-body">
             <div class="container">
+              <?php if(x($page,'navbar')) echo $page['navbar']; ?>
               <?php if(x($page,'aside')) echo $page['aside']; ?>
             </div>
           </div>
