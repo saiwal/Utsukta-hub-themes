@@ -13,7 +13,7 @@ function widget_slugfish2($args) {
   return $temp;
 }
 
-function widget_slugfish($template = 'default') {
+function widget_slugfish($args) {
 
   /**
 	 *
