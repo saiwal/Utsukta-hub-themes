@@ -466,7 +466,7 @@ function widget_slugfish($args) {
 			];
 		}
 
-		App::$page['topnav'] .= replace_macros(get_markup_template('topnav.tpl'), [
+		App::$page['topnav'] .= replace_macros($tpl, [
 			'$notifications' => $notifications,
 			'$no_notifications' => t('Sorry, you have got no notifications at the moment'),
 			'$loading' => t('Loading'),
