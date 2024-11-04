@@ -1,6 +1,6 @@
 <nav class="app-header navbar navbar-expand bg-body border-0 sticky-top"> <!--begin::Container-->
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
-    <ul class="navbar-nav">
+   <ul class="navbar-nav">
       <li class="nav-item">
         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
       </li>
