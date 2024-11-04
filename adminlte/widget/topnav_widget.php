@@ -15,7 +15,7 @@ function nav($template = 'default') {
 	 *
 	 */
 
-	App::$page['nav'] = App::$page['nav'] ?? '';
+	App::$page['topnav'] = App::$page['topnav'] ?? '';
 	App::$page['htmlhead'] = App::$page['htmlhead'] ?? '';
 	App::$page['htmlhead'] .= '<script>$(document).ready(function() { $("#nav-search-text").search_autocomplete(\'' . z_root() . '/acl' . '\');});</script>';
 
