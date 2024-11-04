@@ -22,7 +22,7 @@
 
       {{if $localuser || $nav.pubs}}
       <li class="nav-item">
-        <a class="nav-link" href="/notifications"> <i id="notifications-btn-icon-1" class="bi bi-exclamation-circle"></a>
+        <a class="nav-link" href="/notifications"> <i class="bi bi-exclamation-circle"></a>
       </li>
 			{{/if}}
 
