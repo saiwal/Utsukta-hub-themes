@@ -22,7 +22,7 @@
       {{if $localuser || $nav.pubs}}
       <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
           <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
-          <script>
+<script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
 	var sse_type;
@@ -591,7 +591,7 @@
 			<span class="badge bg-secondary">{10}</span>
 		</a>
 	</div>
-	<div id="notifications" class="border border-top-0 rounded navbar-nav collapse">
+	<div id="notifications" class="border border-top-0 rounded navbar-nav row">
 		{{foreach $notifications as $notification}}
 		<div class="rounded-top rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
 			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
