@@ -7,7 +7,7 @@ use \Zotlabs\Lib\Config;
 require_once('include/security.php');
 require_once('include/menu.php');
 
-function topnav($template = 'default') {
+function topnav_widget($template = 'default') {
 
   /**
 	 *
