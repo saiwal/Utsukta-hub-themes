@@ -314,6 +314,6 @@ function widget_slugfish($args) {
                   $observer['xchan_photo_m'] ]);
                 unset($_SESSION['reload_avatar']); }
 
-
+              return App::$page['topnav'];
               call_hooks('page_header', App::$page['topnav']); }
 
