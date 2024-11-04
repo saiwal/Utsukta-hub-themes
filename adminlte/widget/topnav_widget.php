@@ -15,7 +15,7 @@ function nav($template = 'default') {
 	 *
 	 */
 
-	App::$page['topnav'] = App::$page['topnav'] ?? '';
+	App::$page['nav'] = App::$page['nav'] ?? '';
 	App::$page['htmlhead'] = App::$page['htmlhead'] ?? '';
 	App::$page['htmlhead'] .= '<script>$(document).ready(function() { $("#nav-search-text").search_autocomplete(\'' . z_root() . '/acl' . '\');});</script>';
 
@@ -74,14 +74,14 @@ function nav($template = 'default') {
 	$nav = [];
 
 	if (can_view_public_stream())
-		$topnav['pubs'] = true;
+		$nav['pubs'] = true;
 
 	/**
 	 * Display login or logout
 	 */
 
-	$topnav['usermenu']  = [];
-	$topnav['loginmenu'] = [];
+	$nav['usermenu']  = [];
+	$nav['loginmenu'] = [];
 	$userinfo         = [];
 
 	if ($observer) {
@@ -105,53 +105,53 @@ function nav($template = 'default') {
 	}
 
 	elseif (empty($_SESSION['authenticated'])) {
-		$topnav['remote_login'] = remote_login();
-		$topnav['loginmenu'][]  = ['rmagic', t('Remote authentication'), '', t('Click to authenticate to your home hub'), 'rmagic_nav_btn'];
+		$nav['remote_login'] = remote_login();
+		$nav['loginmenu'][]  = ['rmagic', t('Remote authentication'), '', t('Click to authenticate to your home hub'), 'rmagic_nav_btn'];
 	}
 
 	if (local_channel()) {
 
 		if (empty($_SESSION['delegate'])) {
-			$topnav['manage'] = ['manage', t('Channels'), "", t('Manage your channels'), 'manage_nav_btn'];
+			$nav['manage'] = ['manage', t('Channels'), "", t('Manage your channels'), 'manage_nav_btn'];
 		}
 
-		$topnav['settings'] = ['settings', t('Settings'), "", t('Account/Channel Settings'), 'settings_nav_btn'];
+		$nav['settings'] = ['settings', t('Settings'), "", t('Account/Channel Settings'), 'settings_nav_btn'];
 
 
 		if ($chans && count($chans) > 1)
-			$topnav['channels'] = $chans;
+			$nav['channels'] = $chans;
 
-		$topnav['logout'] = ['logout', t('Logout'), "", t('End this session'), 'logout_nav_btn'];
+		$nav['logout'] = ['logout', t('Logout'), "", t('End this session'), 'logout_nav_btn'];
 
 		// user menu
-		$topnav['usermenu'][] = ['profile/' . $channel['channel_address'], t('View Profile'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profile') ? 'active' : ''), t('Your profile page'), 'profile_nav_btn'];
+		$nav['usermenu'][] = ['profile/' . $channel['channel_address'], t('View Profile'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profile') ? 'active' : ''), t('Your profile page'), 'profile_nav_btn'];
 
 		if (feature_enabled(local_channel(), 'multi_profiles'))
-			$topnav['usermenu'][] = ['profiles', t('Edit Profiles'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profiles') ? 'active' : ''), t('Manage/Edit profiles'), 'profiles_nav_btn'];
+			$nav['usermenu'][] = ['profiles', t('Edit Profiles'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profiles') ? 'active' : ''), t('Manage/Edit profiles'), 'profiles_nav_btn'];
 		else
-			$topnav['usermenu'][] = ['profiles/' . $prof[0]['id'], t('Edit Profile'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profiles') ? 'active' : ''), t('Edit your profile'), 'profiles_nav_btn'];
+			$nav['usermenu'][] = ['profiles/' . $prof[0]['id'], t('Edit Profile'), ((isset(App::$nav_sel['raw_name']) && App::$nav_sel['raw_name'] == 'Profiles') ? 'active' : ''), t('Edit your profile'), 'profiles_nav_btn'];
 
 	}
 	else {
 		if (!get_account_id()) {
 			if (App::$module === 'channel') {
-				$topnav['login']       = login(true, 'modal_login', false, false);
-				$topnav['loginmenu'][] = ['login', t('Login'), '', t('Sign in'), ''];
+				$nav['login']       = login(true, 'modal_login', false, false);
+				$nav['loginmenu'][] = ['login', t('Login'), '', t('Sign in'), ''];
 			}
 			else {
-				$topnav['login']         = login(true, 'modal_login', false, false);
-				$topnav['loginmenu'][]   = ['login', t('Login'), '', t('Sign in'), 'login_nav_btn'];
+				$nav['login']         = login(true, 'modal_login', false, false);
+				$nav['loginmenu'][]   = ['login', t('Login'), '', t('Sign in'), 'login_nav_btn'];
 
 				App::$page['content'] .= replace_macros(get_markup_template('nav_login.tpl'),
 					[
-						'$topnav'     => $topnav,
+						'$nav'     => $nav,
 						'userinfo' => $userinfo
 					]
 				);
 			}
 		}
 		else
-			$topnav['alogout'] = ['logout', t('Logout'), "", t('End this session'), 'logout_nav_btn'];
+			$nav['alogout'] = ['logout', t('Logout'), "", t('End this session'), 'logout_nav_btn'];
 
 
 	}
@@ -168,7 +168,7 @@ function nav($template = 'default') {
 	$homelink = $scheme . '://' . $host;
 
 	if (!$is_owner) {
-		$topnav['rusermenu'] = [
+		$nav['rusermenu'] = [
 			$homelink,
 			t('Take me home'),
 			'logout',
@@ -177,7 +177,7 @@ function nav($template = 'default') {
 	}
 
 	if ((Config::Get('system', 'register_policy') == REGISTER_OPEN || Config::Get('system', 'register_policy') == REGISTER_APPROVE) && empty($_SESSION['authenticated'])) {
-		$topnav['register'] = ['register', t('Register'), "", t('Create an account'), 'register_nav_btn'];
+		$nav['register'] = ['register', t('Register'), "", t('Create an account'), 'register_nav_btn'];
 	}
 
 	// TODO: update help content for various modules
@@ -191,7 +191,7 @@ function nav($template = 'default') {
 			//point directly to /help if $context_help is empty - this can be removed once we have context help for all modules
 			$enable_context_help = (($context_help) ? true : false);
 		}
-		$topnav['help'] = [$help_url, t('Help'), "", t('Help and documentation'), 'help_nav_btn', $context_help, $enable_context_help];
+		$nav['help'] = [$help_url, t('Help'), "", t('Help and documentation'), 'help_nav_btn', $context_help, $enable_context_help];
 	}
 
 	switch (App::$module) {
@@ -205,13 +205,13 @@ function nav($template = 'default') {
 			$search_form_action = 'search';
 	}
 
-	$topnav['search'] = ['search', t('Search'), "", t('Search site @name, !forum, #tag, ?docs, content'), $search_form_action];
+	$nav['search'] = ['search', t('Search'), "", t('Search site @name, !forum, #tag, ?docs, content'), $search_form_action];
 
 	/**
 	 * Admin page
 	 */
 	if (is_site_admin()) {
-		$topnav['admin'] = ['admin/', t('Admin'), "", t('Site Setup and Configuration'), 'admin_nav_btn'];
+		$nav['admin'] = ['admin/', t('Admin'), "", t('Site Setup and Configuration'), 'admin_nav_btn'];
 	}
 
 	$theme_switch_icon = '';
@@ -219,9 +219,9 @@ function nav($template = 'default') {
 		$theme_switch_icon = ((App::$page['color_mode'] === 'dark') ? 'sun' : 'moon');
 	}
 
-	$x = ['topnav' => $topnav, 'usermenu' => $userinfo];
+	$x = ['nav' => $nav, 'usermenu' => $userinfo];
 
-	call_hooks('topnav', $x);
+	call_hooks('nav', $x);
 
 	$url          = '';
 	$settings_url = '';
@@ -314,10 +314,10 @@ function nav($template = 'default') {
 				$app['active'] = true;
 			}
 			if ($is_owner) {
-				$nav_apps[] = Apps::app_render($app, 'topnav');
+				$nav_apps[] = Apps::app_render($app, 'nav');
 			}
 			elseif (!isset($app['requires']) || (isset($app['requires']) && strpos($app['requires'], 'local_channel') === false)) {
-				$nav_apps[] = Apps::app_render($app, 'topnav');
+				$nav_apps[] = Apps::app_render($app, 'nav');
 			}
 		}
 	}
@@ -340,7 +340,7 @@ function nav($template = 'default') {
 		'$theme_switch_icon'  => $theme_switch_icon,
 		'$fulldocs'           => t('Help'),
 		'$sitelocation'       => $sitelocation,
-		'$topnav'                => $x['topnav'],
+		'$nav'                => $x['nav'],
 		'$banner'             => $banner,
 		'$emptynotifications' => t('Loading'),
 		'$userinfo'           => $x['usermenu'],
