@@ -38,7 +38,6 @@
           </a>
           <div class="dropdown-divider"></div> 
           <a href="#" class="dropdown-item dropdown-footer"> See All Notifications</a>
-        </div>
  <script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
@@ -652,7 +651,8 @@
 		{{/foreach}}
 	</div>
 </div>
-{{/if}}       
+{{/if}}         
+        </div>        
       </li>
 
     {{if $userinfo}}
