@@ -21,8 +21,12 @@
       </li>
 
       {{if $localuser || $nav.pubs}}
-      <li class="nav-item" id="notifications-btn-1">
-        <a class="nav-link" id="notifications-btn-icon-1" href="/notifications"> <i class="bi bi-exclamation-circle"></a>
+			<button id="notifications-btn-1" type="button" class="navbar-toggler border-0 notifications-btn">
+				<i id="notifications-btn-icon-1" class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i>
+			</button>
+
+      <li class="nav-item">
+        <a class="nav-link" id="notifications-btn-1" href="/notifications"> <i id="notifications-btn-icon-1" class="bi bi-exclamation-circle"></a>
       </li>
 			{{/if}}
 
