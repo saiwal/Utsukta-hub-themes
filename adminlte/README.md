@@ -15,16 +15,17 @@
   - [x] Fix contact suggest on tagging user.
   - [x] Implement sidebar overlay scrollbar.
   - [x] Debug Offcanvas display
+  - [ ] Add notification dropdown to the navbar.
 - [ ] Different layout options as schemas.
 - [ ] Implement a custom dashboard (aka HQ)
   - [ ] Individual widgets:
     - [ ] Quick inbox with new posts.
     - [ ] DMs
     - [ ] Events
-    - [ ] Webpage overview (If active).
-    - [ ] Gallery overview (if present).
-    - [ ] Wiki overview (if active).
-    - [ ] Recent files list.
+    - [x] Webpage overview (If active).
+    - [x] Gallery overview (if present).
+    - [x] Wiki overview (if active).
+    - [x] Recent files list.
 - [ ] Implement Mailbox module (Network)
   - [ ] Inbox is list of posts (read, unread, starred, events, polls, etc.)
     - [ ] Sort options
