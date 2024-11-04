@@ -21,7 +21,7 @@
       </li>
 
       {{if $localuser || $nav.pubs}}
-      <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning">15</span> </a>
+      <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
           <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
               <div class="dropdown-divider"></div> <a href="/notifications" class="dropdown-item dropdown-footer">
                   See All Notifications
