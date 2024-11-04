@@ -23,7 +23,7 @@
       <li class="nav-item dropdown">
         <a class="nav-link" data-bs-toggle="dropdown" href="#"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info">15</span> </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-          <span class="dropdown-item dropdown-header">15 Notifications</span>
+          <span class="dropdown-item dropdown-header">{{$notifications}}15 Notifications</span>
           <div class="dropdown-divider"></div>
           <a href="#" class="dropdown-item"> <i class="bi bi-envelope me-2"></i> 4 new messages
             <span class="float-end text-secondary fs-7">3 mins</span> 
