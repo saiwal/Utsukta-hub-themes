@@ -6,18 +6,11 @@ use \Zotlabs\Lib\Config;
 require_once('include/security.php');
 require_once('include/menu.php');
 
-
-function widget_slugfish2($args) {
-
-  $temp = '<h3>some content</h3>';
-  return $temp;
-}
-
 function widget_slugfish($args) {
 
   /**
 	 *
-   * Build page header and site navigation bars
+   * Build Top navbar
 	 *
 	 */
 
@@ -164,8 +157,8 @@ function widget_slugfish($args) {
           t('Register'), "", t('Create an account'), 'register_nav_btn']; }
 
       // TODO: update help content for various modules
-      if (false /* !Config::Get('system', 'hide_help') */) { $help_url
-        = z_root() . '/help?f=&cmd=' . App::$cmd; $context_help        = '';
+      if (false /* !Config::Get('system', 'hide_help') */) { $help_url =
+        z_root() . '/help?f=&cmd=' . App::$cmd; $context_help        = '';
       $enable_context_help = ((intval(Config::Get('system',
         'enable_context_help')) === 1 || Config::Get('system',
         'enable_context_help') === false) ? true : false); if
@@ -275,12 +268,12 @@ function widget_slugfish($args) {
 
               if (!$tpl) { $tpl = get_markup_template('topnav.tpl'); }
 
-              App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl'
-                => z_root(), '$color_mode'         => App::$page['color_mode']
-                ?? '', '$navbar_color_mode'  => App::$page['navbar_color_mode']
-                ?? '', '$theme_switch_icon'  => $theme_switch_icon, '$fulldocs'
-                => t('Help'), '$sitelocation'       => $sitelocation, '$nav'
-                => $x['nav'], '$banner'             => $banner,
+              App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl' =>
+                z_root(), '$color_mode'         => App::$page['color_mode'] ??
+                '', '$navbar_color_mode'  => App::$page['navbar_color_mode'] ??
+                '', '$theme_switch_icon'  => $theme_switch_icon, '$fulldocs' =>
+                t('Help'), '$sitelocation'       => $sitelocation, '$nav' =>
+                $x['nav'], '$banner'             => $banner,
                 '$emptynotifications' => t('Loading'), '$userinfo'           =>
                 $x['usermenu'], '$localuser'          => local_channel(),
                 '$is_owner'           => $is_owner, '$sel'                =>
@@ -289,10 +282,10 @@ function widget_slugfish($args) {
                   '$nav_apps'           => $nav_apps, '$navbar_apps'        =>
                   $navbar_apps, '$channel_menu'       =>
                   get_pconfig(App::$profile_uid, 'system', 'channel_menu',
-                    Config::Get('system', 'channel_menu')), '$channel_thumb'
-                    => ((App::$profile) ? App::$profile['thumb'] : ''),
-                    '$channel_apps'       => $channel_apps, '$addapps'
-                    => t('Apps'), '$channelapps'        => t('Channel Apps'),
+                    Config::Get('system', 'channel_menu')), '$channel_thumb' =>
+                    ((App::$profile) ? App::$profile['thumb'] : ''),
+                    '$channel_apps'       => $channel_apps, '$addapps' =>
+                    t('Apps'), '$channelapps'        => t('Channel Apps'),
                     '$sysapps'            => t('System Apps'), '$pinned_apps'
                     => t('Pinned Apps'), '$featured_apps'      => t('Featured
                     Apps'), '$url'                => (($url) ? $url : z_root()
@@ -314,6 +307,179 @@ function widget_slugfish($args) {
                   $observer['xchan_photo_m'] ]);
                 unset($_SESSION['reload_avatar']); }
 
-              return App::$page['topnav'];
-              call_hooks('page_header', App::$page['topnav']); }
+              // notifications
+
+		$channel = \App::get_channel();
+		$notifications = [];
+
+		if(local_channel()) {
+			$notifications[] = [
+				'type' => 'network',
+				'icon' => 'grid-3x3',
+				'severity' => 'secondary',
+				'label' => t('Network'),
+				'title' => t('New network activity notifications'),
+				'viewall' => [
+					'url' => 'network',
+					'label' => t('Network stream')
+				],
+				'markall' => [
+					'label' => t('Mark all notifications read')
+				],
+				'filter' => [
+					'posts_label' => t('Show new posts only'),
+					'name_label' => t('Filter by name or address')
+				]
+			];
+
+
+			$notifications[] = [
+				'type' => 'home',
+				'icon' => 'house',
+				'severity' => 'danger',
+				'label' => t('Home'),
+				'title' => t('New home activity notifications'),
+				'viewall' => [
+					'url' => 'channel/' . $channel['channel_address'],
+					'label' => t('Home stream')
+				],
+				'markall' => [
+					'label' => t('Mark all notifications seen')
+				],
+				'filter' => [
+					'posts_label' => t('Show new posts only'),
+					'name_label' => t('Filter by name or address')
+				]
+			];
+
+			$notifications[] = [
+				'type' => 'dm',
+				'icon' => 'envelope',
+				'severity' => 'danger',
+				'label' => t('Direct Messages'),
+				'title' => t('New direct messages notifications'),
+				'viewall' => [
+					'url' => 'network/?dm=1',
+					'label' => t('Direct messages stream')
+				],
+				'markall' => [
+					'label' => t('Mark all notifications read')
+				],
+				'filter' => [
+					'posts_label' => t('Show new posts only'),
+					'name_label' => t('Filter by name or address')
+				]
+			];
+
+			$notifications[] = [
+				'type' => 'all_events',
+				'icon' => 'calendar-date',
+				'severity' => 'secondary',
+				'label' => t('Events'),
+				'title' => t('New events notifications'),
+				'viewall' => [
+					'url' => 'cdav/calendar',
+					'label' => t('View events')
+				],
+				'markall' => [
+					'label' => t('Mark all events seen')
+				]
+			];
+
+			$notifications[] = [
+				'type' => 'intros',
+				'icon' => 'people',
+				'severity' => 'danger',
+				'label' => t('New Connections'),
+				'title' => t('New connections notifications'),
+				'viewall' => [
+					'url' => 'connections',
+					'label' => t('View all connections')
+				]
+			];
+
+			$notifications[] = [
+				'type' => 'files',
+				'icon' => 'folder',
+				'severity' => 'danger',
+				'label' => t('Files'),
+				'title' => t('New files notifications'),
+			];
+
+			$notifications[] = [
+				'type' => 'notify',
+				'icon' => 'exclamation-circle',
+				'severity' => 'danger',
+				'label' => t('Notices'),
+				'title' => t('Notices'),
+				'viewall' => [
+					'url' => 'notifications/system',
+					'label' => t('View all notices')
+				],
+				'markall' => [
+					'label' => t('Mark all notices seen')
+				]
+			];
+
+			$notifications[] = [
+				'type' => 'forums',
+				'icon' => 'chat-quote',
+				'severity' => 'secondary',
+				'label' => t('Forums'),
+				'title' => t('Forums'),
+				'filter' => [
+					'name_label' => t('Filter by name or address')
+				]
+			];
+		}
+
+		if(local_channel() && is_site_admin()) {
+			$notifications[] = [
+				'type' => 'register',
+				'icon' => 'person-exclamation',
+				'severity' => 'danger',
+				'label' => t('Registrations'),
+				'title' => t('New registrations notifications'),
+			];
+		}
+
+		if(can_view_public_stream()) {
+			$notifications[] = [
+				'type' => 'pubs',
+				'icon' => 'globe',
+				'severity' => 'secondary',
+				'label' => t('Public Stream'),
+				'title' => t('New public stream notifications'),
+				'viewall' => [
+					'url' => 'pubstream',
+					'label' => t('Public stream')
+				],
+				/*
+				'markall' => [
+					'label' => t('Mark all notifications seen')
+				],
+				*/
+				'filter' => [
+					'posts_label' => t('Show new posts only'),
+					'name_label' => t('Filter by name or address')
+				]
+			];
+		}
+
+		App::$page['topnav'] .= replace_macros(get_markup_template('notifications_widget.tpl'), [
+			'$notifications' => $notifications,
+			'$no_notifications' => t('Sorry, you have got no notifications at the moment'),
+			'$loading' => t('Loading'),
+			'$sys_only' => empty($arr['sys_only']) ? 0 : 1
+
+		]);
+
+		return $o;
+
+
+
+              return App::$page['topnav']; 
+              call_hooks('page_header', App::$page['topnav']); 
+
+}
 
