@@ -22,7 +22,7 @@
 
       {{if $localuser || $nav.pubs}}
       <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning">15</span> </a>
-          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
+          <div id="notify_navicon" class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
  <script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
