@@ -6,7 +6,7 @@ use \Zotlabs\Lib\Config;
 require_once('include/security.php');
 require_once('include/menu.php');
 
-function widget_slugfish($args) {
+function widget_mynavbar($args) {
 
   /**
 	 *
