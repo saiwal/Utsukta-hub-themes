@@ -474,7 +474,6 @@ function widget_slugfish($args) {
 
 		]);
 
-		return $o;
 
 
 
