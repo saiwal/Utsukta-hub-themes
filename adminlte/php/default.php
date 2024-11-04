@@ -10,11 +10,11 @@
 <body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-collapse">
 <div class="app-wrapper">
 
+  <?php if(x($page,'nav')) echo $page['nav']; ?>
    <!-- Content Wrapper. Contains page content -->
   <main class="app-main px-3 py-3">
     <div class="row">
 
-  <?php if(x($page,'nav')) echo $page['nav']; ?>
       <div class="col-md-4 d-md-block col-lg-4 col-xl-3">
         <div class="offcanvas-md offcanvas-start" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
           <div class="offcanvas-header">
