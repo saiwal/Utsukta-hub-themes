@@ -22,8 +22,202 @@
 
       {{if $localuser || $nav.pubs}}
       <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning">15</span> </a>
-          <div id="notify_navicon" class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
- <script>
+          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
+              <div class="dropdown-divider"></div> <a href="/notifications" class="dropdown-item dropdown-footer">
+                  See All Notifications
+              </a>
+          </div>
+      </li>
+			{{/if}}
+
+    {{if $userinfo}}
+    <!--begin::User Menu Dropdown-->
+    <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
+      <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
+				{{if $is_owner}}
+        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
+          <p>
+            {{$userinfo.name}}
+          </p>
+        </li> <!--end::User Image--> <!--begin::Menu Body-->
+        <li class="user-body p-0">
+          <!--begin::Profile Row-->
+          <div class="row">
+            {{foreach $nav.usermenu as $usermenu}}
+            <div class="col-6"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+            {{/foreach}}
+            {{if $nav.group}}
+            <div class="col-6"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
+            </div>
+            {{/if}}
+          </div> <!--end::Row-->
+        </li>
+        {{if $nav.manage}}
+        <li class="user-body p-0">
+          <!--begin::Channels Row-->
+          <div class="row">
+            <div class="col-6"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
+            </div>
+          </div> <!--end::Row-->
+        </li>
+        {{/if}}
+        {{if $nav.channels}}
+        <li class="user-body p-0">
+          <!--begin::Channel list Row-->
+          <div class="row">
+            {{foreach $nav.channels as $chan}}
+            <div class="col-12"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
+              <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} text-disabled{{/if}}"></i> {{$chan.channel_name}}
+            </a></div>
+            {{/foreach}}
+        </li>
+        {{/if}}
+        {{if $nav.settings}}
+        <li class="user-body p-0">
+        <div class="row">
+          <div class="col-6">
+   			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
+          </div>
+          {{if $nav.admin}}
+  	  			<div class="col-6">
+			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
+            </div>
+					{{/if}}
+          </div>
+        </li>
+				{{/if}}
+        <!--end::Menu Body-->
+        <!--begin::Menu Footer-->
+        <li class="user-footer"> 
+          <div class="row">
+          {{if $nav.profiles}}
+            <div class="col-6">
+              <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
+            </div>
+          {{/if}}
+          {{if $nav.logout}}
+            <div class="col-6">
+            <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
+            </div>
+          {{/if}}
+          </div> <!--end::Row-->
+        </li> <!--end::Menu Footer-->
+        {{/if}}
+				{{if ! $is_owner}}
+        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
+          <p>
+            {{$userinfo.name}}
+          </p>
+        </li> <!--end::User Image--> <!--begin::Menu Body-->
+        <!--begin::Menu Footer-->
+        <li class="user-footer"> 
+          <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
+          <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
+        </li> <!--end::Menu Footer-->
+        {{/if}}
+      </ul>
+    </li>
+    {{/if}}
+    <!--end::User Menu Dropdown-->
+    {{if $nav.login && !$userinfo}}
+      {{if $nav.loginmenu.1.4}}
+      <li class="nav-item mt-1 ps-2 pe-1">
+        <a class="btn btn-info btn-sm" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal" data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
+      </li>
+      {{else}}
+      <li class="nav-item mt-1 px-1">
+        <a class="btn btn-primary btn-sm" href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
+      </li>
+      {{/if}}
+      {{if $nav.register}}
+      <li class="nav-item mt-1 px-1">
+        <a class="btn btn-success btn-sm" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
+      </li>
+      {{/if}}
+    {{/if}}
+    </ul> <!--end::End Navbar Links-->
+  </div> <!--end::Container-->
+</nav>
+
+<!--begin::Sidebar-->
+<aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+  <!--begin::Sidebar Brand-->
+  <div class="sidebar-brand">
+    <!--begin::Brand Link-->
+    <a href="/" class="brand-link">
+      <!--begin::Brand Image-->
+<!--      <img
+        src="./assets/img/AdminLTELogo.png"
+        alt="U"
+        class="brand-image opacity-75 shadow"
+      /> -->
+      <!--end::Brand Image-->
+      <!--begin::Brand Text-->
+      <span class="brand-text fw-light">{{$banner}}</span>
+      <!--end::Brand Text-->
+    </a>
+    <!--end::Brand Link-->
+  </div>
+  <!--end::Sidebar Brand-->
+  <!--begin::Sidebar Wrapper-->
+  <div class="sidebar-wrapper">
+    <nav class="mt-2">
+      <!--begin::Sidebar Menu-->
+      <ul
+        class="nav sidebar-menu flex-column"
+        data-lte-toggle="treeview"
+        role="menu"
+        data-accordion="false"
+      >
+      <li class="nav-header">
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+          <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto">
+          <label class="btn btn-sm btn-outline-secondary" for="btnradio1"><i class="bi bi-circle-half me-2"></i>Auto</label>
+
+          <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" data-bs-theme-value="dark">
+          <label class="btn btn-sm btn-outline-secondary" for="btnradio2"><i class="bi bi-moon-fill me-2"></i>Dark</label>
+
+          <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" data-bs-theme-value="light">
+          <label class="btn btn-sm btn-outline-secondary" for="btnradio3"><i class="bi bi-sun-fill me-2"></i>Light</label>
+        </div>        
+      </li>
+
+        <!-- Pinned user apps -->
+        {{if $navbar_apps.0}}
+        <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
+        {{foreach $navbar_apps as $navbar_app}}
+          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+        {{/foreach}}
+        {{/if}}
+
+        <!-- Channel apps; needs fixing -->
+        {{if $channel_apps.0}}
+        <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
+        {{foreach $channel_apps as $channel_app}}
+          {{$channel_app}} <br>
+        {{/foreach}}
+        {{/if}}
+
+        {{if $is_owner}}
+        <!-- Starred user apps -->
+        <li class="nav-item"> 
+        <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
+          <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+        </a>
+        <ul class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+        {{foreach $nav_apps as $nav_app}}
+          {{$nav_app}}
+        {{/foreach}}
+        </ul>
+        </li>        
+        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i><p>{{$addapps}}</p></a></li>
+        {{else}}
+        <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
+        <!-- System apps -->
+        {{foreach $nav_apps as $nav_app}}
+          {{$nav_app}}
+        {{/foreach}}
+        {{/if}} <script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
 	var sse_type;
@@ -37,6 +231,30 @@
 		if ($('#notifications_wrapper').length) {
 			notifications_parent = $('#notifications_wrapper')[0].parentElement.id;
 		}
+
+		$('.notifications-btn').click(function() {
+			$('#notifications_wrapper').removeClass('d-none');
+
+			if($('#notifications_wrapper').hasClass('fs')) {
+				$('#notifications_wrapper').prependTo('#' + notifications_parent);
+				$('#notifications_wrapper').addClass('d-none');
+
+			}
+			else {
+				$('#notifications_wrapper').prependTo('main');
+			}
+
+			$('#notifications_wrapper').toggleClass('fs');
+			if($('#navbar-collapse-2').hasClass('show')){
+				$('#navbar-collapse-2').removeClass('show');
+			}
+		});
+
+		$(document).on('click', '.notification', function() {
+			if($('#notifications_wrapper').hasClass('fs')) {
+				$('#notifications_wrapper').prependTo('#' + notifications_parent).removeClass('fs').addClass('d-none');
+			}
+		});
 
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
@@ -540,7 +758,7 @@
 	}
 </script>
 
- {{if !$sys_only}}
+{{if !$sys_only}}
 <div id="notifications_wrapper" class="mb-4">
 	<div id="no_notifications" class="d-xl-none">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
@@ -612,203 +830,7 @@
 		{{/foreach}}
 	</div>
 </div>
-{{/if}}        
-
-              <div class="dropdown-divider"></div> <a href="/notifications" class="dropdown-item dropdown-footer">
-                  See All Notifications
-              </a>
-          </div>
-      </li>
-			{{/if}}
-
-    {{if $userinfo}}
-    <!--begin::User Menu Dropdown-->
-    <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"> <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
-      <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
-				{{if $is_owner}}
-        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
-          <p>
-            {{$userinfo.name}}
-          </p>
-        </li> <!--end::User Image--> <!--begin::Menu Body-->
-        <li class="user-body p-0">
-          <!--begin::Profile Row-->
-          <div class="row">
-            {{foreach $nav.usermenu as $usermenu}}
-            <div class="col-6"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
-            {{/foreach}}
-            {{if $nav.group}}
-            <div class="col-6"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
-            </div>
-            {{/if}}
-          </div> <!--end::Row-->
-        </li>
-        {{if $nav.manage}}
-        <li class="user-body p-0">
-          <!--begin::Channels Row-->
-          <div class="row">
-            <div class="col-6"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
-            </div>
-          </div> <!--end::Row-->
-        </li>
-        {{/if}}
-        {{if $nav.channels}}
-        <li class="user-body p-0">
-          <!--begin::Channel list Row-->
-          <div class="row">
-            {{foreach $nav.channels as $chan}}
-            <div class="col-12"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
-              <i class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} text-disabled{{/if}}"></i> {{$chan.channel_name}}
-            </a></div>
-            {{/foreach}}
-        </li>
-        {{/if}}
-        {{if $nav.settings}}
-        <li class="user-body p-0">
-        <div class="row">
-          <div class="col-6">
-   			    <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem" id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
-          </div>
-          {{if $nav.admin}}
-  	  			<div class="col-6">
-			    		<a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem" id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
-            </div>
-					{{/if}}
-          </div>
-        </li>
-				{{/if}}
-        <!--end::Menu Body-->
-        <!--begin::Menu Footer-->
-        <li class="user-footer"> 
-          <div class="row">
-          {{if $nav.profiles}}
-            <div class="col-6">
-              <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a> 
-            </div>
-          {{/if}}
-          {{if $nav.logout}}
-            <div class="col-6">
-            <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
-            </div>
-          {{/if}}
-          </div> <!--end::Row-->
-        </li> <!--end::Menu Footer-->
-        {{/if}}
-				{{if ! $is_owner}}
-        <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow" alt="User Image">
-          <p>
-            {{$userinfo.name}}
-          </p>
-        </li> <!--end::User Image--> <!--begin::Menu Body-->
-        <!--begin::Menu Footer-->
-        <li class="user-footer"> 
-          <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a> 
-          <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
-        </li> <!--end::Menu Footer-->
-        {{/if}}
-      </ul>
-    </li>
-    {{/if}}
-    <!--end::User Menu Dropdown-->
-    {{if $nav.login && !$userinfo}}
-      {{if $nav.loginmenu.1.4}}
-      <li class="nav-item mt-1 ps-2 pe-1">
-        <a class="btn btn-info btn-sm" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal" data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
-      </li>
-      {{else}}
-      <li class="nav-item mt-1 px-1">
-        <a class="btn btn-primary btn-sm" href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
-      </li>
-      {{/if}}
-      {{if $nav.register}}
-      <li class="nav-item mt-1 px-1">
-        <a class="btn btn-success btn-sm" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
-      </li>
-      {{/if}}
-    {{/if}}
-    </ul> <!--end::End Navbar Links-->
-  </div> <!--end::Container-->
-</nav>
-
-<!--begin::Sidebar-->
-<aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-  <!--begin::Sidebar Brand-->
-  <div class="sidebar-brand">
-    <!--begin::Brand Link-->
-    <a href="/" class="brand-link">
-      <!--begin::Brand Image-->
-<!--      <img
-        src="./assets/img/AdminLTELogo.png"
-        alt="U"
-        class="brand-image opacity-75 shadow"
-      /> -->
-      <!--end::Brand Image-->
-      <!--begin::Brand Text-->
-      <span class="brand-text fw-light">{{$banner}}</span>
-      <!--end::Brand Text-->
-    </a>
-    <!--end::Brand Link-->
-  </div>
-  <!--end::Sidebar Brand-->
-  <!--begin::Sidebar Wrapper-->
-  <div class="sidebar-wrapper">
-    <nav class="mt-2">
-      <!--begin::Sidebar Menu-->
-      <ul
-        class="nav sidebar-menu flex-column"
-        data-lte-toggle="treeview"
-        role="menu"
-        data-accordion="false"
-      >
-      <li class="nav-header">
-        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-          <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked data-bs-theme-value="auto">
-          <label class="btn btn-sm btn-outline-secondary" for="btnradio1"><i class="bi bi-circle-half me-2"></i>Auto</label>
-
-          <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" data-bs-theme-value="dark">
-          <label class="btn btn-sm btn-outline-secondary" for="btnradio2"><i class="bi bi-moon-fill me-2"></i>Dark</label>
-
-          <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" data-bs-theme-value="light">
-          <label class="btn btn-sm btn-outline-secondary" for="btnradio3"><i class="bi bi-sun-fill me-2"></i>Light</label>
-        </div>        
-      </li>
-
-        <!-- Pinned user apps -->
-        {{if $navbar_apps.0}}
-        <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
-        {{foreach $navbar_apps as $navbar_app}}
-          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
-        {{/foreach}}
-        {{/if}}
-
-        <!-- Channel apps; needs fixing -->
-        {{if $channel_apps.0}}
-        <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
-        {{foreach $channel_apps as $channel_app}}
-          {{$channel_app}} <br>
-        {{/foreach}}
-        {{/if}}
-
-        {{if $is_owner}}
-        <!-- Starred user apps -->
-        <li class="nav-item"> 
-        <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
-          <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
-        </a>
-        <ul class="nav nav-treeview" style="display: none; box-sizing: border-box;">
-        {{foreach $nav_apps as $nav_app}}
-          {{$nav_app}}
-        {{/foreach}}
-        </ul>
-        </li>        
-        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i><p>{{$addapps}}</p></a></li>
-        {{else}}
-        <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
-        <!-- System apps -->
-        {{foreach $nav_apps as $nav_app}}
-          {{$nav_app}}
-        {{/foreach}}
-        {{/if}} 
+{{/if}}
       </ul>
       <!--end::Sidebar Menu-->
     </nav>
