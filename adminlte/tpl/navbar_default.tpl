@@ -22,7 +22,7 @@
 
       {{if $localuser || $nav.pubs}}
       <li class="nav-item">
-        <a class="nav-link" href="/notifications"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
+        <a class="nav-link" id="notifications-btn-1" href="/notifications"> <i id="notifications-btn-icon-1" class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-info"></span> </a>
       </li>
 			{{/if}}
 
