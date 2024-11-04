@@ -1,9 +1,9 @@
 <?php /** @file */
 
-use \Zotlabs\Lib\Apps;
-use \Zotlabs\Lib\Chatroom;
-use \Zotlabs\Lib\Config;
-
+/*use \Zotlabs\Lib\Apps;*/
+/*use \Zotlabs\Lib\Chatroom;*/
+/*use \Zotlabs\Lib\Config;*/
+/**/
 /*require_once('include/security.php');*/
 /*require_once('include/menu.php');*/
 
