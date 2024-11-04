@@ -475,10 +475,8 @@ function widget_slugfish($args) {
 		]);
 
 
-
-
-              /*return App::$page['topnav']; */
-              call_hooks('page_header', App::$page['topnav']); 
+              return App::$page['topnav']; 
+              /*call_hooks('page_header', App::$page['topnav']); */
 
 }
 
