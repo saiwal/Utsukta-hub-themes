@@ -608,10 +608,6 @@
 	</div>
 </div>
 {{/if}}
-              <div class="dropdown-divider"></div> <a href="/notifications" class="dropdown-item dropdown-footer">
-                  See All Notifications
-              </a>
-          </div>
       </li>
 			{{/if}}
 
