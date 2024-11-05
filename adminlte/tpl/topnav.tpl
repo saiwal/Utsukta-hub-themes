@@ -20,6 +20,8 @@
       </li>
 
       {{if $localuser || $nav.pubs}}
+      <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
+          <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
 <script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
@@ -563,10 +565,6 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="ms-3 me-3 small">
-  <li class="nav-item dropdown">
-  <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
-  <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
-
 	<div id="no_notifications" class="d-xl-none">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 	</div>
@@ -636,9 +634,9 @@
 		</div>
 		{{/foreach}}
 	</div>
-  </li>
-  </div>  
+</div>
 {{/if}}
+      </li>
 			{{/if}}
 
     {{if $userinfo}}
