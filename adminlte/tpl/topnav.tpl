@@ -32,7 +32,7 @@
 	var sse_sys_only = {{$sys_only}};
 
 	$(document).ready(function() {
-		let notifications_parent;
+		
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
 				// notifications with multiple tabs open will not work very well in this scenario
