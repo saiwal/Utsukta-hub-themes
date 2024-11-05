@@ -563,9 +563,9 @@
 			<span class="badge bg-secondary">{10}</span>
 		</a>
 	</div>
-	<div id="notifications" class="navbar-nav row">
+	<div id="notifications" class="navbar-nav row mb-0">
 		{{foreach $notifications as $notification}}
-		<div class="border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
+		<div class="list-group list-group-flush collapse {{$notification.type}}-button">
 			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
 				<div>
 					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
