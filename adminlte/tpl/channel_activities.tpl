@@ -15,7 +15,7 @@
                 <td><a href="{{$i.url}}" class="text-decoration-none">{{$i.title}}</a></td>
                 {{/if}}
                 <td><a href="{{$i.url}}" class="text-decoration-none">{{$i.summary}}</a></td>
-				        <td class="card-footer text-muted autotime" title="{{$i.footer}}">{{$i.footer}}</td>
+				        <td class="text-muted autotime" title="{{$i.footer}}">{{$i.footer}}</td>
             </tr>
             {{/foreach}}
         </tbody>
