@@ -20,7 +20,7 @@
       </li>
 
       {{if $localuser || $nav.pubs}}
-      <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
+      <li class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" id="notifications-btn" href="#" aria-expanded="true"> <i class="bi bi-bell-fill"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
           <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
 <script>
 	var sse_bs_active = false;
@@ -32,7 +32,35 @@
 	var sse_sys_only = {{$sys_only}};
 
 	$(document).ready(function() {
-		
+		let notifications_parent;
+		if ($('#notifications_wrapper').length) {
+			notifications_parent = $('#notifications_wrapper')[0].parentElement.id;
+		}
+
+		$('.notifications-btn').click(function() {
+			$('#notifications_wrapper').removeClass('d-none');
+
+			if($('#notifications_wrapper').hasClass('fs')) {
+				$('#notifications_wrapper').prependTo('#' + notifications_parent);
+				$('#notifications_wrapper').addClass('d-none');
+
+			}
+			else {
+				$('#notifications_wrapper').prependTo('main');
+			}
+
+			$('#notifications_wrapper').toggleClass('fs');
+			if($('#navbar-collapse-2').hasClass('show')){
+				$('#navbar-collapse-2').removeClass('show');
+			}
+		});
+
+		$(document).on('click', '.notification', function() {
+			if($('#notifications_wrapper').hasClass('fs')) {
+				$('#notifications_wrapper').prependTo('#' + notifications_parent).removeClass('fs').addClass('d-none');
+			}
+		});
+
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
 				// notifications with multiple tabs open will not work very well in this scenario
@@ -563,9 +591,9 @@
 			<span class="badge bg-secondary">{10}</span>
 		</a>
 	</div>
-	<div id="notifications" class="navbar-nav row mb-0">
+	<div id="notifications" class="navbar-nav row">
 		{{foreach $notifications as $notification}}
-		<div class="border border-top-0 border-start-0 border-end-0 list-group list-group-flush collapse {{$notification.type}}-button">
+		<div class="border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
 			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
 				<div>
 					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
@@ -574,7 +602,7 @@
 				<span class="badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
 			</a>
 		</div>
-		<div id="nav-{{$notification.type}}-sub" class="list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
+		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
 			{{if $notification.viewall}}
 			<a class="list-group-item list-group-item-action text-decoration-none" id="nav-{{$notification.type}}-see-all" href="{{$notification.viewall.url}}">
 				<i class="bi bi-box-arrow-up-right generic-icons-nav"></i> {{$notification.viewall.label}}
@@ -608,6 +636,10 @@
 	</div>
 </div>
 {{/if}}
+              <div class="dropdown-divider"></div> <a href="/notifications" class="dropdown-item dropdown-footer">
+                  See All Notifications
+              </a>
+          </div>
       </li>
 			{{/if}}
 
