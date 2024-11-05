@@ -33,34 +33,6 @@
 
 	$(document).ready(function() {
 		let notifications_parent;
-		if ($('#notifications_wrapper').length) {
-			notifications_parent = $('#notifications_wrapper')[0].parentElement.id;
-		}
-
-		$('.notifications-btn').click(function() {
-			$('#notifications_wrapper').removeClass('d-none');
-
-			if($('#notifications_wrapper').hasClass('fs')) {
-				$('#notifications_wrapper').prependTo('#' + notifications_parent);
-				$('#notifications_wrapper').addClass('d-none');
-
-			}
-			else {
-				$('#notifications_wrapper').prependTo('main');
-			}
-
-			$('#notifications_wrapper').toggleClass('fs');
-			if($('#navbar-collapse-2').hasClass('show')){
-				$('#navbar-collapse-2').removeClass('show');
-			}
-		});
-
-		$(document).on('click', '.notification', function() {
-			if($('#notifications_wrapper').hasClass('fs')) {
-				$('#notifications_wrapper').prependTo('#' + notifications_parent).removeClass('fs').addClass('d-none');
-			}
-		});
-
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
 				// notifications with multiple tabs open will not work very well in this scenario
