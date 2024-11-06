@@ -542,17 +542,8 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="ms-3 me-3 small">
-  <div class="border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse">
-			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
-				<div>
-					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
-					{{$notification.label}}
-				</div>
-				<span class="badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
-			</a>
-	</div>
-	<div id="no_notifications" class="navbar-nav row mb-0">
-		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
+  <div class="border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush">
+    <p id="no_notification">{{$no_notifications}} </p>
 	</div>
 	<div id="nav-notifications-template" rel="template" class="d-none">
 		<a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
