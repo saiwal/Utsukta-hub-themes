@@ -542,7 +542,7 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="ms-3 me-3 small">
-	<div id="no_notifications" class="d-xl-none">
+	<div id="no_notifications" class="navbar-nav row mb-0">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 	</div>
 	<div id="nav-notifications-template" rel="template" class="d-none">
