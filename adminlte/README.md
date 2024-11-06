@@ -15,7 +15,7 @@
   - [x] Fix contact suggest on tagging user.
   - [x] Implement sidebar overlay scrollbar.
   - [x] Debug Offcanvas display
-  - [ ] Add notification dropdown to the navbar.
+  - [x] Add notification dropdown to the navbar.
 - [ ] Different layout options as schemas.
 - [ ] Implement a custom dashboard (aka HQ)
   - [ ] Individual widgets:
