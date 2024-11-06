@@ -494,6 +494,7 @@
 		});
 
 		if(primary_available) {
+       console.log("primary available")
 			$('.notifications-btn-icon').removeClass('bi-bell');
 			$('.notifications-btn-icon').addClass('bi-bell-fill');
 		}
