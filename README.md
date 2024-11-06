@@ -14,8 +14,3 @@ Based on [AdminLTE](https://adminlte.io/)
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
 
-## Picard
-Based on [pi-hole-star-trek-picard](https://github.com/MichalSvatos/pi-hole-star-trek-picard)
-
-**Demo available [here](https://hub.utsukta.org/channel/picardtheme)**
-
