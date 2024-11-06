@@ -20,7 +20,7 @@
       </li>
 
       {{if $localuser || $nav.pubs}}
-      <li id="notifications-btn" class="nav-item dropdown"> <a class="nav-link show" data-bs-toggle="dropdown" href="#" aria-expanded="false" data-bs-auto-close="outside"> <i id="notifications-btn-icon" class="bi bi-bell"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
+      <li id="notifications-btn" class="nav-item dropdown"> <a class="nav-link" data-bs-toggle="dropdown" href="#" aria-expanded="false" data-bs-auto-close="outside"> <i id="notifications-btn-icon" class="bi bi-bell"></i> <span class="navbar-badge badge text-bg-warning"></span> </a>
           <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static"> 
 <script>
 	var sse_bs_active = false;
