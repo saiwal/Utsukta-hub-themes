@@ -495,12 +495,12 @@
 
 		if(primary_available) {
        console.log("primary available")
-			$('.notifications-btn-icon').removeClass('bi-bell');
-			$('.notifications-btn-icon').addClass('bi-bell-fill');
+			$('#notifications-btn-icon').removeClass('bi-bell');
+			$('#notifications-btn-icon').addClass('bi-bell-fill');
 		}
 		else {
-			$('.notifications-btn-icon').removeClass('bi-bell-fill');
-			$('.notifications-btn-icon').addClass('bi-bell');
+			$('#notifications-btn-icon').removeClass('bi-bell-fill');
+			$('#notifications-btn-icon').addClass('bi-bell');
 		}
 
 		if(any_available) {
