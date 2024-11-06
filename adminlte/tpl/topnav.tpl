@@ -494,12 +494,12 @@
 		});
 
 		if(primary_available) {
-			$('.notifications-btn-icon').removeClass('bi-exclamation-circle');
-			$('.notifications-btn-icon').addClass('bi-exclamation-triangle');
+			$('.notifications-btn-icon').removeClass('bi-bell');
+			$('.notifications-btn-icon').addClass('bi-bell-fill');
 		}
 		else {
-			$('.notifications-btn-icon').removeClass('bi-exclamation-triangle');
-			$('.notifications-btn-icon').addClass('bi-exclamation-circle');
+			$('.notifications-btn-icon').removeClass('bi-bell-fill');
+			$('.notifications-btn-icon').addClass('bi-bell');
 		}
 
 		if(any_available) {
