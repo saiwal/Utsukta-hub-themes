@@ -579,7 +579,7 @@
 				<span class="badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
 			</a>
 		</div>
-		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
+		<div id="nav-{{$notification.type}}-sub" class="pe-0 rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
 			{{if $notification.viewall}}
 			<a class="list-group-item list-group-item-action text-decoration-none" id="nav-{{$notification.type}}-see-all" href="{{$notification.viewall.url}}">
 				<i class="bi bi-box-arrow-up-right generic-icons-nav"></i> {{$notification.viewall.label}}
