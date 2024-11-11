@@ -19,7 +19,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title " id="wall-item-title-{{$item.id}}">
+				<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title border-bottom-0" id="wall-item-title-{{$item.id}}">
 					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 				</div>
 				{{if ! $item.is_new}}
