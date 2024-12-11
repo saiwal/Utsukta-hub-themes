@@ -1,3 +1,7 @@
+body {
+  font-size: 0.8rem;
+}
+
 .main-sidebar, .main-sidebar::before {
   transition: margin-left .3s ease-in-out,width .3s ease-in-out;
   width: 250px;
