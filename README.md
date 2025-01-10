@@ -13,4 +13,5 @@ Based on [AdminLTE](https://adminlte.io/)
 
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
-
+### Known issues
+- pdl editor doesn't work, css needs to be edited to allow overlays.

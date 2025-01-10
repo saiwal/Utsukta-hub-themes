@@ -16,6 +16,13 @@
 		</a>
 	</li>
 	{{/if}}
+	{{if $feature_file}}
+	<li class="nav-item">
+		<a class="nav-link messages-type" href="#" title="{{$strings.filed_messages_title}}" data-messages_type="filed">
+			<i class="bi bi-folder generic-icons"></i>
+		</a>
+	</li>
+	{{/if}}
 	<li class="nav-item">
 		<a class="nav-link messages-type" href="#" title="{{$strings.notice_messages_title}}" data-messages_type="notification">
 			<i class="bi bi-exclamation-circle generic-icons"></i>
@@ -33,7 +40,7 @@
 							{7}
 							<strong title="{4}">{4}</strong>
 						</div>
-						<small class="messages-timeago opacity-75" title="{1}"></small>
+						<small class="autotime-narrow opacity-75" title="{1}"></small>
 					</div>
 					<div class="text-truncate">
 						<small class="opacity-75" title="{5}">{5}</small>
@@ -53,6 +60,18 @@
 			<input id="messages-author" type="text" class="form-control form-control-sm" placeholder="{{$strings.filter}}">
 			<div id="messages-author-input-clear" class="text-muted notifications-textinput-clear d-none"><i class="bi bi-x-lg"></i></div>
 		</div>
+		{{if $feature_file}}
+		<div id="messages-file-container" class="list-group-item notifications-textinput d-none">
+			<div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div>
+			<input id="messages-file" type="text" list="data_filetags" class="form-control form-control-sm" placeholder="{{$strings.file_filter}}">
+			<datalist id="data_filetags">
+			{{foreach $file_tags as $opt=>$val}}
+				<option value="{{$val}}">
+			{{/foreach}}
+			</datalist>
+			<div id="messages-file-input-clear" class="text-muted notifications-textinput-clear d-none"><i class="bi bi-x-lg"></i></div>
+		</div>
+		{{/if}}
 		{{foreach $entries as $e}}
 		<a href="{{$e.href}}" class="list-group-item list-group-item-action message" data-b64mid="{{$e.b64mid}}">
 			<div class="mb-2 align-middle">
@@ -63,7 +82,7 @@
 							{{$e.icon}}
 							<strong title="{{$e.author_name}}">{{$e.author_name}}</strong>
 						</div>
-						<small class="messages-timeago opacity-75" title="{{$e.created}}"></small>
+						<small class="autotime-narrow opacity-75" title="{{$e.created}}"></small>
 					</div>
 					<div class="text-truncate">
 						<small class="opacity-75" title="{{$e.author_addr}}">{{$e.author_addr}}</small>
@@ -75,7 +94,7 @@
 			</div>
 			<small class="opacity-75">{{$e.info}}</small>
 			{{if $e.unseen_count}}
-			<span class="badge bg-transparent border border-{{$e.unseen_class}} text-{{$e.unseen_class}} rounded-pill position-absolute bottom-0 end-0 m-2" title="{{$strings.unseen_count}}">{{$e.unseen_count}}</span>
+			<span class="badge bg-transparent border border-{{$e.unseen_class}} text-{{$e.unseen_class}} rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">{{$e.unseen_count}}</span>
 			{{/if}}
 		</a>
 		{{/foreach}}
@@ -94,9 +113,11 @@
 	let author_hash;
 	let author_url;
 	let author;
+	let file;
 
 	$(document).ready(function () {
-		$('.messages-timeago').timeago();
+		updateRelativeTime('.autotime-narrow');
+
 		if (bParam_mid) {
 			$('.message[data-b64mid=\'' + bParam_mid + '\']').addClass('active');
 		}
@@ -109,6 +130,7 @@
 			$('#messages-container .message').remove();
 			$('#messages-author-container').addClass('active sticky-top');
 			$('#messages-author-input-clear').removeClass('d-none');
+
 			author_hash = data.xid;
 			author_url = data.url;
 			author = messages_type === 'notification' ? author_url : author_hash;
@@ -116,14 +138,35 @@
 			get_messages_page();
 		});
 
-		$(document).on('click', '#messages-author-input-clear', function() {
-			$('#messages-author').val('');
+		$('#messages-file').on('input', function(e) {
+			file = e.currentTarget.value;
+
+			let datalist = document.getElementById('data_filetags');
+			let options = [...datalist.options].map(option => option.value);
+
+			if (!options.includes(file)) {
+				return;
+			}
+
+			$('#messages-container .message').remove();
+			$('#messages-file-container').addClass('active sticky-top');
+			$('#messages-file-input-clear').removeClass('d-none');
+
+			messages_offset = 0;
+			get_messages_page();
+		});
+
+		$(document).on('click', '#messages-author-input-clear, #messages-file-input-clear', function() {
+			$('#messages-author, #messages-file').val('');
 			$("#messages-author").attr('placeholder', '{{$strings.filter}}');
+			$("#messages-file").attr('placeholder', '{{$strings.file_filter}}');
 
 			$('#messages-author-container').removeClass('active sticky-top');
+			$('#messages-file-container').removeClass('active sticky-top');
 			$('#messages-author-input-clear').addClass('d-none');
 			$('#messages-container .message').remove();
 			author = '';
+			file = '';
 			author_hash = '';
 			author_url = '';
 			messages_offset = 0;
@@ -145,6 +188,16 @@
 		messages_offset = 0;
 		messages_type = $(this).data('messages_type');
 		author = messages_type === 'notification' ? author_url : author_hash;
+
+		if (messages_type === 'filed') {
+			$('#messages-author-container').addClass('d-none');
+			$('#messages-file-container').removeClass('d-none');
+		}
+		else {
+			$('#messages-author-container').removeClass('d-none');
+			$('#messages-file-container').addClass('d-none');
+		}
+
 		$('#messages-container .message').remove();
 		get_messages_page();
 	});
@@ -167,7 +220,8 @@
 			data: {
 				offset: messages_offset,
 				type: messages_type,
-				author: author
+				author: author,
+				file: file
 			}
 		}).done(function(obj) {
 			get_messages_page_active = false;
@@ -185,7 +239,7 @@
 						e.author_addr,
 						e.href,
 						e.icon,
-						e.unseen_count ? '<span class="badge bg-transparent border border-' + e.unseen_class + ' text-' + e.unseen_class + ' rounded-pill position-absolute bottom-0 end-0 m-2" title="{{$strings.unseen_count}}">' + e.unseen_count + '</span>' : '',
+						e.unseen_count ? '<span class="badge bg-transparent border border-' + e.unseen_class + ' text-' + e.unseen_class + ' rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">' + e.unseen_count + '</span>' : '',
 						e.author_img
 					);
 					$('#messages-loading').before(html);
@@ -198,7 +252,7 @@
 				$('.message[data-b64mid=\'' + bParam_mid + '\']').addClass('active');
 			}
 			$('#messages-loading').hide();
-			$('.messages-timeago').timeago();
+			updateRelativeTime('.autotime-narrow');
 
 		});
 
