@@ -5,7 +5,7 @@
  *   * Description: AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 0.1 alpha
  *   * MinVersion: 7.2
- *   * MaxVersion: 10.0
+ *   * MaxVersion: 11.0
  *   * Author: SK
  *   * Maintainer: SK
  *   * Compat: Hubzilla [*]
