@@ -1,7 +1,7 @@
 <?php
 
 /**
- *   * Name: AdminLTE-4
+ *   * Name: Adminlte4
  *   * Description: AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 0.1 alpha
  *   * MinVersion: 7.2
