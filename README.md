@@ -2,7 +2,7 @@
 
 A collection of custom themes developed for hubzilla:
 
-## AdminLTE
+## AdminLTE4
 
 Based on [AdminLTE](https://adminlte.io/)
 
