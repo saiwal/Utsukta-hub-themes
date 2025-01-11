@@ -1,5 +1,5 @@
 {{if $item.comment_firstcollapsed}}
-<button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
+<button class="btn btn-sm btn-info-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
   {{$item.hide_text}}
 </button>
 <div id="collapsed-comments-{{$item.id}}" class="collapse">
