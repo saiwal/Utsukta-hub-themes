@@ -4,11 +4,6 @@
     <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
   </a>
 </p>
-<div class="collapse" id="collapseExample">
-  <div class="card card-body">
-    Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
-  </div>
-</div>
 <div id="collapsed-comments-{{$item.id}}" class="collapse" style="display: none;">
 {{/if}}
 	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-outline generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
