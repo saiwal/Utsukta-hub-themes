@@ -1,5 +1,5 @@
 {{if $wrap}}
-<div id="pmenu-{{$id}}" class="pmenu{{if !$class}} widget{{else}} {{$class}}{{/if}}">
+<div id="pmenu-{{$id}}" class="pmenu{{if !$class}} widget{{else}} {{$class}}{{/if}} card mb-3">
 {{/if}}
 	{{if $menu.menu_desc}}
 	<h5 class="pmenu-title">{{$menu.menu_desc}}{{if $edit}} <a href="mitem/{{$nick}}/{{$menu.menu_id}}" title="{{$edit}}"><i class="bi bi-pencil fakelink" title="{{$edit}}"></i></a>{{/if}}</h5>
