@@ -45,13 +45,6 @@
     </main>
     <!-- /.content-wrapper -->
 
-
-    <!-- Main Footer -->
-    <footer class="app-footer text-sm">
-      🖖 Live long and prosper.
-      <div class="float-right d-none d-sm-inline-block">
-      </div>
-    </footer>
   </div>
   <!-- ./wrapper -->
   <script>
