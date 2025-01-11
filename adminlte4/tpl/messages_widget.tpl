@@ -1,3 +1,4 @@
+<div class="card">
 <ul class="nav nav-tabs nav-fill clearfix">
 	<li class="nav-item">
 		<a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
@@ -105,6 +106,7 @@
 			{{$strings.loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 		</div>
 	</div>
+</div>
 </div>
 <script>
 	let messages_offset = {{$offset}};
