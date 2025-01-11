@@ -1,5 +1,5 @@
 {{if $item.comment_firstcollapsed}}
-<button id="hide-comments-icon-{{$item.id}}" class="btn btn-sm btn-primary-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
+<button id="hide-comments-icon-{{$item.id}}" class="btn btn-sm btn-primary-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}} onclick="showHideComments({{$item.id}});">
  <span id="hide-comments-label-{{$item.id}}">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}">{{$item.num_comments}}</span> 
 </button>
 
