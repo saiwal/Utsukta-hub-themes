@@ -230,5 +230,4 @@
   <!--end::Sidebar Wrapper-->
 </aside>
 <!--end::Sidebar-->
-{{if $is_owner}}
 
