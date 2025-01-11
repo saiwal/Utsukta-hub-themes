@@ -1,9 +1,10 @@
 {{if $item.comment_firstcollapsed}}
-<button id="hide-comments-icon-{{$item.id}}" class="btn btn-sm btn-primary-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}} onclick="showHideComments({{$item.id}});">
+<button id="hide-comments-icon-{{$item.id}}" class="btn btn-sm btn-primary-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}" onclick=showHideComments({{$item.id}});">
  <span id="hide-comments-label-{{$item.id}}">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}">{{$item.num_comments}}</span> 
 </button>
 
 <div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small badge text-bg-info ms-5 me-5 mb-2" onclick="showHideComments({{$item.id}});">
+
 	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
 </div>
 
