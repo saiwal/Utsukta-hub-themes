@@ -1,7 +1,12 @@
 {{if $item.comment_firstcollapsed}}
-<button class="btn btn-sm btn-info-outline" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
-  {{$item.hide_text}}
+<button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
+  {{$item.num_comments}}
 </button>
+
+<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small badge text-bg-info ms-5 me-5 mb-2" onclick="showHideComments({{$item.id}});">
+	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
+</div>
+
 <div id="collapsed-comments-{{$item.id}}" class="collapse">
 {{/if}}
 	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-outline generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
