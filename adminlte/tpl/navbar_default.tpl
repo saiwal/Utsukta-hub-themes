@@ -21,6 +21,12 @@
           </form>
         </div>
       </li>
+      {{if $localuser || $nav.pubs}}
+      <li id="notifications-btn" class="nav-item d-xl-none">
+        <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
+            class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
+      </li>
+      {{/if}}
 
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
