@@ -1,5 +1,5 @@
 {{if $item.comment_firstcollapsed}}
-<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small btn btn-sm btn-primary-outline ms-5 me-5 mb-2" onclick="showHideComments({{$item.id}});">
+<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small btn btn-sm btn-primary" onclick="showHideComments({{$item.id}});">
 	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
 </div>
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
