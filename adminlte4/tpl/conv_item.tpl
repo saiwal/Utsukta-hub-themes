@@ -1,6 +1,6 @@
 {{if $item.comment_firstcollapsed}}
 <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
-  {{$item.hide_text}} {{$item.num_comments}}
+ <span id="hide-comments-label-{{$item.id}}">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}">{{$item.num_comments}}</span> 
 </button>
 <div id="collapsed-comments-{{$item.id}}" class="collapse">
 {{/if}}
