@@ -9,7 +9,7 @@
   </button>
 </div>
 
-<div id="collapsed-comments-{{$item.id}}" class="collapse" style="display: none;">
+<div id="collapsed-comments-{{$item.id}}" class="collapse">
 {{/if}}
 	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-outline generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}" ></a>
