@@ -1,4 +1,4 @@
-<div class="widget saved-search-widget clearfix">
+<div class="widget saved-search-widget clearfix card mb-3">
 	<h5 id="search">{{$title}}</h5>
 	{{$searchbox}}
 	<ul id="saved-search-list" class="nav nav-pills flex-column">
