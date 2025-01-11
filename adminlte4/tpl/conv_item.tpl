@@ -17,7 +17,7 @@
   </button>
 	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
 </div>
-<div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
+<div id="collapsed-comments-{{$item.id}}" class="collapse" style="display: none;">
 {{/if}}
 	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-outline generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}" ></a>
