@@ -3,14 +3,12 @@
   <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
     Link with href
   </a>
-  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsed-comments-{{$item.id}}" aria-expanded="false" aria-controls="collapsed-comments-{{$item.id}}">
     Button with data-bs-target
   </button>
 </p>
 <div class="collapse" id="collapseExample">
-  <div class="card card-body">
     Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
-  </div>
 </div>
 
 <div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small badge text-bg-info ms-5 me-5 mb-2" onclick="showHideComments({{$item.id}});">
