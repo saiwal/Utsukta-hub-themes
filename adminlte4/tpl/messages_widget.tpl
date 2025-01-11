@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card mb-3">
 <ul class="nav nav-tabs nav-fill clearfix">
 	<li class="nav-item">
 		<a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
