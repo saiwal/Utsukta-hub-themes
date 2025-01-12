@@ -1,5 +1,5 @@
 <div class="col-3 p-2">
-  <img class="img-fluid rounded-circle" src="{{$photo}}" alt="User Image">
+  <img class="img-fluid rounded-circle" src="{{$photo}}" alt="" title="{{$title}}">
   <a class="btn fw-bold fs-7 text-secondary text-truncate w-100 p-0" href="{{$url}}">
     {{$title}}
   </a>
