@@ -17,4 +17,6 @@ Based on [AdminLTE](https://adminlte.io/)
 
 ## AdminLTE4 sketchy
 
-Based on AdminLTE and uses bootswatch sketchy for a unique look.
+Based on AdminLTE and uses [Bootswatch sketchy](https://bootswatch.com/sketchy/) for a unique look.
+
+**Demo available [here](https://hub.utsukta.org/channel/Adminlte-sketchy)**
