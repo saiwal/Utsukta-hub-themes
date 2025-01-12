@@ -1,5 +1,8 @@
 <div class="widget saved-search-widget clearfix card mb-3">
-	<h5 id="search">{{$title}}</h5>
+  <div class="card-header">
+    <h3 class="card-title"id="search">{{$title}}</h3>
+  </div>
+  <div class="card-body">
 	{{$searchbox}}
 	<ul id="saved-search-list" class="nav nav-pills flex-column">
 		{{foreach $saved as $search}}
@@ -9,4 +12,5 @@
 		</li>
 		{{/foreach}}
 	</ul>
+  </div>
 </div>
