@@ -8,6 +8,7 @@
 		</a>
 		{{/if}}
 	</h3>
+  </div>
   <div class="card-body">
 	{{$content}}
 	{{if $name}}
