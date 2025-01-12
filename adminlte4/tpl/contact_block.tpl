@@ -1,4 +1,3 @@
-
 <div class="card">
   <div class="card-header">
     <h3 class="card-title">{{$contacts}}</h3>
@@ -26,7 +25,7 @@
   <!-- /.card-body -->
   {{if $viewconnections}}
   <div class="card-footer text-center">
-    <a href="viewconnections/{{$$nickname}}"
+    <a href="viewconnections/{{$nickname}}"
        class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{$viewconnections}}</a>
   </div>
   <!-- /.card-footer -->
