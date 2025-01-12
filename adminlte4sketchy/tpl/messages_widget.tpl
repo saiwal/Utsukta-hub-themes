@@ -1,4 +1,3 @@
-<div class="card mb-3">
 <ul class="nav nav-tabs nav-fill clearfix">
 	<li class="nav-item">
 		<a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
@@ -30,7 +29,7 @@
 		</a>
 	</li>
 </ul>
-<div id="messages-widget" class="overflow-auto clearfix" style="height: 70vh;">
+<div id="messages-widget" class="overflow-auto clearfix card border-top-0 mb-3" style="height: 70vh;">
 	<div id="messages-template" rel="template" class="d-none">
 		<a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
 			<div class="mb-2 align-middle">
@@ -106,7 +105,6 @@
 			{{$strings.loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 		</div>
 	</div>
-</div>
 </div>
 <script>
 	let messages_offset = {{$offset}};

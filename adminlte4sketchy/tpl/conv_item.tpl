@@ -1,5 +1,5 @@
 {{if $item.comment_firstcollapsed}}
-<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small btn btn-sm btn-primary" onclick="showHideComments({{$item.id}});">
+<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small btn btn-sm btn-info" onclick="showHideComments({{$item.id}});">
 	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle">{{$item.hide_text}}</span>&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>
 </div>
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
@@ -14,13 +14,14 @@
 				</div>
 				{{/if}}
 				{{if $item.event}}
-				<div class="card-header wall-event-item" id="wall-event-item-{{$item.id}}">
+				<div class="card-header" id="wall-event-item-{{$item.id}}">
 					{{$item.event}}
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} card-header wall-item-title border-bottom-0" id="wall-item-title-{{$item.id}}">
-					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
+				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header border-bottom-0 h3" id="wall-item-title-{{$item.id}}">
+          <div class="card-title">
+					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</div>
 				</div>
 				{{if ! $item.is_new}}
 				<hr class="m-0">

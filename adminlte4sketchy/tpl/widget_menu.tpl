@@ -1,5 +1,8 @@
-<div class="widget card mb-3">
-	<h5>{{$title}}</h5>
+<div class="card mb-3">
+  <div class="card-header">
+	<h3 class="card-title">{{$title}}</h3>
+  </div>
+  <div class="card-body">
 	<ul class="nav nav-pills flex-column">
 		{{foreach $menu_items as $menu_item}}
 		<li class="nav-item">
@@ -7,4 +10,5 @@
 		<li>
 		{{/foreach}}
 	</ul>
+  </div>
 </div>

@@ -19,7 +19,7 @@
 				</div>
 				{{/if}}
 				<textarea id="comment-edit-text-{{$id}}" class="form-control comment-edit-text" placeholder="{{$comment}}" name="body" ondragenter="linkdropper(event);" ondragleave="linkdropexit(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);" ></textarea>
-				<div id="comment-tools-{{$id}}" class="pt-2 comment-tools">
+				<div id="comment-tools-{{$id}}" class="pt-2 comment-tools pb-3">
 					<div id="comment-edit-bb-{{$id}}" class="btn-toolbar float-start">
 						<div class="btn-group me-2">
 							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edbold}}" onclick="insertbbcomment('{{$comment}}','b', {{$id}}); return false;">

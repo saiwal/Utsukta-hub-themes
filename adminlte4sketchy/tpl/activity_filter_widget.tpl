@@ -1,12 +1,15 @@
-<div class="widget card mb-3">
-	<h5 class="d-flex justify-content-between align-items-center">
+<div class="card mb-3">
+  <div class="card-header">
+	<h3 class="d-flex justify-content-between align-items-center card-title">
 		{{$title}}
 		{{if $reset}}
 		<a href="{{$reset.url}}" class="text-muted" title="{{$reset.title}}">
 			<i class="bi bi-{{$reset.icon}}"></i>
 		</a>
 		{{/if}}
-	</h5>
+	</h3>
+  </div>
+  <div class="card-body">
 	{{$content}}
 	{{if $name}}
 	<div id="cid-filter-wrapper" class="notifications-textinput">
@@ -22,4 +25,5 @@
 		});
 	</script>
 	{{/if}}
+  </div>
 </div>
