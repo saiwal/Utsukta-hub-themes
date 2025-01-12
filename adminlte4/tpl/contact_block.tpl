@@ -15,7 +15,6 @@
   <div class="card-body p-0">
     <div class="row text-center m-1">
       {{foreach $micropro as $m}}
-        {{$m}}
       {{/foreach}}
     </div>
     <!-- /.users-list -->
