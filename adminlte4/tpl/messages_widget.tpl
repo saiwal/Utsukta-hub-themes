@@ -29,7 +29,7 @@
 		</a>
 	</li>
 </ul>
-<div id="messages-widget" class="overflow-auto clearfix card border-top-0" style="height: 70vh;">
+<div id="messages-widget" class="overflow-auto clearfix card border-top-0 mb-3" style="height: 70vh;">
 	<div id="messages-template" rel="template" class="d-none">
 		<a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
 			<div class="mb-2 align-middle">
