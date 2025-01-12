@@ -1,4 +1,4 @@
-<div id="chatroom_members" class="widget card mb-3">
+<div id="chatroom_members" class="card mb-3">
   <div class="card-header">
     <h3 class="card-title">{{$header}}</h3>
     <div class="card-tools">

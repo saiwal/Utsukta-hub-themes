@@ -1,4 +1,4 @@
-<div class="widget{{if $class}} {{$class}}{{/if}} card mb-3">
+<div class="{{if $class}} {{$class}}{{/if}} card mb-3">
   {{if $title}}
   <div class="card-header">
     <h3 calss="card-title">{{$title}}</h3>

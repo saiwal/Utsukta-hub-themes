@@ -1,4 +1,4 @@
-<div class="widget saved-search-widget clearfix card mb-3">
+<div class="clearfix card mb-3">
   <div class="card-header">
     <h3 class="card-title"id="search">{{$title}}</h3>
   </div>
