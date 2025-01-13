@@ -1,7 +1,7 @@
 <?php
 
 /**
- *   * Name: Adminlte4 sketchy
+ *   * Name: Sketchy
  *   * Description: AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 1.0
  *   * MinVersion: 7.2
