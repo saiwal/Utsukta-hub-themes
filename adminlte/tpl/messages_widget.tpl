@@ -54,7 +54,7 @@
 			{8}
 		</a>
 	</div>
-	<div id="messages-container" class="list-group list-group-flush" data-offset="10">
+	<div id="messages-container" class="overflow-auto list-group list-group-flush" data-offset="10">
 		<div id="messages-author-container" class="list-group-item notifications-textinput">
 			<div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div>
 			<input id="messages-author" type="text" class="form-control form-control-sm" placeholder="{{$strings.filter}}">
