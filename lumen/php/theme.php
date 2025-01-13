@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Lumen
- *   * Description: AdminLTE theme adapted  for Utsukta Hub
+ *   * Description: Lumen variant of AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
