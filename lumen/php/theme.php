@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: Lumen
- *   * Description: Lumen variant of AdminLTE theme adapted  for Utsukta Hub
+ *   * Name: Adminlte
+ *   * Description: AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
@@ -16,7 +16,7 @@
 // If you change the name of the theme to `yournewname` change `redbasicchild_init` to `yournewname_init` so it has a unique name.
 // You will also need to edit the style.php file if you change the directory name.
 
-function lumen_init() {
+function adminlte_init() {
 
     App::$theme_info['extends'] = 'redbasic';
 
