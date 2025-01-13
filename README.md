@@ -2,7 +2,19 @@
 
 A collection of custom themes developed for hubzilla:
 
-## AdminLTE4
+## How to install
+
+run the following in hubzilla folder on your webserver:
+
+```
+./util/add_theme https://github.com/saiwal/Utsukta-hub-themes.git utsukta-themes
+```
+
+or manually extract the release in `view/themes`
+
+## Themes
+
+### AdminLTE4
 
 A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
@@ -13,18 +25,18 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
-## Cosmo
+### Cosmo
 
 Based on AdminLTE and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
 
-## Lumen
+### Lumen
 
 Based on AdminLTE and uses [Bootswatch lumen](https://bootswatch.com/lumen/) for a unique look.
 
-## Sketchy
+### Sketchy
 
 Based on AdminLTE and uses [Bootswatch sketchy](https://bootswatch.com/sketchy/) for a unique look.
 
-## Vapor
+### Vapor
 
 Based on AdminLTE and uses [Bootswatch vapor](https://bootswatch.com/vapor/) for a unique look.
