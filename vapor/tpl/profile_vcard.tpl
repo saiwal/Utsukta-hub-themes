@@ -2,7 +2,7 @@
 	<div class="card mb-2">
 		<div class="position-relative">
 			<div id="cover-photo-wrapper" class="overflow-hidden w-100">
-				<img class="img-fluid" src="{{$cover.url}}" alt="" style="">
+				<img class="img-fluid card-img-top" src="{{$cover.url}}" alt="" style="">
 			</div>
 			{{if $connect}}
 			<a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
@@ -41,7 +41,7 @@
 		</div>
 		<div class="d-flex">
 			<div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden" style="min-width: 5rem; min-height: 5rem;">
-				<img class="u-photo" src="{{$profile.thumb}}?rev={{$profile.picdate}}" alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
+				<img class="u-photo card-img-bottom" src="{{$profile.thumb}}?rev={{$profile.picdate}}" alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
 			</div>
 			{{if $profile.pdesc}}
 			<div class="m-2 small text-break">{{$profile.pdesc}}</div>
