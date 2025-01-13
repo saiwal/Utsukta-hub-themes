@@ -4,9 +4,7 @@ A collection of custom themes developed for hubzilla:
 
 ## AdminLTE4
 
-Based on [AdminLTE](https://adminlte.io/)
-
-### Features:
+A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 - This theme is in very early development stage and some functionality may be broken/missing. Report any issues in the [github repo](https://github.com/saiwal/hubzilla-themes).
 - Based on [AdminLTEv4](https://adminlte.io/).
@@ -15,8 +13,18 @@ Based on [AdminLTE](https://adminlte.io/)
 
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
-## AdminLTE4 sketchy
+## Cosmo
+
+Based on AdminLTE and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
+
+## Lumen
+
+Based on AdminLTE and uses [Bootswatch lumen](https://bootswatch.com/lumen/) for a unique look.
+
+## Sketchy
 
 Based on AdminLTE and uses [Bootswatch sketchy](https://bootswatch.com/sketchy/) for a unique look.
 
-**Demo available [here](https://hub.utsukta.org/channel/Adminlte-sketchy)**
+## Vapor
+
+Based on AdminLTE and uses [Bootswatch vapor](https://bootswatch.com/vapor/) for a unique look.
