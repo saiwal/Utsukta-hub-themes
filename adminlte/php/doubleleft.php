@@ -17,7 +17,7 @@
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
-    <main class="app-main px-3 py-3">
+    <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
       <div class="row">
 
         <div class="col-md-4 d-md-block col-lg-4 col-xl-3">
