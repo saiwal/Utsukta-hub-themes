@@ -3,7 +3,7 @@
 /**
  *   * Name: Adminlte4
  *   * Description: AdminLTE theme adapted  for Utsukta Hub
- *   * Version: 0.1 alpha
+ *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: SK
