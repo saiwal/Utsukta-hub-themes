@@ -15,8 +15,8 @@
 			{{if $edit}}<input type="hidden" name="appid" value="{{$app.guid}}" /><button type="submit" name="edit" value="{{$edit}}" class="btn btn-outline-secondary btn-sm" title="{{$edit}}" ><i class="bi bi-pencil" ></i></button>{{/if}}
 			{{if $delete}}<button type="submit" name="delete" value="{{if $deleted}}{{$undelete}}{{else}}{{$delete}}{{/if}}" class="btn btn-outline-secondary btn-sm" title="{{if $deleted}}{{$undelete}}{{else}}{{$delete}}{{/if}}" ><i class="bi bi-trash drop-icons"></i></button>{{/if}}
 			{{if $settings_url}}<a href="{{$settings_url}}/?f=&rpath={{$rpath}}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-gear"></i></a>{{/if}}
-			{{if $feature}}<button type="submit" name="feature" value="nav_featured_app" class="btn btn-outline-secondary btn-sm" title="{{if $featured}}{{$remove}}{{else}}{{$add}}{{/if}}"><i class="bi bi-star{{if $featured}} text-warning{{/if}}"></i></button>{{/if}}
-			{{if $pin}}<button type="submit" name="pin" value="nav_pinned_app" class="btn btn-outline-secondary btn-sm" title="{{if $pinned}}{{$remove_nav}}{{else}}{{$add_nav}}{{/if}}"><i class="bi bi-pin{{if $pinned}} text-success{{/if}}"></i></button>{{/if}}
+			{{if $feature}}<button type="submit" name="feature" value="nav_featured_app" class="btn btn-outline-secondary btn-sm" title="{{if $featured}}{{$remove}}{{else}}{{$add}}{{/if}}"><i class="bi bi-star{{if $featured}}-fill text-success{{/if}}"></i></button>{{/if}}
+			{{if $pin}}<button type="submit" name="pin" value="nav_pinned_app" class="btn btn-outline-secondary btn-sm" title="{{if $pinned}}{{$remove_nav}}{{else}}{{$add_nav}}{{/if}}"><i class="bi bi-pin{{if $pinned}}-fill text-success{{/if}}"></i></button>{{/if}}
 			</form>
 		</div>
 		{{/if}}
