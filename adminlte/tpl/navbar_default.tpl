@@ -31,30 +31,11 @@
 
       {{if $userinfo}}
       {{if $sel.name}}
-      <div class="input-group mb-3">
-        <span class="input-group-text">{{$sel.name}}</span>{{if $sitelocation}}<input class="form-control" id="readOnlyInput" type="text" placeholder="{{$sitelocation}}" readonly="">{{/if}}
+      <div class="input-group mb-0">
+        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span class="input-group-text pt-0 pb-0">{{$sitelocation}}"</span>{{/if}}
         {{if $settings_url}}
-        <span class="input-group-text"><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
+        <span class="input-group-text pt-0 pb-0"><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
         {{/if}}
-      </div>
-      {{/if}}
-      {{/if}}
-
-      {{if $userinfo}}
-      {{if $sel.name}}
-      <div id="nav-app-link-wrapper" class="navbar-nav{{if $sitelocation}} has_location{{/if}}">
-        <a id="nav-app-link" href="{{$url}}" class="nav-link text-truncate" style="width: 100%">
-          {{$sel.name}}
-          {{if $sitelocation}}
-          <small>{{$sitelocation}}</small>
-          {{/if}}
-        </a>
-      </div>
-      {{if $settings_url}}
-      <div id="nav-app-settings-link-wrapper" class="navbar-nav">
-        <a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link">
-          <i class="bi bi-gear"></i>
-        </a>
       </div>
       {{/if}}
       {{/if}}
