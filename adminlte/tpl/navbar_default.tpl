@@ -8,9 +8,6 @@
         <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
       </li>
-    </ul>
-    <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
       <!-- Navbar Search -->
       <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
@@ -21,6 +18,10 @@
           </form>
         </div>
       </li>
+
+    </ul>
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
       {{if $localuser || $nav.pubs}}
       <li id="notifications-btn" class="nav-item d-xl-none">
         <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
@@ -49,8 +50,7 @@
 
       <!--begin::User Menu Dropdown-->
       <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-          <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span
-            class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
+          <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image">
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
           {{if $is_owner}}
           <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow"
