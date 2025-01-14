@@ -12,14 +12,16 @@
     <ul class="navbar-nav">
       {{if $userinfo}}
       {{if $sel.name}}
-      <div class="input-group mb-0">
-        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span
-          class="input-group-text pt-0 pb-0">{{$sitelocation}}</span>{{/if}}
-        {{if $settings_url}}
-        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link"
-            href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
-        {{/if}}
+      {{if $sitelocation}}
+      <div class="lh-1">
+        <h1 class="h4 mb-2 text-white lh-1">{{$sel.name}}</h1>
+        <small>{{$sitelocation}}</small>
       </div>
+      {{else}}
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="{{$url}}">{{$sel.name}}</a>
+      </li>
+      {{/if}}
       {{/if}}
       {{/if}}
     </ul>
