@@ -65,17 +65,12 @@
       };
 
       const setTheme = function(theme) {
-        if (
-          theme === "auto" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
+        if (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
           document.documentElement.setAttribute("data-bs-theme", "dark");
         } else {
           document.documentElement.setAttribute("data-bs-theme", theme);
         }
       };
-
-      setTheme(getPreferredTheme());
 
       const showActiveTheme = (theme, focus = false) => {
         const themeSwitcher = document.querySelector("#bd-theme");
@@ -84,12 +79,8 @@
           return;
         }
 
-        const themeSwitcherText = document.querySelector("#bd-theme-text");
-        const activeThemeIcon = document.querySelector(".theme-icon-active i");
-        const btnToActive = document.querySelector(
-          `[data-bs-theme-value="${theme}"]`
-        );
-        const svgOfActiveBtn = btnToActive.querySelector("i").getAttribute("class");
+        const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
+        const inputToCheck = document.querySelector(`#bd-theme input[data-bs-theme-value="${theme}"]`);
 
         for (const element of document.querySelectorAll("[data-bs-theme-value]")) {
           element.classList.remove("active");
@@ -98,14 +89,18 @@
 
         btnToActive.classList.add("active");
         btnToActive.setAttribute("aria-pressed", "true");
-        activeThemeIcon.setAttribute("class", svgOfActiveBtn);
-        const themeSwitcherLabel = `${themeSwitcherText.textContent} (${btnToActive.dataset.bsThemeValue})`;
-        themeSwitcher.setAttribute("aria-label", themeSwitcherLabel);
+
+        // Update the checked state of the radio button
+        if (inputToCheck) {
+          inputToCheck.checked = true;
+        }
 
         if (focus) {
-          themeSwitcher.focus();
+          btnToActive.focus();
         }
       };
+
+      setTheme(getPreferredTheme());
 
       window
         .matchMedia("(prefers-color-scheme: dark)")
