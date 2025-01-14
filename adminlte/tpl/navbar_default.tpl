@@ -8,6 +8,20 @@
         <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
       </li>
+      {{if $userinfo}}
+      {{if $sel.name}}
+      <div class="input-group mb-0">
+        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span class="input-group-text pt-0 pb-0">{{$sitelocation}}</span>{{/if}}
+        {{if $settings_url}}
+        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
+        {{/if}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+    </ul>
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
       <!-- Navbar Search -->
       <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
@@ -19,9 +33,6 @@
         </div>
       </li>
 
-    </ul>
-    <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
       {{if $localuser || $nav.pubs}}
       <li id="notifications-btn" class="nav-item d-xl-none">
         <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
@@ -29,16 +40,6 @@
       </li>
       {{/if}}
 
-      {{if $userinfo}}
-      {{if $sel.name}}
-      <div class="input-group mb-0">
-        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span class="input-group-text pt-0 pb-0">{{$sitelocation}}</span>{{/if}}
-        {{if $settings_url}}
-        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
-        {{/if}}
-      </div>
-      {{/if}}
-      {{/if}}
 
       {{if $userinfo}}
 
