@@ -8,20 +8,33 @@
         <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
       </li>
+    </ul>
+    <ul class="navbar-nav">
       {{if $userinfo}}
       {{if $sel.name}}
       <div class="input-group mb-0">
-        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span class="input-group-text pt-0 pb-0">{{$sitelocation}}</span>{{/if}}
+        <span class="input-group-text pt-0 pb-0">{{$sel.name}}</span>{{if $sitelocation}}<span
+          class="input-group-text pt-0 pb-0">{{$sitelocation}}</span>{{/if}}
         {{if $settings_url}}
-        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
+        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link"
+            href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
         {{/if}}
       </div>
       {{/if}}
       {{/if}}
-
     </ul>
+
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+      {{if $userinfo}}
+      {{if $sel.name}}
+        {{if $settings_url}}
+        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link"
+            href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
+        {{/if}}
+      {{/if}}
+      {{/if}}
+
       <!-- Navbar Search -->
       <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
