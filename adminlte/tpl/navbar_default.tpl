@@ -40,6 +40,7 @@
       {{/if}}
       {{/if}}
 
+      {{if $userinfo}}
       {{if $sel.name}}
       <div id="nav-app-link-wrapper" class="navbar-nav{{if $sitelocation}} has_location{{/if}}">
         <a id="nav-app-link" href="{{$url}}" class="nav-link text-truncate" style="width: 100%">
