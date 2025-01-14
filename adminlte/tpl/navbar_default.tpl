@@ -29,6 +29,24 @@
       {{/if}}
 
       {{if $userinfo}}
+			{{if $sel.name}}
+			<div id="nav-app-link-wrapper" class="navbar-nav{{if $sitelocation}} has_location{{/if}}">
+				<a id="nav-app-link" href="{{$url}}" class="nav-link text-truncate" style="width: 100%">
+					{{$sel.name}}
+					{{if $sitelocation}}
+					<br><small>{{$sitelocation}}</small>
+					{{/if}}
+				</a>
+			</div>
+			{{if $settings_url}}
+			<div id="nav-app-settings-link-wrapper" class="navbar-nav">
+				<a id="nav-app-settings-link" href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link">
+					<i class="bi bi-gear"></i>
+				</a>
+			</div>
+			{{/if}}
+			{{/if}}
+
       <!--begin::User Menu Dropdown-->
       <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
           <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span
