@@ -37,7 +37,7 @@
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div class="d-lg-block col-xl-3">
+        <div class="d-none d-xl-block col-3">
           <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
         </div>
 
