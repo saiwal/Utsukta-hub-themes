@@ -1,7 +1,7 @@
 <?php
 use Zotlabs\Lib\Config;
 
-require_once('view/php/theme_init.php');
+/*require_once('view/php/theme_init.php');*/
 require_once('include/plugin.php');
 
 head_add_css('/library/jRange/jquery.range.css');
