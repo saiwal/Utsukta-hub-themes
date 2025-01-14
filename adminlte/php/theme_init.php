@@ -29,6 +29,7 @@ head_add_js('/library/sodium-plus/dist/sodium-plus.min.js');
 head_add_js('acl.js');
 head_add_js('webtoolkit.base64.js');
 // head_add_js('main.js');
+head_add_js('/view/theme/adminlte/js/main.js');
 head_add_js('crypto.js');
 head_add_js('/library/jRange/jquery.range.js');
 head_add_js('/library/colorbox/jquery.colorbox-min.js');
@@ -56,4 +57,3 @@ head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
 head_add_js('/view/theme/adminlte/js/adminlte.min.js');
 head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');
-head_add_js('/view/theme/adminlte/js/main.js');
