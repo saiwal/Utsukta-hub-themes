@@ -1,9 +1,9 @@
 <?php
 
 /**
- *   * Name: Adminlte
- *   * Description: AdminLTE theme adapted  for Utsukta Hub
- *   * Version: 1.0
+ *   * Name: Sketchy
+ *   * Description: Hand drawn ;)
+ *   * Version: 1.0beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: SK
