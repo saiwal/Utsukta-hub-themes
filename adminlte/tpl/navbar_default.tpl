@@ -13,7 +13,7 @@
       {{if $userinfo}}
       {{if $sel.name}}
       {{if $sitelocation}}
-      <div class="lh-1">
+      <div class="lh-1 d-flex flex-column align-items-center">
         <h1 class="h4 mb-2 text-white lh-1">{{$sel.name}}</h1>
         <small>{{$sitelocation}}</small>
       </div>
@@ -31,8 +31,9 @@
       {{if $userinfo}}
       {{if $sel.name}}
         {{if $settings_url}}
-        <span class="input-group-text pt-0 pb-0 ps-1 pe-1"><a id="nav-app-settings-link"
-            href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a></span>
+        <li class="nav-item">
+          <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
+        </li>
         {{/if}}
       {{/if}}
       {{/if}}
