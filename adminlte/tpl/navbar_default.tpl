@@ -33,9 +33,9 @@
 			{{if $sel.name}}
 			<div id="nav-app-link-wrapper" class="navbar-nav{{if $sitelocation}} has_location{{/if}}">
 				<a id="nav-app-link" href="{{$url}}" class="nav-link text-truncate" style="width: 100%">
-					{{$sel.name}}
+					{{$sel.name}} :
 					{{if $sitelocation}}
-					<br><small>{{$sitelocation}}</small>
+					<small>{{$sitelocation}}</small>
 					{{/if}}
 				</a>
 			</div>
