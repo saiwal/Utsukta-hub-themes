@@ -30,11 +30,11 @@
     <ul class="navbar-nav ml-auto">
       {{if $userinfo}}
       {{if $sel.name}}
-        {{if $settings_url}}
-        <li class="nav-item">
-          <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
-        </li>
-        {{/if}}
+      {{if $settings_url}}
+      <li class="nav-item">
+        <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
+      </li>
+      {{/if}}
       {{/if}}
       {{/if}}
 
@@ -53,6 +53,33 @@
       <li id="notifications-btn" class="nav-item d-xl-none">
         <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
             class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
+      </li>
+
+      <li class="nav-item dropdown">
+        <a class="nav-link" data-bs-toggle="dropdown" href="#">
+          <i class="bi bi-bell-fill"></i>
+          <span class="navbar-badge badge text-bg-warning">15</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+          <span class="dropdown-item dropdown-header">15 Notifications</span>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-envelope me-2"></i> 4 new messages
+            <span class="float-end text-secondary fs-7">3 mins</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-people-fill me-2"></i> 8 friend requests
+            <span class="float-end text-secondary fs-7">12 hours</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
+            <span class="float-end text-secondary fs-7">2 days</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+        </div>
       </li>
       {{/if}}
 
