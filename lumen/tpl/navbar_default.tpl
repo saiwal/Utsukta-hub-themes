@@ -9,10 +9,37 @@
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
       </li>
     </ul>
+    <ul class="navbar-nav">
+      {{if $userinfo}}
+      {{if $sel.name}}
+      {{if $sitelocation}}
+      <div class="lh-1 d-flex flex-column align-items-center">
+        <h1 class="h6 mb-2 text-white lh-1">{{$sel.name}}</h1>
+        <small>{{$sitelocation}}</small>
+      </div>
+      {{else}}
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="{{$url}}">{{$sel.name}}</a>
+      </li>
+      {{/if}}
+      {{/if}}
+      {{/if}}
+    </ul>
+
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+      {{if $userinfo}}
+      {{if $sel.name}}
+        {{if $settings_url}}
+        <li class="nav-item">
+          <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
+        </li>
+        {{/if}}
+      {{/if}}
+      {{/if}}
+
       <!-- Navbar Search -->
-      <li class="nav-item">
+      <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
             <input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value=""
@@ -21,17 +48,20 @@
           </form>
         </div>
       </li>
-				{{if $localuser || $nav.pubs}}
-				<li id="notifications-btn" class="nav-item d-xl-none">
-					<a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon" class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
-				</li>
-				{{/if}}
+
+      {{if $localuser || $nav.pubs}}
+      <li id="notifications-btn" class="nav-item d-xl-none">
+        <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
+            class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
+      </li>
+      {{/if}}
+
 
       {{if $userinfo}}
+
       <!--begin::User Menu Dropdown-->
       <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-          <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"> <span
-            class="d-none d-md-inline">{{$userinfo.name}}</span> </a>
+          <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"></a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
           {{if $is_owner}}
           <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow"
@@ -189,6 +219,15 @@
                 class="bi bi-sun-fill me-2"></i>Light</label>
           </div>
         </li>
+        <li class="nav-header d-block d-md-none">
+          <div class="navbar-search-block">
+            <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
+              <input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value=""
+                placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
+                onblur="closeMenu('nav-search'); openMenu('nav-search-btn');" />
+            </form>
+          </div>
+        </li>
 
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
@@ -235,4 +274,3 @@
   <!--end::Sidebar Wrapper-->
 </aside>
 <!--end::Sidebar-->
-
