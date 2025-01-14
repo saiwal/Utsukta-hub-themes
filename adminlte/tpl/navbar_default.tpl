@@ -12,7 +12,7 @@
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
       <!-- Navbar Search -->
-      <li class="nav-item">
+      <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
             <input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value=""
@@ -21,11 +21,12 @@
           </form>
         </div>
       </li>
-				{{if $localuser || $nav.pubs}}
-				<li id="notifications-btn" class="nav-item d-xl-none">
-					<a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon" class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
-				</li>
-				{{/if}}
+      {{if $localuser || $nav.pubs}}
+      <li id="notifications-btn" class="nav-item d-xl-none">
+        <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
+            class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
+      </li>
+      {{/if}}
 
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
@@ -189,6 +190,15 @@
                 class="bi bi-sun-fill me-2"></i>Light</label>
           </div>
         </li>
+        <li class="nav-header d-block d-md-none">
+          <div class="navbar-search-block">
+            <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
+              <input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value=""
+                placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
+                onblur="closeMenu('nav-search'); openMenu('nav-search-btn');" />
+            </form>
+          </div>
+        </li>
 
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
@@ -235,4 +245,3 @@
   <!--end::Sidebar Wrapper-->
 </aside>
 <!--end::Sidebar-->
-
