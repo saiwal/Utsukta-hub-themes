@@ -14,7 +14,7 @@
 <body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-open">
   <div class="app-wrapper">
 
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
+    <?php if (x($page, 'cnav')) echo $page['cnav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
