@@ -16,7 +16,7 @@
 // If you change the name of the theme to `yournewname` change `redbasicchild_init` to `yournewname_init` so it has a unique name.
 // You will also need to edit the style.php file if you change the directory name.
 
-function adminlte_init() {
+function vapor_init() {
 
     App::$theme_info['extends'] = 'redbasic';
 
