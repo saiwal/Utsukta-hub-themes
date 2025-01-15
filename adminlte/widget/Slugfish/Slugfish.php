@@ -5,8 +5,10 @@ namespace Zotlabs\Widget;
 
 class Slugfish {
 
-    function widget($args) {
+    function widget() {
 
       return("Hellooooo");
 
     }
+
+}
