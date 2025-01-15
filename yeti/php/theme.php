@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: Vapor
- *   * Description: Vapor + AdminLTE theme adapted  for Utsukta Hub
+ *   * Name: Yeti
+ *   * Description: Yeti + AdminLTE theme adapted  for Utsukta Hub
  *   * Version: 1.0beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
