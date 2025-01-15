@@ -107,7 +107,7 @@
 						{{foreach $item.responses as $verb=>$response}}
 						{{if $item.reactions_allowed || (!$item.reactions_allowed && $response.count)}}
 						<div class="">
-							<button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-sm btn-link{{if !$item.my_responses.$verb}} link-secondary{{/if}} wall-item-{{$response.button.class}}"{{if $response.modal}} data-bs-toggle="modal" data-bs-target="#{{$verb}}Modal-{{$item.id}}"{{else if $response.count}} data-bs-toggle="dropdown"{{elseif $item.reactions_allowed}} onclick="{{$response.button.onclick}}({{$item.id}},'{{$verb}}'); return false;"{{/if}} id="wall-item-{{$verb}}-{{$item.id}}">
+							<button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-sm btn-link{{if !$item.my_responses.$verb}} text-body-tertiary{{/if}} wall-item-{{$response.button.class}}"{{if $response.modal}} data-bs-toggle="modal" data-bs-target="#{{$verb}}Modal-{{$item.id}}"{{else if $response.count}} data-bs-toggle="dropdown"{{elseif $item.reactions_allowed}} onclick="{{$response.button.onclick}}({{$item.id}},'{{$verb}}'); return false;"{{/if}} id="wall-item-{{$verb}}-{{$item.id}}">
 								<i class="bi bi-{{$response.button.icon}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
 							</button>
 							{{if $response.modal}}
@@ -152,7 +152,7 @@
 						{{/foreach}}
 						{{if $item.toplevel && $item.emojis && $item.reactions}}
 						<div class="">
-							<button type="button" class="btn btn-sm btn-link link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
+							<button type="button" class="btn btn-sm btn-link text-body-tertiary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
 								<i class="bi bi-emoji-smile generic-icons"></i>
 							</button>
 							<div class="dropdown-menu dropdown-menu-start container text-center w-25">
@@ -179,22 +179,22 @@
 						{{else}}
 						{{if $item.star && $item.star.isstarred}}
 						<div class="" id="star-button-{{$item.id}}">
-							<button type="button" class="btn btn-sm btn-link link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></button>
+							<button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></button>
 						</div>
 						{{/if}}
 						{{if $item.attachments}}
 						<div class="">
-							<button type="button" class="btn btn-sm btn-link link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></button>
+							<button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></button>
 							<div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
 						</div>
 						{{/if}}
 						{{if $item.reply_to}}
-						<button type="button" title="{{$item.reply_to.0}}" class="btn btn-sm btn-link link-secondary" onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}} {{$item.name|escape:javascript}}');">
+						<button type="button" title="{{$item.reply_to.0}}" class="btn btn-sm btn-link text-body-tertiary" onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}} {{$item.name|escape:javascript}}');">
 							<i class="bi bi-arrow-90deg-left generic-icons" ></i>
 						</button>
 						{{/if}}
 						<div class="">
-							<button type="button" class="btn btn-sm btn-link link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
+							<button type="button" class="btn btn-sm btn-link text-body-tertiary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
 								<i class="bi bi-three-dots-vertical generic-icons"></i>
 							</button>
 							<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$item.id}}">
