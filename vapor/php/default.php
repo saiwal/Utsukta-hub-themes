@@ -19,9 +19,12 @@
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
       <div class="row">
+        <div class="col-12 col-md-8 col-lg-8 col-xl-6">
+          <?php if (x($page, 'content')) echo $page['content']; ?>
+        </div>
 
         <div class="col-md-4 d-md-block col-lg-4 col-xl-3">
-          <div class="offcanvas-md offcanvas-start" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
+          <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
             <div class="offcanvas-header">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
@@ -31,10 +34,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="col-12 col-md-8 col-lg-8 col-xl-6">
-          <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
         <div class="d-none d-xl-block col-3">

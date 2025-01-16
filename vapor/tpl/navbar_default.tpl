@@ -4,10 +4,6 @@
       <li class="nav-item">
         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
-          aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
-      </li>
     </ul>
     <ul class="navbar-nav">
       {{if $userinfo}}
@@ -30,11 +26,11 @@
     <ul class="navbar-nav ml-auto">
       {{if $userinfo}}
       {{if $sel.name}}
-        {{if $settings_url}}
-        <li class="nav-item">
-          <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
-        </li>
-        {{/if}}
+      {{if $settings_url}}
+      <li class="nav-item">
+        <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
+      </li>
+      {{/if}}
       {{/if}}
       {{/if}}
 
@@ -55,7 +51,6 @@
             class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
       </li>
       {{/if}}
-
 
       {{if $userinfo}}
 
@@ -171,6 +166,11 @@
       </li>
       {{/if}}
       {{/if}}
+      <li class="nav-item">
+        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
+          aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
+      </li>
+
     </ul> <!--end::End Navbar Links-->
   </div> <!--end::Container-->
 </nav>
