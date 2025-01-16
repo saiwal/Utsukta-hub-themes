@@ -123,7 +123,7 @@
               {{/if}}
               {{if $nav.logout}}
               <div class="col-12">
-                <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
+                <a href="{{$nav.logout.0}}" class="dropdown-item">{{$nav.logout.1}}</a>
               </div>
               {{/if}}
             </div> <!--end::Row-->
@@ -133,10 +133,10 @@
           <!--begin::Menu Footer-->
           <li class="user-footer">
             <div class="col-12">
-              <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a>
+              <a href="{{$nav.rusermenu.0}}" class="dropdown-item">{{$nav.rusermenu.1}}</a>
             </div>
             <div class="col-12">
-              <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
+              <a href="{{$nav.rusermenu.2}}" class="dropdown-item">{{$nav.rusermenu.3}}</a>
             </div>
           </li> <!--end::Menu Footer-->
           {{/if}}
