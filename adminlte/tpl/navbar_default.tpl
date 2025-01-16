@@ -254,7 +254,7 @@
             {{/foreach}}
           </ul>
         </li>
-        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-gear"></i>
+        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-plus-lg"></i>
             <p>{{$addapps}}</p>
           </a></li>
         {{else}}
