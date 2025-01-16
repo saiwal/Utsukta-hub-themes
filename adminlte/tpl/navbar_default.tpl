@@ -4,10 +4,6 @@
       <li class="nav-item">
         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
-          aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
-      </li>
     </ul>
     <ul class="navbar-nav">
       {{if $userinfo}}
@@ -170,6 +166,11 @@
       </li>
       {{/if}}
       {{/if}}
+      <li class="nav-item">
+        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
+          aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
+      </li>
+
     </ul> <!--end::End Navbar Links-->
   </div> <!--end::Container-->
 </nav>
