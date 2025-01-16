@@ -24,6 +24,7 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+      <!-- App settings icon-->
       {{if $userinfo}}
       {{if $sel.name}}
       {{if $settings_url}}
@@ -45,6 +46,7 @@
         </div>
       </li>
 
+      <!-- notificattion button for smaller screens-->
       {{if $localuser || $nav.pubs}}
       <li id="notifications-btn" class="nav-item d-xl-none">
         <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
@@ -52,27 +54,22 @@
       </li>
       {{/if}}
 
+      <!-- user dowpdown menu-->
       {{if $userinfo}}
-
       <!--begin::User Menu Dropdown-->
       <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
           <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"></a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end"> <!--begin::User Image-->
           {{if $is_owner}}
-          <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow"
-              alt="User Image">
-            <p>
-              {{$userinfo.name}}
-            </p>
-          </li> <!--end::User Image--> <!--begin::Menu Body-->
+          <!--begin::Menu Body-->
           <li class="user-body p-0">
             <!--begin::Profile Row-->
             <div class="row">
               {{foreach $nav.usermenu as $usermenu}}
-              <div class="col-6"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+              <div class="col-12"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
               {{/foreach}}
               {{if $nav.group}}
-              <div class="col-6"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
+              <div class="col-12"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
               </div>
               {{/if}}
             </div> <!--end::Row-->
@@ -81,7 +78,7 @@
           <li class="user-body p-0">
             <!--begin::Channels Row-->
             <div class="row">
-              <div class="col-6"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
+              <div class="col-12"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
               </div>
             </div> <!--end::Row-->
           </li>
@@ -102,12 +99,12 @@
           {{if $nav.settings}}
           <li class="user-body p-0">
             <div class="row">
-              <div class="col-6">
+              <div class="col-12">
                 <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem"
                   id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
               </div>
               {{if $nav.admin}}
-              <div class="col-6">
+              <div class="col-12">
                 <a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem"
                   id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
               </div>
@@ -120,12 +117,12 @@
           <li class="user-footer">
             <div class="row">
               {{if $nav.profiles}}
-              <div class="col-6">
+              <div class="col-12">
                 <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a>
               </div>
               {{/if}}
               {{if $nav.logout}}
-              <div class="col-6">
+              <div class="col-12">
                 <a href="{{$nav.logout.0}}" class="btn btn-default btn-flat">{{$nav.logout.1}}</a>
               </div>
               {{/if}}
@@ -166,6 +163,8 @@
       </li>
       {{/if}}
       {{/if}}
+
+      <!-- right sidebar button on smaller screen-->
       <li class="nav-item">
         <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
