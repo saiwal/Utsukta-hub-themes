@@ -130,16 +130,14 @@
           </li> <!--end::Menu Footer-->
           {{/if}}
           {{if ! $is_owner}}
-          <li class="user-header text-bg-secondary"> <img src="{{$userinfo.icon}}" class="bg-dark shadow"
-              alt="User Image">
-            <p>
-              {{$userinfo.name}}
-            </p>
-          </li> <!--end::User Image--> <!--begin::Menu Body-->
           <!--begin::Menu Footer-->
           <li class="user-footer">
-            <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a>
-            <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
+            <div class="col-12">
+              <a href="{{$nav.rusermenu.0}}" class="btn btn-default btn-flat">{{$nav.rusermenu.1}}</a>
+            </div>
+            <div class="col-12">
+              <a href="{{$nav.rusermenu.2}}" class="btn btn-default btn-flat float-end">{{$nav.rusermenu.3}}</a>
+            </div>
           </li> <!--end::Menu Footer-->
           {{/if}}
         </ul>
