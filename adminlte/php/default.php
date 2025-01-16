@@ -28,7 +28,7 @@
             <div class="offcanvas-header">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
-            <div class="offcanvas-body">
+            <div class="offcanvas-body px-0">
               <div class="container">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>
