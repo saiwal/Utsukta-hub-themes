@@ -11,14 +11,14 @@
   <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
-<body class="layout-fixed sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded sidebar-open">
+<body class="layout-fixed sidebar-expand-xl sidebar-mini bg-body-tertiary app-loaded sidebar-open">
   <div class="app-wrapper">
 
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
-      <div class="row">
+      <div class="d-flex justify-content-center row">
         <div class="col-12 col-md-8 col-lg-8 col-xl-6">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
@@ -34,10 +34,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="d-none d-xl-block col-3">
-          <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
         </div>
 
       </div>
