@@ -232,7 +232,7 @@
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-pin-angle-fill"></i>
             <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
-          <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+          <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: block; box-sizing: border-box;">
         {{foreach $navbar_apps as $navbar_app}}
         {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
         {{/foreach}}
