@@ -30,6 +30,8 @@
             </div>
             <div class="offcanvas-body px-0">
               <div class="container">
+
+                <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>
             </div>
