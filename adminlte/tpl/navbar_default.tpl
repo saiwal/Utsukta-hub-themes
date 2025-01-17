@@ -280,7 +280,7 @@
 		delay: 200,
 		delayOnTouchOnly: true,
 		onEnd: function (e) {
-			let nav_app_str = '';
+			let app_str = '';
 			$('#app-bin-container a').each(function () {
 				if(app_str.length) {
 					app_str = app_str.concat(',', $(this).text());
