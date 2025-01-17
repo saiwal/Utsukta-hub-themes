@@ -989,7 +989,7 @@ function collapseHeight() {
 					startOpen: open,
 					heightMargin: 50,
 					collapsedHeight: divmore_height,
-					moreLink: '<a href="#" class="divgrow-showmore fakelink btn btn-sm"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a>',
+					moreLink: '<div class="d-flex justify-content-center"><a href="#" class="divgrow-showmore fakelink btn btn-sm"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
 					lessLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a>',
 					beforeToggle: function(trigger, element, expanded) {
 						if(expanded) {
