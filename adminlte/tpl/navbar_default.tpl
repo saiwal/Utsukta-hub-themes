@@ -228,7 +228,7 @@
 
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
-        <li class="nav-item">
+        <li class="nav-item menu-open">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-pin-angle-fill"></i>
             <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
