@@ -303,5 +303,13 @@
 		}
 	});
 
+	var papp, app_icon, app_url;
+	$(document).on('dragstart', function (e) {
+		papp = e.target.dataset.papp || null;
+		app_icon = e.target.dataset.icon || null;
+		app_url = e.target.dataset.url || null;
+		app_name = e.target.dataset.name || null;
+	});
+
 </script>
 {{/if}}
