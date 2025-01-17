@@ -244,7 +244,7 @@
 
         {{if $is_owner}}
         <!-- Starred user apps -->
-        <li class="nav-item">
+        <li class="nav-item" id="nav-app-bin-container">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
