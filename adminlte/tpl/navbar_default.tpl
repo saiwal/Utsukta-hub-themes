@@ -282,11 +282,11 @@
 		onEnd: function (e) {
 			let nav_app_str = '';
 			$('#app-bin-container a').each(function () {
-				if(nav_app_str.length) {
-					nav_app_str = nav_app_str.concat(',', $(this).text());
+				if(app_str.length) {
+					app_str = app_str.concat(',', $(this).text());
 				}
 				else {
-					nav_app_str = nav_app_str.concat($(this).text());
+					app_str = app_str.concat($(this).text());
 				}
 			});
 			$.post(
