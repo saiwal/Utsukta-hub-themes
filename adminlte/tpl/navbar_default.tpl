@@ -294,8 +294,8 @@
 				{
 					'aj' : 1,
 					'cat' : 'system',
-					'k' : 'app_pin_order',
-					'v' : nav_app_str,
+					'k' : 'app_order',
+					'v' : app_str,
 					'form_security_token' : $('#app-bin-container').data('token')
 				}
 			);
