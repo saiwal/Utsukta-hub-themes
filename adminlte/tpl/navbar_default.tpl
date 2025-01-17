@@ -248,7 +248,7 @@
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
-          <ul id="nav-app-bin-container" data-token="{{$form_security_token}}" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+          <ul id="app-bin-container" data-token="{{$form_security_token}}" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
             {{foreach $nav_apps as $nav_app}}
             {{$nav_app}}
             {{/foreach}}
@@ -274,14 +274,14 @@
 
 {{if $is_owner}}
 <script>
-	var nav_app_bin_container = document.getElementById('nav-app-bin-container');
+	var nav_app_bin_container = document.getElementById('app-bin-container');
 	new Sortable(nav_app_bin_container, {
 		animation: 150,
 		delay: 200,
 		delayOnTouchOnly: true,
 		onEnd: function (e) {
 			let nav_app_str = '';
-			$('#nav-app-bin-container a').each(function () {
+			$('#app-bin-container a').each(function () {
 				if(nav_app_str.length) {
 					nav_app_str = nav_app_str.concat(',', $(this).text());
 				}
@@ -296,7 +296,7 @@
 					'cat' : 'system',
 					'k' : 'app_pin_order',
 					'v' : nav_app_str,
-					'form_security_token' : $('#nav-app-bin-container').data('token')
+					'form_security_token' : $('#app-bin-container').data('token')
 				}
 			);
 
