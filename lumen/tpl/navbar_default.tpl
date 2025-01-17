@@ -233,12 +233,12 @@
             <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
           <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: block; box-sizing: border-box;">
-        {{foreach $navbar_apps as $navbar_app}}
-        {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
-        {{/foreach}}
-        {{/if}}
+            {{foreach $navbar_apps as $navbar_app}}
+            {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+            {{/foreach}}
           </ul>
         </li>
+        {{/if}}
         <!-- Channel apps; needs fixing -->
         {{if $channel_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
