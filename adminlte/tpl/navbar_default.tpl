@@ -228,12 +228,17 @@
 
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
-        <li class="nav-header" aria-disabled="true">{{$pinned_apps}}</li>
+        <li class="nav-item">
+          <a href="#" class="nav-link"> <i class="nav-icon bi bi-pin-angle-fill"></i>
+            <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+          </a>
+          <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
         {{foreach $navbar_apps as $navbar_app}}
         {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
         {{/foreach}}
         {{/if}}
-
+          </ul>
+        </li>
         <!-- Channel apps; needs fixing -->
         {{if $channel_apps.0}}
         <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
@@ -245,7 +250,7 @@
         {{if $is_owner}}
         <!-- Starred user apps -->
         <li class="nav-item">
-          <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
+          <a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
           <ul id="app-bin-container" data-token="{{$form_security_token}}" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
@@ -296,6 +301,34 @@
 					'cat' : 'system',
 					'k' : 'app_order',
 					'v' : app_str,
+					'form_security_token' : $('#app-bin-container').data('token')
+				}
+			);
+
+		}
+	});
+	var nav_app_bin_container = document.getElementById('nav-app-bin-container');
+	new Sortable(nav_app_bin_container, {
+		animation: 150,
+		delay: 200,
+		delayOnTouchOnly: true,
+		onEnd: function (e) {
+			let nav_app_str = '';
+			$('#nav-app-bin-container a').each(function () {
+				if(nav_app_str.length) {
+					nav_app_str = nav_app_str.concat(',', $(this).text());
+				}
+				else {
+					nav_app_str = nav_app_str.concat($(this).text());
+				}
+			});
+			$.post(
+				'pconfig',
+				{
+					'aj' : 1,
+					'cat' : 'system',
+					'k' : 'app_pin_order',
+					'v' : nav_app_str,
 					'form_security_token' : $('#app-bin-container').data('token')
 				}
 			);
