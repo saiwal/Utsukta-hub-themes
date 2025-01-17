@@ -25,18 +25,26 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
+Some [Screenshots](/adminlte/screenshots/screenshots.md)
+
 ### Cosmo
 
 Based on AdminLTE and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
+![Screenshots](./cosmo/img/screenshot.jpg)
 
 ### Lumen
 
 Based on AdminLTE and uses [Bootswatch lumen](https://bootswatch.com/lumen/) for a unique look.
 
+![Screenshots](./lumen/img/screenshot.jpg)
+
 ### Sketchy
 
 Based on AdminLTE and uses [Bootswatch sketchy](https://bootswatch.com/sketchy/) for a unique look.
 
+![Screenshots](./sketchy/img/screenshot.jpg)
+
 ### Vapor
 
 Based on AdminLTE and uses [Bootswatch vapor](https://bootswatch.com/vapor/) for a unique look.
+![Screenshots](./vapor/img/screenshot.jpg)
