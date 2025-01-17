@@ -244,11 +244,11 @@
 
         {{if $is_owner}}
         <!-- Starred user apps -->
-        <li class="nav-item" id="nav-app-bin-container">
+        <li class="nav-item">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
-          <ul class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+          <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
             {{foreach $nav_apps as $nav_app}}
             {{$nav_app}}
             {{/foreach}}
