@@ -1,7 +1,7 @@
 <div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card clearfix generic-content-wrapper mt-2 mb-2{{/if}}" data-b64mids='{{$item.mids}}'>
 	<a name="{{$item.id}}" ></a>
 	<div class="clearfix wall-item-outside-wrapper {{$item.indent}}{{$item.previewing}}{{if $item.owner_url}} wallwall{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
-		<div class="wall-item-content-wrapper {{$item.indent}}" id="wall-item-content-wrapper-{{$item.id}}">
+		<div class="card-body wall-item-content-wrapper {{$item.indent}}" id="wall-item-content-wrapper-{{$item.id}}">
 			{{if $item.photo}}
 			<div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
 				{{$item.photo}}
@@ -84,7 +84,7 @@
 			<hr class="wall-item-divider">
 			{{/if}}
 			{{if $item.body}}
-			<div class="p-2 clrearfix {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}" id="wall-item-content-{{$item.id}}">
+			<div class="p-2 clearfix {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}" id="wall-item-content-{{$item.id}}">
 				<div class="wall-item-body" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 					{{$item.body}}
 				</div>
@@ -173,7 +173,7 @@
 			</div>
 		</div>
 		{{if $item.conv}}
-		<div class="p-2 wall-item-conv" id="wall-item-conv-{{$item.id}}" >
+		<div class="card-footer wall-item-conv" id="wall-item-conv-{{$item.id}}" >
 			<a href='{{$item.conv.href}}' id='context-{{$item.id}}' title='{{$item.conv.title}}'>{{$item.conv.title}}</a>
 		</div>
 		{{/if}}
