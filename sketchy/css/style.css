@@ -28,3 +28,15 @@
 a {
   text-decoration: none;
 }
+.wall-item-footer {
+  font-size: small;
+  text-align: end;
+}
+blockquote {
+  margin: 0 0 1rem;
+  border-left-color: var(--bs-primary);
+  border-left-style: solid;
+  padding-left: 1rem;
+  color: rgba(var(--bs-info-rgb), var(--bs-text-opacity)) !important;
+  border-left-width: thick;
+}
