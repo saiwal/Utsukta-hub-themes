@@ -1,4 +1,4 @@
-	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} generic-content-wrapper card card-outline h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}}" data-b64mids='{{$item.mids}}'>
+	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} generic-content-wrapper card h-entry mb-4 {{else}} u-comment h-cite card-footer text-body-secondary{{/if}}" data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}" ></a>
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
 			<div class="clearfix wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
@@ -13,9 +13,8 @@
 				</div>
 				{{/if}}
 				{{if $item.title && !$item.event}}
-				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header h3" id="wall-item-title-{{$item.id}}">
-          <h3 class="card-title">
-            {{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</h3>
+				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header" id="wall-item-title-{{$item.id}}">
+            {{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 				</div>
 				{{if ! $item.is_new}}
 				<hr class="m-0">
