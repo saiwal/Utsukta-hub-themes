@@ -1,6 +1,6 @@
 <div id="design-tools" class="card mb-2">
   <div class="card-header">
-    <div class="card-title">{{$title}}</div>
+    {{$title}}
   </div>
   <div class="card-body">
     <div class="list-group list-group-flush">

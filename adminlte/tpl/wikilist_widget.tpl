@@ -1,6 +1,6 @@
 <div id="wiki_list" class="card mb-3">
   <div class="card-header">
-	<h3 class="card-title">{{$header}}</h3>
+    {{$header}}
   </div>
   <div class="card-body">
 	<ul class="nav nav-pills flex-column">
