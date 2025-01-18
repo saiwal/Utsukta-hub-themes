@@ -17,7 +17,7 @@ function toggle_posted_date_button() {
 
 <div id="datebrowse-sidebar" class="card mb-3">
   <div class="card-header">
-	<h3 class="card-title">{{$title}}</h3>
+	{{$title}}
   </div>
   <div class="card-body">
 	<script>function dateSubmit(dateurl) { window.location.href = dateurl; } </script>

@@ -4,7 +4,7 @@
 </div>
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
-	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card card-outline generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
+	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer text-body-secondary{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}" ></a>
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
 			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
@@ -19,10 +19,8 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header border-bottom-0 h3" id="wall-item-title-{{$item.id}}">
-          <div class="card-title">
+				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header border-bottom-0" id="wall-item-title-{{$item.id}}">
 					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="card-title text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</div>
-				</div>
 				{{if ! $item.is_new}}
 				<hr class="m-0">
 				{{/if}}
@@ -58,7 +56,7 @@
 							{{if $item.contact_id}}
 							<div class="spinner-wrapper contact-edit-rotator contact-edit-rotator-{{$item.contact_id}}"><div class="spinner s"></div></div>
 							{{/if}}
-							<img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown" />
+							<img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name img-thumbnail" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown" />
 							{{if $item.author_is_group_actor}}
 							<i class="bi bi-chat-quote-fill wall-item-photo-group-actor" title="{{$item.author_is_group_actor}}"></i>
 							{{/if}}

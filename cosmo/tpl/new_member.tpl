@@ -1,6 +1,6 @@
 <div class="card card-outline card-success collapsed-card mb-3">
   <div class="card-header">
-    <h3 class="card-title">{{$title}}</h3>
+    {{$title}}
     <div class="card-tools">
       <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
         <i data-lte-icon="expand" class="bi bi-plus-lg"></i>

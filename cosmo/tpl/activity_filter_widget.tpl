@@ -1,13 +1,13 @@
 <div class="card mb-3">
   <div class="card-header">
-	<h3 class="d-flex justify-content-between align-items-center card-title">
+	<span class="d-flex justify-content-between align-items-center">
 		{{$title}}
 		{{if $reset}}
 		<a href="{{$reset.url}}" class="text-muted" title="{{$reset.title}}">
 			<i class="bi bi-{{$reset.icon}}"></i>
 		</a>
 		{{/if}}
-	</h3>
+	</span>
   </div>
   <div class="card-body">
 	{{$content}}

@@ -1,6 +1,6 @@
 <div class="card mb-3">
   <div class="card-header">
-	<h3 class="card-title">{{$title}}</h3>
+	{{$title}}
   </div>
   <div class="card-body">
 	<ul class="nav nav-pills flex-column">

@@ -1,6 +1,6 @@
 <div class="card mb-3" id="dir_sort_links">
   <div class="card-header">
-    <h3 class="card-title">{{$header}}</h3>
+    {{$header}}
   </div>
   <div class="card-body">
     {{include file="field_checkbox.tpl" field=$safemode}}

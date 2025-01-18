@@ -3,8 +3,8 @@
   {{/if}}
   {{if $menu.menu_desc}}
   <div class="card-header">
-    <h5 class="card-title">{{$menu.menu_desc}}{{if $edit}} <a href="mitem/{{$nick}}/{{$menu.menu_id}}"
-        title="{{$edit}}"><i class="bi bi-pencil fakelink" title="{{$edit}}"></i></a>{{/if}}</h5>
+    {{$menu.menu_desc}}{{if $edit}} <a href="mitem/{{$nick}}/{{$menu.menu_id}}"
+        title="{{$edit}}"><i class="bi bi-pencil fakelink" title="{{$edit}}"></i></a>{{/if}}
   </div>
   {{/if}}
   <div class="card-body">

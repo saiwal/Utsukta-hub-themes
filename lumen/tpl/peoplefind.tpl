@@ -1,6 +1,6 @@
 <div id="peoplefind-sidebar" class="card mb-3">
   <div class="card-header">
-	<h3 class="card-title">{{$findpeople}}</h3>
+	{{$findpeople}}
   </div>
   <div class="card-body">
 	<form action="directory" method="post" />
