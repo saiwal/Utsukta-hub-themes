@@ -9,11 +9,15 @@
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
       <div>
-        <h5 class="card-title p-2">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2" title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2" title="{{$profile.online}}"></i>{{/if}}</h5>
+        <h5 class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2" title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2" title="{{$profile.online}}"></i>{{/if}}</h5>
         <h6 class="card-subtitle text-muted">{{$profile.reddress}}</h6>
       </div>
+      {{if $connect}}
+      <a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
+        <i class="bi bi-plus-lg"></i> {{$connect}}
+      </a>
+      {{/if}}
     </div>
-
   </div>
 
   <div class="card-body">
@@ -24,6 +28,14 @@
         {{$no_pdsec}}
       {{/if}}
     </p>
+    {{if $profile.pdesc}}
+      <div class="m-2 small text-break">{{$profile.pdesc}}</div>
+      {{else}}
+      <div class="m-2 small">
+        <span class="opacity-50">{{$no_pdesc}}</span>
+      </div>
+      {{/if}}
+
   </div>
   <ul class="list-group list-group-flush">
     <li class="list-group-item">Cras justo odio</li>
