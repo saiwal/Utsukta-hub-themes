@@ -1,6 +1,6 @@
 <div class="card mb-3">
   <!--<h3 class="card-header">Card header</h3>-->
-  <img class="d-block user-select-none" width="100%" height="200" aria-label="Placeholder: Image cap" focusable="false" role="img" preserveaspectratio="xMidYMid slice" viewbox="0 0 318 180" style="font-size:1.125rem;text-anchor:middle" src="{{$cover.url}}"></img>
+  <img class="d-block user-select-none" width="100%" style="font-size:1.125rem;text-anchor:middle" src="{{$cover.url}}"></img>
   <div class="card-body p-0">
     <div class="d-flex">
       <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden me-2"
@@ -9,7 +9,9 @@
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
       <div>
-        <h5 class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2" title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2" title="{{$profile.online}}"></i>{{/if}}</h5>
+        <h5 class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
+            title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
+            title="{{$profile.online}}"></i>{{/if}}</h5>
         <h6 class="card-subtitle text-muted">{{$profile.reddress}}</h6>
       </div>
       {{if $connect}}
@@ -21,31 +23,33 @@
   </div>
 
   <div class="card-body">
-    <p class="card-text">
-      {{if $profile.pdesc}}
-        {{$profile.pdsec}}
-      {{else}}
-        {{$no_pdsec}}
-      {{/if}}
-    </p>
     {{if $profile.pdesc}}
-      <p class="card-text">{{$profile.pdesc}}</p>
-      {{else}}
-      <p class="card-text text-muted">
-        {{$no_pdesc}}
-      </p>
-      {{/if}}
-
+    <p class="card-text">{{$profile.pdesc}}</p>
+    {{else}}
+    <p class="card-text text-muted">
+      {{$no_pdesc}}
+    </p>
+    {{/if}}
   </div>
+
+  {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
   <ul class="list-group list-group-flush">
+    {{if $location}}
     <li class="list-group-item">Cras justo odio</li>
+    {{/if}}
+    {{if $hometown}}
     <li class="list-group-item">Dapibus ac facilisis in</li>
+    {{if $gender}}
     <li class="list-group-item">Vestibulum at eros</li>
+    {{if $marital}}
   </ul>
   <div class="card-body">
-    <a href="#" class="card-link">Card link</a>
-    <a href="#" class="card-link">Another link</a>
+    {{if $homepage}}
+    <span class="card-link">{{$homepage}}</span>
+    <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
   </div>
+  {{/if}}
+
   <div class="card-footer text-muted">
     2 days ago
   </div>
