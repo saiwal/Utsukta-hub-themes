@@ -6,7 +6,7 @@
     <div class="d-flex">
       <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
-        <img class="" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
+        <img class="img-thumbnail" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
       <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
