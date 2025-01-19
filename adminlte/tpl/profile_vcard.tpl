@@ -76,12 +76,14 @@
       <dd class="marital-text">{{$profile.marital}}</dd>
     </li>
     {{/if}}
-  </ul>
-  <div class="card-body">
     {{if $homepage}}
-    <span class="card-link">{{$homepage}}</span>
-    <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
-  </div>
+    <li class="list-group-item">
+      <dt class="card-link"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$homepage}}</dt>
+      <dd class="card-link">
+        <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
+      </dd>
+    </li>
+  </ul>
   {{/if}}
   {{/if}}
 
