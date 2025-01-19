@@ -10,11 +10,11 @@
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
       <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
-        <div class="h4">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
+        <div class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
             title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
             title="{{$profile.online}}"></i>{{/if}}
         </div>
-        <div class="h5 text-muted">{{$profile.reddress}}</div>
+        <div class="card-subtitle text-muted">{{$profile.reddress}}</div>
       </div>
       {{if $connect}}
       <a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
