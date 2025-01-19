@@ -29,11 +29,11 @@
       {{/if}}
     </p>
     {{if $profile.pdesc}}
-      <div class="m-2 small text-break">{{$profile.pdesc}}</div>
+      <p class="card-text">{{$profile.pdesc}}</div>
       {{else}}
-      <div class="m-2 small">
-        <span class="opacity-50">{{$no_pdesc}}</span>
-      </div>
+      <p class="card-text text-muted">
+        {{$no_pdesc}}
+      </p>
       {{/if}}
 
   </div>
