@@ -12770,7 +12770,7 @@ fieldset:disabled .btn {
     }
     .sidebar-expand-xl.layout-fixed .app-main {
         flex: 1 1 auto;
-        overflow: auto;
+        /*overflow: auto;*/
     }
     .sidebar-expand-xl.layout-fixed .app-sidebar {
         position: -webkit-sticky;
