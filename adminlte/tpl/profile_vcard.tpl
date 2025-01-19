@@ -9,11 +9,12 @@
         <img class="u-photo card-img-bottom" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
-      <div>
-        <h5 class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
+      <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
+        <div class="h4">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
             title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
-            title="{{$profile.online}}"></i>{{/if}}</h5>
-        <h6 class="card-subtitle text-muted">{{$profile.reddress}}</h6>
+            title="{{$profile.online}}"></i>{{/if}}
+        </div>
+        <div class="h5 text-muted">{{$profile.reddress}}</div>
       </div>
       {{if $connect}}
       <a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
@@ -73,23 +74,19 @@
     <li class="list-group-item">
 
       <dt class="marital-label"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
-      <dd class="marital-text">{{$profile.marital}}</dd>
+      <dd class="marital-text ps-2">{{$profile.marital}}</dd>
     </li>
     {{/if}}
     {{if $homepage}}
     <li class="list-group-item">
       <dt class="card-link"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$homepage}}</dt>
-      <dd class="card-link">
+      <dd class="ps-2">
         <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
       </dd>
     </li>
   </ul>
   {{/if}}
   {{/if}}
-
-  <div class="card-footer text-muted">
-    2 days ago
-  </div>
 </div>
 
 {{if $details}}
