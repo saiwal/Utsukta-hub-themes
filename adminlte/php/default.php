@@ -18,7 +18,7 @@
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
-      <div class="container-xl d-flex justify-content-center row">
+      <div class="container-xl row">
         <div class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
