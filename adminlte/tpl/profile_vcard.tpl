@@ -29,7 +29,7 @@
       {{/if}}
     </p>
     {{if $profile.pdesc}}
-      <p class="card-text">{{$profile.pdesc}}</div>
+      <p class="card-text">{{$profile.pdesc}}</p>
       {{else}}
       <p class="card-text text-muted">
         {{$no_pdesc}}
