@@ -15,8 +15,9 @@ blockquote {
 }
 .sticky-column {
   position: sticky;
-  top: 56px;
+  top: 72px;
   z-index: 1020; /* Optional: Ensures it appears above other elements */
   overflow-y: auto;
   height: 100vh;
+  scrollbar-width: none;
 }
