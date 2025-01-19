@@ -83,6 +83,7 @@
     <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
   </div>
   {{/if}}
+  {{/if}}
 
   <div class="card-footer text-muted">
     2 days ago
