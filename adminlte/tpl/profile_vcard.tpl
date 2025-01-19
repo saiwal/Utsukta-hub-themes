@@ -35,13 +35,34 @@
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
   <ul class="list-group list-group-flush">
     {{if $location}}
-    <li class="list-group-item">Cras justo odio</li>
+    <li class="list-group-item">
+      <dt class="location-label">{{$location}}</dt>
+      <dd class="adr h-adr">
+        {{if $profile.address}}
+        <div class="street-address p-street-address">{{$profile.address}}</div>
+        {{/if}}
+        <div class="city-state-zip">
+          <span class="postal-code p-postal-code">{{$profile.postal_code}}</span>
+          <span class="locality p-locality">{{$profile.locality}}</span>
+        </div>
+        {{if $profile.region}}
+        <div class="region p-region">{{$profile.region}}</div>
+        {{/if}}
+        {{if $profile.country_name}}
+        <div class="country-name p-country-name">{{$profile.country_name}}</div>
+        {{/if}}
+      </dd>
+    </li>
     {{/if}}
     {{if $hometown}}
     <li class="list-group-item">Dapibus ac facilisis in</li>
+    {{/if}}
     {{if $gender}}
     <li class="list-group-item">Vestibulum at eros</li>
+    {{/if}}
     {{if $marital}}
+    <li class="list-group-item">Vestibulum at eros</li>
+    {{/if}}
   </ul>
   <div class="card-body">
     {{if $homepage}}
