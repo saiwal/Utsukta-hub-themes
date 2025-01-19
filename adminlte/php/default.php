@@ -18,7 +18,8 @@
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
-      <div class="container-xl row">
+      <div class="container-xl">
+        <div class="row">
         <div class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
@@ -37,7 +38,7 @@
             </div>
           </div>
         </div>
-
+        </div>
       </div>
     </main>
     <!-- /.content-wrapper -->
