@@ -54,7 +54,7 @@ head_add_css('/vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
 head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 
-head_add_css('/view/theme/journal/css/adminlte.min.css');
+head_add_css('/view/theme/journal/css/adminlte.css');
 head_add_css('/view/theme/journal/css/bootstrap.min.css');
 head_add_css('/view/theme/journal/css/overlayscrollbar.min.css');
 head_add_css('/view/theme/journal/css/style.css');

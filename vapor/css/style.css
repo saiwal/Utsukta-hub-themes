@@ -49,3 +49,12 @@ blockquote {
   color: rgba(var(--bs-info-rgb), var(--bs-text-opacity)) !important;
   border-left-width: thick;
 }
+.sticky-column {
+  position: sticky;
+  top: 72px;
+  z-index: 1020; /* Optional: Ensures it appears above other elements */
+  overflow-y: auto;
+  height: calc(100vh - 72px);
+  min-height: calc(100vh - 72px);
+  scrollbar-width: none;
+}

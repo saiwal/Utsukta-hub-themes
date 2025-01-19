@@ -54,7 +54,7 @@ head_add_css('/vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
 head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 
-head_add_css('/view/theme/yeti/css/adminlte.min.css');
+head_add_css('/view/theme/yeti/css/adminlte.css');
 head_add_css('/view/theme/yeti/css/bootstrap.min.css');
 head_add_css('/view/theme/yeti/css/overlayscrollbar.min.css');
 head_add_css('/view/theme/yeti/css/style.css');
