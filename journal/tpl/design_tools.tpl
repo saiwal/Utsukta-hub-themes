@@ -1,4 +1,4 @@
-<div id="design-tools" class="card mb-2">
+<div id="design-tools" class="card mb-3">
   <div class="card-header">
     {{$title}}
   </div>
