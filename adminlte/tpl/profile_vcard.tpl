@@ -1,21 +1,16 @@
 <div class="card mb-3">
   <!--<h3 class="card-header">Card header</h3>-->
-  <svg xmlns="http://www.w3.org/2000/svg" class="d-block user-select-none" width="100%" height="200"
-    aria-label="Placeholder: Image cap" focusable="false" role="img" preserveAspectRatio="xMidYMid slice"
-    viewBox="0 0 318 180" style="font-size:1.125rem;text-anchor:middle">
-    <rect width="100%" height="100%" fill="#868e96"></rect>
-    <text x="50%" y="50%" fill="#dee2e6" dy=".3em">Image cap</text>
-  </svg>
-  <div class="card-body">
+  <img class="d-block user-select-none" width="100%" height="200" aria-label="Placeholder: Image cap" focusable="false" role="img" preserveaspectratio="xMidYMid slice" viewbox="0 0 318 180" style="font-size:1.125rem;text-anchor:middle" src="{{$cover.url}}"></img>
+  <div class="card-body p-0">
     <div class="d-flex">
-      <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden"
+      <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
         <img class="u-photo card-img-bottom" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
       </div>
       <div>
-        <h5 class="card-title"></h5>
-        <h6 class="card-subtitle text-muted">Support card subtitle</h6>
+        <h5 class="card-title p-2">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2" title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2" title="{{$profile.online}}"></i>{{/if}}</h5>
+        <h6 class="card-subtitle text-muted">{{$profile.reddress}}</h6>
       </div>
     </div>
 
