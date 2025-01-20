@@ -5,9 +5,9 @@
  *   * Version: 1.0beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: aside
+ *   * ContentRegion: aside, right_aside_wrapper
  *   * ContentRegion: content, region_2
- *   * ContentRegion: right_aside
+ *   * ContentRegion: right_aside, left_aside_wrapper
  */
 ?>
 <!DOCTYPE html>
@@ -42,8 +42,11 @@
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
-              <div class="container">
+              <div class="container row">
+                <div id="left_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+                </div>
+                <div id="right_aside_wrapper">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>
             </div>
