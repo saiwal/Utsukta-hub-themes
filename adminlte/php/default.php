@@ -7,7 +7,7 @@
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
  *   * ContentRegion: right_aside, left_aside_wrapper
- *   * ContentRegion: content, region_1
+ *   * ContentRegion: content, region_2
  */
 ?>
 <!DOCTYPE html>
@@ -32,7 +32,7 @@
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
-        <div id="region_1" class="col-12 col-md-8 col-lg-8">
+        <div id="region_2" class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
@@ -43,7 +43,7 @@
             </div>
             <div class="offcanvas-body px-0">
               <div class="container row">
-                <div id="region_2">
+                <div id="region_3">
                 <div id="left_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
