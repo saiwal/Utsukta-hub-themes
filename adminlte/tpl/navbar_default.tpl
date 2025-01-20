@@ -47,7 +47,7 @@
       </li>
       <!-- notificattion button for smaller screens-->
       {{if $localuser || $nav.pubs}}
-      <li id="notifications-btn" class="nav-item d-xl-none">
+      <li id="notifications-btn" class="nav-item d-md-none">
         <a class="nav-link notifications-btn" id="notifications-btn-icon" href="#"><i class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
       </li>
       <script>
