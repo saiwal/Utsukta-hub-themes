@@ -7,7 +7,7 @@
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
  *   * ContentRegion: right_aside, left_aside_wrapper
- *   * ContentRegion: content, region_2
+ *   * ContentRegion: content, region_1
  */
 ?>
 <!DOCTYPE html>
