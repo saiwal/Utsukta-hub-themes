@@ -5,6 +5,7 @@
  *   * Version: 1.0beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
+ *   * ContentRegion: aside, left_aside_wrapper
  *   * ContentRegion: content, region_2
  *   * ContentRegion: right_aside, right_aside_wrapper
  */
@@ -35,15 +36,16 @@
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div id="right_aside_wrapper" class="col-md-4 d-md-block col-lg-4 sticky-column">
+        <div class="col-md-4 d-md-block col-lg-4 sticky-column">
           <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
             <div class="offcanvas-header">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
-              <div id="right_aside" class="container">
-
+              <div id="right_aside_wrapper" class="container">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+              </div> 
+              <div id="left_aside_wrapper" class="container">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>
             </div>
