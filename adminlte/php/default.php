@@ -1,3 +1,14 @@
+<?php
+/**
+ *   * Name: default
+ *   * Description: AdminLTE default 2-column layout
+ *   * Version: 1.0beta
+ *   * Author: Saiwal
+ *   * Maintainer: Saiwal
+ *   * ContentRegion: content, region_2
+ *   * ContentRegion: right_aside, right_aside_wrapper
+ */
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -20,17 +31,17 @@
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
-        <div class="col-12 col-md-8 col-lg-8">
+        <div id="region_2" class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div class="col-md-4 d-md-block col-lg-4 sticky-column">
+        <div id="right_aside_wrapper" class="col-md-4 d-md-block col-lg-4 sticky-column">
           <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
             <div class="offcanvas-header">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
-              <div class="container">
+              <div id="right_aside" class="container">
 
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
