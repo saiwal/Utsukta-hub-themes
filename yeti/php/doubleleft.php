@@ -1,3 +1,15 @@
+<?php
+/**
+ *   * Name: default
+ *   * Description: AdminLTE default 2-column layout
+ *   * Version: 1.0beta
+ *   * Author: Saiwal
+ *   * Maintainer: Saiwal
+ *   * ContentRegion: aside, right_aside_wrapper
+ *   * ContentRegion: right_aside, left_aside_wrapper
+ *   * ContentRegion: content, region_2
+ */
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -20,7 +32,7 @@
     <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
-        <div class="col-12 col-md-8 col-lg-8">
+        <div id="region_2" class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
@@ -30,10 +42,16 @@
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
-              <div class="container">
-
+              <div class="container row">
+                <div id="region_1">
+                <div id="left_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+                </div>
+                </div>
+                <div id="region_3">
+                <div id="right_aside_wrapper">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
               </div>
             </div>
           </div>
