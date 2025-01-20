@@ -29,7 +29,7 @@
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
-    <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
+    <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
         <div id="region_2" class="col-12 col-md-8 col-lg-8">
