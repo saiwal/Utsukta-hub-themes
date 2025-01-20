@@ -5,9 +5,9 @@
  *   * Version: 1.0beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: content, region_2
  *   * ContentRegion: aside, right_aside_wrapper
  *   * ContentRegion: right_aside, left_aside_wrapper
+ *   * ContentRegion: content, region_2
  */
 ?>
 <!DOCTYPE html>
