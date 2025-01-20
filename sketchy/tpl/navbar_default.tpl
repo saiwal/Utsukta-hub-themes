@@ -45,13 +45,17 @@
           </form>
         </div>
       </li>
-
       <!-- notificattion button for smaller screens-->
       {{if $localuser || $nav.pubs}}
-      <li id="notifications-btn" class="nav-item d-xl-none">
-        <a class="nav-link notifications-btn" href="#"><i id="notifications-btn-icon"
-            class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
+      <li id="notifications-btn" class="nav-item d-md-none">
+        <a class="nav-link notifications-btn" id="notifications-btn-icon" href="#"><i class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
       </li>
+      <script>
+        document.getElementById('notifications-btn').addEventListener('click', function (event) {
+          event.preventDefault(); // Prevent default link behavior
+        });
+      </script>
+
       {{/if}}
 
       <!-- user dowpdown menu-->
@@ -253,7 +257,8 @@
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
-          <ul id="app-bin-container" data-token="{{$form_security_token}}" class="nav nav-treeview" style="display: none; box-sizing: border-box;">
+          <ul id="app-bin-container" data-token="{{$form_security_token}}" class="nav nav-treeview"
+            style="display: none; box-sizing: border-box;">
             {{foreach $nav_apps as $nav_app}}
             {{$nav_app}}
             {{/foreach}}
@@ -279,70 +284,70 @@
 
 {{if $is_owner}}
 <script>
-	var nav_app_bin_container = document.getElementById('app-bin-container');
-	new Sortable(nav_app_bin_container, {
-		animation: 150,
-		delay: 200,
-		delayOnTouchOnly: true,
-		onEnd: function (e) {
-			let app_str = '';
-			$('#app-bin-container a').each(function () {
-				if(app_str.length) {
-					app_str = app_str.concat(',', $(this).text());
-				}
-				else {
-					app_str = app_str.concat($(this).text());
-				}
-			});
-			$.post(
-				'pconfig',
-				{
-					'aj' : 1,
-					'cat' : 'system',
-					'k' : 'app_order',
-					'v' : app_str,
-					'form_security_token' : $('#app-bin-container').data('token')
-				}
-			);
+  var nav_app_bin_container = document.getElementById('app-bin-container');
+  new Sortable(nav_app_bin_container, {
+    animation: 150,
+    delay: 200,
+    delayOnTouchOnly: true,
+    onEnd: function (e) {
+      let app_str = '';
+      $('#app-bin-container a').each(function () {
+        if (app_str.length) {
+          app_str = app_str.concat(',', $(this).text());
+        }
+        else {
+          app_str = app_str.concat($(this).text());
+        }
+      });
+      $.post(
+        'pconfig',
+        {
+          'aj': 1,
+          'cat': 'system',
+          'k': 'app_order',
+          'v': app_str,
+          'form_security_token': $('#app-bin-container').data('token')
+        }
+      );
 
-		}
-	});
-	var nav_app_bin_container = document.getElementById('nav-app-bin-container');
-	new Sortable(nav_app_bin_container, {
-		animation: 150,
-		delay: 200,
-		delayOnTouchOnly: true,
-		onEnd: function (e) {
-			let nav_app_str = '';
-			$('#nav-app-bin-container a').each(function () {
-				if(nav_app_str.length) {
-					nav_app_str = nav_app_str.concat(',', $(this).text());
-				}
-				else {
-					nav_app_str = nav_app_str.concat($(this).text());
-				}
-			});
-			$.post(
-				'pconfig',
-				{
-					'aj' : 1,
-					'cat' : 'system',
-					'k' : 'app_pin_order',
-					'v' : nav_app_str,
-					'form_security_token' : $('#app-bin-container').data('token')
-				}
-			);
+    }
+  });
+  var nav_app_bin_container = document.getElementById('nav-app-bin-container');
+  new Sortable(nav_app_bin_container, {
+    animation: 150,
+    delay: 200,
+    delayOnTouchOnly: true,
+    onEnd: function (e) {
+      let nav_app_str = '';
+      $('#nav-app-bin-container a').each(function () {
+        if (nav_app_str.length) {
+          nav_app_str = nav_app_str.concat(',', $(this).text());
+        }
+        else {
+          nav_app_str = nav_app_str.concat($(this).text());
+        }
+      });
+      $.post(
+        'pconfig',
+        {
+          'aj': 1,
+          'cat': 'system',
+          'k': 'app_pin_order',
+          'v': nav_app_str,
+          'form_security_token': $('#app-bin-container').data('token')
+        }
+      );
 
-		}
-	});
+    }
+  });
 
-	var papp, app_icon, app_url;
-	$(document).on('dragstart', function (e) {
-		papp = e.target.dataset.papp || null;
-		app_icon = e.target.dataset.icon || null;
-		app_url = e.target.dataset.url || null;
-		app_name = e.target.dataset.name || null;
-	});
+  var papp, app_icon, app_url;
+  $(document).on('dragstart', function (e) {
+    papp = e.target.dataset.papp || null;
+    app_icon = e.target.dataset.icon || null;
+    app_url = e.target.dataset.url || null;
+    app_name = e.target.dataset.name || null;
+  });
 
 </script>
 {{/if}}
