@@ -45,7 +45,11 @@
           </form>
         </div>
       </li>
-
+<script>
+  document.getElementById('notifications-btn').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent default link behavior
+  });
+</script>
       <!-- notificattion button for smaller screens-->
       {{if $localuser || $nav.pubs}}
       <li id="notifications-btn" class="nav-item d-xl-none">
