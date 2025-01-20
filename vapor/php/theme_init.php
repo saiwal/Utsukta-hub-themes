@@ -57,7 +57,7 @@ head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.
 head_add_css('/view/theme/vapor/css/adminlte.css');
 head_add_css('/view/theme/vapor/css/bootstrap.min.css');
 head_add_css('/view/theme/vapor/css/overlayscrollbar.min.css');
-head_add_css('/view/theme/vapor/css/style.css');
+/*head_add_css('/view/theme/vapor/css/style.css');*/
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootbox/bootbox.min.js');

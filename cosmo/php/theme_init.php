@@ -57,7 +57,7 @@ head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.
 head_add_css('/view/theme/cosmo/css/adminlte.css');
 head_add_css('/view/theme/cosmo/css/bootstrap.min.css');
 head_add_css('/view/theme/cosmo/css/overlayscrollbar.min.css');
-head_add_css('/view/theme/cosmo/css/style.css');
+/*head_add_css('/view/theme/cosmo/css/style.css');*/
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootbox/bootbox.min.js');
