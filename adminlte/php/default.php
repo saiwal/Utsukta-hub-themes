@@ -43,11 +43,15 @@
             </div>
             <div class="offcanvas-body px-0">
               <div class="container row">
+                <div id="region_1">
                 <div id="left_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
+                </div>
+                <div id="region_3">
                 <div id="right_aside_wrapper">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
               </div>
             </div>
           </div>
