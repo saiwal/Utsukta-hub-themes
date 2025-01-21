@@ -18,8 +18,9 @@ blockquote {
   border-left-color: var(--bs-primary);
   border-left-style: solid;
   padding-left: 1rem;
-  color: rgba(var(--bs-text-body-secondary), var(--bs-text-opacity)) !important;
+  color: var(--bs-body-color);
   border-left-width: thick;
+  background: var(--bs-tertiary-bg);
 }
 .sticky-column {
   position: sticky;
