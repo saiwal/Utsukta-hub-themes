@@ -10,7 +10,7 @@
       {{if $sel.name}}
       {{if $sitelocation}}
       <div class="lh-1 d-flex flex-column align-items-center">
-        <h1 class="h6 mb-2 text-white lh-1">{{$sel.name}}</h1>
+        <h1 class="h6 mb-2 lh-1">{{$sel.name}}</h1>
         <small>{{$sitelocation}}</small>
       </div>
       {{else}}
