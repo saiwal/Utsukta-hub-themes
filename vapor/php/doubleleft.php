@@ -29,26 +29,26 @@
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
-    <main class="app-main px-3 py-3" style="min-height: calc(100vh - 56px);">
+    <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
         <div id="region_2" class="col-12 col-md-8 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div class="col-md-4 d-md-block col-lg-4 sticky-column">
+        <div class="col-md-4 d-md-block col-lg-4 sticky-column pe-0">
           <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
-            <div class="offcanvas-header">
+            <div class="offcanvas-header mt-2">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
-              <div class="container row">
-                <div id="region_1">
+              <div class="container row pe-0">
+                <div id="region_1" class="pe-0">
                 <div id="left_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
                 </div>
-                <div id="region_3">
+                <div id="region_3" class="pe-0">
                 <div id="right_aside_wrapper">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>

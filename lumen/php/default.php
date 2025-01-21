@@ -38,7 +38,7 @@
 
         <div class="col-md-4 d-md-block col-lg-4 sticky-column pe-0">
           <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
-            <div class="offcanvas-header">
+            <div class="offcanvas-header mt-2">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body px-0">
