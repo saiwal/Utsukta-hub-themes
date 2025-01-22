@@ -214,3 +214,6 @@ blockquote {
 #cboxContent {
   background: var(--bs-tertiary-bg);
 }
+#cboxWrapper {
+  z-index: 2000;
+}
