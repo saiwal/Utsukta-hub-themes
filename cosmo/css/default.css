@@ -148,3 +148,6 @@ blockquote {
   min-height: calc(100vh - 72px);
   scrollbar-width: none;
 }
+#cboxContent {
+  background: var(--bs-tertiary-bg);
+}
