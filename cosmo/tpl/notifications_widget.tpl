@@ -546,7 +546,7 @@
 		}
 
 		// Filter thread_top notifications if the filter is active
-		let filterThreadTop = document.getElementById('cn-' + notifyType + '-input');
+		let filterThreadTop = document.getElementById('tt-' + notifyType + '-only');
 		if (filterThreadTop && filterThreadTop.classList.contains('active')) {
 			let notifications = notify_menu.querySelectorAll('[data-thread_top="false"]');
 			notifications.forEach(notification => notification.classList.add('tt-filter-active'));
