@@ -214,6 +214,6 @@ blockquote {
 #cboxContent {
   background: var(--bs-tertiary-bg);
 }
-##colorbox, #cboxOverlay, #cboxWrapper {
+#colorbox, #cboxOverlay, #cboxWrapper {
   z-index: 2000;
 }
