@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Journal
- *   * Description: Journal + AdminLTE theme adapted  for Utsukta Hub
+ *   * Description: Crisp like a new sheet of paper
  *   * Version: 1.0beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
