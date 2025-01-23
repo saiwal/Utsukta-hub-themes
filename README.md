@@ -32,17 +32,10 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 Based on AdminLTE and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
 ![Screenshots](./cosmo/img/screenshot.jpg)
 
-### Lumen
+### Journal
 
-Based on AdminLTE and uses [Bootswatch lumen](https://bootswatch.com/lumen/) for a unique look.
-
-![Screenshots](./lumen/img/screenshot.jpg)
-
-### Sketchy
-
-Based on AdminLTE and uses [Bootswatch sketchy](https://bootswatch.com/sketchy/) for a unique look.
-
-![Screenshots](./sketchy/img/screenshot.jpg)
+Based on AdminLTE and uses [Bootswatch Journal](https://bootswatch.com/journal/) for a unique look.
+![Screenshots](./journal/img/screenshot.jpg)
 
 ### Vapor
 

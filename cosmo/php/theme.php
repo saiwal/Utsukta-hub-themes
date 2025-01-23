@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Cosmo
- *   * Description: A clean sober look
+ *   * Description: An ode to Metro
  *   * Version: 1.0beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
