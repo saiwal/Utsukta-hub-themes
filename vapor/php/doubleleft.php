@@ -1,7 +1,7 @@
 <?php
 /**
- *   * Name: default
- *   * Description: AdminLTE default 2-column layout
+ *   * Name: doubleleft
+ *   * Description: AdminLTE doubleleft layout
  *   * Version: 1.0beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
@@ -26,6 +26,7 @@
 <body class="layout-fixed sidebar-expand-xl sidebar-mini bg-body-tertiary app-loaded sidebar-open">
   <div class="app-wrapper">
 
+	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
