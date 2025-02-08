@@ -13,7 +13,7 @@
 			<li class="nav-item"{{if $ps.id}} id="{{$ps.id}}"{{/if}}>
 				<a class="nav-link{{if $ps.sel}} {{$ps.sel}}{{/if}}" href="{{$ps.url}}"{{if $ps.title}} title="{{$ps.title}}"{{/if}}>
 				{{if $ps.icon}}<i class="bi bi-{{$ps.icon}}"></i>{{/if}}
-				{{if $ps.img}}<img class="menu-img-1" src="{{$ps.img}}">{{/if}}
+				{{if $ps.img}}<img class="menu-img-1 img-thumbnail" src="{{$ps.img}}">{{/if}}
 				{{$ps.label}}
 				{{if $ps.lock}}<i class="bi bi-{{$ps.lock}} text-muted"></i>{{/if}}
 				</a>

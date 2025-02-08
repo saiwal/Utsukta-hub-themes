@@ -20,7 +20,7 @@
 				<hr class="m-0">
 				{{/if}}
 				{{/if}}
-				<div class="p-2 wall-item-head{{if $item.is_new && !$item.event && !$item.is_comment}} wall-item-head-new{{/if}} mb-3" >
+				<div class="p-2 wall-item-head{{if $item.is_new && !$item.event && !$item.is_comment}} wall-item-head-new{{/if}} card-body" >
 					<div class="lh-sm text-end float-end">
 						<div class="wall-item-ago opacity-75" id="wall-item-ago-{{$item.id}}">
 							{{if $item.location}}
