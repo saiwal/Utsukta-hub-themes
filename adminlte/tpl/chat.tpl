@@ -317,7 +317,7 @@ function adjustFullscreenTopBarHeight() {
 }
 
 function adjustInlineTopBarHeight() {
-	$('#chatTopBar').height($(window).height() - $('#chatBottomBar').outerHeight(true) - $('.section-title-wrapper').outerHeight(true) - $('nav').outerHeight(true) - 23);
+	$('#chatTopBar').height($(window).height() - $('#chatBottomBar').outerHeight(true) - $('.section-title-wrapper').outerHeight(true) - $('nav').outerHeight(true) - 56);
 	$('#chatTopBar').scrollTop($('#chatTopBar').prop('scrollHeight'));
 }
 
