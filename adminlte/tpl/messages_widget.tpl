@@ -33,7 +33,7 @@
 	<div id="messages-template" rel="template" class="d-none">
 		<a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
 			<div class="mb-2 align-middle">
-				<img src="{9}" loading="lazy" class="rounded float-start me-2 menu-img-2">
+				<img src="{9}" loading="lazy" class="rounded float-start me-2 menu-img-2 shadow">
 				<div class="text-nowrap">
 					<div class="d-flex justify-content-between align-items-center lh-sm">
 						<div class="text-truncate">
