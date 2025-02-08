@@ -1,4 +1,4 @@
-<ul class="nav nav-tabs nav-fill clearfix">
+<ul class="nav nav-underline nav-fill clearfix">
 	<li class="nav-item">
 		<a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
 			<i class="bi bi-chat generic-icons"></i>
