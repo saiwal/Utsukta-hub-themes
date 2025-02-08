@@ -24,9 +24,7 @@
         <div id="chatLineHolder"></div>
       </div>
       <div class="clear"></div>
-  </div>
-  <!-- /.card-body -->
-  <div class="card-footer" id="chatBottomBar">
+      <div class="card-footer" id="chatBottomBar">
     <form id="chat-form" method="post" action="#">
     <input type="hidden" name="room_id" value="{{$room_id}}" />
     <div class="mb-3">
@@ -99,17 +97,10 @@
       </div>
     </div>
     </form>
-
-    <form action="#" method="post">
-      <div class="input-group">
-        <input type="text" name="message" placeholder="Type Message ..." class="form-control">
-        <span class="input-group-append">
-          <button type="button" class="btn btn-warning">Send</button>
-        </span>
-      </div>
-    </form>
   </div>
-  <!-- /.card-footer-->
+
+  </div>
+  <!-- /.card-body -->
 </div>
 <script>
 var room_id = {{$room_id}};
