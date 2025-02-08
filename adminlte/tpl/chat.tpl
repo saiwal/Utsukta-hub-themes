@@ -1,4 +1,4 @@
-<div class="generic-content-wrapper card direct-chat">
+<div class="generic-content-wrapper card">
 	<div class="section-title-wrapper card-header">
 		<div class="float-end card-tools">
 			{{if $is_owner}}
@@ -14,7 +14,7 @@
 		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
-	<div id="chatContainer" class="section-content-wrapper">
+	<div id="chatContainer" class="section-content-wrapper card-body">
 		<div id="chatTopBar">
 			<div id="chat-top-spinner" class="spinner-wrapper">
 				<div class="spinner m"></div>
