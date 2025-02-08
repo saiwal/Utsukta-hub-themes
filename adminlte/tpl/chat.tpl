@@ -1,104 +1,116 @@
-<div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
-		<div class="float-end">
-			{{if $is_owner}}
-			<form id="chat-destroy" method="post" action="chat">
-				<input type="hidden" name="room_name" value="{{$room_name}}" />
-				<input type="hidden" name="action" value="drop" />
-				<button class="btn btn-danger btn-sm" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
-			</form>
-			{{/if}}
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
-		</div>
-		<h4>{{$room_name}}</h4>
-		<div class="clear"></div>
-	</div>
-	<div id="chatContainer" class="section-content-wrapper">
-		<div id="chatTopBar">
-			<div id="chat-top-spinner" class="spinner-wrapper">
-				<div class="spinner m"></div>
-			</div>
-			<div id="chatLineHolder"></div>
-		</div>
-		<div class="clear"></div>
-		<div id="chatBottomBar" >
-			<form id="chat-form" method="post" action="#">
-				<input type="hidden" name="room_id" value="{{$room_id}}" />
-				<div class="mb-3">
-					<textarea id="chatText" name="chat_text" class="form-control"></textarea>
-				</div>
-				<div id="chat-submit-wrapper" class="clearfix">
-					<div id="chat-submit" class="dropup float-end">
-						<button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
-						<button class="btn btn-primary btn-sm" type="submit" id="chat-submit" name="submit" value="{{$submit}}">{{$submit}}</button>
-						<div class="dropdown-menu dropdown-menu-end">
-							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=online"><i class="bi bi-circle-fill online"></i>&nbsp;{{$online}}</a>
-							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
-							<a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
-                       					<div class="dropdown-divider"></div>
-                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-slash-fill"></i>&nbsp;Toggle notifications</a>
-                        				<a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
-							{{if $bookmark_link}}
-                         				<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="{{$bookmark_link}}" target="_blank" ><i class="bi bi-bookmark-fill"></i>&nbsp;{{$bookmark}}</a>
-							{{/if}}
-						</div>
-					</div>
-					<div id="chat-tools" class="btn-toolbar">
-						<div class="btn-group me-2">
-							<button id="main-editor-bold" class="btn btn-outline-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
-								<i class="bi bi-type-bold jot-icons"></i>
-							</button>
-							<button id="main-editor-italic" class="btn btn-outline-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
-								<i class="bi bi-type-italic jot-icons"></i>
-							</button>
-							<button id="main-editor-underline" class="btn btn-outline-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
-								<i class="bi bi-type-underline jot-icons"></i>
-							</button>
-							<button id="main-editor-quote" class="btn btn-outline-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
-								<i class="bi bi-quote jot-icons"></i>
-							</button>
-							<button id="main-editor-code" class="btn btn-outline-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
-								<i class="bi bi-code jot-icons"></i>
-							</button>
-						</div>
-						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-link-wrapper" class="btn btn-outline-secondary btn-sm" onclick="chatJotGetLink(); return false;" >
-								<i id="chat-link" class="bi bi-link-45deg jot-icons" title="{{$insert}}" ></i>
-							</button>
-						</div>
-						{{if $feature_encrypt}}
-						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-encrypt-wrapper" class="btn btn-outline-secondary btn-sm" onclick="sodium_encrypt('#chatText'); return false;">
-								<i id="chat-encrypt" class="bi bi-key jot-icons" title="{{$encrypt}}" ></i>
-							</button>
-						</div>
-						{{/if}}
-						<div class="btn-group dropup d-md-none">
-							<button type="button" id="more-tools" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-								<i id="more-tools-icon" class="bi bi-gear jot-icons"></i>
-							</button>
-							<div class="dropdown-menu">
-								<a class="dropdown-item" href="#" onclick="chatJotGetLink(); return false;" ><i class="bi bi-link-45deg"></i>&nbsp;{{$insert}}</a>
-								{{if $feature_encrypt}}
-								<div class="dropdown-divider"></div>
-								<a class="dropdown-item" href="#" onclick="sodium_encrypt('#chatText'); return false;"><i class="bi bi-key"></i>&nbsp;{{$encrypt}}</a>
-								{{/if}}
-							</div>
-						</div>
-						<div class="btn-group">
-							<div id="chat-rotator" class="mt-2 spinner-wrapper">
-								<div class="spinner s"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-</div>
+<div class="card direct-chat direct-chat-warning">
+  <div class="card-header">
+    <h3 class="card-title">Direct Chat</h3>
+    <div class="card-tools">
+      {{if $is_owner}}
+      <form id="chat-destroy" method="post" action="chat">
+        <input type="hidden" name="room_name" value="{{$room_name}}" />
+        <input type="hidden" name="action" value="drop" />
+        <button class="btn btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
+      </form>
+      {{/if}}
+      <button id="fullscreen-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
+      <button id="inline-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
+    </div>
+  </div>
+  <!-- /.card-header -->
+  <div class="card-body">
+    <!-- Conversations are loaded here -->
+    <div id="chatContainer" class="direct-chat-messages">
+      <div id="chatTopBar">
+        <div id="chat-top-spinner" class="spinner-wrapper">
+          <div class="spinner m"></div>
+        </div>
+        <div id="chatLineHolder"></div>
+      </div>
+      <div class="clear"></div>
+  </div>
+  <!-- /.card-body -->
+  <div class="card-footer" id="chatBottomBar">
+    <form id="chat-form" method="post" action="#">
+    <input type="hidden" name="room_id" value="{{$room_id}}" />
+    <div class="mb-3">
+      <textarea id="chatText" name="chat_text" class="form-control"></textarea>
+    </div>
+    <div id="chat-submit-wrapper" class="clearfix">
+      <div id="chat-submit" class="dropup float-end">
+        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
+        <button class="btn btn-primary btn-sm" type="submit" id="chat-submit" name="submit" value="{{$submit}}">{{$submit}}</button>
+        <div class="dropdown-menu dropdown-menu-end">
+          <a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=online"><i class="bi bi-circle-fill online"></i>&nbsp;{{$online}}</a>
+          <a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
+          <a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
+                            <div class="dropdown-divider"></div>
+                            <a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-slash-fill"></i>&nbsp;Toggle notifications</a>
+                            <a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
+          {{if $bookmark_link}}
+                            <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="{{$bookmark_link}}" target="_blank" ><i class="bi bi-bookmark-fill"></i>&nbsp;{{$bookmark}}</a>
+          {{/if}}
+        </div>
+      </div>
+      <div id="chat-tools" class="btn-toolbar">
+        <div class="btn-group me-2">
+          <button id="main-editor-bold" class="btn btn-outline-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
+            <i class="bi bi-type-bold jot-icons"></i>
+          </button>
+          <button id="main-editor-italic" class="btn btn-outline-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
+            <i class="bi bi-type-italic jot-icons"></i>
+          </button>
+          <button id="main-editor-underline" class="btn btn-outline-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
+            <i class="bi bi-type-underline jot-icons"></i>
+          </button>
+          <button id="main-editor-quote" class="btn btn-outline-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
+            <i class="bi bi-quote jot-icons"></i>
+          </button>
+          <button id="main-editor-code" class="btn btn-outline-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
+            <i class="bi bi-code jot-icons"></i>
+          </button>
+        </div>
+        <div class="btn-group me-2 d-none d-md-flex">
+          <button id="chat-link-wrapper" class="btn btn-outline-secondary btn-sm" onclick="chatJotGetLink(); return false;" >
+            <i id="chat-link" class="bi bi-link-45deg jot-icons" title="{{$insert}}" ></i>
+          </button>
+        </div>
+        {{if $feature_encrypt}}
+        <div class="btn-group me-2 d-none d-md-flex">
+          <button id="chat-encrypt-wrapper" class="btn btn-outline-secondary btn-sm" onclick="sodium_encrypt('#chatText'); return false;">
+            <i id="chat-encrypt" class="bi bi-key jot-icons" title="{{$encrypt}}" ></i>
+          </button>
+        </div>
+        {{/if}}
+        <div class="btn-group dropup d-md-none">
+          <button type="button" id="more-tools" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i id="more-tools-icon" class="bi bi-gear jot-icons"></i>
+          </button>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="#" onclick="chatJotGetLink(); return false;" ><i class="bi bi-link-45deg"></i>&nbsp;{{$insert}}</a>
+            {{if $feature_encrypt}}
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" onclick="sodium_encrypt('#chatText'); return false;"><i class="bi bi-key"></i>&nbsp;{{$encrypt}}</a>
+            {{/if}}
+          </div>
+        </div>
+        <div class="btn-group">
+          <div id="chat-rotator" class="mt-2 spinner-wrapper">
+            <div class="spinner s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </form>
 
+    <form action="#" method="post">
+      <div class="input-group">
+        <input type="text" name="message" placeholder="Type Message ..." class="form-control">
+        <span class="input-group-append">
+          <button type="button" class="btn btn-warning">Send</button>
+        </span>
+      </div>
+    </form>
+  </div>
+  <!-- /.card-footer-->
+</div>
 <script>
 var room_id = {{$room_id}};
 var last_chat = 0;
@@ -156,7 +168,7 @@ function update_inroom(inroom) {
 	$.each( inroom, function(index, item) {
 		var newNode = document.createElement('div');
 		newNode.setAttribute('class', 'member-item');
-		$(newNode).html('<img class="menu-img-2" src="' + item.img + '" alt="' + item.name + '" /> ' + '<span class="contactname">' + item.name + '</span><span class="' + item.status_class + '">' + item.status + '</span>');
+		$(newNode).html('<img class="img-size-32 img-thumbnail" src="' + item.img + '" alt="' + item.name + '" /> ' + '<span class="contactname">' + item.name + '</span><span class="' + item.status_class + '">' + item.status + '</span>');
 		html.appendChild(newNode);
 	});
     memberChange = chatRoomMembersChange(inroom); // get list of arrivals and departures
