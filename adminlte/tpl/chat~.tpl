@@ -1,17 +1,17 @@
-<div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
-		<div class="float-end">
+<div class="generic-content-wrapper card">
+	<div class="section-title-wrapper card-header">
+		<div class="float-end card-tools">
 			{{if $is_owner}}
 			<form id="chat-destroy" method="post" action="chat">
 				<input type="hidden" name="room_name" value="{{$room_name}}" />
 				<input type="hidden" name="action" value="drop" />
-				<button class="btn btn-danger btn-sm" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
+				<button class="btn btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
 			</form>
 			{{/if}}
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
+			<button id="fullscreen-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
+			<button id="inline-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h2>{{$room_name}}</h2>
+		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
 	<div id="chatContainer" class="section-content-wrapper">
@@ -22,7 +22,7 @@
 			<div id="chatLineHolder"></div>
 		</div>
 		<div class="clear"></div>
-		<div id="chatBottomBar" >
+		<div id="chatBottomBar" class="card-footer">
 			<form id="chat-form" method="post" action="#">
 				<input type="hidden" name="room_id" value="{{$room_id}}" />
 				<div class="mb-3">
