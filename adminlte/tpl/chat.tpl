@@ -196,11 +196,11 @@ function update_chats(chats) {
 		var newNode = document.createElement('div');
 
 		if(item.self) {
-			newNode.setAttribute('class', 'chat-item-self clear');
+			newNode.setAttribute('class', 'direct-chat-msg end');
 			$(newNode).html('<div class="chat-body-self"><div class="chat-item-title-self wall-item-ago"><span class="chat-item-name-self">' + item.name + ' </span><span class="autotime chat-item-time-self" title="' + item.isotime + '">' + item.localtime + '</span></div><div class="chat-item-text-self">' + item.text + '</div></div><img class="chat-item-photo-self" src="' + item.img + '" alt="' + item.name + '" />');
 		}
 		else {
-			newNode.setAttribute('class', 'chat-item clear');
+			newNode.setAttribute('class', 'direct-chat-msg');
 			$(newNode).html('<img class="chat-item-photo" src="' + item.img + '" alt="' + item.name + '" /><div class="chat-body"><div class="chat-item-title wall-item-ago"><span class="chat-item-name">' + item.name + ' </span><span class="autotime chat-item-time" title="' + item.isotime + '">' + item.localtime + '</span></div><div class="chat-item-text">' + item.text + '</div></div>');
             chat_issue_notification(item.name + ':\n' + item.text, 'Hubzilla Chat');
 		}
