@@ -1,4 +1,4 @@
-<ul class="nav nav-tabs nav-fill clearfix">
+<ul class="nav nav-underline nav-fill clearfix">
 	<li class="nav-item">
 		<a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
 			<i class="bi bi-chat generic-icons"></i>
@@ -33,7 +33,7 @@
 	<div id="messages-template" rel="template" class="d-none">
 		<a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
 			<div class="mb-2 align-middle">
-				<img src="{9}" loading="lazy" class="rounded float-start me-2 menu-img-2">
+				<img src="{9}" loading="lazy" class="rounded float-start me-2 menu-img-2 shadow">
 				<div class="text-nowrap">
 					<div class="d-flex justify-content-between align-items-center lh-sm">
 						<div class="text-truncate">
@@ -75,7 +75,7 @@
 		{{foreach $entries as $e}}
 		<a href="{{$e.href}}" class="list-group-item list-group-item-action message" data-b64mid="{{$e.b64mid}}">
 			<div class="mb-2 align-middle">
-				<img src="{{$e.author_img}}" loading="lazy" class="rounded float-start me-2 menu-img-2">
+				<img src="{{$e.author_img}}" loading="lazy" class="rounded float-start me-2 menu-img-2 shadow">
 				<div class="text-nowrap">
 					<div class="d-flex justify-content-between align-items-center lh-sm">
 						<div class="text-truncate pe-1">
