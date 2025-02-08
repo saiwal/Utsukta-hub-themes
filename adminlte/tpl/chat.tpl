@@ -14,7 +14,7 @@
 		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
-	<div id="chatContainer" class="section-content-wrapper">
+	<div id="chatContainer" class="section-content-wrapper direct-chat-messages">
 		<div id="chatTopBar">
 			<div id="chat-top-spinner" class="spinner-wrapper">
 				<div class="spinner m"></div>
