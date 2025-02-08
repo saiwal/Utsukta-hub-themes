@@ -197,11 +197,11 @@ function update_chats(chats) {
 
 		if(item.self) {
 			newNode.setAttribute('class', 'direct-chat-msg end');
-			$(newNode).html('<div class="chat-body-self"><div class="chat-item-title-self wall-item-ago"><span class="chat-item-name-self">' + item.name + ' </span><span class="autotime chat-item-time-self" title="' + item.isotime + '">' + item.localtime + '</span></div><div class="chat-item-text-self">' + item.text + '</div></div><img class="chat-item-photo-self" src="' + item.img + '" alt="' + item.name + '" />');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-end">' + item.name + '</span><span class="direct-chat-timestamp float-start">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
 		}
 		else {
-			newNode.setAttribute('class', 'direct-chat-msg');
-$(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-start">' + item.name + '</span><span class="direct-chat-timestamp float-end">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
+			newNode.setAttribute('class', 'direct-chat-msg p-2');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-start">' + item.name + '</span><span class="direct-chat-timestamp float-end">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
             chat_issue_notification(item.name + ':\n' + item.text, 'Hubzilla Chat');
 		}
 		$('#chatLineHolder').append(newNode);
