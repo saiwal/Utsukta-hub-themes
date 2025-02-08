@@ -11,7 +11,7 @@
 			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-tool" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
 			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-tool" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h2>{{$room_name}}</h2>
+		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
 	<div id="chatContainer" class="section-content-wrapper">
@@ -22,7 +22,7 @@
 			<div id="chatLineHolder"></div>
 		</div>
 		<div class="clear"></div>
-		<div id="chatBottomBar" >
+		<div id="chatBottomBar" class="card-footer">
 			<form id="chat-form" method="post" action="#">
 				<input type="hidden" name="room_id" value="{{$room_id}}" />
 				<div class="mb-3">
