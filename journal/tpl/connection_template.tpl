@@ -2,18 +2,16 @@
   <div class="row g-0">
 
 <div id="contact-entry-wrapper-{{$contact.id}}">
-	<div class="section-subtitle-wrapper clearfix card-header pb-0 border-bottom-0">
+	<div class="section-subtitle-wrapper clearfix card-header border-bottom-0">
 		<div class="float-end">
 			{{if $contact.status}}
 			{{foreach $contact.states as $state}}
 			<span class="badge rounded-pill bg-danger text-white me-1" title="">{{$state}}</span>
 			{{/foreach}}
 			{{/if}}
-			<span id="contact-role-{{$contact.id}}" class="badge rounded-pill bg-warning text-dark me-1" title="{{$role_label}}">{{$contact.role}}</span>
-			<button type="button" class="btn btn-outline-secondary btn-sm contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
-				<i class="fa fa-fw fa-pencil contact-edit-icon-{{$contact.id}}"></i>
-				<div class="spinner-wrapper contact-edit-rotator-{{$contact.id}}" style="vertical-align: text-bottom; margin-right: 2px"><div class="spinner s"></div></div>
-				{{$contact.edit}}
+			<span id="contact-role-{{$contact.id}}" class="badge bg-warning text-dark me-1" title="{{$role_label}}">{{$contact.role}}</span>
+			<button type="button" class="btn btn-tool contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
+				<i class="bi bi-pencil contact-edit-icon-{{$contact.id}}"></i>
 			</button>
 
 		</div>
