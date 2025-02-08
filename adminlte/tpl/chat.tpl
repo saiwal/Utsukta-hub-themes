@@ -1,5 +1,5 @@
-<div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
+<div class="generic-content-wrapper card direct-chat direct-chat-warning">
+	<div class="section-title-wrapper card-header">
 		<div class="float-end">
 			{{if $is_owner}}
 			<form id="chat-destroy" method="post" action="chat">
@@ -11,10 +11,10 @@
 			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
 			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h2>{{$room_name}}</h2>
+		<h3 class="card-title">{{$room_name}}</div>
 		<div class="clear"></div>
 	</div>
-	<div id="chatContainer" class="section-content-wrapper">
+	<div id="chatContainer" class="section-content-wrapper card-body">
 		<div id="chatTopBar">
 			<div id="chat-top-spinner" class="spinner-wrapper">
 				<div class="spinner m"></div>
