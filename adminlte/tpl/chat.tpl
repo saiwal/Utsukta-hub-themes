@@ -1,4 +1,4 @@
-<div class="generic-content-wrapper card direct-chat direct-chat-warning">
+<div class="generic-content-wrapper">
 	<div class="section-title-wrapper card-header">
 		<div class="float-end">
 			{{if $is_owner}}
