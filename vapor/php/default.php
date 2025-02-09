@@ -2,7 +2,7 @@
 /**
  *   * Name: default
  *   * Description: AdminLTE default 2-column layout
- *   * Version: 1.0beta
+ *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper

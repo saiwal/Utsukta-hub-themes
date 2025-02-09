@@ -3,7 +3,7 @@
 /**
  *   * Name: Cosmo
  *   * Description: An ode to Metro
- *   * Version: 1.0beta
+ *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: SK

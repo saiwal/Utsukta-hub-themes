@@ -3,7 +3,7 @@
 /**
  *   * Name: Journal
  *   * Description: Crisp like a new sheet of paper
- *   * Version: 1.0beta
+ *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: SK
