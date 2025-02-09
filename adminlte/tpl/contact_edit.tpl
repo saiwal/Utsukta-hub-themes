@@ -2,7 +2,7 @@
   <div id="contact-edit-tools" class="accordion"  role="tablist" >
 			<div class="accordion-item" role="tab" id="roles-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" href="#" aria-expanded="true" aria-controls="roles-tool-collapse" data-section="roles">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" aria-expanded="true" aria-controls="roles-tool-collapse" data-section="roles">
 						{{$roles_label}}
 					</button>
 				</h2>
@@ -52,7 +52,7 @@
 		{{if $groups}}
 			<div class="accordion-item" role="tab" id="group-tool">
         <h2 class="accordion-header">
-					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" href="#" aria-expanded="true" aria-controls="group-tool-collapse" data-section="group">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" aria-expanded="true" aria-controls="group-tool-collapse" data-section="group">
 						{{$pgroups_label}}
 					</button>
 				</h2>
@@ -71,7 +71,7 @@
 		{{if $multiprofs}}
 			<div class="accordion-item" role="tab" id="profile-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" href="#" aria-expanded="true" aria-controls="profile-tool-collapse" data-section="profile">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" aria-expanded="true" aria-controls="profile-tool-collapse" data-section="profile">
 						{{$profiles_label}}
 					</button>
 				</h2>
@@ -88,7 +88,7 @@
 		{{if $slide}}
 			<div class="accordion-item" role="tab" id="affinity-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" href="#" aria-expanded="true" aria-controls="affinity-tool-collapse" data-section="affinity">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" aria-expanded="true" aria-controls="affinity-tool-collapse" data-section="affinity">
 						{{$affinity_label}}
 					</button>
 				</h2>
@@ -104,7 +104,7 @@
 		{{if $connfilter}}
 			<div class="accordion-item" role="tab" id="filter-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" href="#" aria-expanded="true" aria-controls="filter-tool-collapse" data-section="filter">
+					<button class="accordion-button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" aria-expanded="true" aria-controls="filter-tool-collapse" data-section="filter">
 						{{$filter_label}}
 					</button>
 				</h2>
