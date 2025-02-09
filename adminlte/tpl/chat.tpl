@@ -37,7 +37,7 @@
 							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
 							<a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
                        					<div class="dropdown-divider"></div>
-                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-slash-fill"></i>&nbsp;Toggle notifications</a>
+                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi"></i>&nbsp;Toggle notifications</a>
                         				<a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
 							{{if $bookmark_link}}
                          				<div class="dropdown-divider"></div>
