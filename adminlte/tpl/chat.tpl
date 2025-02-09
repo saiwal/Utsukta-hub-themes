@@ -150,12 +150,12 @@ function load_chats() {
 var previousChatRoomMembers = null; // initialize chat room member change register
 var currentChatRoomMembers = null; // initialize chat room member change register
 function update_inroom(inroom) {
-	var html = document.createElement('div');
+	var html = document.createElement('ul');
+  html.setAttribute('class', 'contacts-list');
 	var count = inroom.length;
 	$.each( inroom, function(index, item) {
-		var newNode = document.createElement('div');
-		newNode.setAttribute('class', 'member-item');
-		$(newNode).html('<li><img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img img-size-32"><div class="contacts-list-info"><span class="contacts-list-name">'+ item.name +'<small class="contacts-list-date float-end">' + item.status + '</small></span></div></li>');    
+		var newNode = document.createElement('li');
+		$(newNode).html('<img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img img-size-32"><div class="contacts-list-info"><span class="contacts-list-name">'+ item.name +'<small class="contacts-list-date float-end">' + item.status + '</small></span></div>');    
 		html.appendChild(newNode);
 	});
     memberChange = chatRoomMembersChange(inroom); // get list of arrivals and departures

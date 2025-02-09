@@ -9,6 +9,6 @@
     </div>
   </div>
   <div class="card-body">
-    <ul id="chatMembers" class="contacts-list"></ul>
+    <div id="chatMembers"></div>
   </div>
 </div>
