@@ -703,7 +703,7 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="mb-0">
-	<div id="no_notifications" class="d-block d-md-none">
+	<div id="no_notifications" class="d-block d-none">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 	</div>
 	<div id="nav-notifications-template" rel="template" class="d-none">
