@@ -37,7 +37,7 @@
 							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
 							<a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
                        					<div class="dropdown-divider"></div>
-                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-slash-fill"></i>&nbsp;Toggle notifications</a>
+                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-fill"></i>&nbsp;Toggle notifications</a>
                         				<a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
 							{{if $bookmark_link}}
                          				<div class="dropdown-divider"></div>
@@ -197,11 +197,11 @@ function update_chats(chats) {
 
 		if(item.self) {
 			newNode.setAttribute('class', 'direct-chat-msg end');
-      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-end">' + item.name + '</span><span class="direct-chat-timestamp float-start">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-end">' + item.name + '</span><span class="direct-chat-timestamp float-start">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text float-end">'+ item.text +'</div>');
 		}
 		else {
 			newNode.setAttribute('class', 'direct-chat-msg p-2');
-      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-start">' + item.name + '</span><span class="direct-chat-timestamp float-end">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-start">' + item.name + '</span><span class="direct-chat-timestamp float-end">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text float-start">'+ item.text +'</div>');
             chat_issue_notification(item.name + ':\n' + item.text, 'Hubzilla Chat');
 		}
 		$('#chatLineHolder').append(newNode);
