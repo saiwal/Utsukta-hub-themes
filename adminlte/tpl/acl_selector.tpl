@@ -3,17 +3,17 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h4 class="modal-title">
+				<h5 class="modal-title">
 					<i id="dialog-perms-icon" class="bi"></i> {{$aclModalTitle}}
 					{{if $helpUrl}}
 					<a target="hubzilla-help" href="{{$helpUrl}}" class="contextual-help-tool" title="Help and documentation"><i class="bi bi-question-lg"></i></a>
 					{{/if}}
-				</h4>
+				</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="section-content-wrapper modal-body">
 				{{if $aclModalDesc}}
-				<div id="acl-dialog-description" class="section-content-info-wrapper">{{$aclModalDesc}}</div>
+				<div id="acl-dialog-description" class="section-content-info-wrapper mb-2">{{$aclModalDesc}}</div>
 				{{/if}}
 				<label for="acl-select">{{if $aclModalDesc}}<i class="bi bi-send"></i> {{/if}}{{$select_label}}</label>
 				<select id="acl-select" name="optionsRadios" class="form-control mb-3">
