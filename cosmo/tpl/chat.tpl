@@ -1,20 +1,20 @@
-<div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
-		<div class="float-end">
+<div class="generic-content-wrapper card">
+	<div class="section-title-wrapper card-header">
+		<div class="float-end card-tools">
 			{{if $is_owner}}
 			<form id="chat-destroy" method="post" action="chat">
 				<input type="hidden" name="room_name" value="{{$room_name}}" />
 				<input type="hidden" name="action" value="drop" />
-				<button class="btn btn-danger btn-sm" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
+				<button class="btn btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
 			</form>
 			{{/if}}
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
+			<button id="fullscreen-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
+			<button id="inline-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h4>{{$room_name}}</h4>
+		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
-	<div id="chatContainer" class="section-content-wrapper">
+	<div id="chatContainer" class="section-content-wrapper p-2">
 		<div id="chatTopBar">
 			<div id="chat-top-spinner" class="spinner-wrapper">
 				<div class="spinner m"></div>
@@ -22,7 +22,7 @@
 			<div id="chatLineHolder"></div>
 		</div>
 		<div class="clear"></div>
-		<div id="chatBottomBar" >
+		<div id="chatBottomBar" class="card-footer">
 			<form id="chat-form" method="post" action="#">
 				<input type="hidden" name="room_id" value="{{$room_id}}" />
 				<div class="mb-3">
@@ -98,7 +98,6 @@
 		</div>
 	</div>
 </div>
-
 <script>
 var room_id = {{$room_id}};
 var last_chat = 0;
@@ -151,12 +150,12 @@ function load_chats() {
 var previousChatRoomMembers = null; // initialize chat room member change register
 var currentChatRoomMembers = null; // initialize chat room member change register
 function update_inroom(inroom) {
-	var html = document.createElement('div');
+	var html = document.createElement('ul');
+  html.setAttribute('class', 'contacts-list');
 	var count = inroom.length;
 	$.each( inroom, function(index, item) {
-		var newNode = document.createElement('div');
-		newNode.setAttribute('class', 'member-item');
-		$(newNode).html('<img class="menu-img-2" src="' + item.img + '" alt="' + item.name + '" /> ' + '<span class="contactname">' + item.name + '</span><span class="' + item.status_class + '">' + item.status + '</span>');
+		var newNode = document.createElement('li');
+		$(newNode).html('<img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img img-size-32"><div class="contacts-list-info"><span class="contacts-list-name text-body-emphasis">'+ item.name +'<small class="contacts-list-date text-success float-end">' + item.status + '</small></span></div>');
 		html.appendChild(newNode);
 	});
     memberChange = chatRoomMembersChange(inroom); // get list of arrivals and departures
@@ -197,12 +196,12 @@ function update_chats(chats) {
 		var newNode = document.createElement('div');
 
 		if(item.self) {
-			newNode.setAttribute('class', 'chat-item-self clear');
-			$(newNode).html('<div class="chat-body-self"><div class="chat-item-title-self wall-item-ago"><span class="chat-item-name-self">' + item.name + ' </span><span class="autotime chat-item-time-self" title="' + item.isotime + '">' + item.localtime + '</span></div><div class="chat-item-text-self">' + item.text + '</div></div><img class="chat-item-photo-self" src="' + item.img + '" alt="' + item.name + '" />');
+			newNode.setAttribute('class', 'direct-chat-msg end');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-end">' + item.name + '</span><span class="direct-chat-timestamp float-start">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
 		}
 		else {
-			newNode.setAttribute('class', 'chat-item clear');
-			$(newNode).html('<img class="chat-item-photo" src="' + item.img + '" alt="' + item.name + '" /><div class="chat-body"><div class="chat-item-title wall-item-ago"><span class="chat-item-name">' + item.name + ' </span><span class="autotime chat-item-time" title="' + item.isotime + '">' + item.localtime + '</span></div><div class="chat-item-text">' + item.text + '</div></div>');
+			newNode.setAttribute('class', 'direct-chat-msg p-2');
+      $(newNode).html('<div class="direct-chat-infos clearfix"><span class="direct-chat-name float-start">' + item.name + '</span><span class="direct-chat-timestamp float-end">' + item.localtime + '</span></div><img class="direct-chat-img" src="' + item.img + '" alt="' + item.name + '"><div class="direct-chat-text">'+ item.text +'</div>');
             chat_issue_notification(item.name + ':\n' + item.text, 'Hubzilla Chat');
 		}
 		$('#chatLineHolder').append(newNode);
@@ -318,7 +317,7 @@ function adjustFullscreenTopBarHeight() {
 }
 
 function adjustInlineTopBarHeight() {
-	$('#chatTopBar').height($(window).height() - $('#chatBottomBar').outerHeight(true) - $('.section-title-wrapper').outerHeight(true) - $('nav').outerHeight(true) - 23);
+	$('#chatTopBar').height($(window).height() - $('#chatBottomBar').outerHeight(true) - $('.section-title-wrapper').outerHeight(true) - $('nav').outerHeight(true) - 56);
 	$('#chatTopBar').scrollTop($('#chatTopBar').prop('scrollHeight'));
 }
 
