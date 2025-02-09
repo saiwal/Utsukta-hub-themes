@@ -52,9 +52,9 @@
 		{{if $groups}}
 			<div class="accordion-item" role="tab" id="group-tool">
         <h2 class="accordion-header">
-					<a class="section" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" href="#" aria-expanded="true" aria-controls="group-tool-collapse" data-section="group">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" href="#" aria-expanded="true" aria-controls="group-tool-collapse" data-section="group">
 						{{$pgroups_label}}
-					</a>
+					</button>
 				</h2>
 			<div id="group-tool-collapse" class="accordion-collapse collapse{{if $section == 'group'}} show{{/if}}" role="tabpanel" aria-labelledby="group-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
@@ -71,9 +71,9 @@
 		{{if $multiprofs}}
 			<div class="accordion-item" role="tab" id="profile-tool">
 				<h2 class="accordion-header">
-					<a class="section" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" href="#" aria-expanded="true" aria-controls="profile-tool-collapse" data-section="profile">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" href="#" aria-expanded="true" aria-controls="profile-tool-collapse" data-section="profile">
 						{{$profiles_label}}
-					</a>
+					</button>
 				</h2>
 			<div id="profile-tool-collapse" class="accordion-collapse collapse{{if $section == 'profile'}} show{{/if}}" role="tabpanel" aria-labelledby="profile-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper">
@@ -88,9 +88,9 @@
 		{{if $slide}}
 			<div class="accordion-item" role="tab" id="affinity-tool">
 				<h2 class="accordion-header">
-					<a class="section" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" href="#" aria-expanded="true" aria-controls="affinity-tool-collapse" data-section="affinity">
+					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" href="#" aria-expanded="true" aria-controls="affinity-tool-collapse" data-section="affinity">
 						{{$affinity_label}}
-					</a>
+					</button>
 				</h2>
 			<div id="affinity-tool-collapse" class="accordion-collapse collapse{{if $section == 'affinity'}} show{{/if}}" role="tabpanel" aria-labelledby="affinity-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper">
@@ -104,9 +104,9 @@
 		{{if $connfilter}}
 			<div class="accordion-item" role="tab" id="filter-tool">
 				<h2 class="accordion-header">
-					<a class="section"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" href="#" aria-expanded="true" aria-controls="filter-tool-collapse" data-section="filter">
+					<button class="accordion-button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" href="#" aria-expanded="true" aria-controls="filter-tool-collapse" data-section="filter">
 						{{$filter_label}}
-					</a>
+					</button>
 				</h2>
 			<div id="filter-tool-collapse" class="accordion-collapse collapse{{if $section == 'filter'}} show{{/if}}" role="tabpanel" aria-labelledby="filter-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper">
