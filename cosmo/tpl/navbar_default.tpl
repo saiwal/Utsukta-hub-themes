@@ -351,3 +351,41 @@
 
 </script>
 {{/if}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Function to apply the saved sidebar state
+  function applySavedState() {
+    const isDesktop = window.innerWidth >= 768; // AdminLTE's desktop breakpoint
+    const savedState = localStorage.getItem('sidebarCollapsed');
+
+    // Apply state only on desktop
+    if (isDesktop && savedState !== null) {
+      document.body.classList.toggle('sidebar-collapse', savedState === 'true');
+    }
+  }
+
+  // Apply saved state on initial load
+  applySavedState();
+
+  // Re-apply state when window is resized to desktop
+  window.addEventListener('resize', applySavedState);
+
+  // Watch for sidebar class changes to update localStorage
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'class') {
+        const isDesktop = window.innerWidth >= 768;
+        const isCollapsed = document.body.classList.contains('sidebar-collapse');
+        
+        // Save state only for desktop interactions
+        if (isDesktop) {
+          localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+      }
+    });
+  });
+
+  // Start observing the body element for class changes
+  observer.observe(document.body, { attributes: true });
+});
+</script>
