@@ -2,11 +2,11 @@
   <div id="contact-edit-tools" class="accordion"  role="tablist" >
 			<div class="accordion-item" role="tab" id="roles-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" aria-expanded="true" aria-controls="roles-tool-collapse" data-section="roles">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" aria-expanded="true" aria-controls="roles-tool-collapse">          
 						{{$roles_label}}
 					</button>
 				</h2>
-			<div id="roles-tool-collapse" class="accordion-collapse collapse{{if $section == 'roles'}} show{{/if}}" role="tabpanel" aria-labelledby="roles-tool" data-bs-parent="#contact-edit-tools">
+			<div id="roles-tool-collapse" class="accordion-collapse collapse {{if $section == 'roles'}} show{{/if}}" role="tabpanel" aria-labelledby="roles-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{include file="field_select.tpl" field=$permcat}}
 					<button class="btn btn-outline-secondary btn-sm float-end sub_section{{if $sub_section == 'perms'}} sub_section_active{{/if}}" type="button" onclick="openClose('perms-table', 'table')" data-section="perms">
