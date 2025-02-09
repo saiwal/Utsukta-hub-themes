@@ -52,7 +52,7 @@
 		{{if $groups}}
 			<div class="accordion-item" role="tab" id="group-tool">
         <h2 class="accordion-header">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" aria-expanded="true" aria-controls="group-tool-collapse">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" aria-expanded="true" aria-controls="group-tool-collapse">
 						{{$pgroups_label}}
 					</button>
 				</h2>
@@ -71,7 +71,7 @@
 		{{if $multiprofs}}
 			<div class="accordion-item" role="tab" id="profile-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" aria-expanded="true" aria-controls="profile-tool-collapse">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" aria-expanded="true" aria-controls="profile-tool-collapse">
 						{{$profiles_label}}
 					</button>
 				</h2>
@@ -88,7 +88,7 @@
 		{{if $slide}}
 			<div class="accordion-item" role="tab" id="affinity-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" aria-expanded="true" aria-controls="affinity-tool-collapse">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" aria-expanded="true" aria-controls="affinity-tool-collapse">
 						{{$affinity_label}}
 					</button>
 				</h2>
@@ -104,7 +104,7 @@
 		{{if $connfilter}}
 			<div class="accordion-item" role="tab" id="filter-tool">
 				<h2 class="accordion-header">
-					<button class="accordion-button" type="button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" aria-expanded="true" aria-controls="filter-tool-collapse">
+					<button class="accordion-button collapsed" type="button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" aria-expanded="true" aria-controls="filter-tool-collapse">
 						{{$filter_label}}
 					</button>
 				</h2>
