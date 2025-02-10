@@ -34,7 +34,7 @@
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="custom-settings-title">
 					<h2 class="accordion-header">
-						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#custom-settings-content"  aria-controls="custom-settings-content">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#custom-settings-content"  aria-controls="custom-settings-content">
 							{{$d_ctset}}
 						</button>
 					</h2>
@@ -49,7 +49,7 @@
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="content-settings-title">
 					<h2 class="accordion-header">
-						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#content-settings-content" aria-controls="content-settings-content">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#content-settings-content" aria-controls="content-settings-content">
 							{{$d_cset}}
 						</button>
 					</h2>
