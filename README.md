@@ -23,7 +23,8 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 - Mobile friendly and responsive.
 - Report any issues in the [github repo](https://github.com/saiwal/hubzilla-themes).
 - Use [Discussions](https://github.com/saiwal/Utsukta-hub-themes/discussions) to discuss ideas, ask questions and for help.
-**Demo available [here](https://hub.utsukta.org/channel/adminlte)**
+
+  **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
