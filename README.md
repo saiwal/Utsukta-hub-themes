@@ -18,11 +18,11 @@ or manually extract the release in `view/themes`
 
 A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
-- This theme is in very early development stage and some functionality may be broken/missing. Report any issues in the [github repo](https://github.com/saiwal/hubzilla-themes).
 - Based on [AdminLTEv4](https://adminlte.io/).
 - Built completely from the ground up.
 - Mobile friendly and responsive.
-
+- Report any issues in the [github repo](https://github.com/saiwal/hubzilla-themes).
+- Use [Discussions](https://github.com/saiwal/Utsukta-hub-themes/discussions) to discuss ideas, ask questions and for help.
 **Demo available [here](https://hub.utsukta.org/channel/adminlte)**
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
