@@ -55,7 +55,7 @@
 					</h2>
 				</div>
 				<div id="content-settings-content" class="accordion-collapse collapse{{if !$theme && !$theme_config}} in{{/if}}" data-bs-parent="#settings">
-					<div class="section-content-wrapper accordion-body"
+          <div class="section-content-wrapper accordion-body">
 						{{include file="field_input.tpl" field=$ajaxint}}
 						{{include file="field_input.tpl" field=$itemspage}}
 						{{include file="field_checkbox.tpl" field=$nosmile}}
