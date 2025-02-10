@@ -11,7 +11,7 @@
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="basic-settings">
 					<h2 class="accordion-header">
-						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#basic-settings-collapse">
+							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#settings-collapse" aria-expanded="true" aria-controls="settings-collapse">
 							{{$h_basic}}
 						</button>
 					</h2>
@@ -42,7 +42,7 @@
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="notification-settings">
 					<h2 class="accordion-header">
-						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#notification-settings-collapse">
+							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#notification-settings-collapse" aria-expanded="true" aria-controls="notification-settings-collapse">
 							{{$h_not}}
 						</a>
 					</h2>
