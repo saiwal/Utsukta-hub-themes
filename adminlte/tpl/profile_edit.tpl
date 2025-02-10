@@ -45,22 +45,6 @@
 			<div class="section-content-info-wrapper">{{$default}}</div>
 			{{/if}}
 
-<div class="accordion" id="contact-edit-tools">
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-        Accordion Item #1
-      </button>
-    </h2>
-    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#contact-edit-tools">
-      <div class="accordion-body">
-        <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-      </div>
-    </div>
-  </div>
-</div>
-
-
 			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="personal">
@@ -341,9 +325,9 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="miscellaneous">
 						<h2 class="accordion-header">
-							<<button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse" aria-expanded="true" aria-controls="miscellaneous-collapse">
+							<button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse" aria-expanded="true" aria-controls="miscellaneous-collapse">
 								{{$miscellaneous}}
-							</a>
+							</button>
 						</h2>
 					</div>
 					<div id="miscellaneous-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
