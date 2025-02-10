@@ -229,7 +229,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="location">
 						<h2 class="accordion-header">
-							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
 								{{$location}}
 							</a>
 						</h2>
@@ -274,7 +274,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="relation">
 						<h2 class="accordion-header">
-							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
 								{{$relation}}
 							</a>
 						</h2>
@@ -325,7 +325,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="miscellaneous">
 						<h2 class="accordion-header">
-							<button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
+							<button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
 								{{$miscellaneous}}
 							</button>
 						</h2>
