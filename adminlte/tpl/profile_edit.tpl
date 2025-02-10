@@ -34,15 +34,15 @@
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" id="profile-upload-form">
-		<label id="profile-upload-choose-label" class="callout callout-info mb-2" for="profile-upload-choose" >{{$lbl_import}}</label>
-		<input id="profile-upload-choose" class="callout callout-info mb-2" type="file" name="userfile">
+		<label id="profile-upload-choose-label" for="profile-upload-choose" >{{$lbl_import}}</label>
+		<input id="profile-upload-choose" type="file" name="userfile">
 	</div>
 
 		<form id="profile-edit-form" name="form1" action="profiles/{{$profile_id}}" enctype="multipart/form-data" method="post" >
 			<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 
 			{{if $is_default}}
-			<div class="section-content-info-wrapper">{{$default}}</div>
+			<div class="section-content-info-wrapper" class="callout callout-info mb-2">{{$default}}</div>
 			{{/if}}
 
 			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
