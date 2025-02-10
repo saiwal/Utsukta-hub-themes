@@ -42,7 +42,7 @@
 			<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 
 			{{if $is_default}}
-			<div class="section-content-info-wrapper" class="callout callout-info mb-2">{{$default}}</div>
+			<div class="section-content-info-wrapper callout callout-info mb-2">{{$default}}</div>
 			{{/if}}
 
 			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
