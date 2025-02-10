@@ -34,8 +34,8 @@
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" id="profile-upload-form">
-		<label id="profile-upload-choose-label" for="profile-upload-choose" >{{$lbl_import}}</label>
-		<input id="profile-upload-choose" type="file" name="userfile">
+		<label id="profile-upload-choose-label" class="callout callout-info mb-2" for="profile-upload-choose" >{{$lbl_import}}</label>
+		<input id="profile-upload-choose" class="callout callout-info mb-2" type="file" name="userfile">
 	</div>
 
 		<form id="profile-edit-form" name="form1" action="profiles/{{$profile_id}}" enctype="multipart/form-data" method="post" >
@@ -45,17 +45,33 @@
 			<div class="section-content-info-wrapper">{{$default}}</div>
 			{{/if}}
 
-			<div class="panel-group" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
-				<div class="panel">
+<div class="accordion" id="contact-edit-tools">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        Accordion Item #1
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#contact-edit-tools">
+      <div class="accordion-body">
+        <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
+				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="personal">
-						<h3>
-							<a data-bs-toggle="collapse" data-bs-target="#personal-collapse" href="#" aria-expanded="true" aria-controls="personal-collapse">
+						<h2 class="accordion-header">
+							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapse" aria-expanded="true" aria-controls="personal-collapse">
 								{{$basic}}
 							</a>
-						</h3>
+						</h2>
 					</div>
-					<div id="personal-collapse" class="panel-collapse collapse show" data-bs-parent="#profile-edit-wrapper" role="tabpanel" aria-labelledby="personal">
-						<div class="section-content-tools-wrapper">
+					<div id="personal-collapse" class="accordion-collapse collapse show" data-bs-parent="#profile-edit-wrapper">
+						<div class="section-content-tools-wrapper accordion-body">
 							{{if $multi_profiles}}
 							{{include file="field_input.tpl" field=$profile_name}}
 							{{else}}
@@ -226,16 +242,16 @@
 
 
 				{{if $fields.address || $fields.locality || $fields.postal_code || $fields.region || $fields.country_name || $fields.hometown}}
-				<div class="panel">
+				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="location">
-						<h3>
-							<a data-bs-toggle="collapse" data-bs-target="#location-collapse" href="#" aria-expanded="true" aria-controls="location-collapse">
+						<h2 class="accordion-header">
+							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-expanded="true" aria-controls="location-collapse">
 								{{$location}}
 							</a>
-						</h3>
+						</h2>
 					</div>
-					<div id="location-collapse" class="panel-collapse collapse" data-bs-parent="#profile-edit-wrapper" role="tabpanel" aria-labelledby="location">
-						<div class="section-content-tools-wrapper">
+					<div id="location-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
+						<div class="section-content-tools-wrapper accordion-body">
 							{{if $fields.address}}
 							{{include file="field_input.tpl" field=$address}}
 							{{/if}}
@@ -271,16 +287,16 @@
 				{{/if}}
 
 				{{if $fields.marital || $fields.sexual}}
-				<div class="panel">
+				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="relation">
-						<h3>
-							<a data-bs-toggle="collapse" data-bs-target="#relation-collapse" href="#" aria-expanded="true" aria-controls="relation-collapse">
+						<h2 class="accordion-header">
+							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-expanded="true" aria-controls="relation-collapse">
 								{{$relation}}
 							</a>
-						</h3>
+						</h2>
 					</div>
-					<div id="relation-collapse" class="panel-collapse collapse" data-bs-parent="#profile-edit-wrapper" role="tabpanel" aria-labelledby="relation">
-						<div class="section-content-tools-wrapper">
+					<div id="relation-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
+						<div class="section-content-tools-wrapper accordion-body">
 							{{if $fields.marital }}
 							<div id="profile-edit-marital-wrapper" class="mb-3 field" >
 							<label id="profile-edit-marital-label" for="profile-edit-marital" ><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$lbl_marital}}</label>
@@ -322,16 +338,16 @@
 				</div>
 				{{/if}}
 				{{if $fields.keywords || $fields.politic || $fields.religion || $fields.about || $fields.contact || $fields.homepage || $fields.interest || $fields.likes || $fields.dislikes || $fields.channels || $fields.music || $fields.book || $fields.tv || $fields.film || $fields.romance || $fields.employment || $fields.education || $extra_fields}}
-				<div class="panel">
+				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="miscellaneous">
-						<h3>
-							<a data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse" href="#" aria-expanded="true" aria-controls="miscellaneous-collapse">
+						<h2 class="accordion-header">
+							<<button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse" aria-expanded="true" aria-controls="miscellaneous-collapse">
 								{{$miscellaneous}}
 							</a>
-						</h3>
+						</h2>
 					</div>
-					<div id="miscellaneous-collapse" class="panel-collapse collapse" data-bs-parent="#profile-edit-wrapper" role="tabpanel" aria-labelledby="miscellaneous">
-						<div class="section-content-tools-wrapper">
+					<div id="miscellaneous-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
+						<div class="section-content-tools-wrapper accordion-body">
 							{{if $fields.homepage}}
 							{{include file="field_input.tpl" field=$homepage}}
 							{{/if}}
