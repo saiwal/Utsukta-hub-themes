@@ -55,12 +55,12 @@
 				</td>
 				<td class="webpage-list-tool">
 					{{if $item.bb_element}}
-					<a href="rpost?attachment={{$item.bb_element}}" title="{{$share}}"><i class="bi bi-share-square-o"></i></a>
+					<a href="rpost?attachment={{$item.bb_element}}" title="{{$share}}"><i class="bi bi-share"></i></a>
 					{{/if}}
 				</td>
 				<td class="webpage-list-tool">
 					{{if $edit}}
-					<a href="#" title="{{$delete}}" onclick="dropItem('item/drop/{{$item.url}}', '#webpage-list-item-{{$item.url}}'); return false;"><i class="bi bi-trash-o drop-icons"></i></a>
+					<a href="#" title="{{$delete}}" onclick="dropItem('item/drop/{{$item.url}}', '#webpage-list-item-{{$item.url}}'); return false;"><i class="bi bi-trash drop-icons"></i></a>
 					{{/if}}
 				</td>
 				<td class="d-none d-md-table-cell">
