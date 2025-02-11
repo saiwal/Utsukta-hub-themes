@@ -1,11 +1,11 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
+	<div class="section-title-wrapper app-content-header">
 		{{if $editor}}
 		<div class="float-end">
 			<button id="webpage-create-btn" class="btn btn-sm btn-success acl-form-trigger" onclick="openClose('webpage-editor');" data-form_id="profile-jot-form"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$create}}</button>
 		</div>
 		{{/if}}
-		<h2>{{$listtitle}}</h2>
+		<h3>{{$listtitle}}</h3>
 		<div class="clear"></div>
 	</div>
 	{{if $editor}}

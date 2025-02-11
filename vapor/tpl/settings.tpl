@@ -1,7 +1,7 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
+	<div class="section-title-wrapper app-content-header">
 		<a title="{{$removechannel}}" class="btn btn-danger btn-sm float-end" href="removeme"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
-		<h2>{{$ptitle}}</h2>
+		<h3>{{$ptitle}}</h3>
 		<div class="clear"></div>
 	</div>
 	{{$nickname_block}}

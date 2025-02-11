@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
-		<h2>{{$ptitle}}</h2>
+	<div class="section-title-wrapper app-content-header">
+		<h3>{{$ptitle}}</h3>
 	</div>
 	<form action="settings/display" id="settings-form" method="post" autocomplete="off" >
 		<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>

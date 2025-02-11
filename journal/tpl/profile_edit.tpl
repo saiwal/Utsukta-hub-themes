@@ -1,5 +1,5 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
+	<div class="section-title-wrapper app-content-header">
 		<div class="dropdown float-end" id="profile-edit-links">
 			<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
