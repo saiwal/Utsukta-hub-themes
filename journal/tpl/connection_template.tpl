@@ -15,7 +15,7 @@
 			</button>
 
 		</div>
-		<h5>{{include "connstatus.tpl" perminfo=$contact.perminfo}}{{if $contact.public_forum}}<i class="fa fa-comments-o" title="{{$group_label}}"></i>&nbsp;{{/if}}<a href="{{$contact.url}}" title="{{$contact.img_hover}}" >{{$contact.name}}</a>{{if $contact.phone}}&nbsp;<a class="btn btn-outline-secondary btn-sm" href="tel:{{$contact.phone}}" title="{{$contact.call}}"><i class="fa fa-phone connphone"></i></a>{{/if}}</h5>
+		<h5>{{include "connstatus.tpl" perminfo=$contact.perminfo}}{{if $contact.public_forum}}<i class="bi bi-chat" title="{{$group_label}}"></i>&nbsp;{{/if}}<a href="{{$contact.url}}" title="{{$contact.img_hover}}" >{{$contact.name}}</a>{{if $contact.phone}}&nbsp;<a class="btn btn-outline-secondary btn-sm" href="tel:{{$contact.phone}}" title="{{$contact.call}}"><i class=bi bi-phone connphone"></i></a>{{/if}}</h5>
 	</div>
 	<div class="section-content-tools-wrapper card-body">
 		<div class="contact-photo-wrapper" >
@@ -45,7 +45,7 @@
 			</div>
 			{{/if}}
 			{{if $contact.connect}}
-			<a href="{{$contact.follow}}" class="btn btn-success btn-sm" title="{{$contact.connect_hover}}"><i class="fa fa-plus"></i> {{$contact.connect}}</a>
+			<a href="{{$contact.follow}}" class="btn btn-success btn-sm" title="{{$contact.connect_hover}}"><i class="bi bi-plus"></i> {{$contact.connect}}</a>
 			{{/if}}
 		</div>
 

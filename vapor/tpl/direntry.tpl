@@ -14,10 +14,10 @@
 			<a class="directory-ignore btn btn-info btn-sm" href="{{$entry.ignlink}}"> {{$entry.ignore_label}}</a>
 			{{/if}}
 			{{if $entry.connect}}
-			<a class="btn btn-success btn-sm" href="{{$entry.connect}}"><i class="fa fa-plus connect-icon"></i> {{$entry.conn_label}}</a>
+			<a class="btn btn-success btn-sm" href="{{$entry.connect}}"><i class="bi bi-plus connect-icon"></i> {{$entry.conn_label}}</a>
 			{{/if}}
 		</div>
-		<h5>{{if $entry.public_forum}}<i class="fa fa-comments-o" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}' >{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="fa fa-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</h5>
+		<h5>{{if $entry.public_forum}}<i class="bi bi-chat" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}' >{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</h5>
 	</div>
 	<div class="section-content-tools-wrapper directory-collapse">
 		<div class="contact-photo-wrapper" id="directory-photo-wrapper-{{$entry.hash}}" >
