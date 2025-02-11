@@ -45,12 +45,6 @@
   </div>
 </form>
 
-<!-- Required CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css">
-
-<!-- Required JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"></script>
-
 <!-- Custom Styling for Tagsinput -->
 <style>
   .bootstrap-tagsinput {
@@ -79,20 +73,4 @@
   }
 </style>
 
-<!-- Initialize Tagsinput -->
-<script>
-  $(document).ready(function() {
-    $('#jot-category').tagsinput({
-      trimValue: true,
-      confirmKeys: [13, 44], // Enter and comma
-      tagClass: function(item) {
-        return 'badge rounded-pill bg-primary';
-      }
-    });
 
-    // Fix Bootstrap 5 conflict
-    $.fn.tagsinput.Constructor.prototype.$input = function() {
-      return this.$input.find('input');
-    };
-  });
-</script>
