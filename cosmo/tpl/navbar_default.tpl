@@ -168,7 +168,7 @@
 
       <!-- right sidebar button on smaller screen-->
       <li class="nav-item">
-        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
+        <a class="nav-link d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
           aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
       </li>
 
