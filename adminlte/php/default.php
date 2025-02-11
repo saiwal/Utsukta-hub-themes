@@ -23,7 +23,7 @@
   <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
-<body class="layout-fixed sidebar-expand-xl sidebar-mini bg-body-tertiary app-loaded sidebar-open">
+<body class="layout-fixed sidebar-expand-md sidebar-mini bg-body-tertiary app-loaded sidebar-open">
   <div class="app-wrapper">
 
 	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
@@ -33,12 +33,12 @@
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
-        <div id="region_2" class="col-12 col-md-8 col-lg-8">
+        <div id="region_2" class="col-12 col-md-12 col-lg-8">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div class="col-md-4 d-md-block col-lg-4 sticky-column pe-0">
-          <div class="offcanvas-md offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
+        <div class="d-none d-lg-block col-lg-4 sticky-column pe-0">
+          <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
             <div class="offcanvas-header mt-2">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
             </div>
