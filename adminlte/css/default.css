@@ -16,7 +16,7 @@ blockquote {
 }
 .sticky-column {
   position: sticky;
-  /*top: 72px;*/
+  top: 0px;
   overflow-y: auto;
   height: calc(100vh - 72px);
   min-height: calc(100vh - 72px);
