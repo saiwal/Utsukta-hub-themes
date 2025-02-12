@@ -37,7 +37,7 @@
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
 
-        <div class="d-lg-block col-lg-4 sticky-column pe-0 py-3">
+        <div class="d-lg-block col-lg-4 sticky-column pe-0">
           <div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
             <div class="offcanvas-header mt-2">
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close"></button>
