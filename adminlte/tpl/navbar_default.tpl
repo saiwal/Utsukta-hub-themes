@@ -202,7 +202,7 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-        <li class="nav-header">
+        <li class="nav-header pb-3 pt-1">
           <div id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked
               data-bs-theme-value="auto">
