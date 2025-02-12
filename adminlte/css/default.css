@@ -16,10 +16,9 @@ blockquote {
 }
 .sticky-column {
   position: sticky;
-  top: 0px;
-  overflow-y: auto;
-  height: calc(100vh - 72px);
-  min-height: calc(100vh - 72px);
+  top: 72px; /* Adjust this value based on your header height */
+  overflow-y: auto; /* This can be removed if not needed */
+  height: auto; /* This can be removed if not needed */
   scrollbar-width: none;  
 }
 
