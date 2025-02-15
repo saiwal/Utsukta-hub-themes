@@ -2,7 +2,7 @@
   <!--<h3 class="card-header">Card header</h3>-->
   <img class="d-block user-select-none" width="100%" style="font-size:1.125rem;text-anchor:middle"
     src="{{$cover.url}}"></img>
-  <div class="card-body p-0">
+  <div class="card-body">
     <div class="d-flex">
       <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <div class="card-body">
+  <div class="card-body pt-0">
     {{if $profile.pdesc}}
     <p class="card-text">{{$profile.pdesc}}</p>
     {{else}}
