@@ -13,7 +13,7 @@
     <span class="channel-id-select-desc">{{$id_seltext}}</span> {{$id_select}}
   </div>
   {{/if}}
-  <div class="mb-4" id="profile-jot-wrapper">
+  <div class="mb-3" id="profile-jot-wrapper">
 
     {{if $parent}}
     <input type="hidden" name="parent" value="{{$parent}}" />
