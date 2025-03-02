@@ -15,7 +15,7 @@
 				</h2>
 			</div>
 			<div id="{{$g}}-settings-content" class="accordion-collapse collapse{{if $g == 'general'}} show{{/if}}" data-bs-parent="#settings">
-				<div class="section-content-tools-wrapper">
+				<div class="section-content-tools-wrapper accordion-body">
 					{{foreach $f.1 as $fcat}}
 						{{include file="field_checkbox.tpl" field=$fcat.0}}
 						{{include file="field_checkbox.tpl" field=$fcat.1}}
