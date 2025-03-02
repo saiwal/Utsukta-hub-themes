@@ -4,17 +4,17 @@
 	</div>
 	<form action="admin/features" method="post" autocomplete="off">
 	<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
-	<div class="panel-group" id="settings" role="tablist" aria-multiselectable="true">
+	<div class="accordion" id="settings" role="tablist" aria-multiselectable="true">
 		{{foreach $features as $g => $f}}
-		<div class="panel">
+		<div class="accordion-item">
 			<div class="section-subtitle-wrapper" role="tab" id="{{$g}}-settings-title">
-				<h3>
-					<a data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" href="#" aria-expanded="true" aria-controls="{{$g}}-settings-collapse">
+				<h2 class="accordion-header">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" aria-expanded="false" aria-controls="{{$g}}-settings-collapse">
 						{{$f.0}}
-					</a>
-				</h3>
+					</button>
+				</h2>
 			</div>
-			<div id="{{$g}}-settings-content" class="panel-collapse collapse{{if $g == 'general'}} show{{/if}}" data-bs-parent="#settings" role="tabpanel" aria-labelledby="{{$g}}-settings-title">
+			<div id="{{$g}}-settings-content" class="accordion-collapse collapse{{if $g == 'general'}} show{{/if}}" data-bs-parent="#settings">
 				<div class="section-content-tools-wrapper">
 					{{foreach $f.1 as $fcat}}
 						{{include file="field_checkbox.tpl" field=$fcat.0}}
