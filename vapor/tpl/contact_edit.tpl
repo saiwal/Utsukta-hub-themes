@@ -76,7 +76,7 @@
 					</button>
 				</h2>
 			<div id="profile-tool-collapse" class="accordion-collapse collapse{{if $section == 'profile'}} show{{/if}}" role="tabpanel" aria-labelledby="profile-tool" data-bs-parent="#contact-edit-tools">
-				<div class="section-content-tools-wrapper">
+				<div class="section-content-tools-wrapper accordion-body">
 					{{$profile_select}}
 					<a href="profiles" class="btn btn-sm btn-outline-primary">
 						<i class="bi bi-box-arrow-up-right"></i>&nbsp;{{$profiles_label}}
@@ -93,7 +93,7 @@
 					</button>
 				</h2>
 			<div id="affinity-tool-collapse" class="accordion-collapse collapse{{if $section == 'affinity'}} show{{/if}}" role="tabpanel" aria-labelledby="affinity-tool" data-bs-parent="#contact-edit-tools">
-				<div class="section-content-tools-wrapper">
+				<div class="section-content-tools-wrapper accordion-body">
 						<div class="mb-2"><label>{{$lbl_slider}}</label></div>
 						{{$slide}}
 						<input id="contact-closeness-mirror" type="hidden" name="closeness" value="{{$close}}" />
@@ -109,7 +109,7 @@
 					</button>
 				</h2>
 			<div id="filter-tool-collapse" class="accordion-collapse collapse{{if $section == 'filter'}} show{{/if}}" role="tabpanel" aria-labelledby="filter-tool" data-bs-parent="#contact-edit-tools">
-				<div class="section-content-tools-wrapper">
+				<div class="section-content-tools-wrapper accordion-body">
 					{{include file="field_textarea.tpl" field=$incl}}
 					{{include file="field_textarea.tpl" field=$excl}}
 				</div>
