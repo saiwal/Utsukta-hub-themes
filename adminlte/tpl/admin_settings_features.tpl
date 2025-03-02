@@ -9,7 +9,7 @@
 		<div class="accordion-item">
 			<div class="section-subtitle-wrapper" role="tab" id="{{$g}}-settings-title">
 				<h2 class="accordion-header">
-					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" aria-expanded="false" aria-controls="{{$g}}-settings-collapse">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" aria-expanded="false" aria-controls="{{$g}}-settings-collapse">
 						{{$f.0}}
 					</button>
 				</h2>
