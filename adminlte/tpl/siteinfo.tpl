@@ -72,7 +72,7 @@
           </div>
       </li>
       <li class="list-group-item">
-        <div class="d-flex py-2 px-1"><div>{{$prj_transport}} </div>{{$transport_link}}
+          <div class="d-flex py-2 px-1"><div>{{$prj_transport}} {{$transport_link}}</div>
       </li>
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
