@@ -4,12 +4,6 @@
   <div class="card mb-3">
     <div class="card-header">
       <h3 class="card-title">{{$title}}</h3>
-      <div class="card-tools">
-        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
-          <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
-          <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
-        </button>
-       </div>
     </div>
     <div class="card-body">
       <h4>{{$sitename}}</h4>
@@ -54,12 +48,6 @@
   <div class="card mb-3">
     <div class="card-header">
       <h3 class="card-title">{{$prj_header}}</h3>
-      <div class="card-tools">
-        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
-          <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
-          <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
-        </button>
-      </div>
     </div>
     <div class="card-body">
       <p class="card-text">{{$prj_name}} ({{$z_server_role}})</p>
