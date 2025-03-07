@@ -14,12 +14,10 @@
     <div class="card-body">
       <h4>{{$sitename}}</h4>
       <p class="card-text">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
-    </div>
-    <div class="card-body">
-      <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
-    </div>
-    <div class="card-body">
     <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
+      </li>
       {{if $addons.1}}
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
