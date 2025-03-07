@@ -57,16 +57,16 @@
     <ul class="list-group list-group-flush">    
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
-          <div class="col-2">{{$prj_linktxt}}
+          <div class="col-4">{{$prj_linktxt}}
           </div>
-          <div class="col-10">    <a href="{{$prj_link}}" class="card-link">{{$prj_link}}</a>
+          <div class="col-8">    <a href="{{$prj_link}}" class="card-link">{{$prj_link}}</a>
           </div>
       </li> 
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
-          <div class="col-2">{{$prj_srctxt}}
+          <div class="col-4">{{$prj_srctxt}}
           </div>
-          <div class="col-10">    <a href="{{$prj_src}}" class="card-link">{{$prj_src}}</a>
+          <div class="col-8">    <a href="{{$prj_src}}" class="card-link">{{$prj_src}}</a>
           </div>
       </li>
       <li class="list-group-item">
