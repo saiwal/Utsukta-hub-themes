@@ -5,7 +5,7 @@
     <div class="card-header">{{$title}}</div>
     <div class="card-body">
       <h5 class="card-title">{{$sitename}}</h5>
-      <p class="card-subtitle text-muted">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
+      <h6 class="card-subtitle text-muted">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</h6>
     </div>
     <div class="card-body">
       <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
