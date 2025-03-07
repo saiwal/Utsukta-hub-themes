@@ -4,8 +4,8 @@
   <div class="card mb-3">
     <div class="card-header">{{$title}}</div>
     <div class="card-body">
-      <h5 class="card-title">{{$sitename}}</h5>
-      <h6 class="card-subtitle text-muted">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</h6>
+      <h4>{{$sitename}}</h4>
+      <p class="card-text">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
     </div>
     <div class="card-body">
       <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
@@ -70,7 +70,7 @@
           </div>
       </li>
       <li class="list-group-item">
-        <div class="d-flex py-2 px-1"><div>{{$prj_transport}}</div>{{$transport_link}}
+        <div class="d-flex py-2 px-1"><div>{{$prj_transport}} </div>{{$transport_link}}
       </li>
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
