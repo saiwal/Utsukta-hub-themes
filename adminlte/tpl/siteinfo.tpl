@@ -1,7 +1,7 @@
 
 <div class="app-content">
 
-  <div class="card mb-3">
+  <div class="card card-primary mb-3">
     <div class="card-header">
       <h3 class="card-title">{{$title}}</h3>
     </div>
@@ -45,7 +45,7 @@
     </div>    
   </div>
 
-  <div class="card mb-3">
+  <div class="card card-primary mb-3">
     <div class="card-header">
       <h3 class="card-title">{{$prj_header}}</h3>
     </div>
