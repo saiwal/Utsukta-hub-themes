@@ -3,7 +3,7 @@
 
   <div class="card card-primary mb-3">
     <div class="card-header">
-      <h3 class="card-title">{{$title}}</h3>
+      {{$title}}
     </div>
     <div class="card-body">
       <h4>{{$sitename}}</h4>
@@ -47,7 +47,7 @@
 
   <div class="card card-primary mb-3">
     <div class="card-header">
-      <h3 class="card-title">{{$prj_header}}</h3>
+      {{$prj_header}}
     </div>
     <div class="card-body">
       <p class="card-text">{{$prj_name}} ({{$z_server_role}})
