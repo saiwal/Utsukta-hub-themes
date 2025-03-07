@@ -13,7 +13,7 @@
     <ul class="list-group list-group-flush">
       {{if $addons.1}}
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">
+        <div class="d-flex py-2 px-1">
           <div class="col-2">
             {{$addons.0}}
           </div>
@@ -26,7 +26,7 @@
       {{/if}}
       {{if $blocked_sites.1}}
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">
+        <div class="d-flex py-2 px-1">
           <div class="col-2">
             {{$blocked_sites.0}}
           </div>
@@ -56,24 +56,24 @@
     </div>
     <ul class="list-group list-group-flush">    
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">
+        <div class="d-flex py-2 px-1">
           <div class="col-2">{{$prj_linktxt}}
           </div>
           <div class="col-10">
           </div>
       </li> 
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">
+        <div class="d-flex py-2 px-1">
           <div class="col-2">{{$prj_srctxt}}
           </div>
           <div class="col-10">
           </div>
       </li>
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">{{$prj_transport}} {{$transport_link}}
+        <div class="d-flex py-2 px-1">{{$prj_transport}} {{$transport_link}}
       </li>
       <li class="list-group-item">
-        <div class="d-flex border-top py-2 px-1">{{$additional_text}} {{$additional_fed}}
+        <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
       </li>
     </ul>
   </div>
