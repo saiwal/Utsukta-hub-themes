@@ -59,18 +59,18 @@
         <div class="d-flex py-2 px-1">
           <div class="col-2">{{$prj_linktxt}}
           </div>
-          <div class="col-10">
+          <div class="col-10">    <a href="{{$prj_link}}" class="card-link">{{$prj_link}}</a>
           </div>
       </li> 
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
           <div class="col-2">{{$prj_srctxt}}
           </div>
-          <div class="col-10">
+          <div class="col-10">    <a href="{{$prj_src}}" class="card-link">{{$prj_src}}</a>
           </div>
       </li>
       <li class="list-group-item">
-        <div class="d-flex py-2 px-1">{{$prj_transport}} {{$transport_link}}
+        <div class="d-flex py-2 px-1"><div>{{$prj_transport}}</div>{{$transport_link}}
       </li>
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
