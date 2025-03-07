@@ -1,7 +1,7 @@
 
 <div class="app-content">
 
-  <div class="card card-primary mb-3">
+  <div class="card  mb-3">
     <div class="card-header">
       {{$title}}
     </div>
@@ -45,7 +45,7 @@
     </div>    
   </div>
 
-  <div class="card card-primary mb-3">
+  <div class="card  mb-3">
     <div class="card-header">
       {{$prj_header}}
     </div>
