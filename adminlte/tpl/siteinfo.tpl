@@ -2,7 +2,15 @@
 <div class="app-content">
 
   <div class="card mb-3">
-    <div class="card-header">{{$title}}</div>
+    <div class="card-header">
+      <h3 class="card-title">{{$title}}</h3>
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+          <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
+          <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
+        </button>
+       </div>
+    </div>
     <div class="card-body">
       <h4>{{$sitename}}</h4>
       <p class="card-text">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
@@ -38,9 +46,6 @@
       </li>
       {{/if}}
     </ul>    
-    <div class="card-body">
-      <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
-    </div>
     <div class="card-footer text-muted">
       {{if $admin_about}}{{$admin_about}}{{else}}--{{/if}}
     </div>    
