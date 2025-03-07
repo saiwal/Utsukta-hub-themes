@@ -50,9 +50,9 @@
       <h3 class="card-title">{{$prj_header}}</h3>
     </div>
     <div class="card-body">
-      <p class="card-text">{{$prj_name}} ({{$z_server_role}})</p>
+      <p class="card-text">{{$prj_name}} ({{$z_server_role}})
       {{if $prj_version}}
-      <p class="card-text">{{$prj_version}}</p>
+      {{$prj_version}}</p>
       {{/if}}
     </div>
     <ul class="list-group list-group-flush">    
