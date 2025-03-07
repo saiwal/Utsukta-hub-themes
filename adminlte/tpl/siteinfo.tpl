@@ -59,6 +59,7 @@
       <p class="card-text">{{$prj_version}}</p>
       {{/if}}
     </div>
+    <div class="card-body">
     <ul class="list-group list-group-flush">    
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
@@ -81,6 +82,7 @@
         <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
       </li>
     </ul>
+    </div>
   </div>
 
 </div>    
