@@ -81,7 +81,7 @@
     <li class="list-group-item">
       <dt class="card-link"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$homepage}}</dt>
       <dd class="ps-2">
-        <a href="{{$profile.homepage}}" class="card-link">{{$profile.homepage}}</a>
+        {{$profile.homepage}}
       </dd>
     </li>
   </ul>
