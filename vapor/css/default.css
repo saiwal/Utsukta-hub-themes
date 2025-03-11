@@ -67,3 +67,26 @@ blockquote {
 .section-title-wrapper.app-content-header {
   padding-top: 0;
 }
+
+/* fix post with summary, clickable 'view summary' and 'view article' */
+
+.view-article {
+  color: var(--bs-link-color);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.view-article:hover {
+  color: var(--bs-link-hover-color);
+  text-decoration: underline; /* Optional, for traditional link appearance */
+}
+
+.view-summary:hover {
+  color: var(--bs-link-hover-color);
+  text-decoration: underline; /* Optional, for traditional link appearance */
+}
+.view-summary {
+  color: var(--bs-link-color);
+  text-decoration: none;
+  cursor: pointer;
+}
