@@ -25,8 +25,6 @@ if(!App::$install) {
 	}
 }
 
-$site_bs_path = 'view/theme/adminlte/css/bootstrap.min.css';
-
 // Apply the settings
 
 $x = file_get_contents('view/theme/adminlte/css/style.css');
@@ -36,7 +34,8 @@ if(file_exists('view/theme/adminlte/schema/' . $schema . '.min.css')) {
 }
 
 if($schemecss) {
-  $x .= $schemecss;
+  /*$x .= $schemecss;*/
+  *$x .= "$schemecss";
 }
 
 /*$left_aside_width = 21; //unit: rem*/
