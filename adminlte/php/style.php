@@ -25,24 +25,6 @@ if(!App::$install) {
 	}
 }
 
-// Apply the settings
-
-$x = file_get_contents('view/theme/adminlte/css/style.css');
-
-if(file_exists('view/theme/adminlte/schema/' . $schema . '.min.css')) {
-	$schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
-}
-
-if($schemecss) {
-  $x = $x . file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
-}
-
-if (isset($_REQUEST['schema']) && preg_match('/^[\w_-]+$/i', $_REQUEST['schema'])) {
-  $schema = $_REQUEST['schema'];
-}
-
-$x = $schema;
-
 /*$left_aside_width = 21; //unit: rem*/
 /*$right_aside_width = 21; //unit: rem*/
 
@@ -67,12 +49,17 @@ $options = array (
   '$right_aside_width' => $right_aside_width
 );
 
+// Apply the settings
+
+$x = file_get_contents('view/theme/adminlte/css/style.css');
+
+$schemecss = file_get_contents('view/theme/adminlte/schema' . $schema . '.min.css');
 
 /*$o = strtr($x, $options);*/
 
 header('Cache-Control: max-age=2592000');
 
-echo $x;
+echo $x . $schemecss;
 
 // ! If you change the name of the directory containing the theme, be sure to change this line to match.
 /*echo @file_get_contents('/view/theme/adminlte/css/style.css');*/
