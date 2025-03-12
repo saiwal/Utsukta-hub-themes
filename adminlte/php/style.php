@@ -21,7 +21,10 @@ if(!App::$install) {
 		$font_size = get_pconfig($uid, 'adminlte', 'font_size');
 		$converse_width = get_pconfig($uid,'adminlte','converse_width');
 		$top_photo = get_pconfig($uid,'adminlte','top_photo');
-		$reply_photo = get_pconfig($uid,'adminlte','reply_photo');
+    $reply_photo = get_pconfig($uid,'adminlte','reply_photo');
+    echo 'uid' . $uid . 'schema:' . $schema ;
+    echo 'view/theme/adminlte/schema/' . $schema . '.min.css';
+
 	}
 }
 
