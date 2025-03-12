@@ -17,10 +17,10 @@ class AdminlteConfig {
 
 			if(in_array('view/theme/adminlte/schema/default.php', $files)) {
 				$scheme_choices['---'] = t('Default');
-				$scheme_choices['schema1'] = t('Schema1');
+				$scheme_choices['schema1'] = t('Default');
 			}
 			else {
-				$scheme_choices['---'] = t('Schema1');
+				$scheme_choices['---'] = t('Default');
 			}
 
 			foreach($files as $file) {
