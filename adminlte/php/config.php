@@ -9,13 +9,13 @@ use ScssPhp\ScssPhp\OutputStyle;
 class AdminlteConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/adminlte/schemas/*.php');
+		$files = glob('view/theme/adminlte/schema/*.php');
 
 		$scheme_choices = [];
 
 		if($files) {
 
-			if(in_array('view/theme/adminlte/schemas/default.php', $files)) {
+			if(in_array('view/theme/adminlte/schema/default.php', $files)) {
 				$scheme_choices['---'] = t('Default');
 				$scheme_choices['schema1'] = t('Default');
 			}

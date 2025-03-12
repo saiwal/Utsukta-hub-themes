@@ -31,8 +31,8 @@ $site_bs_path = 'view/theme/adminlte/css/bootstrap.min.css';
 
 $x = file_get_contents('view/theme/adminlte/css/default.css');
 
-if(file_exists('view/theme/adminlte/schemas/' . $schema . '.min.css')) {
-	$schemecss = file_get_contents('view/theme/adminlte/schemas/' . $schema . '.min.css');
+if(file_exists('view/theme/adminlte/schema/' . $schema . '.min.css')) {
+	$schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
 }
 
 if($schemecss) {
