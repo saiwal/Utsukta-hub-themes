@@ -40,26 +40,26 @@ class AdminlteConfig {
 			return;
 		}
 
-		$arr['primary_color'] = get_pconfig(local_channel(),'redbasic', 'primary_color');
-		$arr['success_color'] = get_pconfig(local_channel(),'redbasic', 'success_color');
-		$arr['info_color'] = get_pconfig(local_channel(),'redbasic', 'info_color');
-		$arr['warning_color'] = get_pconfig(local_channel(),'redbasic', 'warning_color');
-		$arr['danger_color'] = get_pconfig(local_channel(),'redbasic', 'danger_color');
-		$arr['dark_mode'] = get_pconfig(local_channel(),'redbasic', 'dark_mode');
-		$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'redbasic', 'navbar_dark_mode');
-		$arr['narrow_navbar'] = get_pconfig(local_channel(),'redbasic', 'narrow_navbar' );
-		$arr['nav_bg'] = get_pconfig(local_channel(),'redbasic', 'nav_bg' );
-		$arr['nav_bg_dark'] = get_pconfig(local_channel(),'redbasic', 'nav_bg_dark' );
-		$arr['bgcolor'] = get_pconfig(local_channel(),'redbasic', 'background_color' );
-		$arr['bgcolor_dark'] = get_pconfig(local_channel(),'redbasic', 'background_color_dark' );
-		$arr['background_image'] = get_pconfig(local_channel(),'redbasic', 'background_image' );
-		$arr['background_image_dark'] = get_pconfig(local_channel(),'redbasic', 'background_image_dark' );
-		$arr['font_size'] = get_pconfig(local_channel(),'redbasic', 'font_size' );
-		$arr['radius'] = get_pconfig(local_channel(),'redbasic', 'radius' );
-		$arr['converse_width']=get_pconfig(local_channel(),"redbasic","converse_width");
-		$arr['top_photo']=get_pconfig(local_channel(),"redbasic","top_photo");
-		$arr['reply_photo']=get_pconfig(local_channel(),"redbasic","reply_photo");
-		$arr['advanced_theming'] = get_pconfig(local_channel(), 'redbasic', 'advanced_theming');
+		$arr['primary_color'] = get_pconfig(local_channel(),'adminlte', 'primary_color');
+		$arr['success_color'] = get_pconfig(local_channel(),'adminlte', 'success_color');
+		$arr['info_color'] = get_pconfig(local_channel(),'adminlte', 'info_color');
+		$arr['warning_color'] = get_pconfig(local_channel(),'adminlte', 'warning_color');
+		$arr['danger_color'] = get_pconfig(local_channel(),'adminlte', 'danger_color');
+		$arr['dark_mode'] = get_pconfig(local_channel(),'adminlte', 'dark_mode');
+		$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'adminlte', 'navbar_dark_mode');
+		$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );
+		$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );
+		$arr['nav_bg_dark'] = get_pconfig(local_channel(),'adminlte', 'nav_bg_dark' );
+		$arr['bgcolor'] = get_pconfig(local_channel(),'adminlte', 'background_color' );
+		$arr['bgcolor_dark'] = get_pconfig(local_channel(),'adminlte', 'background_color_dark' );
+		$arr['background_image'] = get_pconfig(local_channel(),'adminlte', 'background_image' );
+		$arr['background_image_dark'] = get_pconfig(local_channel(),'adminlte', 'background_image_dark' );
+		$arr['font_size'] = get_pconfig(local_channel(),'adminlte', 'font_size' );
+		$arr['radius'] = get_pconfig(local_channel(),'adminlte', 'radius' );
+		$arr['converse_width']=get_pconfig(local_channel(),"adminlte","converse_width");
+		$arr['top_photo']=get_pconfig(local_channel(),"adminlte","top_photo");
+		$arr['reply_photo']=get_pconfig(local_channel(),"adminlte","reply_photo");
+		$arr['advanced_theming'] = get_pconfig(local_channel(), 'adminlte', 'advanced_theming');
 		return $this->form($arr);
 	}
 
@@ -141,37 +141,37 @@ class AdminlteConfig {
 
 						$bs = $compiler->compileString('@import "bootstrap.scss";');
 
-						set_pconfig(local_channel(), 'redbasic', 'bootstrap', $bs->getCss());
+						set_pconfig(local_channel(), 'adminlte', 'bootstrap', $bs->getCss());
 					} catch (\Exception $e) {
 						logger('scssphp: Unable to compile content');
 					}
 				}
 				else {
-					set_pconfig(local_channel(), 'redbasic', 'bootstrap', '');
+					set_pconfig(local_channel(), 'adminlte', 'bootstrap', '');
 				}
 			}
 
-			set_pconfig(local_channel(), 'redbasic', 'primary_color', $_POST['redbasic_primary_color']);
-			set_pconfig(local_channel(), 'redbasic', 'success_color', $_POST['redbasic_success_color']);
-			set_pconfig(local_channel(), 'redbasic', 'info_color', $_POST['redbasic_info_color']);
-			set_pconfig(local_channel(), 'redbasic', 'warning_color', $_POST['redbasic_warning_color']);
-			set_pconfig(local_channel(), 'redbasic', 'danger_color', $_POST['redbasic_danger_color']);
+			set_pconfig(local_channel(), 'adminlte', 'primary_color', $_POST['adminlte_primary_color']);
+			set_pconfig(local_channel(), 'adminlte', 'success_color', $_POST['redbasic_success_color']);
+			set_pconfig(local_channel(), 'adminlte', 'info_color', $_POST['redbasic_info_color']);
+			set_pconfig(local_channel(), 'adminlte', 'warning_color', $_POST['redbasic_warning_color']);
+			set_pconfig(local_channel(), 'adminlte', 'danger_color', $_POST['redbasic_danger_color']);
 
-			set_pconfig(local_channel(), 'redbasic', 'narrow_navbar', $_POST['redbasic_narrow_navbar']);
-			set_pconfig(local_channel(), 'redbasic', 'navbar_dark_mode', $_POST['redbasic_navbar_dark_mode']);
-			set_pconfig(local_channel(), 'redbasic', 'dark_mode', $_POST['redbasic_dark_mode']);
-			set_pconfig(local_channel(), 'redbasic', 'nav_bg', $_POST['redbasic_nav_bg']);
-			set_pconfig(local_channel(), 'redbasic', 'nav_bg_dark', $_POST['redbasic_nav_bg_dark']);
-			set_pconfig(local_channel(), 'redbasic', 'background_color', $_POST['redbasic_background_color']);
-			set_pconfig(local_channel(), 'redbasic', 'background_color_dark', $_POST['redbasic_background_color_dark']);
-			set_pconfig(local_channel(), 'redbasic', 'background_image', $_POST['redbasic_background_image']);
-			set_pconfig(local_channel(), 'redbasic', 'background_image_dark', $_POST['redbasic_background_image_dark']);
-			set_pconfig(local_channel(), 'redbasic', 'font_size', $_POST['redbasic_font_size']);
-			set_pconfig(local_channel(), 'redbasic', 'radius', $_POST['redbasic_radius']);
-			set_pconfig(local_channel(), 'redbasic', 'converse_width', $_POST['redbasic_converse_width']);
-			set_pconfig(local_channel(), 'redbasic', 'top_photo', $_POST['redbasic_top_photo']);
-			set_pconfig(local_channel(), 'redbasic', 'reply_photo', $_POST['redbasic_reply_photo']);
-			set_pconfig(local_channel(), 'redbasic', 'advanced_theming', $_POST['redbasic_advanced_theming']);
+			set_pconfig(local_channel(), 'adminlte', 'narrow_navbar', $_POST['redbasic_narrow_navbar']);
+			set_pconfig(local_channel(), 'adminlte', 'navbar_dark_mode', $_POST['redbasic_navbar_dark_mode']);
+			set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['redbasic_dark_mode']);
+			set_pconfig(local_channel(), 'adminlte', 'nav_bg', $_POST['redbasic_nav_bg']);
+			set_pconfig(local_channel(), 'adminlte', 'nav_bg_dark', $_POST['redbasic_nav_bg_dark']);
+			set_pconfig(local_channel(), 'adminlte', 'background_color', $_POST['redbasic_background_color']);
+			set_pconfig(local_channel(), 'adminlte', 'background_color_dark', $_POST['redbasic_background_color_dark']);
+			set_pconfig(local_channel(), 'adminlte', 'background_image', $_POST['redbasic_background_image']);
+			set_pconfig(local_channel(), 'adminlte', 'background_image_dark', $_POST['redbasic_background_image_dark']);
+			set_pconfig(local_channel(), 'adminlte', 'font_size', $_POST['redbasic_font_size']);
+			set_pconfig(local_channel(), 'adminlte', 'radius', $_POST['redbasic_radius']);
+			set_pconfig(local_channel(), 'adminlte', 'converse_width', $_POST['redbasic_converse_width']);
+			set_pconfig(local_channel(), 'adminlte', 'top_photo', $_POST['redbasic_top_photo']);
+			set_pconfig(local_channel(), 'adminlte', 'reply_photo', $_POST['redbasic_reply_photo']);
+			set_pconfig(local_channel(), 'adminlte', 'advanced_theming', $_POST['redbasic_advanced_theming']);
 
 			// This is used to refresh the cache
 			set_pconfig(local_channel(), 'system', 'style_update', time());
@@ -181,7 +181,7 @@ class AdminlteConfig {
 	function form($arr) {
 
 		$expert = false;
-		if(get_pconfig(local_channel(), 'redbasic', 'advanced_theming')) {
+		if(get_pconfig(local_channel(), 'adminlte', 'advanced_theming')) {
 			$expert = true;
 		}
 
