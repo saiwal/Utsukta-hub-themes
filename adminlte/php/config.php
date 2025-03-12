@@ -17,10 +17,8 @@ class AdminlteConfig {
 
 			foreach($files as $file) {
 				$f = basename($file, ".php");
-				if($f != 'default') {
-					$scheme_name = $f;
-					$scheme_choices[$f] = $scheme_name;
-				}
+			  $scheme_name = $f;
+				$scheme_choices[$f] = $scheme_name;
 			}
 		}
 
