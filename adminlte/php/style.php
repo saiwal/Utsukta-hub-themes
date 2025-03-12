@@ -37,6 +37,10 @@ if($schemecss) {
   $x = $x . file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
 }
 
+if (isset($_REQUEST['schema']) && preg_match('/^[\w_-]+$/i', $_REQUEST['schema'])) {
+  $schema = $_REQUEST['schema'];
+}
+
 $x = $schema;
 
 /*$left_aside_width = 21; //unit: rem*/
