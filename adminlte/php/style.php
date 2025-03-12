@@ -35,8 +35,8 @@ if(file_exists('view/theme/adminlte/schema/' . $schema . '.min.css')) {
 
 if($schemecss) {
   $x = $x . file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
+  $x = ' ';
 }
-$x = ' ';
 
 
 /*$left_aside_width = 21; //unit: rem*/
