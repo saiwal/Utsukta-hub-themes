@@ -27,5 +27,44 @@ if(!App::$install) {
 
 $site_bs_path = 'view/theme/adminlte/css/bootstrap.min.css';
 
+// Apply the settings
+
+$x = file_get_contents('view/theme/adminlte/css/style.css');
+
+if($schemecss) {
+  $x .= $schemecss;
+}
+
+/*$left_aside_width = 21; //unit: rem*/
+/*$right_aside_width = 21; //unit: rem*/
+
+/*$main_width = $left_aside_width + $right_aside_width + intval($converse_width);*/
+
+// prevent main_width smaller than 768px
+/*$main_width = (($main_width < 30) ? 30 : $main_width);*/
+
+$options = array (
+  '$nav_bg' => $nav_bg,
+  '$nav_bg_dark' => $nav_bg_dark,
+  '$bgcolor' => $bgcolor,
+  '$bgcolor_dark' => $bgcolor_dark,
+  '$background_image' => $background_image,
+  '$background_image_dark' => $background_image_dark,
+  '$font_size' => $font_size,
+  '$converse_width' => $converse_width,
+  '$top_photo' => $top_photo,
+  '$reply_photo' => $reply_photo,
+  '$main_width' => $main_width,
+  '$left_aside_width' => $left_aside_width,
+  '$right_aside_width' => $right_aside_width
+);
+
+
+/*$o = strtr($x, $options);*/
+
+header('Cache-Control: max-age=2592000');
+
+echo $x;
+
 // ! If you change the name of the directory containing the theme, be sure to change this line to match.
 echo @file_get_contents('/view/theme/adminlte/css/style.css');
