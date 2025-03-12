@@ -54,7 +54,7 @@ $options = array (
 $x = file_get_contents('view/theme/adminlte/css/style.css');
 
 $schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
-
+echo 'uid' . $uid ;
 echo 'view/theme/adminlte/schema/' . $schema . '.min.css';
 
 if ($schemecss === false) {

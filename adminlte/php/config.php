@@ -5,7 +5,6 @@ namespace Zotlabs\Theme;
 use ScssPhp\ScssPhp\Compiler;
 use ScssPhp\ScssPhp\OutputStyle;
 
-
 class AdminlteConfig {
 
 	function get_schemas() {
@@ -208,7 +207,6 @@ class AdminlteConfig {
 
 		return $o;
 	}
-
 
 }
 
