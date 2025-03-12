@@ -55,6 +55,8 @@ $x = file_get_contents('view/theme/adminlte/css/style.css');
 
 $schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
 
+echo 'view/theme/adminlte/schema/' . $schema . '.min.css';
+
 if ($schemecss === false) {
     echo "Error: Could not load cosmo.min.css\n";
 
