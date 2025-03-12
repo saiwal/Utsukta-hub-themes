@@ -53,7 +53,7 @@ $options = array (
 
 $x = file_get_contents('view/theme/adminlte/css/style.css');
 
-$schemecss = file_get_contents('view/theme/adminlte/schema' . $schema . '.min.css');
+$schemecss = file_get_contents('view/theme/adminlte/schema/cosmo.min.css');
 
 /*$o = strtr($x, $options);*/
 
