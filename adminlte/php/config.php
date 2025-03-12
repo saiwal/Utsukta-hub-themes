@@ -9,7 +9,7 @@ use ScssPhp\ScssPhp\OutputStyle;
 class AdminlteConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/adminlte/schema/*.php');
+		$files = glob('view/theme/adminlte/schemas/*.php');
 
 		$scheme_choices = [];
 
