@@ -9,18 +9,18 @@ use ScssPhp\ScssPhp\OutputStyle;
 class RedbasicConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/adminLTE-4/schema/*.php');
+		$files = glob('view/theme/adminlte/schema/*.php');
 
 		$scheme_choices = [];
 
 		if($files) {
 
-			if(in_array('view/theme/adminLTE-4/schema/default.php', $files)) {
+			if(in_array('view/theme/adminlte/schema/default.php', $files)) {
 				$scheme_choices['---'] = t('Default');
-				$scheme_choices['focus'] = t('Focus (Hubzilla default)');
+				$scheme_choices['schema1'] = t('Schem1');
 			}
 			else {
-				$scheme_choices['---'] = t('Focus (Hubzilla default)');
+				$scheme_choices['---'] = t('Schema1');
 			}
 
 			foreach($files as $file) {
