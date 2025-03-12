@@ -15,14 +15,6 @@ class AdminlteConfig {
 
 		if($files) {
 
-			if(in_array('view/theme/adminlte/schema/default.php', $files)) {
-				$scheme_choices['---'] = t('Default');
-				$scheme_choices['schema1'] = t('Default');
-			}
-			else {
-				$scheme_choices['---'] = t('Default');
-			}
-
 			foreach($files as $file) {
 				$f = basename($file, ".php");
 				if($f != 'default') {
@@ -220,4 +212,14 @@ class AdminlteConfig {
 	}
 
 
+}
+
+function redbasic_theme_admin_enable() {
+	// This function is called once when the theme is being enabled by the admin
+	// It can be used to register hooks etc.
+}
+
+function redbasic_theme_admin_disable() {
+	// This function is called once when the theme is being disabled by the admin
+	// It can be used to unregister hooks etc.
 }
