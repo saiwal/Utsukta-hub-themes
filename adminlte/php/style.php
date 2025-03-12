@@ -55,10 +55,17 @@ $x = file_get_contents('view/theme/adminlte/css/style.css');
 
 $schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
 
+if ($schemecss === false) {
+    echo "Error: Could not load cosmo.min.css\n";
+
+} else {
+    echo "Loaded cosmo.min.css (" . strlen($schemecss) . " bytes)\n";
+}
+
 /*$o = strtr($x, $options);*/
 
 header('Cache-Control: max-age=2592000');
-echo "Error: Could not load style.css\n";
+
 echo $x . $schemecss;
 
 // ! If you change the name of the directory containing the theme, be sure to change this line to match.
