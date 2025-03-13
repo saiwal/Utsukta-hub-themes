@@ -63,7 +63,8 @@
       <!--begin::User Menu Dropdown-->
       <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
           <img src="{{$userinfo.icon}}" class="user-image rounded-circle shadow" alt="User Image"></a>
-        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end" style="overflow-y: auto; overflow-x: hidden; max-height: 100vh;"> <!--begin::User Image-->
+
+        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end" style="overflow-y: auto; max-height: 80vh;"> <!--begin::User Image-->
           {{if $is_owner}}
           <!--begin::Menu Body-->
           <li class="user-body p-0">
