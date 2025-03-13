@@ -15,7 +15,8 @@ if(!App::$install) {
 		$narrow_navbar = get_pconfig($uid,'adminlte','narrow_navbar');
 		$bgcolor = get_pconfig($uid, 'adminlte', 'background_color');
 		$bgcolor_dark = get_pconfig($uid, 'adminlte', 'background_color_dark');
-		$schema = get_pconfig($uid,'adminlte','schema');
+    $schema = get_pconfig($uid,'adminlte','schema');
+    $schema = 'journal';
 		$background_image = get_pconfig($uid, 'adminlte', 'background_image');
 		$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');
 		$font_size = get_pconfig($uid, 'adminlte', 'font_size');
