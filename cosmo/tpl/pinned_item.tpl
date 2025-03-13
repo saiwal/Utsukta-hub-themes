@@ -135,19 +135,19 @@
 							</button>
 							<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$id}}">
 								{{if $share}}
-									<a class="dropdown-item" href="#" onclick="jotShare({{$id}},{{$item_type}}); return false;"><i class="generic-icons-nav bi fa-retweet" title="{{$share.0}}"></i>{{$share.0}}</a>
+									<a class="dropdown-item" href="#" onclick="jotShare({{$id}},{{$item_type}}); return false;"><i class="generic-icons-nav bi bi-arrow-90deg-right me-2" title="{{$share.0}}"></i>{{$share.0}}</a>
 								{{/if}}
 								{{if $embed}}
-									<a class="dropdown-item" href="#" onclick="jotEmbed({{$id}},{{$item_type}}); return false;"><i class="generic-icons-nav bi fa-share" title="{{$embed.0}}"></i>{{$embed.0}}</a>
+									<a class="dropdown-item" href="#" onclick="jotEmbed({{$id}},{{$item_type}}); return false;"><i class="generic-icons-nav bi bi-share me-2" title="{{$embed.0}}"></i>{{$embed.0}}</a>
 								{{/if}}
 								{{if $plink}}
-									<a class="dropdown-item" href="{{$plink.href}}" title="{{$plink.title}}" class="u-url"><i class="generic-icons-nav bi bi-box-arrow-up-right"></i>{{$plink.title}}</a>
+									<a class="dropdown-item" href="{{$plink.href}}" title="{{$plink.title}}" class="u-url"><i class="generic-icons-nav bi bi-box-arrow-up-right me-2"></i>{{$plink.title}}</a>
 								{{/if}}
 								{{if $pinme}}
-								    <a class="dropdown-item dropdown-item-pinnable" href="#" onclick="dopin({{$id}}); return false;"><i class="generic-icons-nav bi fa-thumb-tack"></i>{{$pinme}}</a>
+								    <a class="dropdown-item dropdown-item-pinnable" href="#" onclick="dopin({{$id}}); return false;"><i class="generic-icons-nav bi bi-pin-angle me-2"></i>{{$pinme}}</a>
 								{{/if}}
 								{{if $hide}}
-									<a class="dropdown-item" href="#" onclick="dopinhide({{$id}}); return false;" class="u-url"><i class="generic-icons-nav bi fa-remove"></i>{{$hide}}</a>
+									<a class="dropdown-item" href="#" onclick="dopinhide({{$id}}); return false;" class="u-url"><i class="generic-icons-nav bi bi-trash me-2"></i>{{$hide}}</a>
 								{{/if}}
 							</div>
 						</div>
@@ -159,7 +159,7 @@
 							<div class="wall-item-tools-left btn-group" id="pinned-item-tools-left-{{$id}}">
 								<div class="btn-group">
 									<button type="button" class="btn btn-outline-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="pinned-attachment-menu-{{$id}}">
-										<i class="bi bi-paperclip"></i>
+										<i class="bi bi-paperclip me-2"></i>
 									</button>
 									<div class="dropdown-menu">{{$attachments}}</div>
 								</div>
