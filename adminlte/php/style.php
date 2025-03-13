@@ -15,7 +15,10 @@ if(!App::$install) {
 		/*$narrow_navbar = get_pconfig($uid,'adminlte','narrow_navbar');*/
 		/*$bgcolor = get_pconfig($uid, 'adminlte', 'background_color');*/
 		/*$bgcolor_dark = get_pconfig($uid, 'adminlte', 'background_color_dark');*/
-    $schema = get_pconfig($uid,'adminlte','schema','defaultt');
+    $schema = get_pconfig($uid, 'adminlte', 'schema');
+    var_dump(App::$config[$uid]); // See the full config for $uid
+    var_dump(App::$config[$uid]['adminlte']); // Check the 'adminlte' family
+    var_dump(App::$config[$uid]['adminlte']['schema']); // Check the 'schema' key    
 		/*  $schema = 'journal';*/
 		/*$background_image = get_pconfig($uid, 'adminlte', 'background_image');*/
 		/*$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');*/
