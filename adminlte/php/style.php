@@ -30,6 +30,7 @@ if(!App::$install) {
 }
 
 $schema = 'journal';
+echo 'uid' . $uid . 'schema:' . $schema ;
 /*$left_aside_width = 21; //unit: rem*/
 /*$right_aside_width = 21; //unit: rem*/
 
