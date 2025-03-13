@@ -1,4 +1,4 @@
-<div id="pinned-wrapper-{{$id}}" class="pinned-item card toplevel_item generic-content-wrapper mb-3 h-entry" data-b64mids='{{$mids}}'>
+<div id="pinned-wrapper-{{$id}}" class="pinned-item card toplevel_item generic-content-wrapper mb-4 h-entry" data-b64mids='{{$mids}}'>
 	<div class="wall-item-outside-wrapper" id="pinned-item-outside-wrapper-{{$id}}">
 		<div class="clearfix wall-item-content-wrapper" id="pinned-item-content-wrapper-{{$id}}">
 			{{if $photo}}
