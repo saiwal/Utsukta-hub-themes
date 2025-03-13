@@ -16,7 +16,6 @@ if(!App::$install) {
 		/*$bgcolor = get_pconfig($uid, 'adminlte', 'background_color');*/
 		/*$bgcolor_dark = get_pconfig($uid, 'adminlte', 'background_color_dark');*/
     $schema = get_pconfig($uid, 'adminlte', 'schema');
-    var_dump(App::$config[$uid]); // See the full config for $uid
     var_dump(App::$config[$uid]['adminlte']); // Check the 'adminlte' family
     var_dump(App::$config[$uid]['adminlte']['schema']); // Check the 'schema' key    
 		/*  $schema = 'journal';*/
@@ -26,9 +25,6 @@ if(!App::$install) {
 		/*$converse_width = get_pconfig($uid,'adminlte','converse_width');*/
 		/*$top_photo = get_pconfig($uid,'adminlte','top_photo');*/
 		/*  $reply_photo = get_pconfig($uid,'adminlte','reply_photo');*/
-    echo 'uid' . $uid . 'schema:' . $schema ;
-    echo 'view/theme/adminlte/schema/' . $schema . '.min.css';
-
 	}
 }
 
