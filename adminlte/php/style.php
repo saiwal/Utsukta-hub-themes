@@ -70,3 +70,6 @@ echo $x . $schemecss;
 
 // ! If you change the name of the directory containing the theme, be sure to change this line to match.
 /*echo @file_get_contents('/view/theme/adminlte/css/style.css');*/
+
+if(local_channel() && App::$channel && App::$channel['channel_theme'] != 'adminlte')
+	set_pconfig(local_channel(), 'adminlte', 'schema', '---');
