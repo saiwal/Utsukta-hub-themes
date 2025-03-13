@@ -8,14 +8,16 @@ use ScssPhp\ScssPhp\OutputStyle;
 class AdminlteConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/adminlte/schema/*.php');
+		$files = glob('view/theme/adminlte/schema/*.min.css');
 
 		$scheme_choices = [];
 
 		if($files) {
 
-			foreach($files as $file) {
-				$f = basename($file, ".php");
+			$scheme_choices['---'] = t('Default');
+      
+      foreach($files as $file) {
+				$f = basename($file, ".min.css");
 			  $scheme_name = $f;
 				$scheme_choices[$f] = $scheme_name;
 			}
