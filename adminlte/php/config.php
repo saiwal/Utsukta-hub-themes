@@ -59,6 +59,7 @@ class AdminlteConfig {
 			return;
 		}
 
+		set_pconfig(local_channel(), 'adminlte', 'schema', $_POST['schema']);
 		/*if (isset($_POST['redbasic-settings-submit'])) {*/
 		/*	if (isset($_POST['redbasic_primary_color']) || isset($_POST['redbasic_radius'])) {*/
 		/**/
