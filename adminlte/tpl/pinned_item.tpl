@@ -12,7 +12,7 @@
 				</div>
 			{{/if}}
 			{{if $title && !$event}}
-				<div class="{{if $is_new}} bg-primary text-white{{/if}} card-header wall-item-title h3{{if !$photo}} rounded-top{{/if}}" id="pinned-item-title-{{$id}}">
+				<div class="{{if $is_new}} bg-primary text-white{{/if}} card-header wall-item-title {{if !$photo}} rounded-top{{/if}}" id="pinned-item-title-{{$id}}">
 					{{if $title_tosource}}
 						{{if $plink}}
 							<a class="{{if $item.is_new}}text-white{{/if}} text-decoration-none" href="{{$plink.href}}" title="{{$title}} ({{$plink.title}})" rel="nofollow">
@@ -29,10 +29,10 @@
 					<hr class="m-0">
 				{{/if}}
 			{{/if}}
-			<div class="p-2 lh-sm d-flex wall-item-head{{if !$title && !$event && !$photo}} rounded-top{{/if}}{{if $is_new && !$event}} wall-item-head-new{{/if}} card-body" >
+			<div class="p-2 lh-sm d-flex wall-item-head{{if $is_new && !$event}} wall-item-head-new{{/if}} card-body" >
 				<div class="wall-item-info pe-2" id="wall-item-info-{{$id}}" >
 					<div class="wall-item-photo-wrapper{{if $owner_url}} wwfrom{{/if}} h-card p-author" id="wall-item-photo-wrapper-{{$id}}">
-						<img src="{{$thumb}}" class="fakelink wall-item-photo{{$sparkle}} u-photo p-name" id="wall-item-photo-{{$id}}" alt="{{$name}}" loading="lazy" data-bs-toggle="dropdown" />
+						<img src="{{$thumb}}" class="fakelink wall-item-photo{{$sparkle}} u-photo p-name img-thumbnail img-size-64" id="wall-item-photo-{{$id}}" alt="{{$name}}" loading="lazy" data-bs-toggle="dropdown" />
 						{{if $thread_author_menu}}
 						<i class="bi bi-caret-down wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
 						<div class="dropdown-menu">
@@ -44,7 +44,7 @@
 					</div>
 				</div>
 				<div class="wall-item-author text-truncate">
-					<a href="{{$profile_url}}" title="{{$linktitle}}" class="wall-item-name-link u-url"><span class="wall-item-name" id="pinned-item-name-{{$id}}" >{{$name}}</span></a>{{if $owner_url}}&nbsp;{{$via}}&nbsp;<a href="{{$owner_url}}" title="{{$olinktitle}}" class="wall-item-name-link"><span class="wall-item-name" id="pinned-item-ownername-{{$id}}">{{$owner_name}}</span></a>{{/if}}<br>
+					<a href="{{$profile_url}}" title="{{$linktitle}}" class=" text-decoration-none wall-item-name-link u-url"><span class="wall-item-name" id="pinned-item-name-{{$id}}" >{{$name}}</span></a>{{if $owner_url}}&nbsp;{{$via}}&nbsp;<a href="{{$owner_url}}" title="{{$olinktitle}}" class="wall-item-name-link"><span class="wall-item-name" id="pinned-item-ownername-{{$id}}">{{$owner_name}}</span></a>{{/if}}<br>
 					<small class="wall-item-addr opacity-75">{{$author_id}}</small>
 				</div>
 				<div class="text-end ms-auto">
