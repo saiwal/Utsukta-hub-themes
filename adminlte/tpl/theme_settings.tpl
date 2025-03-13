@@ -1,2 +1,2 @@
-<h3>Comin soon...</h3>
+<h5>Coming soon...</h5>
 
