@@ -1,4 +1,4 @@
-<div id="pinned-wrapper-{{$id}}" class="pinned-item card toplevel_item generic-content-wrapper h-entry" data-b64mids='{{$mids}}'>
+<div id="pinned-wrapper-{{$id}}" class="pinned-item card toplevel_item generic-content-wrapper mb-3 h-entry" data-b64mids='{{$mids}}'>
 	<div class="wall-item-outside-wrapper" id="pinned-item-outside-wrapper-{{$id}}">
 		<div class="clearfix wall-item-content-wrapper" id="pinned-item-content-wrapper-{{$id}}">
 			{{if $photo}}
@@ -7,7 +7,7 @@
 				</div>
 			{{/if}}
 			{{if $event}}
-				<div class="wall-event-item" id="pinned-event-item-{{$id}}">
+				<div class="card-header wall-event-item" id="pinned-event-item-{{$id}}">
 					{{$event}}
 				</div>
 			{{/if}}
@@ -15,7 +15,7 @@
 				<div class="{{if $is_new}} bg-primary text-white{{/if}} card-header wall-item-title h3{{if !$photo}} rounded-top{{/if}}" id="pinned-item-title-{{$id}}">
 					{{if $title_tosource}}
 						{{if $plink}}
-							<a href="{{$plink.href}}" title="{{$title}} ({{$plink.title}})" rel="nofollow">
+							<a class="{{if $item.is_new}}text-white{{/if}} text-decoration-none" href="{{$plink.href}}" title="{{$title}} ({{$plink.title}})" rel="nofollow">
 						{{/if}}
 					{{/if}}
 					{{$title}}
