@@ -14,7 +14,7 @@ class AdminlteConfig {
 
 		if($files) {
 
-			$scheme_choices['---'] = t('Default');
+			$scheme_choices['---'] = t('default');
       
       foreach($files as $file) {
 				$f = basename($file, ".min.css");

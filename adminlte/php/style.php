@@ -57,11 +57,9 @@ $options = array (
 $x = file_get_contents('view/theme/adminlte/css/style.css');
 
 $schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.min.css');
-echo 'uid' . $uid ;
-echo 'view/theme/adminlte/schema/' . $schema . '.min.css';
 
 if ($schemecss === false) {
-    echo "Error: Could not load cosmo.min.css\n";
+    echo "Error: Could not load schema\n";
 
 } else {
     echo "Loaded cosmo.min.css (" . strlen($schemecss) . " bytes)\n";
