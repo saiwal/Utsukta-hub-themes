@@ -29,6 +29,7 @@ if(!App::$install) {
 	}
 }
 
+$schema = 'journal';
 /*$left_aside_width = 21; //unit: rem*/
 /*$right_aside_width = 21; //unit: rem*/
 
