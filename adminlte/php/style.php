@@ -52,6 +52,10 @@ if(!App::$install) {
 /*  '$right_aside_width' => $right_aside_width*/
 /*);*/
 /**/
+// Allow layouts to over-ride the schema
+if (isset($_REQUEST['schema']) && preg_match('/^[\w_-]+$/i', $_REQUEST['schema'])) {
+  $schema = $_REQUEST['schema'];
+}
 // Apply the settings
 
 $x = file_get_contents('view/theme/adminlte/css/style.css');
