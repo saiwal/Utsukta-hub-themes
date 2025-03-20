@@ -8,8 +8,6 @@
 				<button class="btn btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
 			</form>
 			{{/if}}
-			<button id="fullscreen-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(); adjustFullscreenTopBarHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-tool" onclick="makeFullScreen(false); adjustInlineTopBarHeight();"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
 		<h3 class="card-title">{{$room_name}}</h3>
 		<div class="clear"></div>

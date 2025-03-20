@@ -1825,15 +1825,3 @@ function close_modal() {
 		modal.hide();
 	}
 }
-
-function makeFullScreen(full) {
-    if (typeof full === 'undefined' || full === true) {
-        document.querySelector('main').classList.add('fullscreen');
-        document.getElementById('fullscreen-btn').style.display = 'none';
-        document.getElementById('inline-btn').style.display = 'inline-block';
-    } else {
-        document.querySelector('main').classList.remove('fullscreen');
-        document.getElementById('fullscreen-btn').style.display = '';
-        document.getElementById('inline-btn').style.display = 'none';
-    }
-}

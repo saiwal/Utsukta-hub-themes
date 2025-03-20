@@ -110,8 +110,6 @@ function updateSize() {
 				<button id="today-btn" class="btn btn-outline-secondary btn-sm" title="{{$today}}"><span id="events-spinner" class="spinner s"></span><i class="bi bi-crosshair" style="display: none; padding: 0.065rem;"></i></button>
 				<button id="next-btn" class="btn btn-outline-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
 			</div>
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false);"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
 		<h3 id="title"></h3>
 		<div class="clear"></div>
