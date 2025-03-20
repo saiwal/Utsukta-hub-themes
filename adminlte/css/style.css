@@ -135,4 +135,38 @@ span.spinner {
 
 /* spinner end */
 
+main.fullscreen {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vh;
+	z-index: 1020;
+	overflow: auto;
+}
+
+main.fullscreen .generic-content-wrapper {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vh;
+	z-index: 1020;
+	overflow: auto;
+	border-radius: 0px;
+	border-width: 0px;
+}
+
+main.fullscreen .section-title-wrapper {
+	border-radius: 0px;
+	position: sticky;
+	top: 0;
+	z-index: 1020;
+}
+
+main.fullscreen .section-content-wrapper,
+main.fullscreen .section-content-wrapper-np {
+	border-radius: 0px;
+}
+
 
