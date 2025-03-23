@@ -6,8 +6,8 @@
  *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
- *   * Author: SK
- *   * Maintainer: SK
+ *   * Author: Saiwal sk@hub.utsukta.org
+ *   * Maintainer: Saiwal sk@hub.utsukta.org
  *   * Compat: Hubzilla [*]
  *
  */
