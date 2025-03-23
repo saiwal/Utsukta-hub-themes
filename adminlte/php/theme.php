@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Adminlte
- *   * Description: AdminLTE theme adapted  for Utsukta Hub
+ *   * Description: AdminLTE theme adapted for Hubzilla
  *   * Version: 1.0
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
