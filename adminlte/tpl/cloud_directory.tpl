@@ -57,9 +57,6 @@
 			<td><i class="bi bi-arrow-90deg-up"></i></td>
 			<td colspan="6"><a href="{{$parentpath}}" title="{{$parent}}" class="p-2" draggable="false">..</a></td>
 		</tr>
-		<tr class="cloud-tools">
-			<td colspan="8" class="attach-edit-panel">{{* this is for display consistency *}}</td>
-		</tr>
 		{{/if}}
 		{{if $channel_id && $is_owner && $entries.0}}
 		<tr id="cloud-multi-actions">
