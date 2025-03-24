@@ -10,13 +10,15 @@
 	{{/if}}
 	{{if $rooms}}
 	<div class="section-content-wrapper-np">
-		<table id="chatrooms-index">
+		<table id="chatrooms-index" class="table table-hover">
+      <thead>
 			<tr>
 				<th width="97%">{{$name}}</th>
 				<th width="1%">{{$expire}}</th>
 				<th width="1%" class="chatrooms-index-tool"></th>
 				<th width="1%"></th>
 			</tr>
+      </thead>
 			{{foreach $rooms as $room}}
 			<tr class="chatroom-index-row">
 				<td><a href="{{$baseurl}}/chat/{{$nickname}}/{{$room.cr_id}}">{{$room.cr_name}}</a></td>
