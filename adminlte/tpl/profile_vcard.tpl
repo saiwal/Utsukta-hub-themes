@@ -4,7 +4,7 @@
     src="{{$cover.url}}"></img>
   <div class="card-body">
     <div class="d-flex">
-      <div id="profile-photo-wrapper" class="bg-body-secondary overflow-hidden me-2"
+      <div id="profile-photo-wrapper" class="overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
         <img class="img-thumbnail" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
           alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
