@@ -203,22 +203,22 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-        <li class="nav-header pb-3 pt-1">
+        <li class="nav-header pb-3 pt-1 d-flex justify-content-center">
           <div id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked
               data-bs-theme-value="auto">
             <label class="btn btn-sm btn-outline-primary" for="btnradio1"><i
-                class="bi bi-circle-half me-2"></i>Auto</label>
+                class="bi bi-circle-half me-1"></i>Auto</label>
 
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"
               data-bs-theme-value="dark">
             <label class="btn btn-sm btn-outline-primary" for="btnradio2"><i
-                class="bi bi-moon-fill me-2"></i></label>
+                class="bi bi-moon-fill me-1"></i>Dark</label>
 
             <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"
               data-bs-theme-value="light">
             <label class="btn btn-sm btn-outline-primary" for="btnradio3"><i
-                class="bi bi-sun-fill me-2"></i></label>
+                class="bi bi-sun-fill me-1"></i>Light</label>
           </div>
         </li>
         <!-- Pinned user apps -->
