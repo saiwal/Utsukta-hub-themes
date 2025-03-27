@@ -181,7 +181,7 @@
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-dark shadow" data-bs-theme="dark">
   <!--begin::Sidebar Brand-->
-  <div class="sidebar-brand">
+  <div class="sidebar-brand border-0">
     <!--begin::Brand Link-->
     <a href="/" class="brand-link">
       <!--begin::Brand Image-->
