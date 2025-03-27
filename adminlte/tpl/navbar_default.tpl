@@ -61,7 +61,7 @@
       <!-- user dowpdown menu-->
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
-      <li class="nav-item dropdown user-menu"> <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+      <li class="nav-item dropdown user-menu"> <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle ps-2" data-bs-toggle="dropdown">
           <img src="{{$userinfo.icon}}" class="rounded-circle shadow img-size-32" alt="User Image"></a>
 
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end" style="overflow-y: auto; overflow-x:hidden; max-height: 80vh;"> <!--begin::User Image-->
