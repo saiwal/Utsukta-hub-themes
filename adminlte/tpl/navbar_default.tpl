@@ -221,16 +221,6 @@
                 class="bi bi-sun-fill me-2"></i>Light</label>
           </div>
         </li>
-        <li class="nav-header d-block d-md-none">
-          <div class="navbar-search-block">
-            <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
-              <input class="form-control me-sm-2" id="nav-search-text" type="text" value=""
-                placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
-                onblur="closeMenu('nav-search'); openMenu('nav-search-btn');" />
-            </form>
-          </div>
-        </li>
-
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
         <li class="nav-item menu-open">
