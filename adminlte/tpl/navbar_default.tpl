@@ -23,7 +23,7 @@
     </ul>
 
     <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
+    <ul class="navbar-nav ml-auto align-items-center justify-content-center">
       <!-- App settings icon-->
       {{if $userinfo}}
       {{if $sel.name}}
