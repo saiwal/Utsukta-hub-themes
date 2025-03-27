@@ -39,7 +39,7 @@
       <li class="nav-item d-none d-md-block">
         <div class="navbar-search-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
-            <input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value=""
+            <input class="form-control me-sm-2" id="nav-search-text" type="text" value=""
               placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
               onblur="closeMenu('nav-search'); openMenu('nav-search-btn');" />
           </form>
