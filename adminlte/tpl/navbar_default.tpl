@@ -203,6 +203,24 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+        <li class="nav-header pb-3 pt-1">
+          <div id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked
+              data-bs-theme-value="auto">
+            <label class="btn btn-sm btn-outline-primary" for="btnradio1"><i
+                class="bi bi-circle-half me-2"></i>Auto</label>
+
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"
+              data-bs-theme-value="dark">
+            <label class="btn btn-sm btn-outline-primary" for="btnradio2"><i
+                class="bi bi-moon-fill me-2"></i></label>
+
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"
+              data-bs-theme-value="light">
+            <label class="btn btn-sm btn-outline-primary" for="btnradio3"><i
+                class="bi bi-sun-fill me-2"></i></label>
+          </div>
+        </li>
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
         <li class="nav-item menu-open">
@@ -247,13 +265,6 @@
         {{$nav_app}}
         {{/foreach}}
         {{/if}}
-        <li class="nav-header pb-2 pt-1">
-          <div class="form-check form-switch d-flex align-items-center gap-2">
-            <i class="bi bi-sun-fill"></i>
-            <input class="form-check-input m-0" type="checkbox" role="switch" id="themeSwitch" data-bs-theme-value="dark" name="themeToggle" autocomplete="off">
-            <i class="bi bi-moon-fill"></i>
-          </div>
-        </li>
       </ul>
       <!--end::Sidebar Menu-->
     </nav>
