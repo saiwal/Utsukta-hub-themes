@@ -203,7 +203,7 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-        <li class="nav-header pb-3 pt-1 d-flex justify-content-center">
+        <li class="nav-header pb-3 pt-1"><div class="d-flex justify-content-center">
           <div id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked
               data-bs-theme-value="auto">
@@ -219,7 +219,7 @@
               data-bs-theme-value="light">
             <label class="btn btn-sm btn-outline-primary" for="btnradio3"><i
                 class="bi bi-sun-fill me-1"></i>Light</label>
-          </div>
+          </div></div>
         </li>
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
