@@ -162,7 +162,7 @@
       {{/if}}
       {{if $nav.register}}
       <li class="nav-item mt-1 px-1">
-        <a class="btn btn-success btn-sm" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
+        <a class="btn btn-success" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
       </li>
       {{/if}}
       {{/if}}
