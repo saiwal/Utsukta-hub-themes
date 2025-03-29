@@ -353,7 +353,7 @@
     (function ssInit() {
 
         ssPreloader();
-        ssMobileMenu();
+        //ssMobileMenu();
         ssSearch();
         ssMasonry();
         ssAnimateBricks();
