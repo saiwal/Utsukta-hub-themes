@@ -55,14 +55,11 @@ head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.
 
 head_add_css('/view/theme/spurgeon/css/styles.css');
 head_add_css('/view/theme/spurgeon/css/vendor.css');
-/*head_add_css('/view/theme/adminlte/css/overlayscrollbar.min.css');*/
-/*head_add_css('/view/theme/adminlte/css/style.css');*/
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootbox/bootbox.min.js');
 head_add_js('/library/bootstrap-tagsinput/bootstrap-tagsinput.js');
 head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
-head_add_js('/view/theme/spurgeon/js/main.js');
+/*head_add_js('/view/theme/spurgeon/js/main.js');*/
 head_add_js('/view/theme/spurgeon/js/plugins.js');
-/*head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');*/
