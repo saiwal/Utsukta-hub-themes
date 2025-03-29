@@ -353,11 +353,11 @@
     (function ssInit() {
 
         ssPreloader();
-        //ssMobileMenu();
+        ssMobileMenu();
         ssSearch();
         ssMasonry();
         ssAnimateBricks();
-        //ssSwiper();
+        ssSwiper();
         ssAlertBoxes();
         ssBackToTop();
         ssMoveTo();
