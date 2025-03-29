@@ -1,5 +1,3 @@
-        <!-- # site header 
-        ================================================== -->
         <header id="masthead" class="s-header">
 
             <div class="s-header__branding">

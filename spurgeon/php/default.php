@@ -14,8 +14,6 @@
 <html lang="en" class="no-js" >
 <head>
 
-    <!--- basic page needs
-    ================================================== -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php if (x($page, 'title')) echo $page['title'] ?></title>
@@ -29,19 +27,11 @@
     </script>
 
     <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
-    <!-- favicons-->
-    <!--================================================== -->-->
-    <!--<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">-->
-    <!--<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">-->
-    <!--<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">-->
-    <!--<link rel="manifest" href="site.webmanifest">-->
 </head>
 
 
 <body id="top">
 
-    <!-- preloader
-    ================================================== -->
     <div id="preloader">
         <div id="loader" class="dots-fade">
             <div></div>
@@ -52,8 +42,6 @@
 
 
 	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
-    <!-- page wrap
-    ================================================== -->
     <div id="page" class="s-pagewrap ss-home">
 
 
@@ -733,11 +721,6 @@
         </footer><!-- end s-footer -->
 
 
-    <!-- Java Script
-    ================================================== -->
-    <!--<script src="js/plugins.js"></script>-->
-    <!--<script src="js/main.js"></script>-->
-    <!---->
 </body>
 </html>
 
