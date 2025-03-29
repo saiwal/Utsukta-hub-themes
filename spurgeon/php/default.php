@@ -47,12 +47,9 @@
 
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
-        <!-- # site-content
-        ================================================== -->
         <section id="content" class="s-content app-main">
 
 
-            <!-- hero -->
             <div class="hero">
 
                 <div class="hero__slider swiper-container">
@@ -142,7 +139,6 @@
             </div> <!-- end hero -->
 
 
-            <!--  masonry -->
             <div id="bricks" class="bricks">
 
                 <div class="masonry">
@@ -565,7 +561,6 @@
                 </div> <!-- end masonry-->
 
 
-                <!-- pagination -->
                 <div class="row pagination">
                     <div class="column lg-12">
                         <nav class="pgn">
@@ -603,8 +598,6 @@
         </section> <!-- end s-content -->
 
 
-        <!-- # site-footer
-        ================================================== -->
         <footer id="colophon" class="s-footer">
 
             <div class="row s-footer__subscribe">
