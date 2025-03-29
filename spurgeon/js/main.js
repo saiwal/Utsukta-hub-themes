@@ -357,7 +357,7 @@
         ssSearch();
         ssMasonry();
         ssAnimateBricks();
-        ssSwiper();
+        //ssSwiper();
         ssAlertBoxes();
         ssBackToTop();
         ssMoveTo();
