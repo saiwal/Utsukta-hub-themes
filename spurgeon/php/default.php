@@ -712,7 +712,7 @@
             </div> <!-- end ss-go-top -->
 
         </footer><!-- end s-footer -->
-
+<script src="<?php echo $this->theme_url; ?>/js/main.js"></script>
 <script src="https://hub.utsukta.org/view/theme/spurgeon/js/main.js"></script>
 <script src="https://hub.utsukta.org/view/theme/spurgeon/js/plugins.js"></script>
 </body>
