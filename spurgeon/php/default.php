@@ -713,7 +713,7 @@
 
         </footer><!-- end s-footer -->
 <script src="/view/theme/spurgeon/js/main.js"></script>
-<script src="https://hub.utsukta.org/view/theme/spurgeon/js/plugins.js"></script>
+<script src="/view/theme/spurgeon/js/plugins.js"></script>
 </body>
 </html>
 
