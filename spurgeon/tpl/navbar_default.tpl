@@ -2,7 +2,7 @@
 
             <div class="s-header__branding">
                 <p class="site-title">
-                    <a href="index.html" rel="home">Spurgeon.</a>
+              {{$banner}}
                 </p>
             </div>
 
