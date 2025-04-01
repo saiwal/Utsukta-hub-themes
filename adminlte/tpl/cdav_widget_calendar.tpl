@@ -1,5 +1,6 @@
-<div class="widget">
-	<h3>{{$channel_calendars_label}}</h3>
+<div class="card mb-3">
+  <div class="card-header">{{$channel_calendars_label}}</div>
+  <div class="card-body">
 	{{foreach $channel_calendars as $channel_calendar}}
 	<div id="calendar-{{$channel_calendar.calendarid}}">
 		<div class="ml-3{{if !$channel_calendar@last}} mb-3{{/if}}">
@@ -10,11 +11,13 @@
 		</div>
 	</div>
 	{{/foreach}}
+  </div>
 </div>
 
 {{if $my_calendars}}
-<div class="widget">
-	<h3>{{$my_calendars_label}}</h3>
+<div class="card mb-3">
+  <div class="card-header">{{$my_calendars_label}}</div>
+  <div class="card-body">
 	{{foreach $my_calendars as $calendar}}
 	<div id="calendar-{{$calendar.calendarid}}">
 		<div class="ml-3{{if !$calendar@last}} mb-3{{/if}}">
@@ -72,12 +75,14 @@
 		</div>
 	</div>
 	{{/foreach}}
+  </div>
 </div>
 {{/if}}
 
 {{if $shared_calendars}}
-<div class="widget">
-	<h3>{{$shared_calendars_label}}</h3>
+<div class="card mb-3">
+  <div class="card-header">{{$shared_calendars_label}}</div>
+  <div class="card-body">
 	{{foreach $shared_calendars as $calendar}}
 	<div id="shared-calendar-{{$calendar.calendarid}}" class="ml-3{{if !$calendar@last}} mb-3{{/if}}">
 		<i id="calendar-btn-{{$calendar.calendarid}}" class="bi {{if $calendar.switch}}{{if $calendar.access == 'read-write'}}bi-calendar-check{{else}}bi-calendar-x{{/if}}{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}}, {{if $calendar.access == 'read-write'}}'bi-calendar-check'{{else}}'bi-calendar-x'{{/if}})"  style="color: {{$calendar.color}};"></i>{{$calendar.displayname}} ({{$calendar.sharer}})
@@ -87,11 +92,13 @@
 		</div>
 	</div>
 	{{/foreach}}
+  </div>
 </div>
 {{/if}}
 
-<div class="widget">
-	<h3>{{$tools_label}}</h3>
+<div class="card mb-3">
+	<div class="card-header">{{$tools_label}}</div>
+  <div class="card-body">
 	<div class="nav nav-pills flex-column">
 		<li class="nav-item">
 			<a class="nav-link text-reset" href="#" onclick="openClose('create-calendar'); return false;"><i class="bi bi-calendar-plus generic-icons-nav"></i> {{$create_label}}</a>
@@ -135,4 +142,5 @@
 			</div>
 		</div>
 	</div>
+  </div>
 </div>
