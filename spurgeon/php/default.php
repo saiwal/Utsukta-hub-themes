@@ -47,20 +47,13 @@
 
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
-        <section id="content" class="s-content app-main">
-
-            <div class="hero">
-              <?php if (x($page, 'hero')) echo $page['hero']; ?>
-            </div> <!-- end hero -->
-
-            <div id="bricks" class="bricks">
-
+        <div id="content" class="s-content s-content--page app-main">
+          <div class="row entry-wrap">
+            <div class="column lg-12">
               <?php if (x($page, 'content')) echo $page['content']; ?>
-              <?php if (x($page, 'bricks')) echo $page['bricks']; ?>
-
-            </div> <!-- end bricks -->
-
-        </section> <!-- end s-content -->
+            </div>
+          </div>
+        </div>
 
 
         <footer id="colophon" class="s-footer">
@@ -108,6 +101,7 @@
             </div> <!-- end ss-go-top -->
 
         </footer><!-- end s-footer -->
+    </div>
 <script src="/view/theme/spurgeon/js/main.js"></script>
 <script src="/view/theme/spurgeon/js/plugins.js"></script>
 </body>
