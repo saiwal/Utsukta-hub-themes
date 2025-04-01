@@ -13,6 +13,27 @@
                     <h3 class="s-header__nav-heading">Navigate to</h3>
     
                     <ul class="s-header__nav">
+                    <!-- Pinned user apps -->
+                      {{if $navbar_apps.0}}
+                      <li class="nav-item menu-open">
+                        <a href="#" class="nav-link"> <i class="nav-icon bi bi-pin-angle-fill"></i>
+                          <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+                        </a>
+                        <ul id="nav-app-bin-container" class="nav nav-treeview" style="display: block; box-sizing: border-box;">
+                          {{foreach $navbar_apps as $navbar_app}}
+                          {{$navbar_app|replace:'fa':'generic-icons-nav fa'}}
+                          {{/foreach}}
+                        </ul>
+                      </li>
+                      {{/if}}
+                      <!-- Channel apps; needs fixing -->
+                      {{if $channel_apps.0}}
+                      <li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
+                      {{foreach $channel_apps as $channel_app}}
+                      {{$channel_app}} <br>
+                      {{/foreach}}
+                      {{/if}}
+
                         <li class="current-menu-item"><a href="index.html" title="">Home</a></li>
                         <li class="has-children">
                             <a href="#0" title="" class="">Categories</a>
