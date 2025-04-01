@@ -19,9 +19,7 @@
                                 {{foreach $nav_apps as $nav_app}}
                                 {{$nav_app}}
                                 {{/foreach}}
-                              <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-plus-lg"></i>
-                                  <p>{{$addapps}}</p>
-                                </a></li>
+                              <li><a href="/apps"><i class="bi bi-plus-lg"></i> {{$addapps}}</a></li>
                             </ul>
                             {{else}}
                             <h4>{{$sysapps}}</h4>
