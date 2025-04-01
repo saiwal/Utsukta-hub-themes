@@ -1,9 +1,9 @@
         <header id="masthead" class="s-header">
 
             <div class="s-header__branding">
-                <p class="site-title">
-              {{$banner}}
-                </p>
+            <p class="site-title">
+              <a href="/" rel="home">{{$banner}}</a>
+            </p>
             </div>
 
             <div class="row s-header__navigation">
