@@ -21,7 +21,7 @@
 	{{foreach $my_calendars as $calendar}}
 	<div id="calendar-{{$calendar.calendarid}}">
 		<div class="ml-3{{if !$calendar@last}} mb-3{{/if}}">
-			<i id="calendar-btn-{{$calendar.calendarid}}" class="bi {{if $calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}})" style="color: {{$calendar.color}};"></i>{{$calendar.displayname}}
+			<i id="calendar-btn-{{$calendar.calendarid}}" class="pe-2 bi {{if $calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}})" style="color: {{$calendar.color}};"></i>{{$calendar.displayname}}
 			<div class="float-end">
 				<i id="edit-icon" class="bi bi-pencil cursor-pointer generic-icons-right" onclick="openClose('edit-calendar-{{$calendar.calendarid}}')"></i>
 				<a class="text-reset" href="/cdav/calendars/{{$calendar.ownernick}}/{{$calendar.uri}}/?export"><i id="download-icon" class="bi bi-download cursor-pointer generic-icons-right"></i></a>
@@ -85,7 +85,7 @@
   <div class="card-body">
 	{{foreach $shared_calendars as $calendar}}
 	<div id="shared-calendar-{{$calendar.calendarid}}" class="ml-3{{if !$calendar@last}} mb-3{{/if}}">
-		<i id="calendar-btn-{{$calendar.calendarid}}" class="bi {{if $calendar.switch}}{{if $calendar.access == 'read-write'}}bi-calendar-check{{else}}bi-calendar-x{{/if}}{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}}, {{if $calendar.access == 'read-write'}}'bi-calendar-check'{{else}}'bi-calendar-x'{{/if}})"  style="color: {{$calendar.color}};"></i>{{$calendar.displayname}} ({{$calendar.sharer}})
+		<i id="calendar-btn-{{$calendar.calendarid}}" class="pe-2 bi {{if $calendar.switch}}{{if $calendar.access == 'read-write'}}bi-calendar-check{{else}}bi-calendar-x{{/if}}{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}}, {{if $calendar.access == 'read-write'}}'bi-calendar-check'{{else}}'bi-calendar-x'{{/if}})"  style="color: {{$calendar.color}};"></i>{{$calendar.displayname}} ({{$calendar.sharer}})
 		<div class="float-end">
 			<a class="text-reset" href="/cdav/calendars/{{$calendar.ownernick}}/{{$calendar.uri}}/?export"><i id="download-icon" class="bi bi-download cursor-pointer generic-icons-right"></i></a>
 			<a class="text-reset" href="#" onclick="var drop = dropItem('/cdav/calendar/drop/{{$calendar.calendarid}}/{{$calendar.instanceid}}', '#shared-calendar-{{$calendar.calendarid}}'); if(drop) { add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}}, 'drop'); } return false;"><i class="bi bi-trash generic-icons-right"></i></a>
