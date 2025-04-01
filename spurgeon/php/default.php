@@ -42,7 +42,7 @@
 
 
 	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
-    <div id="page" class="s-pagewrap ss-home">
+    <div id="page" class="s-pagewrap">
 
 
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
