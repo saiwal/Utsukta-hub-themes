@@ -1,4 +1,4 @@
-<nav class="app-header navbar navbar-expand bg-body sticky-top"> <!--begin::Container-->
+<nav class="app-header navbar navbar-expand bg-primary sticky-top"> <!--begin::Container-->
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
       <li class="nav-item">
