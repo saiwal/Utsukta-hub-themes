@@ -6,7 +6,7 @@ use \Zotlabs\Lib\Config;
 require_once('include/security.php');
 require_once('include/menu.php');
 
-function widget_mynavbar($args) {
+function widget_footer_nav($args) {
 
   /**
 	 *
@@ -14,7 +14,7 @@ function widget_mynavbar($args) {
 	 *
 	 */
 
-  App::$page['topnav'] = App::$page['topnav'] ?? ''; App::$page['htmlhead'] =
+  App::$page['footer_nav'] = App::$page['footer_nav'] ?? ''; App::$page['htmlhead'] =
     App::$page['htmlhead'] ?? ''; App::$page['htmlhead'] .=
     '<script>$(document).ready(function() {
       $("#nav-search-text").search_autocomplete(\'' . z_root() . '/acl' .
@@ -268,7 +268,7 @@ function widget_mynavbar($args) {
 
               if (!$tpl) { $tpl = get_markup_template('footer_nav.tpl'); }
 
-              App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl' =>
+              App::$page['footer_nav'] .= replace_macros($tpl, [ '$baseurl' =>
                 z_root(), '$color_mode'         => App::$page['color_mode'] ??
                 '', '$navbar_color_mode'  => App::$page['navbar_color_mode'] ??
                 '', '$theme_switch_icon'  => $theme_switch_icon, '$fulldocs' =>
@@ -303,7 +303,7 @@ function widget_mynavbar($args) {
                 // from the server instead of its cache.
                 $tpl = get_markup_template('force_image_reload.tpl');
 
-                App::$page['topnav'] .= replace_macros($tpl, [ '$imgUrl' =>
+                App::$page['footer_nav'] .= replace_macros($tpl, [ '$imgUrl' =>
                   $observer['xchan_photo_m'] ]);
                 unset($_SESSION['reload_avatar']); }
 
