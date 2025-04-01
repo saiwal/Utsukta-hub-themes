@@ -475,7 +475,7 @@ function widget_footer_nav($args) {
 		]);
 
 
-              return App::$page['footer_nav']; 
+              /*return App::$page['footer_nav']; */
               /*call_hooks('page_header', App::$page['topnav']); */
 
 }
