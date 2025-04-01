@@ -4,7 +4,7 @@
 	{{foreach $channel_calendars as $channel_calendar}}
 	<div id="calendar-{{$channel_calendar.calendarid}}">
 		<div class="ml-3{{if !$channel_calendar@last}} mb-3{{/if}}">
-			<i id="calendar-btn-{{$channel_calendar.calendarid}}" class="bi {{if $channel_calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$channel_calendar.json_source}}', '{{$channel_calendar.color}}', {{$channel_calendar.editable}})" style="color: {{$channel_calendar.color}};"></i>{{$channel_calendar.displayname}}
+			<i id="calendar-btn-{{$channel_calendar.calendarid}}" class="pe-2 bi {{if $channel_calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$channel_calendar.json_source}}', '{{$channel_calendar.color}}', {{$channel_calendar.editable}})" style="color: {{$channel_calendar.color}};"></i>{{$channel_calendar.displayname}}
 			<div class="float-end">
 				<a class="text-reset" href="#" onclick="exportDate(); return false;"><i id="download-icon" class="bi bi-download cursor-pointer generic-icons-right"></i></a>
 			</div>
