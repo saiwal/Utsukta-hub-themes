@@ -26,7 +26,6 @@
                             {{else}}
                             <h4>{{$sysapps}}</h4>
                             <ul class="link-list">
-                              <li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
                               <!-- System apps -->
                               {{foreach $nav_apps as $nav_app}}
                               {{$nav_app}}
