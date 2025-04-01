@@ -266,7 +266,7 @@ function widget_mynavbar($args) {
 
               if ($c && $tpl) { head_add_css('navbar_' . $template . '.css'); }
 
-              if (!$tpl) { $tpl = get_markup_template('footer_nav.tpl'); }
+              if (!$tpl) { $tpl = get_markup_template('topnav.tpl'); }
 
               App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl' =>
                 z_root(), '$color_mode'         => App::$page['color_mode'] ??
@@ -466,7 +466,7 @@ function widget_mynavbar($args) {
 			];
 		}
 
-		App::$page['footer_nav'] .= replace_macros($tpl, [
+		App::$page['topnav'] .= replace_macros($tpl, [
 			'$notifications' => $notifications,
 			'$no_notifications' => t('Sorry, you have got no notifications at the moment'),
 			'$loading' => t('Loading'),
@@ -475,7 +475,7 @@ function widget_mynavbar($args) {
 		]);
 
 
-              return App::$page['footer_nav']; 
+              return App::$page['topnav']; 
               /*call_hooks('page_header', App::$page['topnav']); */
 
 }
