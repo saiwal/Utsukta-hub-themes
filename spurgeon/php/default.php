@@ -7,7 +7,7 @@
  *   * Maintainer: Mario Vavti
  *   * ContentRegion: aside, left_aside_wrapper
  *   * ContentRegion: content, region_2
- *   * ContentRegion: right_aside, right_aside_wrapper
+ *   * ContentRegion: footer, right_aside_wrapper
  */
 ?>
 <!DOCTYPE html >
