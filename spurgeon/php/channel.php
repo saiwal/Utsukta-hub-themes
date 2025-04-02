@@ -112,8 +112,8 @@
 
         </footer><!-- end s-footer -->
     </div>
-<script src="/view/theme/spurgeon/js/main.js"></script>
 <script src="/view/theme/spurgeon/js/plugins.js"></script>
+<script src="/view/theme/spurgeon/js/main.js"></script>
 </body>
 </html>
 
