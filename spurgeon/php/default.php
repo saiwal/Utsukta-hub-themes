@@ -1,38 +1,95 @@
 <?php
 /**
  *   * Name: default
- *   * Description: Hubzilla default 3-column layout
- *   * Version: 1
- *   * Author: Mario Vavti
- *   * Maintainer: Mario Vavti
- *   * ContentRegion: aside, left_aside_wrapper
+ *   * Description: Spurgeons default layout
+ *   * Version: 1.0
+ *   * Author: Saiwal
+ *   * Maintainer: Saiwal
+ *   * ContentRegion: aside, right_aside_wrapper
+ *   * ContentRegion: right_aside, left_aside_wrapper
  *   * ContentRegion: content, region_2
- *   * ContentRegion: footer, right_aside_wrapper
  */
 ?>
-<!DOCTYPE html >
-<html prefix="og: http://ogp.me/ns#" <?php if(x($page,'color_mode')) echo $page['color_mode'] ?>>
+<!DOCTYPE html>
+<html lang="en" class="no-js" >
 <head>
-  <title><?php if(x($page,'title')) echo $page['title'] ?></title>
-  <script>var baseurl="<?php echo z_root() ?>";</script>
-  <?php if(x($page,'htmlhead')) echo $page['htmlhead'] ?>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?php if (x($page, 'title')) echo $page['title'] ?></title>
+    <script>
+      var baseurl = "<?php echo z_root() ?>";
+    </script>
+
+    <script>
+        document.documentElement.classList.remove('no-js');
+        document.documentElement.classList.add('js');
+    </script>
+
+    <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
-<body <?php if($page['direction']) echo 'dir="rtl"' ?> >
-	<?php if(x($page,'banner')) echo $page['banner']; ?>
-	<header><?php if(x($page,'header')) echo $page['header']; ?></header>
-	<?php if(x($page,'nav')) echo $page['nav']; ?>
-	<main>
-		<div class="content">
-			<div class="columns">
-				<aside id="region_1" class="d-none d-lg-block"><div class="aside_spacer_top_left"></div><div class="aside_spacer_left"><div id="left_aside_wrapper" class="aside_wrapper"><?php if(x($page,'aside')) echo $page['aside']; ?></div></div></aside>
-				<section id="region_2"><?php if(x($page,'content')) echo $page['content']; ?>
-					<div id="page-footer"></div>
-					<div id="pause"></div>
-				</section>
-				<aside id="region_3" class="d-none d-xl-block"><div class="aside_spacer_top_right"></div><div class="aside_spacer_right"><div id="right_aside_wrapper" class="aside_wrapper"><?php if(x($page,'right_aside')) echo $page['right_aside']; ?></div></div></aside>
-			</div>
-		</div>
-	</main>
-	<footer><?php if(x($page,'footer')) echo $page['footer']; ?></footer>
+
+
+<body id="top">
+
+    <div id="preloader">
+        <div id="loader" class="dots-fade">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+
+	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+    <div id="page" class="s-pagewrap">
+
+
+    <?php if (x($page, 'nav')) echo $page['nav']; ?>
+
+      <div id="content" class="s-content s-content--page app-main">
+        <main>
+          <div class="row entry-wrap">
+            <div class="column lg-12">
+              <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              <?php if (x($page, 'content')) echo $page['content']; ?>
+            </div>
+          </div>
+        </main>
+      </div>
+
+
+        <footer id="colophon" class="s-footer">
+          <div class="row s-footer__main">
+            <?php if (x($page, 'footer')) echo $page['footer']; ?>
+          </div> <!-- end s-footer__main -->
+
+          <div class="row s-footer__bottom">
+
+                <div class="column lg-7 md-6 tab-12">
+                </div>
+                <div class="column lg-5 md-6 tab-12">
+                    <div class="ss-copyright">
+                        <span>© Copyright Spurgeon 2021</span> 
+                        <span>Design by <a href="https://www.styleshout.com/">StyleShout</a>, Adapted for Hubzilla by Saiwal</span>
+                    </div>
+                </div>
+
+          </div> <!-- end s-footer__bottom -->
+           
+          <div class="ss-go-top">
+                <a class="smoothscroll" title="Back to Top" href="#top">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.25 10.25L12 4.75L6.75 10.25"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19.25V5.75"/>
+                    </svg>
+                </a>
+          </div> <!-- end ss-go-top -->
+
+        </footer><!-- end s-footer -->
+    </div>
+<script src="/view/theme/spurgeon/js/plugins.js"></script>
+<script src="/view/theme/spurgeon/js/main.js"></script>
 </body>
 </html>
+
