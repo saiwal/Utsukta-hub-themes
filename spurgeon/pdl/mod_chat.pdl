@@ -5,10 +5,16 @@
 [widget=suggestedchats][/widget]
 [widget=chatroom_members][/widget]
 [/region]
+
 [region=content]
 $content
 [/region]
+
 [region=right_aside]
 [widget=notifications][/widget]
 [widget=newmember][/widget]
+[/region]
+
+[region=footer]
+[widget=footer_nav][/widget]
 [/region]
