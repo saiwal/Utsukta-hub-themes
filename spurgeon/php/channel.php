@@ -50,7 +50,7 @@
         <section id="content" class="s-content app-main">
 
 
-        <main class="app-main">
+        <main>
             <div class="hero">
               <?php if (x($page, 'hero')) echo $page['hero']; ?>
             </div> <!-- end hero -->
