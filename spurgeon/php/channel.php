@@ -50,6 +50,7 @@
         <section id="content" class="s-content app-main">
 
 
+        <main class="app-main">
             <div class="hero">
               <?php if (x($page, 'hero')) echo $page['hero']; ?>
             </div> <!-- end hero -->
@@ -61,6 +62,7 @@
 
             </div> <!-- end bricks -->
 
+        </main>
         </section> <!-- end s-content -->
 
 

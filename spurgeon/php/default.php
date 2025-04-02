@@ -47,13 +47,15 @@
 
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
-        <div id="content" class="s-content s-content--page app-main">
+      <div id="content" class="s-content s-content--page app-main">
+        <main class="app-main">
           <div class="row entry-wrap">
             <div class="column lg-12">
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
           </div>
-        </div>
+        </main>
+      </div>
 
 
         <footer id="colophon" class="s-footer">
