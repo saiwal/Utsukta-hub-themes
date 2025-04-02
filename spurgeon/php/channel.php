@@ -51,67 +51,45 @@
 
 
         <main>
-            <div class="hero">
-              <?php if (x($page, 'hero')) echo $page['hero']; ?>
-            </div> <!-- end hero -->
-
-
-            <div id="bricks" class="bricks">
-
-              <?php if (x($page, 'bricks')) echo $page['bricks']; ?>
-
-            </div> <!-- end bricks -->
-
+          <div class="row entry-wrap">
+            <div class="column lg-12">
+              <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              <?php if (x($page, 'content')) echo $page['content']; ?>
+            </div>
+          </div>
         </main>
         </section> <!-- end s-content -->
 
-
         <footer id="colophon" class="s-footer">
+          <div class="row s-footer__main">
+            <?php if (x($page, 'footer')) echo $page['footer']; ?>
+          </div> <!-- end s-footer__main -->
 
-          <?php if (x($page, 'footer_subscribe')) echo $page['footer_subscribe']; ?>
-
-            <div class="row s-footer__main">
-
-                <div class="column lg-5 md-6 tab-12 s-footer__about">
-                    <h4>Spurgeon</h4>
-
-                    <p>
-                    Lorem ipsum dolor sit amet, consectetur 
-                    adipiscing elit, sed do eiusmod tempor 
-                    incididunt ut labore et dolore magna aliqua. 
-                    Ut enim ad minim veniam, quis nostrud exercitation 
-                    ullamco laboris nisi ut aliquip ex ea commodo 
-                    </p>
-                </div> <!-- end s-footer__about -->
-
-            <?php if (x($page, 'footer_nav')) echo $page['footer_nav']; ?>
-
-            </div> <!-- end s-footer__main -->
-
-            <div class="row s-footer__bottom">
+          <div class="row s-footer__bottom">
 
                 <div class="column lg-7 md-6 tab-12">
                 </div>
                 <div class="column lg-5 md-6 tab-12">
                     <div class="ss-copyright">
                         <span>© Copyright Spurgeon 2021</span> 
-                        <span>Design by <a href="https://www.styleshout.com/">StyleShout</a></span>
+                        <span>Design by <a href="https://www.styleshout.com/">StyleShout</a>, Adapted for Hubzilla by Saiwal</span>
                     </div>
                 </div>
 
-            </div> <!-- end s-footer__bottom -->
+          </div> <!-- end s-footer__bottom -->
            
-            <div class="ss-go-top">
+          <div class="ss-go-top">
                 <a class="smoothscroll" title="Back to Top" href="#top">
                     <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.25 10.25L12 4.75L6.75 10.25"/>
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19.25V5.75"/>
                     </svg>
                 </a>
-            </div> <!-- end ss-go-top -->
+          </div> <!-- end ss-go-top -->
 
         </footer><!-- end s-footer -->
-    </div>
+
+     </div>
 <script src="/view/theme/spurgeon/js/plugins.js"></script>
 <script src="/view/theme/spurgeon/js/main.js"></script>
 </body>
