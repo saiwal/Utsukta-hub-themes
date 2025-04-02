@@ -352,15 +352,18 @@
     * ------------------------------------------------------ */
     (function ssInit() {
 
-        ssPreloader();
+      ssPreloader();
+      document.addEventListener('DOMContentLoaded', function() {
         ssMobileMenu();
-        ssSearch();
-        ssMasonry();
-        ssAnimateBricks();
-        ssSwiper();
-        ssAlertBoxes();
-        ssBackToTop();
-        ssMoveTo();
+      });
+      ssMobileMenu();
+      ssSearch();
+      ssMasonry();
+      ssAnimateBricks();
+      ssSwiper();
+      ssAlertBoxes();
+      ssBackToTop();
+      ssMoveTo();
 
     })();
 
