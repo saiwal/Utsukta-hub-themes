@@ -29,17 +29,27 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
-### Cosmo variant
+#### Variants
 
-Can be chosen as a schema and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
-![Screenshots](./cosmo/img/screenshot.jpg)
+- [Cosmo](https://bootswatch.com/cosmo/)
+- [Journal](https://bootswatch.com/journal/)
+- [Sandstone](https://bootswatch.com/sandstone/)
+- [Sketchy](https://bootswatch.com/sketchy/)
+- [Solar](https://bootswatch.com/solar/)
+- [Superhero](https://bootswatch.com/superhero/)
+- [Vapor](https://bootswatch.com/vapor/)
 
-### Journal
+### Keep It Simple
 
-Can be chosen as a schema and uses [Bootswatch Journal](https://bootswatch.com/journal/) for a unique look.
-![Screenshots](./journal/img/screenshot.jpg)
+Based on [Keep It Simple](https://styleshout.com/demo/?theme=keepitsimple) by Styleshout.
+**Demo available [here](https://hub.utsukta.org/channel/keepitsimple)**
 
-### Vapor
+### Spurgeon
 
-Can be chosen as a schema and uses [Bootswatch vapor](https://bootswatch.com/vapor/) for a unique look.
-![Screenshots](./vapor/img/screenshot.jpg)
+Based on [Spurgeon](https://styleshout.com/demo/?theme=spurgeon) by Styleshout.
+**Demo available [here](https://hub.utsukta.org/channel/spurgeon)**
+
+### Typerite
+
+Based on [Typerite](https://styleshout.com/demo/?theme=typerite) by Styleshout.
+**Demo available [here](https://hub.utsukta.org/channel/typerite)**
