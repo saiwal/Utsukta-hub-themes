@@ -13,30 +13,18 @@
             <nav class="header__nav-wrap">
 
                 <ul class="header__nav">
-                    <li><a href="index.html" title="">Home</a></li>
-                    <li class="has-children">
-                        <a href="#0" title="">Categories</a>
-                        <ul class="sub-menu">
-                        <li><a href="category.html">Lifestyle</a></li>
-                        <li><a href="category.html">Health</a></li>
-                        <li><a href="category.html">Family</a></li>
-                        <li><a href="category.html">Management</a></li>
-                        <li><a href="category.html">Travel</a></li>
-                        <li><a href="category.html">Work</a></li>
-                        </ul>
-                    </li>
-                    <li class="has-children">
-                        <a href="#0" title="">Blog</a>
-                        <ul class="sub-menu">
-                        <li><a href="single-video.html">Video Post</a></li>
-                        <li><a href="single-audio.html">Audio Post</a></li>
-                        <li><a href="single-gallery.html">Gallery Post</a></li>
-                        <li><a href="single-standard.html">Standard Post</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="styles.html" title="">Styles</a></li>
-                    <li class="current"><a href="page-about.html" title="">About</a></li>
-                    <li><a href="page-contact.html" title="">Contact</a></li>
+                    <!-- Pinned user apps -->
+                      {{if $navbar_apps.0}}
+                      {{foreach $navbar_apps as $navbar_app}}
+                        {{$navbar_app}}
+                      {{/foreach}}
+                      {{/if}}
+                      <!-- Channel apps; needs fixing -->
+                      {{if $channel_apps.0}}
+                      {{foreach $channel_apps as $channel_app}}
+                      {{$channel_app}}
+                      {{/foreach}}
+                      {{/if}}
                 </ul> <!-- end header__nav -->
 
                 <ul class="header__social">
