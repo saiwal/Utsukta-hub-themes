@@ -4,7 +4,7 @@
 
             <div class="s-header__content column">
                 <h1 class="s-header__logotext">
-                    <a href="index.html" title="">Keep It Simple.</a>
+                    <a href="/" title="">{{$banner}}</a>
                 </h1>
                 <p class="s-header__tagline">Put your awesome tagline here.</p>
             </div>
