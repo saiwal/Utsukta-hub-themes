@@ -111,7 +111,7 @@
 
     </div> <!-- end s-wrap -->
 
-<script src="/view/theme/typerite/js/jquery-3.2.1.min.j"></script>
+<script src="/view/theme/typerite/js/jquery-3.2.1.min.js"></script>
 <script src="/view/theme/typerite/js/plugins.js"></script>
 <script src="/view/theme/typerite/js/mainjs.js"></script>
 </body>
