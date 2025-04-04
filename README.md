@@ -14,7 +14,7 @@ or manually extract the release in `view/themes`
 
 ## Themes
 
-### AdminLTE4
+### 1. AdminLTE4
 
 A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
@@ -39,17 +39,17 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 - [Superhero](https://bootswatch.com/superhero/)
 - [Vapor](https://bootswatch.com/vapor/)
 
-### Keep It Simple
+### 2. Keep It Simple
 
 Based on [Keep It Simple](https://styleshout.com/demo/?theme=keepitsimple) by Styleshout.
 **Demo available [here](https://hub.utsukta.org/channel/keepitsimple)**
 
-### Spurgeon
+### 3. Spurgeon
 
 Based on [Spurgeon](https://styleshout.com/demo/?theme=spurgeon) by Styleshout.
 **Demo available [here](https://hub.utsukta.org/channel/spurgeon)**
 
-### Typerite
+### 4. Typerite
 
 Based on [Typerite](https://styleshout.com/demo/?theme=typerite) by Styleshout.
 **Demo available [here](https://hub.utsukta.org/channel/typerite)**
