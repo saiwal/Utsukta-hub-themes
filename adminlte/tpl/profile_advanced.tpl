@@ -43,30 +43,22 @@
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-wrapper">
+    <div class="card  mb-3">
+      <ul class="list-group list-group-flush">
+        {{foreach $fields as $f}}
+        <li class="list-group-item">
+        <div class="d-flex py-2 px-1">
+          <div class="col-2">
+            {{$f}}
+          </div>
+          <div class="col-10">
+          </div>
+        </li>
+        {{/foreach}}
+      </ul>    
+    </div>
 
 	{{foreach $fields as $f}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		{{if $f == 'name'}}
 			<dl id="aprofile-fullname" class="aprofile">
