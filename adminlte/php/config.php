@@ -36,20 +36,20 @@ class AdminlteConfig {
 		$arr['info_color'] = get_pconfig(local_channel(),'adminlte', 'info_color');
 		$arr['warning_color'] = get_pconfig(local_channel(),'adminlte', 'warning_color');
 		$arr['danger_color'] = get_pconfig(local_channel(),'adminlte', 'danger_color');
-		$arr['dark_mode'] = get_pconfig(local_channel(),'adminlte', 'dark_mode');
-		$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'adminlte', 'navbar_dark_mode');
-		$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );
-		$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );
-		$arr['nav_bg_dark'] = get_pconfig(local_channel(),'adminlte', 'nav_bg_dark' );
+		$arr['bg_mode'] = get_pconfig(local_channel(),'adminlte', 'bg_mode');
+		/*$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'adminlte', 'navbar_dark_mode');*/
+		/*$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );*/
+		/*$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );*/
+		/*$arr['nav_bg_dark'] = get_pconfig(local_channel(),'adminlte', 'nav_bg_dark' );*/
 		$arr['bgcolor'] = get_pconfig(local_channel(),'adminlte', 'background_color' );
 		$arr['bgcolor_dark'] = get_pconfig(local_channel(),'adminlte', 'background_color_dark' );
 		$arr['background_image'] = get_pconfig(local_channel(),'adminlte', 'background_image' );
 		$arr['background_image_dark'] = get_pconfig(local_channel(),'adminlte', 'background_image_dark' );
-		$arr['font_size'] = get_pconfig(local_channel(),'adminlte', 'font_size' );
-		$arr['radius'] = get_pconfig(local_channel(),'adminlte', 'radius' );
-		$arr['converse_width']=get_pconfig(local_channel(),"adminlte","converse_width");
-		$arr['top_photo']=get_pconfig(local_channel(),"adminlte","top_photo");
-		$arr['reply_photo']=get_pconfig(local_channel(),"adminlte","reply_photo");
+		/*$arr['font_size'] = get_pconfig(local_channel(),'adminlte', 'font_size' );*/
+		/*$arr['radius'] = get_pconfig(local_channel(),'adminlte', 'radius' );*/
+		/*$arr['converse_width']=get_pconfig(local_channel(),"adminlte","converse_width");*/
+		/*$arr['top_photo']=get_pconfig(local_channel(),"adminlte","top_photo");*/
+		/*$arr['reply_photo']=get_pconfig(local_channel(),"adminlte","reply_photo");*/
 		$arr['advanced_theming'] = get_pconfig(local_channel(), 'adminlte', 'advanced_theming');
 		return $this->form($arr);
 	}
@@ -68,7 +68,7 @@ class AdminlteConfig {
 			set_pconfig(local_channel(), 'adminlte', 'info_color', $_POST['adminlte_info_color']);
 			set_pconfig(local_channel(), 'adminlte', 'warning_color', $_POST['adminlte_warning_color']);
 			set_pconfig(local_channel(), 'adminlte', 'danger_color', $_POST['adminlte_danger_color']);
-			set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);
+			/*set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);*/
 			set_pconfig(local_channel(), 'adminlte', 'bg_mode', $_POST['adminlte_bg_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color', $_POST['adminlte_background_color']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color_dark', $_POST['adminlte_background_color_dark']);
