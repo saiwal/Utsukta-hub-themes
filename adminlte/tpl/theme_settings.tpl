@@ -18,9 +18,6 @@
 	{{include file="field_colorinput.tpl" field=$info_color}}
 	{{include file="field_colorinput.tpl" field=$warning_color}}
 	{{include file="field_colorinput.tpl" field=$danger_color}}
-	{{include file="field_input.tpl" field=$radius}}
-	{{include file="field_input.tpl" field=$top_photo}}
-	{{include file="field_input.tpl" field=$reply_photo}}
 
 <script>
 	$(function(){
