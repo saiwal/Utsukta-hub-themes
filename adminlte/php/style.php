@@ -13,18 +13,11 @@ if(!App::$install) {
 		/*$nav_bg = get_pconfig($uid, 'adminlte', 'nav_bg');*/
 		/*$nav_bg_dark = get_pconfig($uid, 'adminlte', 'nav_bg_dark');*/
 		/*$narrow_navbar = get_pconfig($uid,'adminlte','narrow_navbar');*/
-		/*$bgcolor = get_pconfig($uid, 'adminlte', 'background_color');*/
-		/*$bgcolor_dark = get_pconfig($uid, 'adminlte', 'background_color_dark');*/
+		$bgcolor = get_pconfig($uid, 'adminlte', 'background_color');
+		$bgcolor_dark = get_pconfig($uid, 'adminlte', 'background_color_dark');
     $schema = get_pconfig($uid, 'adminlte', 'schema');
-    /*var_dump(App::$config[$uid]['adminlte']); // Check the 'adminlte' family*/
-    /*var_dump(App::$config[$uid]['adminlte']['schema']); // Check the 'schema' key    */
-		/*  $schema = 'journal';*/
-		/*$background_image = get_pconfig($uid, 'adminlte', 'background_image');*/
-		/*$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');*/
-		/*$font_size = get_pconfig($uid, 'adminlte', 'font_size');*/
-		/*$converse_width = get_pconfig($uid,'adminlte','converse_width');*/
-		/*$top_photo = get_pconfig($uid,'adminlte','top_photo');*/
-		/*  $reply_photo = get_pconfig($uid,'adminlte','reply_photo');*/
+		$background_image = get_pconfig($uid, 'adminlte', 'background_image');
+		$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');
 	}
 }
 
