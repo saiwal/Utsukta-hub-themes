@@ -197,11 +197,7 @@ class AdminlteConfig {
 			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color'), $arr['bgcolor_dark']),
 			'$background_image' => array('adminlte_background_image', t('Set the background image'), $arr['background_image']),
 			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image'), $arr['background_image_dark']),
-			'$font_size' => array('adminlte_font_size', t('Set font-size for the entire application'), $arr['font_size'], t('Examples: 1rem, 100%, 16px')),
-			'$radius' => array('adminlte_radius', t('Set radius of corners in rem'), $arr['radius'], t('Leave empty for default radius')),
 			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
-			'$top_photo' => array('adminlte_top_photo', t('Set size of conversation author photo'), $arr['top_photo'], t('Leave empty for default size')),
-			'$reply_photo' => array('adminlte_reply_photo', t('Set size of followup author photos'), $arr['reply_photo'], t('Leave empty for default size')),
 			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
 			));
 

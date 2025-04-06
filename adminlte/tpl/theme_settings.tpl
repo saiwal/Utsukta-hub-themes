@@ -1,10 +1,7 @@
-<h6> Background Image (Light Mode)</h6>  {{$schema}}
 {{include file="field_colorinput.tpl" field=$background_image}}
 
-<h6> Background Image (Dark Mode)</h6>  
 {{include file="field_colorinput.tpl" field=$background_image_dark}}
 
-<h6> Background Image Mode (stretch, tile) </h6>  
 {{include file="field_select.tpl" field=$bg_mode}}
 
 {{include file="field_checkbox.tpl" field=$advanced_theming}}
@@ -22,13 +19,10 @@
 	{{include file="field_input.tpl" field=$reply_photo}}
 
 	<h3>{{$light}}</h3>
-	{{include file="field_checkbox.tpl" field=$navbar_dark_mode}}
-	{{include file="field_colorinput.tpl" field=$nav_bg}}
 	{{include file="field_colorinput.tpl" field=$bgcolor}}
 	{{include file="field_colorinput.tpl" field=$background_image}}
 
 	<h3>{{$dark}}</h3>
-	{{include file="field_colorinput.tpl" field=$nav_bg_dark}}
 	{{include file="field_colorinput.tpl" field=$bgcolor_dark}}
 	{{include file="field_colorinput.tpl" field=$background_image_dark}}
 
