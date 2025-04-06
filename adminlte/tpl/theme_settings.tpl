@@ -5,8 +5,7 @@
 	{{include file="field_colorinput.tpl" field=$warning_color}}
 	{{include file="field_colorinput.tpl" field=$danger_color}}
 {{/if}}
-{{$schema}}
-<h6> Background Image (Light Mode)</h6>  
+<h6> Background Image (Light Mode)</h6>  {{$schema}}
 {{include file="field_colorinput.tpl" field=$background_image}}
 
 <h6> Background Image (Dark Mode)</h6>  
