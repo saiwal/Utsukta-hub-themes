@@ -29,17 +29,13 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
-### Cosmo variant
+#### Variants
 
-Can be chosen as a schema and uses [Bootswatch cosmo](https://bootswatch.com/cosmo/) for a unique look.
-![Screenshots](./cosmo/img/screenshot.jpg)
+- [Cosmo](https://bootswatch.com/cosmo/)
+- [Journal](https://bootswatch.com/journal/)
+- [Sandstone](https://bootswatch.com/sandstone/)
+- [Sketchy](https://bootswatch.com/sketchy/)
+- [Solar](https://bootswatch.com/solar/)
+- [Superhero](https://bootswatch.com/superhero/)
+- [Vapor](https://bootswatch.com/vapor/)
 
-### Journal
-
-Can be chosen as a schema and uses [Bootswatch Journal](https://bootswatch.com/journal/) for a unique look.
-![Screenshots](./journal/img/screenshot.jpg)
-
-### Vapor
-
-Can be chosen as a schema and uses [Bootswatch vapor](https://bootswatch.com/vapor/) for a unique look.
-![Screenshots](./vapor/img/screenshot.jpg)
