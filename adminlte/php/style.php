@@ -66,7 +66,7 @@ $schemecss = file_get_contents('view/theme/adminlte/schema/' . $schema . '.css')
 
 header('Cache-Control: max-age=2592000');
 
-echo $x . $schemecss;
+echo $schemecss . $x;
 
 // ! If you change the name of the directory containing the theme, be sure to change this line to match.
 /*echo @file_get_contents('/view/theme/adminlte/css/style.css');*/
