@@ -193,6 +193,7 @@ class AdminlteConfig {
 			'$warning_color' => array('adminlte_warning_color', t('Warning theme color'), $arr['warning_color'], '<i class="bi bi-circle-fill text-warning"></i> ' . t('Current color, leave empty for default')),
 			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
 			'$dark_mode' => array('adminlte_dark_mode',t('Default to dark mode'),$arr['dark_mode'], '', array(t('No'),t('Yes'))),
+			'$bg_mode' => array('adminlte_bg_mode',t('Set background image tile mode'),$arr['bg_mode'], '', array(t('Tiled'),t('Cover'))),
 			'$bgcolor' => array('adminlte_background_color', t('Set the background color'), $arr['bgcolor']),
 			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color'), $arr['bgcolor_dark']),
 			'$background_image' => array('adminlte_background_image', t('Set the background image'), $arr['background_image']),
