@@ -141,7 +141,7 @@ span.spinner {
 	border-width: 5px;
 }
 
-.app-main{
+[data-bs-theme="light"] .app-main{
   background-image: url(https://www.toptal.com/designers/subtlepatterns/uploads/light_wool.png)
 }
 [data-bs-theme="dark"] .app--main{
