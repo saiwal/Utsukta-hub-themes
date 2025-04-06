@@ -140,3 +140,10 @@ span.spinner {
 	border-style: solid;
 	border-width: 5px;
 }
+
+.app-main,[data-bs-theme="light"] {
+  background-image: url(https://www.toptal.com/designers/subtlepatterns/uploads/light_wool.png)
+}
+.app-main,[data-bs-theme="dark"] {
+  background-image: url(https://cdn5.vectorstock.com/i/thumbs/62/09/damask-seamless-pattern-dark-element-elegant-vector-14266209.jpg)
+}
