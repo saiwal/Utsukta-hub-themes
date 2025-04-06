@@ -29,7 +29,7 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
-#### Variants
+#### Variants (Schemas)
 
 - [Cosmo](https://bootswatch.com/cosmo/)
 - [Journal](https://bootswatch.com/journal/)
