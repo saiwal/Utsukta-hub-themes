@@ -1,4 +1,4 @@
-{{if $schema=="adminlte"}}
+{{if $schema=="default"}}
 	{{include file="field_colorinput.tpl" field=$primary_color}}
 	{{include file="field_colorinput.tpl" field=$success_color}}
 	{{include file="field_colorinput.tpl" field=$info_color}}
