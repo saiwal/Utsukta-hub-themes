@@ -1,11 +1,12 @@
 	<h3>{{$light}}</h3>
 	{{include file="field_colorinput.tpl" field=$bgcolor}}
 	{{include file="field_colorinput.tpl" field=$background_image}}
-  {{include file="field_select.tpl" field=$bg_mode}}
 
 	<h3>{{$dark}}</h3>
 	{{include file="field_colorinput.tpl" field=$bgcolor_dark}}
 	{{include file="field_colorinput.tpl" field=$background_image_dark}}
+  <hr>
+  {{include file="field_select.tpl" field=$bg_mode}}
 
 {{include file="field_checkbox.tpl" field=$advanced_theming}}
 
