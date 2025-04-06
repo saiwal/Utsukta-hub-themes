@@ -32,8 +32,8 @@ if(!App::$install) {
 
 
 # set some defaults 
-$bgcolor = $bgcolor ?: '#fff';
-$bgcolor_dark = $bgcolor_dark ?: '#212529';
+$bgcolor = $bgcolor ?: '';
+$bgcolor_dark = $bgcolor_dark ?: '';
 $background_image = $background_image ?: '';
 $background_image_dark = $background_image_dark ?: '';
 $bg_mode = $bg_mode ?: '';

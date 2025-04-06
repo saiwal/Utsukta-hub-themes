@@ -142,10 +142,12 @@ span.spinner {
 }
 
 [data-bs-theme="light"] .app-main{
+  background-color: var($bgcolor);
   background-image: url($background_image);
   background-attachment: fixed; /* Prevents scrolling */
 }
 [data-bs-theme="dark"] .app-main{
+  background-color: var($bgcolor_dark);
   background-image: url($background_image_dark);
   background-attachment: fixed; /* Prevents scrolling */
 }
