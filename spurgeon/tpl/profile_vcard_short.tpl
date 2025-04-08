@@ -7,7 +7,7 @@
 
 {{$rating}}
 
-	{{if $pdesc}}<div class="title">{{$profile.pdesc}}a</div>{{/if}}
+{{if $pdesc}}<div class="title">{{$profile.fullname}}{{$profile.pdesc}}</div>{{/if}}
 
 	{{if $location}}
 		<dl class="location"><dt class="location-label">{{$location}}</dt> 
