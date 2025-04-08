@@ -78,7 +78,7 @@
     {{/if}}
     {{if $homepage}}
     <li class="list-group-item">
-      <dt class="card-link"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$homepage}}</dt>
+      <dt class="card-link">{{$homepage}}</dt>
       <dd class="">
         {{$profile.homepage}}
       </dd>
