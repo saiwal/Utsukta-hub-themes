@@ -66,21 +66,20 @@
     <li class="list-group-item">
 
       <dt class="gender-label">{{$gender}}</dt>
-      <dd class="p-gender">{{if $profile.gender_icon}}<i
-          class="bi bi-{{$profile.gender_icon}}"></i>&nbsp;{{/if}}{{$profile.gender}}</dd>
+      <dd class="p-gender">{{$profile.gender}}</dd>
     </li>
     {{/if}}
     {{if $marital}}
     <li class="list-group-item">
 
       <dt class="marital-label"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
-      <dd class="marital-text ps-2">{{$profile.marital}}</dd>
+      <dd class="marital-text">{{$profile.marital}}</dd>
     </li>
     {{/if}}
     {{if $homepage}}
     <li class="list-group-item">
       <dt class="card-link"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$homepage}}</dt>
-      <dd class="ps-2">
+      <dd class="">
         {{$profile.homepage}}
       </dd>
     </li>
