@@ -46,6 +46,40 @@ function widget_footer_nav($args) {
 
       if (can_view_public_stream()) $nav['pubs'] = true;
 
+        $pinned_list = [];
+
+        //app bin
+        if ($is_owner) { if (get_pconfig(local_channel(), 'system',
+          'import_system_apps') !== datetime_convert('UTC', 'UTC', 'now',
+          'Y-m-d')) { Apps::import_system_apps(); set_pconfig(local_channel(),
+          'system', 'import_system_apps', datetime_convert('UTC', 'UTC', 'now',
+          'Y-m-d')); }
+
+        if (get_pconfig(local_channel(), 'system', 'force_import_system_apps')
+          !== STD_VERSION) { Apps::import_system_apps();
+        set_pconfig(local_channel(), 'system', 'force_import_system_apps',
+          STD_VERSION); }
+
+        $list = Apps::app_list(local_channel(), false, ['nav_pinned_app']); if
+          ($list) { foreach ($list as $li) { $pinned_list[] =
+          Apps::app_encode($li); } }
+
+          Apps::translate_system_apps($pinned_list);
+
+        usort($pinned_list, 'Zotlabs\\Lib\\Apps::app_name_compare');
+
+        $pinned_list = Apps::app_order(local_channel(), $pinned_list,
+          'nav_pinned_app'); $syslist = []; $list    =
+          Apps::app_list(local_channel(), false, ['nav_featured_app']);
+
+        if ($list) { foreach ($list as $li) { $syslist[] =
+          Apps::app_encode($li); } }
+
+          Apps::translate_system_apps($syslist);
+
+        } else { $syslist = Apps::get_system_apps(true); }
+
+        usort($syslist, 'Zotlabs\\Lib\\Apps::app_name_compare');
 
         $syslist = Apps::app_order(local_channel(), $syslist,
           'nav_featured_app');
