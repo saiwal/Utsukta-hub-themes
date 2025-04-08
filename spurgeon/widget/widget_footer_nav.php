@@ -46,6 +46,7 @@ function widget_footer_nav($args) {
 
       if (can_view_public_stream()) $nav['pubs'] = true;
 
+
         $syslist = Apps::app_order(local_channel(), $syslist,
           'nav_featured_app');
 
