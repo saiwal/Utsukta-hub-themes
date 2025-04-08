@@ -8,12 +8,6 @@ require_once('include/menu.php');
 
 function widget_footer_nav($args) {
 
-  /**
-	 *
-   * Build Top navbar
-	 *
-	 */
-
   App::$page['footer_nav'] = App::$page['footer_nav'] ?? ''; App::$page['htmlhead'] =
 
       $is_owner = (((local_channel()) && ((App::$profile_uid ==
