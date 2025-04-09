@@ -174,17 +174,17 @@
             <i id="wall-file-upload-icon" class="bi bi-paperclip jot-icons"></i>
           </button>
           {{/if}}
+          {{if $embedPhotos}}
+          <button type="button" id="embed-photo-wrapper" class="btn btn-outline-secondary btn-sm"
+            title="{{$embedPhotos}}" onclick="initializeEmbedPhotoDialog();return false;">
+            <i id="embed-photo" class="bi bi-file-image jot-icons"></i>
+          </button>
+          {{/if}}
           {{if $weblink}}
           <button type="button" id="profile-link-wrapper" class="btn btn-outline-secondary btn-sm" title="{{$weblink}}"
             ondragenter="linkdropper(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);"
             onclick="jotGetLink(); return false;">
             <i id="profile-link" class="bi bi-link jot-icons"></i>
-          </button>
-          {{/if}}
-          {{if $embedPhotos}}
-          <button type="button" id="embed-photo-wrapper" class="btn btn-outline-secondary btn-sm"
-            title="{{$embedPhotos}}" onclick="initializeEmbedPhotoDialog();return false;">
-            <i id="embed-photo" class="bi bi-file-image jot-icons"></i>
           </button>
           {{/if}}
         </div>
@@ -249,14 +249,14 @@
               <a class="dropdown-item" id="wall-file-upload-sub" href="#"><i
                   class="bi bi-paperclip"></i>&nbsp;{{$attach}}</a>
               {{/if}}
-              {{if $weblink}}
-              <a class="dropdown-item" href="#" onclick="jotGetLink(); return false;"><i
-                  class="bi bi-link"></i>&nbsp;{{$weblink}}</a>
-              {{/if}}
               {{if $embedPhotos}}
               <a class="dropdown-item" href="#" onclick="initializeEmbedPhotoDialog(); return false;"><i
                   class="bi bi-file-image jot-icons"></i>&nbsp;{{$embedPhotos}}</a>
               {{/if}}
+              {{if $weblink}}
+              <a class="dropdown-item" href="#" onclick="jotGetLink(); return false;"><i
+                  class="bi bi-link"></i>&nbsp;{{$weblink}}</a>
+              {{/if}} 
               {{if $setloc}}
               <a class="dropdown-item" href="#" onclick="jotGetLocation(); return false;"><i
                   class="bi bi-globe"></i>&nbsp;{{$setloc}}</a>
