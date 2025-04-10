@@ -151,7 +151,7 @@
             {{if !$item.reactions_allowed }}
 						<div class="">
               <button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-star" onclick="window.location.href='/search?search={{$item.plink.href}}';">
-                <i class="file-earmark-arrow-down"></i>
+                <i class="bi bi-file-earmark-arrow-down"></i>
               </button>
             </div>
 						{{/if}}
