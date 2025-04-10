@@ -148,6 +148,13 @@
 						</div>
 						{{/if}}
 						{{/foreach}}
+            {{if !$item.reactions_allowed }}
+						<div class="">
+              <button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-star" onclick="window.location.href='/search?search={{$item.plink.href}}';">
+                <i class="bi bi-file-earmark-arrow-down"></i>
+              </button>
+            </div>
+						{{/if}}
 						{{if $item.toplevel && $item.emojis && $item.reactions}}
 						<div class="">
 							<button type="button" class="btn btn-sm btn-link text-body-tertiary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
