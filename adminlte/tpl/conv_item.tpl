@@ -148,7 +148,7 @@
 						</div>
 						{{/if}}
 						{{/foreach}}
-            {{if (str_ends_with($item.profile_url, '.rss')) && $item.settings}}
+            {{if !$item.reactions_allowed && $item.settings}}
             <div class="">
               <button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-star" onclick="window.location.href='/search?search={{$item.plink.href}}';">
                 <i class="bi bi-file-earmark-arrow-down"></i>
