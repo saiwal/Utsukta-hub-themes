@@ -148,14 +148,12 @@
 						</div>
 						{{/if}}
 						{{/foreach}}
-					  {{if !$item.comment}}
-            {{if !$item.reactions_allowed}}
+            {{if !$item.reactions_allowed && $item.comment}}
 						<div class="">
               <button type="button" class="btn btn-sm btn-link text-body-tertiary wall-item-star" onclick="window.location.href='/search?search={{$item.plink.href}}';">
                 <i class="bi bi-file-earmark-arrow-down"></i>
               </button>
             </div>
-						{{/if}}
 						{{/if}}
 						{{if $item.toplevel && $item.emojis && $item.reactions}}
 						<div class="">
