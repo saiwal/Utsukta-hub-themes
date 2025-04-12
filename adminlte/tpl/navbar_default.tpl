@@ -36,8 +36,9 @@
       {{/if}}
 
       <!-- Navbar Search -->
-      <li class="nav-item d-none d-md-block">
-        <div class="navbar-search-block">
+      <li class="nav-item">
+        <a class="nav-link d-md-none" href="/search"><i class="bi bi-search"></i></a>
+        <div class="navbar-search-block d-none d-md-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
             <input class="form-control me-sm-2" id="nav-search-text" type="text" value=""
               placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
@@ -47,6 +48,32 @@
       </li>
       <!-- notificattion button for smaller screens-->
       {{if $localuser || $nav.pubs}}
+      <li class="nav-item dropdown">
+        <a class="nav-link" data-bs-toggle="dropdown" href="#" aria-expanded="false">
+          <i class="bi bi-bell-fill"></i>
+          <span class="navbar-badge badge text-bg-warning">15</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+          <span class="dropdown-item dropdown-header">15 Notifications</span>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-envelope me-2"></i> 4 new messages
+            <span class="float-end text-secondary fs-7">3 mins</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-people-fill me-2"></i> 8 friend requests
+            <span class="float-end text-secondary fs-7">12 hours</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
+            <span class="float-end text-secondary fs-7">2 days</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+        </div>
+      </li>
       <li id="notifications-btn" class="nav-item d-md-none">
         <a class="nav-link notifications-btn" id="notifications-btn-icon" href="#"><i class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
       </li>
