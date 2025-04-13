@@ -448,12 +448,6 @@
 				sse_type = sessionStorage.getItem('notification_open');
 			}
 
-			// Add the 'show' class to the appropriate element
-			let subNav = document.getElementById("nav-" + sse_type + "-sub");
-			if (subNav) {
-				subNav.classList.add('show');
-			}
-
 			// Call the sse_bs_notifications function
 			sse_bs_notifications(sse_type, true, false);
 		} else {
@@ -520,8 +514,6 @@
 				document.getElementById("nav-" + sse_type + "-loading").style.display = 'block';
 			}
 
-			sessionStorage.setItem('notification_open', sse_type);
-
 			if (sse_offset !== -1 || replace) {
 				let cn_val = (document.getElementById('cn-' + sse_type + '-input') && sse_partial_result)
 					? document.getElementById('cn-' + sse_type + '-input').value.toString().toLowerCase()
@@ -557,7 +549,6 @@
 				document.getElementById("nav-" + sse_type + "-loading").style.display = 'none';
 			}
 		} else {
-			sessionStorage.removeItem('notification_open');
 		}
 	}
 
