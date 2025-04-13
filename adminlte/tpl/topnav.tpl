@@ -445,7 +445,6 @@
 		// Check if 'notification_open' exists in sessionStorage or if sse_type is defined
 		if (sessionStorage.getItem('notification_open') !== null || typeof sse_type !== 'undefined') {
 			if (typeof sse_type === 'undefined') {
-				sse_type = sessionStorage.getItem('notification_open');
 			}
 
 			// Call the sse_bs_notifications function
