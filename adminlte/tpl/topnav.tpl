@@ -47,9 +47,11 @@
         </div>
       </li>
  			{{if $localuser || $nav.pubs}}
+      <li class="nav-item">
 			<button id="notifications-btn-1" type="button" class="navbar-toggler border-0 notifications-btn">
 				<i id="notifications-btn-icon-1" class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i>
 			</button>
+      </li>
 			{{/if}}
      
       <!--Notification icon-->
