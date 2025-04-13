@@ -569,27 +569,8 @@
     }
   </script>
 
-                <span class="dropdown-item dropdown-header">15 Notifications</span>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                  <i class="bi bi-envelope me-2"></i> 4 new messages
-                  <span class="float-end text-secondary fs-7">3 mins</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                  <i class="bi bi-people-fill me-2"></i> 8 friend requests
-                  <span class="float-end text-secondary fs-7">12 hours</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                  <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
-                  <span class="float-end text-secondary fs-7">2 days</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
-              
         {{if !$sys_only}}
-        <div id="notifications_wrapper" class="ms-3 me-3 small">
+        <div id="notifications_wrapper" class="ms-2 me-2 small">
           <div class="border-top-0 border-start-0 border-end-0 border-bottom-0 list-group list-group-flush">
             <p id="no_notifications" class="list-group-item">{{$no_notifications}} </p>
           </div>
