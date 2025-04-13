@@ -474,7 +474,6 @@ function widget_mynavbar($args) {
 
 		]);
 
-          return "Hello";
               return App::$page['topnav']; 
               /*call_hooks('page_header', App::$page['topnav']); */
 
