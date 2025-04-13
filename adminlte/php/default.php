@@ -26,8 +26,10 @@
 <body class="layout-fixed sidebar-expand-md sidebar-mini app-loaded sidebar-open">
   <div class="app-wrapper">
 
-	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+    <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+
     <?php if (x($page, 'topnav')) echo $page['topnav']; ?>
+
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
