@@ -27,10 +27,8 @@
   <div class="app-wrapper">
 
     <header><?php if(x($page,'header')) echo $page['header']; ?></header>
-
-    <?php if (x($page, 'topnav')) echo $page['topnav']; ?>
-
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
+    
+    <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
