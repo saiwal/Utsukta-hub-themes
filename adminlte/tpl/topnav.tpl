@@ -59,7 +59,6 @@
       <li class="nav-item dropdown">
         <a id="notifications-btn-1" class="nav-link show notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
           <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
-          <span class="navbar-badge badge text-bg-warning">15</span>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
 {{if !$sys_only}}
