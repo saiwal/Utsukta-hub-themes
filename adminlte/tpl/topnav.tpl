@@ -150,32 +150,6 @@
 		let notificationsParent = notificationsWrapper ? notificationsWrapper.parentElement.id : null;
 		let notificationsBtn = document.querySelector('.notifications-btn');
 
-		// Event listener for notifications button
-		if (notificationsBtn) {
-			notificationsBtn.addEventListener('click', function() {
-				// Remove the 'd-none' class to show the notifications wrapper
-				notificationsWrapper.classList.remove('d-none');
-
-				// Check if the notifications wrapper has the 'fs' class
-				if (notificationsWrapper.classList.contains('fs')) {
-					// Prepend the notifications wrapper back to its original parent and hide it
-					document.getElementById(notificationsParent).appendChild(notificationsWrapper);
-					notificationsWrapper.classList.add('d-none');
-				} else {
-					// Otherwise, prepend the notifications wrapper to 'main'
-					document.querySelector('main').prepend(notificationsWrapper);
-				}
-
-				// Toggle the 'fs' class
-				notificationsWrapper.classList.toggle('fs');
-			});
-		}
-
-		// Event listener for clicking a notification
-		document.addEventListener('click', function(event) {
-			if (event.target.closest('a') && event.target.closest('a').classList.contains('notification')) {
-				console.log(1)
-			}
 		});
 
 		if(sse_enabled) {
