@@ -204,12 +204,6 @@
 			}, false);
 		}
 
-		document.querySelectorAll('.notification-link').forEach(function (element) {
-			element.addEventListener('click', function (element) {
-				sse_bs_notifications(element, true, false);
-			});
-		});
-
 		document.querySelectorAll('.notification-filter').forEach(function (element) {
 			element.addEventListener('keypress', function(e) {
 				if (e.which == 13) { // Enter key
