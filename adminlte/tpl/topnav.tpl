@@ -61,7 +61,7 @@
           <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
           <span class="navbar-badge badge text-bg-warning">15</span>
         </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end show" data-bs-popper="static">
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="mb-4">
 	<div id="no_notifications" class="d-xl-none">
