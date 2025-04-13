@@ -5,6 +5,7 @@
 [region=banner]
 [widget=cover_photo][/widget]
 [/region]
+
 [region=aside]
 [widget=fullprofile][/widget]
 [widget=common_friends][/widget]
@@ -12,9 +13,11 @@
 [widget=categories][/widget]
 [widget=tagcloud_wall][var=limit]24[/var][/widget]
 [/region]
+
 [region=content]
 $content
 [/region]
+
 [region=right_aside]
 [widget=notifications][/widget]
 [widget=newmember][/widget]
