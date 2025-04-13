@@ -46,16 +46,116 @@
           </form>
         </div>
       </li>
+
  			{{if $localuser || $nav.pubs}}
       <li class="nav-item">
-			<button id="notifications-btn-1" type="button" class="navbar-toggler border-0 notifications-btn">
+		  <button id="notifications-btn-1" type="button" class="navbar-toggler border-0 notifications-btn">
 				<i id="notifications-btn-icon-1" class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i>
 			</button>
       </li>
 			{{/if}}
      
       <!--Notification icon-->
+      <li class="nav-item dropdown">
+        <a id="notifications-btn-1" class="nav-link show notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
+          <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
+          <span class="navbar-badge badge text-bg-warning">15</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end show" data-bs-popper="static">
+{{if !$sys_only}}
+<div id="notifications_wrapper" class="mb-4">
+	<div id="no_notifications" class="d-xl-none">
+		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
+	</div>
+	<div id="nav-notifications-template" rel="template" class="d-none">
+		<a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
+			<img data-src="{1}" loading="lazy" class="rounded float-start me-2 menu-img-2">
+			<div class="text-nowrap">
+				<div class="d-flex justify-content-between align-items-center lh-sm">
+					<div class="text-truncate pe-1">
+						<strong title="{2} - {3}">{2}</strong>
+					</div>
+					<small class="autotime-narrow opacity-75" title="{5}"></small>
+				</div>
+				<div class="text-truncate">{4}</div>
+			</div>
+		</a>
+	</div>
+	<div id="nav-notifications-forums-template" rel="template" class="d-none">
+		<a class="list-group-item list-group-item-action justify-content-between align-items-center d-flex notification notification-forum" href="{0}" title="{4} - {3}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-b64mids='{12}'>
+			<div>
+				<img class="menu-img-1" data-src="{1}" loading="lazy">
+				<span>{2}</span>
+			</div>
+			<span class="badge bg-secondary">{10}</span>
+		</a>
+	</div>
+	<div id="notifications" class="border border-top-0 rounded navbar-nav collapse">
+		{{foreach $notifications as $notification}}
+		<div class="rounded-top rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
+			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
+				<div>
+					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
+					{{$notification.label}}
+				</div>
+				<span class="badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
+			</a>
+		</div>
+		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
+			{{if $notification.viewall}}
+			<a class="list-group-item list-group-item-action text-decoration-none" id="nav-{{$notification.type}}-see-all" href="{{$notification.viewall.url}}">
+				<i class="bi bi-box-arrow-up-right generic-icons-nav"></i> {{$notification.viewall.label}}
+			</a>
+			{{/if}}
+			{{if $notification.markall}}
+			<div class="list-group-item list-group-item-action cursor-pointer" id="nav-{{$notification.type}}-mark-all" onclick="markRead('{{$notification.type}}'); return false;">
+				<i class="bi bi-check-circle generic-icons-nav"></i> {{$notification.markall.label}}
+			</div>
+			{{/if}}
+			{{if $notification.filter}}
+			{{if $notification.filter.posts_label}}
+			<div class="list-group-item list-group-item-action cursor-pointer" id="tt-{{$notification.type}}-only">
+				<i class="bi bi-funnel generic-icons-nav"></i> {{$notification.filter.posts_label}}
+			</div>
+			{{/if}}
+			{{if $notification.filter.name_label}}
+			<div class="list-group-item clearfix notifications-textinput" id="cn-{{$notification.type}}-only">
+				<div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div>
+				<input id="cn-{{$notification.type}}-input" type="text" class="notification-filter form-control form-control-sm" placeholder="{{$notification.filter.name_label}}">
+				<div id="cn-{{$notification.type}}-input-clear" class="text-muted notifications-textinput-clear d-none"><i class="bi bi-x-lg"></i></div>
+			</div>
+			{{/if}}
+			{{/if}}
+			<div id="nav-{{$notification.type}}-menu" class="list-group list-group-flush"></div>
+			<div id="nav-{{$notification.type}}-loading" class="list-group-item" style="display: none;">
+				{{$loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
+			</div>
+		</div>
+		{{/foreach}}
+	</div>
+</div>
+{{/if}}
 
+          <span class="dropdown-item dropdown-header">15 Notifications</span>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-envelope me-2"></i> 4 new messages
+            <span class="float-end text-secondary fs-7">3 mins</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-people-fill me-2"></i> 8 friend requests
+            <span class="float-end text-secondary fs-7">12 hours</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item">
+            <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
+            <span class="float-end text-secondary fs-7">2 days</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item dropdown-footer"> See All Notifications </a>
+        </div>
+      </li>
 <script>
 	var sse_bs_active = false;
 	var sse_offset = 0;
@@ -759,79 +859,6 @@
 
 </script>
 
-{{if !$sys_only}}
-<div id="notifications_wrapper" class="mb-4">
-	<div id="no_notifications" class="d-xl-none">
-		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
-	</div>
-	<div id="nav-notifications-template" rel="template" class="d-none">
-		<a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
-			<img data-src="{1}" loading="lazy" class="rounded float-start me-2 menu-img-2">
-			<div class="text-nowrap">
-				<div class="d-flex justify-content-between align-items-center lh-sm">
-					<div class="text-truncate pe-1">
-						<strong title="{2} - {3}">{2}</strong>
-					</div>
-					<small class="autotime-narrow opacity-75" title="{5}"></small>
-				</div>
-				<div class="text-truncate">{4}</div>
-			</div>
-		</a>
-	</div>
-	<div id="nav-notifications-forums-template" rel="template" class="d-none">
-		<a class="list-group-item list-group-item-action justify-content-between align-items-center d-flex notification notification-forum" href="{0}" title="{4} - {3}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-b64mids='{12}'>
-			<div>
-				<img class="menu-img-1" data-src="{1}" loading="lazy">
-				<span>{2}</span>
-			</div>
-			<span class="badge bg-secondary">{10}</span>
-		</a>
-	</div>
-	<div id="notifications" class="border border-top-0 rounded navbar-nav collapse">
-		{{foreach $notifications as $notification}}
-		<div class="rounded-top rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
-			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
-				<div>
-					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
-					{{$notification.label}}
-				</div>
-				<span class="badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
-			</a>
-		</div>
-		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
-			{{if $notification.viewall}}
-			<a class="list-group-item list-group-item-action text-decoration-none" id="nav-{{$notification.type}}-see-all" href="{{$notification.viewall.url}}">
-				<i class="bi bi-box-arrow-up-right generic-icons-nav"></i> {{$notification.viewall.label}}
-			</a>
-			{{/if}}
-			{{if $notification.markall}}
-			<div class="list-group-item list-group-item-action cursor-pointer" id="nav-{{$notification.type}}-mark-all" onclick="markRead('{{$notification.type}}'); return false;">
-				<i class="bi bi-check-circle generic-icons-nav"></i> {{$notification.markall.label}}
-			</div>
-			{{/if}}
-			{{if $notification.filter}}
-			{{if $notification.filter.posts_label}}
-			<div class="list-group-item list-group-item-action cursor-pointer" id="tt-{{$notification.type}}-only">
-				<i class="bi bi-funnel generic-icons-nav"></i> {{$notification.filter.posts_label}}
-			</div>
-			{{/if}}
-			{{if $notification.filter.name_label}}
-			<div class="list-group-item clearfix notifications-textinput" id="cn-{{$notification.type}}-only">
-				<div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div>
-				<input id="cn-{{$notification.type}}-input" type="text" class="notification-filter form-control form-control-sm" placeholder="{{$notification.filter.name_label}}">
-				<div id="cn-{{$notification.type}}-input-clear" class="text-muted notifications-textinput-clear d-none"><i class="bi bi-x-lg"></i></div>
-			</div>
-			{{/if}}
-			{{/if}}
-			<div id="nav-{{$notification.type}}-menu" class="list-group list-group-flush"></div>
-			<div id="nav-{{$notification.type}}-loading" class="list-group-item" style="display: none;">
-				{{$loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
-			</div>
-		</div>
-		{{/foreach}}
-	</div>
-</div>
-{{/if}}
       <!-- user dowpdown menu-->
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
