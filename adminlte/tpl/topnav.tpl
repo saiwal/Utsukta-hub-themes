@@ -792,31 +792,3 @@
 </nav>
 
 
-
-
-<nav class="app-header navbar navbar-expand bg-body border-0 sticky-top"> <!--begin::Container-->
-  <div class="container-fluid"> <!--begin::Start Navbar Links-->
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive"><i class="bi bi-layout-text-sidebar"></i></a>
-      </li>
-    </ul>
-    <!-- Right navbar links -->
-    <ul class="navbar-nav ml-auto">
-      <!-- Navbar Search -->
-      <li class="nav-item">
-        <div class="navbar-search-block">
-          <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
-						<input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();" onblur="closeMenu('nav-search'); openMenu('nav-search-btn');"/>
-					</form>
-        </div>
-      </li>
-
-    </ul> <!--end::End Navbar Links-->
-  </div> <!--end::Container-->
-</nav>
-
-
