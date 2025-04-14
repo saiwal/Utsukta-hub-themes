@@ -152,7 +152,7 @@
 
 		// Event listener for notifications button
 		if (notificationsBtn) {
-			notificationsBtn.addEventListener('click', function() {
+			notificationsBtn.addEventListener('click', function(event) {
 				// Remove the 'd-none' class to show the notifications wrapper
 				notificationsWrapper.classList.remove('d-none');
 
@@ -171,19 +171,13 @@
 			});
 		}
 
-		// Event listener for clicking a notification
-		document.addEventListener('click', function(event) {
-			if (event.target.closest('a') && event.target.closest('a').classList.contains('notification')) {
-				console.log(1)
-				if (notificationsWrapper.classList.contains('fs')) {
-					// Move notifications wrapper back to its original parent and hide it
-					notificationsWrapper.classList.remove('fs');
-					notificationsWrapper.classList.add('d-none');
-					document.getElementById(notificationsParent).appendChild(notificationsWrapper);
-
-				}
-			}
-		});
+		// Prevent dropdown from closing when clicking inside the dropdown menu
+		const dropdownMenu = document.querySelector('.dropdown-menu');
+		if (dropdownMenu) {
+			dropdownMenu.addEventListener('click', function(event) {
+				event.stopPropagation(); // Prevent Bootstrap dropdown from closing
+			});
+		}
 
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
@@ -233,12 +227,12 @@
 					sse_bs_init();
 					sse_fallback_interval = setInterval(sse_fallback, updateInterval);
 				}
-
 			}, false);
 		}
 
 		document.querySelectorAll('.notification-link').forEach(function (element) {
-			element.addEventListener('click', function (element) {
+			element.addEventListener('click', function (event) {
+				event.stopPropagation(); // Prevent dropdown from closing
 				sse_bs_notifications(element, true, false);
 			});
 		});
@@ -326,7 +320,6 @@
 
 		document.querySelectorAll('#tt-{{$notification.type}}-only').forEach(function (element) {
 			element.addEventListener('click', function(e) {
-
 				let element = e.target.closest('div');
 				let menu = document.querySelector('#nav-{{$notification.type}}-menu');
 				let notifications = menu.querySelectorAll('.notification[data-thread_top="false"]');
@@ -355,7 +348,6 @@
 						sse_bs_notifications(sse_type, false, true);
 					}
 				}
-
 			});
 		});
 
@@ -440,7 +432,6 @@
 		sse_bs_counts();
 	});
 
-
 	function sse_bs_init() {
 		// Check if 'notification_open' exists in sessionStorage or if sse_type is defined
 		if (sessionStorage.getItem('notification_open') !== null || typeof sse_type !== 'undefined') {
@@ -515,7 +506,6 @@
 		}
 
 		if (followup || !manual || !document.getElementById('notification-link-' + sse_type).classList.contains('collapsed')) {
-
 			if (sse_offset >= 0) {
 				document.getElementById("nav-" + sse_type + "-loading").style.display = 'block';
 			}
@@ -629,7 +619,6 @@
 	}
 
 	function sse_handleNotificationsItems(notifyType, data, replace, followup) {
-
 		// Get the template, adjust based on the notification type
 		let notifications_tpl = (notifyType === 'forums')
 			? decodeURIComponent(document.querySelector("#nav-notifications-forums-template[rel=template]").innerHTML.replace('data-src', 'src'))
@@ -713,9 +702,7 @@
 		updateRelativeTime('.autotime-narrow');
 	}
 
-
 	function sse_updateNotifications(type, mid) {
-
 		// Skip processing if the type is 'notify' and the conditions don't match
 		if (type === 'notify' && (mid !== bParam_mid || sse_type !== 'notify')) {
 			return true;
@@ -728,7 +715,6 @@
 			notification.remove();
 		}
 	}
-
 
 	function sse_setNotificationsStatus(data) {
 		let primary_notifications = ['dm', 'home', 'intros', 'register', 'notify', 'files'];
@@ -836,7 +822,6 @@
 				console.error('Error fetching SSE data:', error);
 			});
 	}
-
 </script>
 
       <!-- user dowpdown menu-->
