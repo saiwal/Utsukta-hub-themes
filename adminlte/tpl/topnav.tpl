@@ -613,12 +613,12 @@
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
 			notificationsBtn.style.opacity = 1;
-			noNotifications.classList.add = 'd-none';
+			noNotifications.classList.add('d-none');
 			notifications.style.display = 'block';
 		} else {
 			notificationsBtn.style.opacity = 0.5;
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
-			noNotifications.classList.remove = 'd-none';
+			noNotifications.classList.remove('d-none');
 			notifications.style.display = 'none';
 		}
 		if (typeof data !== 'undefined') {
