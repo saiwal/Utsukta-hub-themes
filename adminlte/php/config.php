@@ -104,10 +104,10 @@ class AdminlteConfig {
 			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
 			'$dark_mode' => array('adminlte_dark_mode',t('Default to dark mode'),$arr['dark_mode'], '', array(t('No'),t('Yes'))),
 			'$bg_mode' => array('adminlte_bg_mode',t('Set background image tile mode'),$arr['bg_mode'], '', array(t('Tiled'),t('Cover'))),
-			'$bgcolor' => array('adminlte_background_color', t('Set the background color(e.g. #ffffff)'), $arr['bgcolor']),
-			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color(e.g. #000000)'), $arr['bgcolor_dark']),
-			'$background_image' => array('adminlte_background_image', t('Set the background image(url link)'), $arr['background_image']),
-			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image(url link)'), $arr['background_image_dark']),
+			'$bgcolor' => array('adminlte_background_color', t('Set the background color(e.g. #ffffff, blank for default)'), $arr['bgcolor']),
+			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color(e.g. #000000, blank for default)'), $arr['bgcolor_dark']),
+			'$background_image' => array('adminlte_background_image', t('Set the background image(url link, blank for none)'), $arr['background_image']),
+			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image(url link, blank for none)'), $arr['background_image_dark']),
 			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
 			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
 			));
