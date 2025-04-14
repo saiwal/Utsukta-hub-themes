@@ -36,8 +36,9 @@
       {{/if}}
 
       <!-- Navbar Search -->
-      <li class="nav-item d-none d-md-block">
-        <div class="navbar-search-block">
+      <li class="nav-item">
+        <a class="nav-link d-md-none" href="/search"><i class="bi bi-search"></i></a>
+        <div class="navbar-search-block d-none d-md-block">
           <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
             <input class="form-control me-sm-2" id="nav-search-text" type="text" value=""
               placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
@@ -45,19 +46,6 @@
           </form>
         </div>
       </li>
-      <!-- notificattion button for smaller screens-->
-      {{if $localuser || $nav.pubs}}
-      <li id="notifications-btn" class="nav-item d-md-none">
-        <a class="nav-link notifications-btn" id="notifications-btn-icon" href="#"><i class="bi bi-exclamation-circle notifications-btn-icon generic-icons"></i></a>
-      </li>
-      <script>
-        document.getElementById('notifications-btn').addEventListener('click', function (event) {
-          event.preventDefault(); // Prevent default link behavior
-        });
-      </script>
-
-      {{/if}}
-
       <!-- user dowpdown menu-->
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
@@ -176,7 +164,6 @@
     </ul> <!--end::End Navbar Links-->
   </div> <!--end::Container-->
 </nav>
-
 
 <!--begin::Sidebar-->
 <aside class="app-sidebar bg-dark shadow" data-bs-theme="dark">

@@ -2,7 +2,7 @@
 /**
  *   * Name: default
  *   * Description: AdminLTE default 2-column layout
- *   * Version: 1.0
+ *   * Version: 1.1
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
@@ -26,8 +26,9 @@
 <body class="layout-fixed sidebar-expand-md sidebar-mini app-loaded sidebar-open">
   <div class="app-wrapper">
 
-	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
+    <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+    
+    <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
