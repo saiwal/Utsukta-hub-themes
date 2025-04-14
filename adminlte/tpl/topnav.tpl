@@ -600,9 +600,11 @@
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 		if (primary_available) {
 			notificationIcon.classList.remove('bi-bell');
-			notificationIcon.classList.add('bi-bell-fill text-warning');
+			notificationIcon.classList.add('bi-bell-fill');
+			notificationIcon.classList.add('text-warning');
 		} else {
-			notificationIcon.classList.remove('bi-bell-fill text-warning');
+			notificationIcon.classList.remove('bi-bell-fill');
+			notificationIcon.classList.remove('text-warning');
 			notificationIcon.classList.add('bi-bell');
 		}
 		let notificationsBtn = document.querySelector('.notifications-btn');
