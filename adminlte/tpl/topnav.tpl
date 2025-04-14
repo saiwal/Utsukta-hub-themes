@@ -613,11 +613,11 @@
 		});
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 		if (primary_available) {
-			notificationIcon.classList.remove('bi-exclamation-circle');
-			notificationIcon.classList.add('bi-exclamation-triangle');
+			notificationIcon.classList.remove('bi-bell');
+			notificationIcon.classList.add('bi-bell-fill text-warning');
 		} else {
-			notificationIcon.classList.remove('bi-exclamation-triangle');
-			notificationIcon.classList.add('bi-exclamation-circle');
+			notificationIcon.classList.remove('bi-bell-fill text-warning');
+			notificationIcon.classList.add('bi-bell');
 		}
 		let notificationsBtn = document.querySelector('.notifications-btn');
 		let noNotifications = document.querySelector('#no_notifications');
