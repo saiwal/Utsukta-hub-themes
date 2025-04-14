@@ -454,7 +454,7 @@ function widget_mynavbar($args) {
                     ((!$is_owner && isset(App::$profile['thumb'])) ?
                     App::$profile['thumb'] : ''), '$form_security_token' =>
                     get_form_security_token('pconfig'), '$notifications' => $notifications,
-			'$no_notifications' => t('Sorry, you have got no notifications at the moment'),
+			'$no_notifications' => t('No Notifications'),
 			'$loading' => t('Loading'),
 			'$sys_only' => empty($arr['sys_only']) ? 0 : 1
  ]);

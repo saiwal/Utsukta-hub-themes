@@ -57,7 +57,7 @@
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
           {{if !$sys_only}}
           <div id="notifications_wrapper" class=" " style="min-width:15em;">
-            <div id="no_notifications" class="d-block">
+            <div id="no_notifications" class="ps-2 pe-2 d-block">
           		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
           	</div>
             <div id="nav-notifications-template" rel="template" class="d-none">
