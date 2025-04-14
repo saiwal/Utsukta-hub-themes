@@ -263,50 +263,6 @@ function widget_mynavbar($args) {
                 $c   = theme_include('navbar_' . purify_filename($template) .
                 '.css'); $tpl = get_markup_template('navbar_' .
                 purify_filename($template) . '.tpl');
-
-              if ($c && $tpl) { head_add_css('navbar_' . $template . '.css'); }
-
-              if (!$tpl) { $tpl = get_markup_template('topnav.tpl'); }
-
-              App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl' =>
-                z_root(), '$color_mode'         => App::$page['color_mode'] ??
-                '', '$navbar_color_mode'  => App::$page['navbar_color_mode'] ??
-                '', '$theme_switch_icon'  => $theme_switch_icon, '$fulldocs' =>
-                t('Help'), '$sitelocation'       => $sitelocation, '$nav' =>
-                $x['nav'], '$banner'             => $banner,
-                '$emptynotifications' => t('Loading'), '$userinfo'           =>
-                $x['usermenu'], '$localuser'          => local_channel(),
-                '$is_owner'           => $is_owner, '$sel'                =>
-                App::$nav_sel, '$help'               => t('@name, #tag, ?doc,
-                  content'), '$pleasewait'         => t('Please wait...'),
-                  '$nav_apps'           => $nav_apps, '$navbar_apps'        =>
-                  $navbar_apps, '$channel_menu'       =>
-                  get_pconfig(App::$profile_uid, 'system', 'channel_menu',
-                    Config::Get('system', 'channel_menu')), '$channel_thumb' =>
-                    ((App::$profile) ? App::$profile['thumb'] : ''),
-                    '$channel_apps'       => $channel_apps, '$addapps' =>
-                    t('Apps'), '$channelapps'        => t('Channel Apps'),
-                    '$sysapps'            => t('System Apps'), '$pinned_apps'
-                    => t('Pinned Apps'), '$featured_apps'      => t('Featured
-                    Apps'), '$url'                => (($url) ? $url : z_root()
-                    . '/' . App::$cmd), '$settings_url'       => $settings_url,
-                    '$name'               => ((!$is_owner &&
-                    isset(App::$profile['fullname'])) ?
-                    App::$profile['fullname'] : ''), '$thumb'              =>
-                    ((!$is_owner && isset(App::$profile['thumb'])) ?
-                    App::$profile['thumb'] : ''), '$form_security_token' =>
-                    get_form_security_token('pconfig') ]);
-
-              if (x($_SESSION, 'reload_avatar') && $observer) {
-                // The avatar has been changed on the server but the browser
-                // doesn't know that, force the browser to reload the image
-                // from the server instead of its cache.
-                $tpl = get_markup_template('force_image_reload.tpl');
-
-                App::$page['topnav'] .= replace_macros($tpl, [ '$imgUrl' =>
-                  $observer['xchan_photo_m'] ]);
-                unset($_SESSION['reload_avatar']); }
-
               // notifications
 
 		$channel = \App::get_channel();
@@ -466,13 +422,53 @@ function widget_mynavbar($args) {
 			];
 		}
 
-		App::$page['topnav'] .= replace_macros($tpl, [
-			'$notifications' => $notifications,
+              if ($c && $tpl) { head_add_css('navbar_' . $template . '.css'); }
+
+              if (!$tpl) { $tpl = get_markup_template('topnav.tpl'); }
+
+              App::$page['topnav'] .= replace_macros($tpl, [ '$baseurl' =>
+                z_root(), '$color_mode'         => App::$page['color_mode'] ??
+                '', '$navbar_color_mode'  => App::$page['navbar_color_mode'] ??
+                '', '$theme_switch_icon'  => $theme_switch_icon, '$fulldocs' =>
+                t('Help'), '$sitelocation'       => $sitelocation, '$nav' =>
+                $x['nav'], '$banner'             => $banner,
+                '$emptynotifications' => t('Loading'), '$userinfo'           =>
+                $x['usermenu'], '$localuser'          => local_channel(),
+                '$is_owner'           => $is_owner, '$sel'                =>
+                App::$nav_sel, '$help'               => t('@name, #tag, ?doc,
+                  content'), '$pleasewait'         => t('Please wait...'),
+                  '$nav_apps'           => $nav_apps, '$navbar_apps'        =>
+                  $navbar_apps, '$channel_menu'       =>
+                  get_pconfig(App::$profile_uid, 'system', 'channel_menu',
+                    Config::Get('system', 'channel_menu')), '$channel_thumb' =>
+                    ((App::$profile) ? App::$profile['thumb'] : ''),
+                    '$channel_apps'       => $channel_apps, '$addapps' =>
+                    t('Apps'), '$channelapps'        => t('Channel Apps'),
+                    '$sysapps'            => t('System Apps'), '$pinned_apps'
+                    => t('Pinned Apps'), '$featured_apps'      => t('Featured
+                    Apps'), '$url'                => (($url) ? $url : z_root()
+                    . '/' . App::$cmd), '$settings_url'       => $settings_url,
+                    '$name'               => ((!$is_owner &&
+                    isset(App::$profile['fullname'])) ?
+                    App::$profile['fullname'] : ''), '$thumb'              =>
+                    ((!$is_owner && isset(App::$profile['thumb'])) ?
+                    App::$profile['thumb'] : ''), '$form_security_token' =>
+                    get_form_security_token('pconfig'), '$notifications' => $notifications,
 			'$no_notifications' => t('Sorry, you have got no notifications at the moment'),
 			'$loading' => t('Loading'),
 			'$sys_only' => empty($arr['sys_only']) ? 0 : 1
+ ]);
 
-		]);
+              if (x($_SESSION, 'reload_avatar') && $observer) {
+                // The avatar has been changed on the server but the browser
+                // doesn't know that, force the browser to reload the image
+                // from the server instead of its cache.
+                $tpl = get_markup_template('force_image_reload.tpl');
+
+                App::$page['topnav'] .= replace_macros($tpl, [ '$imgUrl' =>
+                  $observer['xchan_photo_m'] ]);
+                unset($_SESSION['reload_avatar']); }
+
 
               return App::$page['topnav']; 
               /*call_hooks('page_header', App::$page['topnav']); */
