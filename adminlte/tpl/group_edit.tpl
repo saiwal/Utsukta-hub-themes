@@ -21,10 +21,10 @@
 			<button type="submit" name="submit" class="btn btn-primary float-end">{{$submit}}</button>
 		</form>
 	</div>
-	<div class="section-content-info-wrapper">
+	<div class="callout callout-info mt-2 mb-2">
 		{{$desc}}
 	</div>
-	<div class="section-content-wrapper">
+	<div class="">
 		<div id="group-update-wrapper" class="clearfix">
 			{{include file="groupeditor.tpl"}}
 		</div>
