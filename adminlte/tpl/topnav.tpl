@@ -145,20 +145,6 @@
 		let notificationsParent = notificationsWrapper ? notificationsWrapper.parentElement.id : null;
 		let notificationsBtn = document.querySelector('.notifications-btn');
 
-		// Event listener for notifications button
-		if (notificationsBtn) {
-			notificationsBtn.addEventListener('click', function(event) {
-				notificationsWrapper.classList.remove('d-none');
-				if (notificationsWrapper.classList.contains('fs')) {
-					document.getElementById(notificationsParent).appendChild(notificationsWrapper);
-					notificationsWrapper.classList.add('d-none');
-				} else {
-					document.querySelector('main').prepend(notificationsWrapper);
-				}
-				notificationsWrapper.classList.toggle('fs');
-			});
-		}
-
 		// Prevent dropdown from closing when clicking inside
 		const dropdownMenu = document.querySelector('.dropdown-menu');
 		if (dropdownMenu) {
