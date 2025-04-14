@@ -608,7 +608,7 @@
 			notificationIcon.classList.add('bi-bell');
 		}
 		let notificationsBtn = document.querySelector('.notifications-btn');
-		let noNotifications = document.querySelector('.no_notifications');
+		let noNotifications = document.querySelector('#no_notifications');
 		let notifications = document.querySelector('#notifications');
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
