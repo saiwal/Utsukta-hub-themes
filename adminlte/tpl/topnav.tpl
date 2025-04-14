@@ -57,7 +57,7 @@
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
           {{if !$sys_only}}
           <div id="notifications_wrapper" class=" " style="min-width:15em;">
-            <div id="no_notifications" class="d-block d-none">
+            <div id="no_notifications" class="d-block">
           		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
           	</div>
             <div id="nav-notifications-template" rel="template" class="d-none">
@@ -613,12 +613,12 @@
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
 			notificationsBtn.style.opacity = 1;
-			noNotifications.style.display = 'none';
+			noNotifications.classList.add = 'd-none';
 			notifications.style.display = 'block';
 		} else {
 			notificationsBtn.style.opacity = 0.5;
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
-			noNotifications.style.display = 'block';
+			noNotifications.classList.remove = 'd-none';
 			notifications.style.display = 'none';
 		}
 		if (typeof data !== 'undefined') {
