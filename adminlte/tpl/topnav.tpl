@@ -63,6 +63,9 @@
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
           {{if !$sys_only}}
           <div id="notifications_wrapper" class=" " style="min-width:15em;">
+            <div id="no_notifications" class="d-none">
+              {{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
+            </div>
             <div id="nav-notifications-template" rel="template" class="d-none">
               <a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
                 <img data-src="{1}" loading="lazy" class="rounded float-start me-2 menu-img-2">
