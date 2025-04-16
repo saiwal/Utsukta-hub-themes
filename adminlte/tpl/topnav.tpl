@@ -56,13 +56,13 @@
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
           {{if !$sys_only}}
-          <div id="notifications_wrapper" class=" " style="min-width:15em;">
+          <div id="notifications_wrapper" class=" " style="min-width:18em;">
             <div id="no_notifications" class="ps-2 pe-2 d-block">
           		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
           	</div>
             <div id="nav-notifications-template" rel="template" class="d-none">
               <a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
-                <img data-src="{1}" loading="lazy" class="rounded float-start me-2 menu-img-2">
+                <img data-src="{1}" loading="lazy" class="rounded-circle shadow img-size-32 float-start me-2">
                 <div class="text-nowrap">
                   <div class="d-flex justify-content-between align-items-center lh-sm">
                     <div class="text-truncate pe-1">
@@ -77,7 +77,7 @@
             <div id="nav-notifications-forums-template" rel="template" class="d-none">
               <a class="list-group-item list-group-item-action justify-content-between align-items-center d-flex notification notification-forum" href="{0}" title="{4} - {3}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-b64mids='{12}'>
                 <div>
-                  <img class="menu-img-1" data-src="{1}" loading="lazy">
+                  <img class="rounded-circle img-size-32 shadow" data-src="{1}" loading="lazy">
                   <span>{2}</span>
                 </div>
                 <span class="badge bg-secondary">{10}</span>
