@@ -600,11 +600,12 @@
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 		if (primary_available) {
 			notificationIcon.classList.remove('bi-bell');
+			notificationIcon.classList.remove('text-info');
 			notificationIcon.classList.add('bi-bell-fill');
-			notificationIcon.classList.add('text-warning');
+			notificationIcon.classList.add('text-danger');
 		} else {
 			notificationIcon.classList.remove('bi-bell-fill');
-			notificationIcon.classList.remove('text-warning');
+			notificationIcon.classList.remove('text-danger');
 			notificationIcon.classList.add('bi-bell');
 		}
 		let notificationsBtn = document.querySelector('.notifications-btn');
@@ -612,11 +613,13 @@
 		let notifications = document.querySelector('#notifications');
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
-			notificationsBtn.style.opacity = 1;
+      notificationIcon.classList.add('bi-bell-fill');
+			notificationIcon.classList.add('text-info');
 			noNotifications.classList.add('d-none');
 			notifications.style.display = 'block';
 		} else {
-			notificationsBtn.style.opacity = 0.5;
+			notificationIcon.classList.remove('bi-bell-fill');
+			notificationIcon.classList.remove('text-info');
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
 			noNotifications.classList.remove('d-none');
 			notifications.style.display = 'none';
