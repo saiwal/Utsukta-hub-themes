@@ -598,6 +598,7 @@
 			}
 		});
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
+		let notificationsBtn = document.querySelector('.notifications-btn');
 		if (primary_available) {
 			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('text-info');
@@ -609,7 +610,6 @@
 			notificationIcon.classList.remove('text-danger');
 			notificationIcon.classList.add('bi-bell');
 		}
-		let notificationsBtn = document.querySelector('.notifications-btn');
 		let noNotifications = document.querySelector('#no_notifications');
 		let notifications = document.querySelector('#notifications');
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
