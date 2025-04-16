@@ -604,10 +604,10 @@
 			notificationIcon.classList.remove('text-info');
 			notificationIcon.classList.remove('bi-bell');
 			notificationIcon.classList.add('bi-bell-fill');
-			notificationIcon.classList.add('text-danger');
+			notificationIcon.classList.add('text-warning');
 		} else {
 			notificationIcon.classList.remove('bi-bell-fill');
-			notificationIcon.classList.remove('text-danger');
+			notificationIcon.classList.remove('text-warning');
 			notificationIcon.classList.add('bi-bell');
 		}
 		let noNotifications = document.querySelector('#no_notifications');
