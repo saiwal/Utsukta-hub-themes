@@ -599,7 +599,6 @@
 		});
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 		if (primary_available) {
-			notificationIcon.classList.remove('bi-bell');
 			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('text-info');
 			notificationIcon.classList.add('bi-bell-fill');
