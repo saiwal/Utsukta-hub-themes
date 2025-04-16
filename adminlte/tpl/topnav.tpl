@@ -600,6 +600,7 @@
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 		if (primary_available) {
 			notificationIcon.classList.remove('bi-bell');
+			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('text-info');
 			notificationIcon.classList.add('bi-bell-fill');
 			notificationIcon.classList.add('text-danger');
@@ -614,6 +615,7 @@
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
       notificationIcon.classList.add('bi-bell-fill');
+			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('bi-bell');
 			notificationIcon.classList.add('text-info');
 			noNotifications.classList.add('d-none');
