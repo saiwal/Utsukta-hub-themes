@@ -598,7 +598,10 @@
 			}
 		});
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
+		let notificationsBtn = document.querySelector('.notifications-btn');
 		if (primary_available) {
+			notificationsBtn.style.opacity = 1;
+			notificationIcon.classList.remove('text-info');
 			notificationIcon.classList.remove('bi-bell');
 			notificationIcon.classList.add('bi-bell-fill');
 			notificationIcon.classList.add('text-warning');
@@ -607,16 +610,18 @@
 			notificationIcon.classList.remove('text-warning');
 			notificationIcon.classList.add('bi-bell');
 		}
-		let notificationsBtn = document.querySelector('.notifications-btn');
 		let noNotifications = document.querySelector('#no_notifications');
 		let notifications = document.querySelector('#notifications');
 		let navbarCollapse = document.querySelector('#navbar-collapse-1');
 		if (any_available) {
+      notificationIcon.classList.add('bi-bell-fill');
 			notificationsBtn.style.opacity = 1;
+			notificationIcon.classList.remove('bi-bell');
 			noNotifications.classList.add('d-none');
 			notifications.style.display = 'block';
 		} else {
-			notificationsBtn.style.opacity = 0.5;
+			notificationIcon.classList.remove('bi-bell-fill');
+			notificationIcon.classList.add('bi-bell');
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
 			noNotifications.classList.remove('d-none');
 			notifications.style.display = 'none';
