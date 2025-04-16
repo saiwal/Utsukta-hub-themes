@@ -601,6 +601,7 @@
 		if (primary_available) {
 			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('text-info');
+			notificationIcon.classList.remove('bi-bell');
 			notificationIcon.classList.add('bi-bell-fill');
 			notificationIcon.classList.add('text-danger');
 		} else {
@@ -616,12 +617,11 @@
       notificationIcon.classList.add('bi-bell-fill');
 			notificationsBtn.style.opacity = 1;
 			notificationIcon.classList.remove('bi-bell');
-			notificationIcon.classList.add('text-info');
 			noNotifications.classList.add('d-none');
 			notifications.style.display = 'block';
 		} else {
 			notificationIcon.classList.remove('bi-bell-fill');
-			notificationIcon.classList.remove('text-info');
+			notificationIcon.classList.add('bi-bell');
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
 			noNotifications.classList.remove('d-none');
 			notifications.style.display = 'none';
