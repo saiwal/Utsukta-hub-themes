@@ -28,7 +28,6 @@
         document.documentElement.classList.add('js');
     </script>
 
-    <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
 
