@@ -22,13 +22,13 @@
 		{{/if}}
 		{{/if}}
 	</div>
-	<h5>{{$app.name}}{{if $app.price}} ({{$app.price}}){{/if}}</h5>
+    <div><a href="{{$app.url}}">{{$app.name}}{{if $app.price}} ({{$app.price}}){{/if}}</a></div>
 </div>
 <div class="section-content-tools-wrapper container card-body">
 	<div class="{{if $deleted}} app-deleted{{/if}} mb-3">
 		<a class="app-icon app-link" href="{{$app.url}}"{{if $app.target}} target="{{$app.target}}"{{/if}}{{if $installed}} data-papp="{{$app.papp}}" data-icon="{{$icon}}" data-url="{{$app.url}}" data-name="{{$app.name}}"{{/if}}>
 			{{if $icon}}
-			<i class="app-icon bi bi-{{$icon}}"></i>
+			<i class="app-icon bi bi-{{$icon}} fs-1"></i>
 			{{else}}
 			<img src="{{$app.photo}}" width="80" height="80" />
 			{{/if}}
