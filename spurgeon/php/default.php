@@ -22,12 +22,6 @@
     <script>
       var baseurl = "<?php echo z_root() ?>";
     </script>
-
-    <script>
-        document.documentElement.classList.remove('no-js');
-        document.documentElement.classList.add('js');
-    </script>
-
     <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
