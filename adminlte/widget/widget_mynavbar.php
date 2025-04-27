@@ -328,13 +328,7 @@ function widget_mynavbar($args)
             $search_form_action = "search";
     }
 
-    $nav["search"] = [
-        "search",
-        t("Search"),
-        "",
-        t("Search site @name, !forum, #tag, ?docs, content"),
-        $search_form_action,
-    ];
+    $nav["search"] = ["search", t("Search"), "", t("Search site @name, !forum, #tag, ?docs, content"), $search_form_action];
 
     /** Admin page
      */
