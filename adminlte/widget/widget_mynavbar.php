@@ -435,7 +435,7 @@ EOT;
             'title' => t('New public stream notifications'),
             'viewall' => [
                 'url' => 'pubstream',
-                Packing list for public stream')
+                (Packing list for public stream')
             ],
             'filter' => [
                 'posts_label' => t('Show new posts only'),
