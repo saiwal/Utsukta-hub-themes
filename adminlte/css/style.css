@@ -22,6 +22,10 @@ blockquote {
   min-height: calc(100vh - 72px);
   scrollbar-width: none;  
 }
+#toast-container {
+	z-index: 1060;
+	width: 300px;
+}
 
 #cboxContent {
   background: var(--bs-tertiary-bg);
