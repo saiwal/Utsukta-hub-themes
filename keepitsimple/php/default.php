@@ -162,7 +162,7 @@
     </footer> <!-- end Footer-->
 
 <script src="/view/theme/keepitsimple/js/jquery-3.2.1.min.js"></script>
-<script src="/view/theme/keepitsimple/js/main.js"></script>
+<script src="/view/theme/keepitsimple/js/maintr.js"></script>
 </body>
 </html>
 
