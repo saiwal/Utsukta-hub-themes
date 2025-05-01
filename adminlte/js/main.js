@@ -459,13 +459,6 @@ function insertCommentAttach(comment,id) {
 
 }
 
-function insertCommentEmbed(comment,id) {
-	activeCommentID = id;
-	activeCommentText = comment;
-	initializeEmbedPhotoDialog();
-	return false;
-}
-
 function insertCommentURL(comment, id) {
 	reply = prompt(aStr.linkurl);
 	if(reply && reply.length) {
@@ -1733,35 +1726,12 @@ function loadText(textRegion,data) {
 	$(textRegion).val(currentText + data);
 }
 
-// Add text to active comment region if set, otherwise add to main editor
 function addActiveEditorText(data) {
-    if (activeCommentID) {
-        const textarea = document.getElementById('comment-edit-text-' + activeCommentID);
-
-        if (textarea) {
-            let currentText = textarea.value;
-
-            // Clear the textarea if it matches the active comment text
-            if (currentText === activeCommentText) {
-                currentText = '';
-            }
-
-            textarea.classList.add('expanded');
-            openMenu('comment-tools-' + activeCommentID);
-            textarea.value = currentText + data;
-            textarea.focus();
-            textarea.click();
-            preview_comment(activeCommentID);
-        }
-
-        // Reset activeCommentID after processing
-        activeCommentID = 0;
-    } else {
-        addeditortext(data);
-        preview_post();
-    }
+  if(plaintext == 'none') {
+		var currentText = $("#profile-jot-text").val();
+		$("#profile-jot-text").val(currentText + data);
+	}
 }
-
 
 function makeid(length) {
 	var result = '';
