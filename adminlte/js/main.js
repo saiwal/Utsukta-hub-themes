@@ -1727,7 +1727,7 @@ function loadText(textRegion,data) {
 }
 
 function addActiveEditorText(data) {
- 	if(plaintext == 'none') {
+  if(plaintext == 'none') {
 		var currentText = $("#profile-jot-text").val();
 		$("#profile-jot-text").val(currentText + data);
 	}
