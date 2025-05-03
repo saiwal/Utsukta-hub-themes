@@ -22,35 +22,35 @@
 				<div id="comment-tools-{{$id}}" class="pt-2 comment-tools pb-3">
 					<div id="comment-edit-bb-{{$id}}" class="btn-toolbar float-start">
 						<div class="btn-group me-2">
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edbold}}" onclick="insertbbcomment('{{$comment}}','b', {{$id}}); return false;">
+							<button class="btn btn-sm text-body-tertiary btn-outline-secondary border-0" title="{{$edbold}}" onclick="insertbbcomment('{{$comment}}','b', {{$id}}); return false;">
 								<i class="bi bi-type-bold comment-icon"></i>
 							</button>
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$editalic}}" onclick="insertbbcomment('{{$comment}}','i', {{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$editalic}}" onclick="insertbbcomment('{{$comment}}','i', {{$id}}); return false;">
 								<i class="bi bi-type-italic comment-icon"></i>
 							</button>
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$eduline}}" onclick="insertbbcomment('{{$comment}}','u', {{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$eduline}}" onclick="insertbbcomment('{{$comment}}','u', {{$id}}); return false;">
 								<i class="bi bi-type-underline comment-icon"></i>
 							</button>
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edquote}}" onclick="insertbbcomment('{{$comment}}','quote', {{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$edquote}}" onclick="insertbbcomment('{{$comment}}','quote', {{$id}}); return false;">
 								<i class="bi bi-quote comment-icon"></i>
 							</button>
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edcode}}" onclick="insertbbcomment('{{$comment}}','code', {{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$edcode}}" onclick="insertbbcomment('{{$comment}}','code', {{$id}}); return false;">
 								<i class="bi bi-code comment-icon"></i>
 							</button>
 						</div>
 						<div class="btn-group me-2">
 							{{if $can_upload}}
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edatt}}" onclick="insertCommentAttach('{{$comment}}',{{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$edatt}}" onclick="insertCommentAttach('{{$comment}}',{{$id}}); return false;">
 								<i class="bi bi-paperclip comment-icon"></i>
 							</button>
 							{{/if}}
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$edurl}}" onclick="insertCommentURL('{{$comment}}',{{$id}}); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$edurl}}" onclick="insertCommentURL('{{$comment}}',{{$id}}); return false;">
 								<i class="bi bi-link-45deg comment-icon"></i>
 							</button>
 						</div>
 						{{if $feature_encrypt}}
 						<div class="btn-group me-2">
-							<button class="btn btn-outline-secondary btn-sm border-0" title="{{$encrypt}}" onclick="sodium_encrypt('#comment-edit-text-' + '{{$id}}'); return false;">
+							<button class="btn btn-outline-secondary btn-sm border-0 text-body-tertiary" title="{{$encrypt}}" onclick="sodium_encrypt('#comment-edit-text-' + '{{$id}}'); return false;">
 								<i class="bi bi-key comment-icon"></i>
 							</button>
 						</div>
@@ -59,11 +59,11 @@
 					</div>
 					<div class="btn-group float-end" id="comment-edit-submit-wrapper-{{$id}}">
 						{{if $preview}}
-						<button id="comment-edit-presubmit-{{$id}}" class="btn btn-outline-secondary btn-sm" onclick="preview_comment({{$id}}); return false;" title="{{$preview}}">
+						<button id="comment-edit-presubmit-{{$id}}" class="btn btn-outline-secondary btn-sm text-body-tertiary" onclick="preview_comment({{$id}}); return false;" title="{{$preview}}">
 							<i class="bi bi-eye comment-icon" ></i>
 						</button>
 						{{/if}}
-						<button id="comment-edit-submit-{{$id}}" class="btn btn-primary btn-sm" type="submit" name="button-submit" onclick="post_comment({{$id}}); return false;">{{$submit}}</button>
+						<button id="comment-edit-submit-{{$id}}" class="btn btn-primary btn-sm text-body-tertiary" type="submit" name="button-submit" onclick="post_comment({{$id}}); return false;">{{$submit}}</button>
 					</div>
 				</div>
 				<div class="clear"></div>
