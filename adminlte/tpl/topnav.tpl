@@ -41,56 +41,6 @@
     <a class="nav-link" href="#" title="{{$nav.search.3}}" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="bi bi-search generic-icons"></i></a>
 </li>
 
-<!-- Custom CSS for Responsive Modal -->
-<!-- Custom CSS for Responsive Modal -->
-<style>
-@media (max-width: 576px) {
-    .modal-sm {
-        --bs-modal-width: 100vw;
-        --bs-modal-margin: 0;
-        height: 100vh;
-    }
-    .modal-content {
-        height: 100%;
-        border: none;
-        border-radius: 0;
-    }
-    .modal-body {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        flex-grow: 1;
-        padding-top: 20px;
-    }
-    .modal-body form {
-        width: 100%;
-    }
-}
-@media (min-width: 577px) {
-    .modal-sm {
-        --bs-modal-width: 400px;
-    }
-}
-.spinner-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-}
-.d-none {
-    display: none;
-}
-</style>
-
-<!-- JavaScript for Modal Focus -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchModal = document.getElementById('searchModal');
-    searchModal.addEventListener('shown.bs.modal', function() {
-        document.getElementById('nav-search-text').focus();
-    });
-});
-</script>
-
  			{{if $localuser || $nav.pubs}}
       <!--Notification icon-->
       <li class="nav-item dropdown">
