@@ -17,7 +17,7 @@ head_add_js('/library/justifiedGallery/jquery.justifiedGallery.min.js');
 head_add_js('/library/sprintf.js/dist/sprintf.min.js');
 
 head_add_js('/library/textcomplete/textcomplete.min.js');
-head_add_js('autocomplete.js');
+head_add_js('/view/theme/adminlte/js/autocomplete.js');
 
 head_add_js('/library/readmore.js/readmore.js');
 
