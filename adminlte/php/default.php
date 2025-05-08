@@ -29,6 +29,23 @@
     <header><?php if(x($page,'header')) echo $page['header']; ?></header>
     
     <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
+<!-- Search Modal -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
+                    <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" />
+                    <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                </form>
+                <div id="nav-search-spinner" class="spinner-wrapper d-none">
+                    <div class="spinner s"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
