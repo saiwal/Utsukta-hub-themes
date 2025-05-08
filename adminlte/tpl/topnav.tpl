@@ -42,6 +42,7 @@
 </li>
 
 <!-- Custom CSS for Responsive Modal -->
+<!-- Custom CSS for Responsive Modal -->
 <style>
 @media (max-width: 576px) {
     .modal-sm {
@@ -56,9 +57,10 @@
     }
     .modal-body {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         flex-grow: 1;
+        padding-top: 20px;
     }
     .modal-body form {
         width: 100%;
