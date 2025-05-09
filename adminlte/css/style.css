@@ -160,31 +160,4 @@ span.spinner {
     overflow: visible; /* Allow dropdown to overflow if needed */
 }
 
-/* Dropdown styling */
-#searchModal .textcomplete-dropdown {
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    background-color: #fff;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    margin-top: 0.25rem;
-    z-index: 1060; /* Above modal */
-    width: calc(100% - 1.5rem) !important; /* Account for modal padding */
-}
-
-#searchModal .textcomplete-dropdown li {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-}
-
-#searchModal .textcomplete-dropdown li.active,
-#searchModal .textcomplete-dropdown li:hover {
-    background-color: #f8f9fa;
-}
-
-/* Responsive adjustments */
-@media (min-width: 992px) {
-    #searchModal .textcomplete-dropdown {
-        max-width: 100%;
-    }
-}
 
