@@ -154,10 +154,4 @@ span.spinner {
   background-image: url($background_image_dark);
 }
 
-/* Ensure modal body can contain positioned dropdown */
-#searchModal .modal-body {
-    position: relative;
-    overflow: visible; /* Allow dropdown to overflow if needed */
-}
-
 
