@@ -1002,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
               <div class="modal-body">
                   <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
-                      <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" />
+                      <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$nav.search.3}}" name="search" title="{{$nav.search.3}}" />
                       <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
                   </form>
                   <div id="nav-search-spinner" class="spinner-wrapper d-none">
