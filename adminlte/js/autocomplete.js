@@ -265,7 +265,7 @@ match: /(^@)([^\n]{2,})$/,
                     className: 'dropdown-menu textcomplete-dropdown',
                     placement: 'bottom',
                     style: {
-                        position: 'absolute',
+                        // position: 'absolute',
                         top: 'auto',
                         left: 'auto',
                         width: 'calc(100% - 30px)',
