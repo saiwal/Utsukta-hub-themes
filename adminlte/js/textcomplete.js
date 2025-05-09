@@ -1487,7 +1487,7 @@ var Dropdown = function (_EventEmitter) {
       var el = document.createElement("ul");
       var style = el.style;
       style.display = "none";
-      style.position = "absolute";
+      style.position = "relative";
       style.zIndex = "10000";
 
       // Change this to target your modal body
