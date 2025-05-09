@@ -1012,4 +1012,15 @@ document.addEventListener('DOMContentLoaded', function() {
           </div>
       </div>
   </div>    
+<!-- JavaScript for Modal Focus -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchModal = document.getElementById('searchModal');
+    const searchInput = document.getElementById('nav-search-text');
 
+    // Focus input when modal opens
+    searchModal.addEventListener('shown.bs.modal', function() {
+        searchInput.focus();
+    });
+});
+</script>
