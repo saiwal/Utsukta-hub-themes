@@ -177,4 +177,6 @@ span.spinner {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
+#searchModal .modal-body {
+    position: relative;
+  }
