@@ -1487,7 +1487,7 @@ var Dropdown = function (_EventEmitter) {
       var el = document.createElement("ul");
       var style = el.style;
       style.display = "none";
-      style.position = "relative";
+      style.position = "absolute";
       style.zIndex = "10000";
 
       // Change this to target your modal body
@@ -1501,7 +1501,7 @@ var Dropdown = function (_EventEmitter) {
           body.appendChild(el);
         }
       }      
-      return el;
+      // return el;
     }
   }]);
 
