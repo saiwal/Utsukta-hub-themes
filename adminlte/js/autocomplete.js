@@ -292,7 +292,7 @@ match: /(^@)([^\n]{2,})$/,
                 el.style.right = 'auto';
                 
                 modalBody.append(el);
-                return el;
+                // return el;
             };
 
             textcomplete.register([contacts, tags]);
