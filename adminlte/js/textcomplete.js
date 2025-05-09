@@ -1501,7 +1501,7 @@ var Dropdown = function (_EventEmitter) {
           body.appendChild(el);
         }
       }      
-      // return el;
+      return el;
     }
   }]);
 
