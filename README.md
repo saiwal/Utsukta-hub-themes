@@ -39,17 +39,4 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 - [Superhero](https://bootswatch.com/superhero/)
 - [Vapor](https://bootswatch.com/vapor/)
 
-### 2. Keep It Simple
 
-Based on [Keep It Simple](https://styleshout.com/demo/?theme=keepitsimple) by Styleshout.
-**Demo available [here](https://hub.utsukta.org/channel/keepitsimple)**
-
-### 3. Spurgeon
-
-Based on [Spurgeon](https://styleshout.com/demo/?theme=spurgeon) by Styleshout.
-**Demo available [here](https://hub.utsukta.org/channel/spurgeon)**
-
-### 4. Typerite
-
-Based on [Typerite](https://styleshout.com/demo/?theme=typerite) by Styleshout.
-**Demo available [here](https://hub.utsukta.org/channel/typerite)**
