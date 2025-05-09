@@ -262,7 +262,7 @@ match: /(^@)([^\n]{2,})$/,
             const textcomplete = new Textcomplete(editor, {
                 dropdown: {
                     maxCount: 100,
-                    className: 'dropdown-menu textcomplete-dropdown',
+                    className: 'list-group textcomplete-dropdown',
                     placement: 'bottom',
                     style: {
                         // position: 'absolute',
