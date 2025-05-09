@@ -154,12 +154,21 @@ span.spinner {
   background-image: url($background_image_dark);
 }
 
+/* Ensure modal body can contain positioned dropdown */
+#searchModal .modal-body {
+    position: relative;
+    overflow: visible; /* Allow dropdown to overflow if needed */
+}
+
+/* Dropdown styling */
 #searchModal .textcomplete-dropdown {
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     background-color: #fff;
-    z-index: 1060; /* Above modal backdrop */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    margin-top: 0.25rem;
+    z-index: 1060; /* Above modal */
+    width: calc(100% - 1.5rem) !important; /* Account for modal padding */
 }
 
 #searchModal .textcomplete-dropdown li {
@@ -172,11 +181,10 @@ span.spinner {
     background-color: #f8f9fa;
 }
 
-#searchModal .textcomplete-dropdown .dropdown-item {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Responsive adjustments */
+@media (min-width: 992px) {
+    #searchModal .textcomplete-dropdown {
+        max-width: 100%;
+    }
 }
-#searchModal .modal-body {
-    position: relative;
-  }
+

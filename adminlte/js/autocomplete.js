@@ -215,31 +215,32 @@ function string2bb(element) {
 	};
 })( jQuery );
 
-/**
- * jQuery plugin 'search_autocomplete'
- */
 (function( $ ) {
     $.fn.search_autocomplete = function(backend_url) {
-        if(! this.length)
-            return;
+        if(! this.length) return;
 
-        // Get modal body element
-        var modalBody = document.querySelector("#searchModal .modal-body");
-        
-        // Autocomplete contacts
-        contacts = {
-            match: /(^@)([^\n]{2,})$/,
+        // Store modal reference
+        const modal = $('#searchModal');
+        const modalBody = modal.find('.modal-body');
+        const searchInput = this;
+
+        // Autocomplete configurations
+        const contacts = {
+match: /(^@)([^\n]{2,})$/,
             index: 2,
             cache: true,
             search: function(term, callback) { 
-                contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); 
+                $('#nav-search-spinner').removeClass('d-none');
+                contact_search(term, function(data) {
+                    $('#nav-search-spinner').addClass('d-none');
+                    callback(data);
+                }, backend_url, 'x', [], '#nav-search-spinner'); 
             },
             replace: basic_replace,
             template: contact_format,
         };
 
-        // Autocomplete hashtags
-        tags = {
+        const tags = {
             match: /(^\#)([^ \n]{2,})$/,
             index: 2,
             cache: true,
@@ -255,55 +256,55 @@ function string2bb(element) {
             template: tag_format
         };
 
-        var textcomplete;
-        var Textarea = Textcomplete.editors.Textarea;
-
-        $(this).each(function() {
-            var editor = new Textarea(this);
-            textcomplete = new Textcomplete(editor, {
+        // Initialize only when modal is shown
+        modal.on('shown.bs.modal', function() {
+            const editor = new Textcomplete.editors.Textarea(searchInput[0]);
+            const textcomplete = new Textcomplete(editor, {
                 dropdown: {
                     maxCount: 100,
-                    className: 'dropdown-menu textcomplete-dropdown show',
-                    placement: 'bottom', // Ensure dropdown appears below input
+                    className: 'dropdown-menu textcomplete-dropdown',
+                    placement: 'bottom',
                     style: {
                         position: 'absolute',
-                        top: '100%',
-                        left: '0',
-                        right: '0',
+                        top: 'auto',
+                        left: 'auto',
+                        width: 'calc(100% - 30px)',
                         maxHeight: '300px',
-                        overflowY: 'auto',
-                        width: 'calc(100% - 30px)', // Account for modal padding
-                        margin: '5px 15px' // Match modal body padding
+                        overflowY: 'auto'
                     }
                 }
             });
-            
-            // Override dropdown creation to append to modal body
-            textcomplete.dropdown._el = null; // Clear existing reference
-            textcomplete.dropdown.el = function() {
-                if (!this._el) {
-                    this._el = document.createElement('ul');
-                    this._el.className = this.className;
-                    Object.keys(this.style).forEach(key => {
-                        this._el.style[key] = this.style[key];
-                    });
-                    modalBody.appendChild(this._el);
-                }
-                return this._el;
+
+            // Custom dropdown element creation
+            textcomplete.dropdown._createElement = function() {
+                const el = document.createElement('ul');
+                el.className = this.className;
+                Object.keys(this.style).forEach(key => {
+                    el.style[key] = this.style[key];
+                });
+                
+                // Position relative to modal body
+                const inputRect = searchInput[0].getBoundingClientRect();
+                const modalBodyRect = modalBody[0].getBoundingClientRect();
+                
+                el.style.top = (inputRect.top - modalBodyRect.top + inputRect.height) + 'px';
+                el.style.left = (inputRect.left - modalBodyRect.left) + 'px';
+                el.style.right = 'auto';
+                
+                modalBody.append(el);
+                return el;
             };
-            
-            textcomplete.register([contacts,tags]);
-        });
 
-        textcomplete.on('selected', function() { 
-            this.editor.el.form.submit(); 
-        });
+            textcomplete.register([contacts, tags]);
 
-        // Clean up when modal is closed
-        $('#searchModal').on('hidden.bs.modal', function() {
-            if (textcomplete && textcomplete.dropdown) {
-                textcomplete.dropdown.deactivate();
-            }
+            textcomplete.on('selected', function() { 
+                this.editor.el.form.submit(); 
+            });
+
+            // Cleanup when modal hides
+            modal.on('hidden.bs.modal', function() {
+                textcomplete.destroy();
+            });
         });
     };
 })( jQuery );
