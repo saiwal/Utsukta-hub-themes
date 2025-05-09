@@ -4,7 +4,7 @@ A collection of custom themes developed for hubzilla:
 
 ## How to install
 
-run the following in hubzilla folder on your webserver:
+Run the following in hubzilla folder on your webserver:
 
 ```
 ./util/add_theme_repo https://github.com/saiwal/Utsukta-hub-themes.git utsukta-themes
@@ -14,7 +14,7 @@ or manually extract the release in `view/themes`
 
 ## Themes
 
-### AdminLTE4
+### 1. AdminLTE4
 
 A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
@@ -38,4 +38,5 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 - [Solar](https://bootswatch.com/solar/)
 - [Superhero](https://bootswatch.com/superhero/)
 - [Vapor](https://bootswatch.com/vapor/)
+
 
