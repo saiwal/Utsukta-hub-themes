@@ -219,50 +219,93 @@ function string2bb(element) {
  * jQuery plugin 'search_autocomplete'
  */
 (function( $ ) {
-	$.fn.search_autocomplete = function(backend_url) {
+    $.fn.search_autocomplete = function(backend_url) {
+        if(! this.length)
+            return;
 
-		if(! this.length)
-			return;
+        // Get modal body element
+        var modalBody = document.querySelector("#searchModal .modal-body");
+        
+        // Autocomplete contacts
+        contacts = {
+            match: /(^@)([^\n]{2,})$/,
+            index: 2,
+            cache: true,
+            search: function(term, callback) { 
+                contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); 
+            },
+            replace: basic_replace,
+            template: contact_format,
+        };
 
-		// Autocomplete contacts
-		contacts = {
-			match: /(^@)([^\n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); },
-			replace: basic_replace,
-			template: contact_format,
-		};
+        // Autocomplete hashtags
+        tags = {
+            match: /(^\#)([^ \n]{2,})$/,
+            index: 2,
+            cache: true,
+            search: function(term, callback) { 
+                $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { 
+                    callback($.map(data, function(entry) { 
+                        return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; 
+                    })); 
+                }); 
+            },
+            replace: function(item) { return "$1" + item.text + ' '; },
+            context: function(text) { return text.toLowerCase(); },
+            template: tag_format
+        };
 
-		// Autocomplete hashtags
-		tags = {
-			match: /(^\#)([^ \n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { callback($.map(data, function(entry) { return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; })); }); },
-			replace: function(item) { return "$1" + item.text + ' '; },
-			context: function(text) { return text.toLowerCase(); },
-			template: tag_format
-		};
+        var textcomplete;
+        var Textarea = Textcomplete.editors.Textarea;
 
-		//this.attr('autocomplete', 'off');
+        $(this).each(function() {
+            var editor = new Textarea(this);
+            textcomplete = new Textcomplete(editor, {
+                dropdown: {
+                    maxCount: 100,
+                    className: 'dropdown-menu textcomplete-dropdown show',
+                    placement: 'bottom', // Ensure dropdown appears below input
+                    style: {
+                        position: 'absolute',
+                        top: '100%',
+                        left: '0',
+                        right: '0',
+                        maxHeight: '300px',
+                        overflowY: 'auto',
+                        width: 'calc(100% - 30px)', // Account for modal padding
+                        margin: '5px 15px' // Match modal body padding
+                    }
+                }
+            });
+            
+            // Override dropdown creation to append to modal body
+            textcomplete.dropdown._el = null; // Clear existing reference
+            textcomplete.dropdown.el = function() {
+                if (!this._el) {
+                    this._el = document.createElement('ul');
+                    this._el.className = this.className;
+                    Object.keys(this.style).forEach(key => {
+                        this._el.style[key] = this.style[key];
+                    });
+                    modalBody.appendChild(this._el);
+                }
+                return this._el;
+            };
+            
+            textcomplete.register([contacts,tags]);
+        });
 
-		var textcomplete;
-		var Textarea = Textcomplete.editors.Textarea;
+        textcomplete.on('selected', function() { 
+            this.editor.el.form.submit(); 
+        });
 
-		$(this).each(function() {
-			var editor = new Textarea(this);
-			textcomplete = new Textcomplete(editor, {
-				dropdown: {
-					maxCount: 100
-				}
-			});
-			textcomplete.register([contacts,tags]);
-		});
-
-		textcomplete.on('selected', function() { this.editor.el.form.submit(); });
-
-	};
+        // Clean up when modal is closed
+        $('#searchModal').on('hidden.bs.modal', function() {
+            if (textcomplete && textcomplete.dropdown) {
+                textcomplete.dropdown.deactivate();
+            }
+        });
+    };
 })( jQuery );
 
 (function( $ ) {
