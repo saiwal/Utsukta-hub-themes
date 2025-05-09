@@ -269,7 +269,7 @@ match: /(^@)([^\n]{2,})$/,
                         top: 'auto',
                         left: 'auto',
                         width: 'calc(100% - 30px)',
-                        maxHeight: '300px',
+                        // maxHeight: '300px',
                         overflowY: 'auto'
                     }
                 }

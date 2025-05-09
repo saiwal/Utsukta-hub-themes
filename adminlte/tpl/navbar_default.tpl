@@ -34,30 +34,11 @@
       {{/if}}
       {{/if}}
       {{/if}}
+<!-- Search Button in Navbar -->
+<li class="nav-item" id="nav-search-btn">
+    <a class="nav-link" href="#" title="{{$nav.search.3}}" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="bi bi-search generic-icons"></i></a>
+</li>
 
-      <!-- Navbar Search -->
-      <li class="nav-item">
-        <a class="nav-link d-md-none" href="/search"><i class="bi bi-search"></i></a>
-        <div class="navbar-search-block d-none d-md-block">
-          <form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
-            <input class="form-control me-sm-2" id="nav-search-text" type="text" value=""
-              placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();"
-              onblur="closeMenu('nav-search'); openMenu('nav-search-btn');" />
-          </form>
-        </div>
-      </li>
- 			
-      <li class="nav-item collapse clearfix" id="nav-search" {{$color_mode}}>
-				<form class="form-inline" method="get" action="{{$nav.search.4}}" role="search">
-					<input class="form-control form-control-sm mt-1 me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" onclick="this.submit();" onblur="closeMenu('nav-search'); openMenu('nav-search-btn');"/>
-				</form>
-				<div id="nav-search-spinner" class="spinner-wrapper">
-					<div class="spinner s"></div>
-				</div>
-			</li>
-			<li class="nav-item" id="nav-search-btn">
-				<a class="nav-link" href="#nav-search" title="{{$nav.search.3}}" onclick="openMenu('nav-search'); closeMenu('nav-search-btn'); $('#nav-search-text').focus(); return false;"><i class="bi bi-search generic-icons"></i></a>
-			</li>     
 
       <!-- user dowpdown menu-->
       {{if $userinfo}}
@@ -380,3 +361,25 @@ document.addEventListener('DOMContentLoaded', function() {
   observer.observe(document.body, { attributes: true });
 });
 </script>
+
+  <!-- Search Modal -->
+  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="searchModalLabel">Search</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
+                      <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$help}}" name="search" title="{{$nav.search.3}}" />
+                      <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                  </form>
+                  <div id="nav-search-spinner" class="spinner-wrapper d-none">
+                      <div class="spinner s"></div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>    
+
