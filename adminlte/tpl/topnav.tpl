@@ -992,27 +992,7 @@ document.addEventListener('DOMContentLoaded', function() {
   observer.observe(document.body, { attributes: true });
 });
 </script>
-  <!-- Search Modal -->
-  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h5 class="modal-title" id="searchModalLabel">Search</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                  <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
-                      <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$nav.search.3}}" name="search" title="{{$nav.search.3}}" />
-                      <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
-                  </form>
-                  <div id="nav-search-spinner" class="spinner-wrapper d-none">
-                      <div class="spinner s"></div>
-                  </div><div id="search-autocomplete-results"></div>
-              </div>
-          </div>
-      </div>
-  </div>    
-<!-- JavaScript for Modal Focus -->
+ <!-- JavaScript for Modal Focus -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchModal = document.getElementById('searchModal');
