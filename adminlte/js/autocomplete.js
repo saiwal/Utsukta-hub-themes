@@ -215,98 +215,54 @@ function string2bb(element) {
 	};
 })( jQuery );
 
+/**
+ * jQuery plugin 'search_autocomplete'
+ */
 (function( $ ) {
-    $.fn.search_autocomplete = function(backend_url) {
-        if(! this.length) return;
+	$.fn.search_autocomplete = function(backend_url) {
 
-        // Store modal reference
-        const modal = $('#searchModal');
-        const modalBody = modal.find('.modal-body');
-        const searchInput = this;
+		if(! this.length)
+			return;
 
-        // Autocomplete configurations
-        const contacts = {
-match: /(^@)([^\n]{2,})$/,
-            index: 2,
-            cache: true,
-            search: function(term, callback) { 
-                $('#nav-search-spinner').removeClass('d-none');
-                contact_search(term, function(data) {
-                    $('#nav-search-spinner').addClass('d-none');
-                    callback(data);
-                }, backend_url, 'x', [], '#nav-search-spinner'); 
-            },
-            replace: basic_replace,
-            template: contact_format,
-        };
+		// Autocomplete contacts
+		contacts = {
+			match: /(^@)([^\n]{2,})$/,
+			index: 2,
+			cache: true,
+			search: function(term, callback) { contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); },
+			replace: basic_replace,
+			template: contact_format,
+		};
 
-        const tags = {
-            match: /(^\#)([^ \n]{2,})$/,
-            index: 2,
-            cache: true,
-            search: function(term, callback) { 
-                $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { 
-                    callback($.map(data, function(entry) { 
-                        return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; 
-                    })); 
-                }); 
-            },
-            replace: function(item) { return "$1" + item.text + ' '; },
-            context: function(text) { return text.toLowerCase(); },
-            template: tag_format
-        };
+		// Autocomplete hashtags
+		tags = {
+			match: /(^\#)([^ \n]{2,})$/,
+			index: 2,
+			cache: true,
+			search: function(term, callback) { $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { callback($.map(data, function(entry) { return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; })); }); },
+			replace: function(item) { return "$1" + item.text + ' '; },
+			context: function(text) { return text.toLowerCase(); },
+			template: tag_format
+		};
 
-        // Initialize only when modal is shown
-        modal.on('shown.bs.modal', function() {
-            const editor = new Textcomplete.editors.Textarea(searchInput[0]);
-            const textcomplete = new Textcomplete(editor, {
-                dropdown: {
-                    maxCount: 100,
-                    className: 'list-group textcomplete-dropdown',
-                    placement: 'bottom',
-                    style: {
-                        // position: 'absolute',
-                        top: 'auto',
-                        left: 'auto',
-                        width: 'calc(100% - 30px)',
-                        // maxHeight: '300px',
-                        overflowY: 'auto'
-                    }
-                }
-            });
+		//this.attr('autocomplete', 'off');
 
-            // Custom dropdown element creation
-            textcomplete.dropdown._createElement = function() {
-                const el = document.createElement('ul');
-                el.className = this.className;
-                Object.keys(this.style).forEach(key => {
-                    el.style[key] = this.style[key];
-                });
-                
-                // Position relative to modal body
-                const inputRect = searchInput[0].getBoundingClientRect();
-                const modalBodyRect = modalBody[0].getBoundingClientRect();
-                
-                el.style.top = (inputRect.top - modalBodyRect.top + inputRect.height) + 'px';
-                el.style.left = (inputRect.left - modalBodyRect.left) + 'px';
-                el.style.right = 'auto';
-                
-                modalBody.append(el);
-                return el;
-            };
+		var textcomplete;
+		var Textarea = Textcomplete.editors.Textarea;
 
-            textcomplete.register([contacts, tags]);
+		$(this).each(function() {
+			var editor = new Textarea(this);
+			textcomplete = new Textcomplete(editor, {
+				dropdown: {
+					maxCount: 100
+				}
+			});
+			textcomplete.register([contacts,tags]);
+		});
 
-            textcomplete.on('selected', function() { 
-                this.editor.el.form.submit(); 
-            });
+		textcomplete.on('selected', function() { this.editor.el.form.submit(); });
 
-            // Cleanup when modal hides
-            modal.on('hidden.bs.modal', function() {
-                textcomplete.destroy();
-            });
-        });
-    };
+	};
 })( jQuery );
 
 (function( $ ) {
