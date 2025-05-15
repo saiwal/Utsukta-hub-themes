@@ -38,7 +38,7 @@
       <!-- Navbar Search -->
 <!-- Search Button in Navbar -->
 <li class="nav-item" id="nav-search-btn">
-    <a class="nav-link" href="#" title="{{$nav.search.3}}" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="bi bi-search generic-icons"></i></a>
+    <a class="nav-link" href="#" title="{{$nav.search.3}}" data-bs-toggle="modal" data-bs-target="#searchResultsModal"><i class="bi bi-search generic-icons"></i></a>
 </li>
 
  			{{if $localuser || $nav.pubs}}
