@@ -992,6 +992,21 @@ document.addEventListener('DOMContentLoaded', function() {
   observer.observe(document.body, { attributes: true });
 });
 </script>
+<div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Search Results</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Results will be inserted here -->
+      </div>
+    </div>
+  </div>
+</div>
   <!-- Search Modal -->
   <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable">
