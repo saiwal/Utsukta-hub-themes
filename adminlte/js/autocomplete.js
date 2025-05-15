@@ -318,7 +318,7 @@ class ModalComplete {
     $(this).each(function() {
       const editor = new Textarea(this);
       const modalComplete = new ModalComplete(editor, {
-        modalId: 'search-autocomplete-modal',
+        modalId: 'searchModal',
         modalBodyId: 'search-autocomplete-results'
       });
 

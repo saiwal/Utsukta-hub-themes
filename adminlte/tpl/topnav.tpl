@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
   <!-- Search Modal -->
-  <div class="modal fade" id="search-autocomplte-modal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable">
           <div class="modal-content">
               <div class="modal-header">
