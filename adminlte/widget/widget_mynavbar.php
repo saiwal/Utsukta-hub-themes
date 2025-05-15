@@ -16,7 +16,7 @@ function widget_mynavbar($args)
 
     App::$page["topnav"] = "";
     /* App::$page["htmlhead"] = App::$page["htmlhead"] ?? ""; */
-    App::$page["htmlhead"] .= '<script>$(document).ready(function() {$("#search-input").modal_search_autocomplete(\'' . z_root() . "/acl" . '\', "#searchResultsModal");});</script>';
+    /* App::$page["htmlhead"] .= '<script>$(document).ready(function() {$("#nav-search-text").search_autocomplete(\'' . z_root() . "/acl" . '\');});</script>'; */
 
     $is_owner =
         local_channel() &&
