@@ -222,76 +222,87 @@ function string2bb(element) {
   $.fn.modal_search_autocomplete = function(backend_url, modal_id) {
     if(! this.length) return;
 
-    // Store reference to modal and its body
+    // Store references to modal elements
     var $modal = $(modal_id);
     var $modalBody = $modal.find('.modal-body');
+    var $input = $(this);
     
-// Clear previous results when starting new search
-    this.on('input', function() {
+    // Clear previous results when starting new search
+    $input.on('input', function() {
       $modalBody.empty();
+      $modal.modal('hide');
     });
 
-    // Autocomplete contacts
-    contacts = {
-      match: /(^@)([^\n]{2,})$/,
-      index: 2,
-      cache: true,
-      search: function(term, callback) { 
-        contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner'); 
-      },
-      replace: basic_replace,
-      template: contact_format,
-    };
-
-    // Autocomplete hashtags
-    tags = {
-      match: /(^\#)([^ \n]{2,})$/,
-      index: 2,
-      cache: true,
-      search: function(term, callback) { 
-        $.getJSON('/hashtags/' + '$f=&t=' + term)
-          .done(function(data) { 
-            callback($.map(data, function(entry) { 
-              return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; 
-            })); 
-          }); 
-      },
-      replace: function(item) { return "$1" + item.text + ' '; },
-      context: function(text) { return text.toLowerCase(); },
-      template: tag_format
-    };
-
-    // Create custom textcomplete that uses modal instead of dropdown
-    var Textarea = Textcomplete.editors.Textarea;
-
-    $(this).each(function() {
-      var editor = new Textarea(this);
-      var textcomplete = new Textcomplete(editor, {
-        dropdown: {
-          maxCount: 100
-        }
-      });
+    // Function to handle search results
+    function showResults(results) {
+      $modalBody.empty();
       
-      textcomplete.register([contacts, tags]);
-      
-      // Handle selection differently - show in modal
-      textcomplete.on('hit', function(e) {
-        $modalBody.empty();
-        if (e.searchResults.length) {
-          e.searchResults.forEach(function(result) {
-            $modalBody.append(result.render());
-          });
-          $modal.modal('show');
-        } else {
-          $modal.modal('hide');
-        }
-      });
-      
-      // Handle selection
-      textcomplete.on('selected', function(e) {
+      if (results.length) {
+        results.forEach(function(result) {
+          // Use the existing format functions
+          var html;
+          if (result.data.taggable !== undefined) {
+            html = contact_format(result.data);
+          } else {
+            html = tag_format(result.data);
+          }
+          $modalBody.append(html);
+        });
+        $modal.modal('show');
+      } else {
         $modal.modal('hide');
-        this.editor.el.form.submit();
-      });
+      }
+    }
+
+    // Function to perform search
+    function performSearch(term) {
+      // Check if it's a contact search (@) or tag search (#)
+      if (term.startsWith('@')) {
+        contact_search(
+          term.substring(1), 
+          function(results) { showResults(results); },
+          backend_url, 
+          'x', 
+          [], 
+          '#nav-search-spinner'
+        );
+      } else if (term.startsWith('#')) {
+        $.getJSON('/hashtags/' + '$f=&t=' + term.substring(1))
+          .done(function(data) { 
+            var filtered = $.map(data, function(entry) { 
+              return entry.text.toLowerCase().indexOf(term.substring(1).toLowerCase()) === 0 ? entry : null; 
+            });
+            showResults(filtered.map(function(item) {
+              return { data: item };
+            }));
+          });
+      }
+    }
+
+    // Handle keyup events to trigger search
+    $input.on('keyup', function(e) {
+      var val = $(this).val();
+      
+      // Only trigger search when we have @ or # with at least 2 characters
+      if ((val.startsWith('@') || val.startsWith('#')) && val.length >= 3) {
+        performSearch(val);
+      } else {
+        $modal.modal('hide');
+      }
+    });
+
+    // Handle item selection
+    $modalBody.on('click', '.dropdown-item', function() {
+      var text = $(this).find('strong').text() || $(this).text();
+      var currentVal = $input.val();
+      var prefix = currentVal.startsWith('@') ? '@' : '#';
+      
+      // Update input value
+      $input.val(prefix + text.trim() + ' ');
+      $modal.modal('hide');
+      
+      // Submit form if needed
+      $input.closest('form').submit();
     });
   };
 })( jQuery );
