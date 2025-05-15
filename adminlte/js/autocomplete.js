@@ -214,57 +214,166 @@ function string2bb(element) {
 		});
 	};
 })( jQuery );
+/**
+ * ModalComplete - A Textcomplete-like class that shows results in a modal
+ */
+class ModalComplete {
+  constructor(editor, options = {}) {
+    this.editor = editor;
+    this.options = options;
+    this.modalId = options.modalId || 'autocomplete-modal';
+    this.modalBodyId = options.modalBodyId || 'autocomplete-modal-body';
+    
+    // Initialize modal if it doesn't exist
+    this.initModal();
+    
+    // Store references
+    this.$modal = $(`#${this.modalId}`);
+    this.$modalBody = $(`#${this.modalBodyId}`);
+    
+    // Initialize events
+    this.bindEvents();
+  }
+  
+  initModal() {
+    if ($(`#${this.modalId}`).length === 0) {
+      $('body').append(`
+        <div class="modal fade" id="${this.modalId}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-body">
+                <div id="${this.modalBodyId}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+  }
+  
+  bindEvents() {
+    // Clear modal when hidden
+    this.$modal.on('hidden.bs.modal', () => {
+      this.clear();
+      this.editor.el.value = ''; // Clear input
+    });
+    
+    // Handle clicks on results
+    this.$modalBody.on('click', '.autocomplete-item', (e) => {
+      const item = $(e.currentTarget).data('item');
+      this.selectItem(item);
+    });
+  }
+  
+  showResults(results) {
+    this.clear();
+    
+    if (results.length === 0) {
+      this.$modal.modal('hide');
+      return;
+    }
+    
+    results.forEach(result => {
+      const $item = $(`<div class="autocomplete-item"></div>`);
+      $item.html(result.render());
+      $item.data('item', result);
+      this.$modalBody.append($item);
+    });
+    
+    this.$modal.modal('show');
+  }
+  
+  selectItem(item) {
+    // Implement your selection logic here
+    const replacement = item.replace(this.editor.getBeforeCursor(), this.editor.getAfterCursor());
+    if (Array.isArray(replacement)) {
+      this.editor.el.value = replacement[0] + replacement[1];
+    } else {
+      this.editor.el.value = replacement;
+    }
+    this.$modal.modal('hide');
+  }
+  
+  clear() {
+    this.$modalBody.empty();
+  }
+  
+  destroy() {
+    this.$modal.off('hidden.bs.modal');
+    this.$modalBody.off('click');
+    this.$modal.modal('hide');
+    this.$modal.remove();
+  }
+}
 
 /**
- * jQuery plugin 'search_autocomplete'
+ * Updated search_autocomplete plugin using ModalComplete
  */
 (function( $ ) {
-	$.fn.search_autocomplete = function(backend_url) {
+  $.fn.search_autocomplete = function(backend_url) {
+    if (!this.length) return;
 
-		if(! this.length)
-			return;
+    const Textarea = Textcomplete.editors.Textarea;
 
-		// Autocomplete contacts
-		contacts = {
-			match: /(^@)([^\n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); },
-			replace: basic_replace,
-			template: contact_format,
-		};
+    $(this).each(function() {
+      const editor = new Textarea(this);
+      const modalComplete = new ModalComplete(editor, {
+        modalId: 'search-autocomplete-modal',
+        modalBodyId: 'search-autocomplete-results'
+      });
 
-		// Autocomplete hashtags
-		tags = {
-			match: /(^\#)([^ \n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { callback($.map(data, function(entry) { return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; })); }); },
-			replace: function(item) { return "$1" + item.text + ' '; },
-			context: function(text) { return text.toLowerCase(); },
-			template: tag_format
-		};
+      // Search strategies
+      const strategies = [
+        {
+          match: /(^@)([^\n]{2,})$/,
+          index: 2,
+          search: (term, callback) => {
+            contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
+          },
+          replace: basic_replace,
+          template: contact_format
+        },
+        {
+          match: /(^\#)([^ \n]{2,})$/,
+          index: 2,
+          search: (term, callback) => {
+            $.getJSON('/hashtags/' + '$f=&t=' + term)
+              .done(data => callback(
+                data.filter(entry => 
+                  entry.text.toLowerCase().includes(term.toLowerCase())
+                )
+              ));
+          },
+          replace: item => `$1${item.text} `,
+          template: tag_format
+        }
+      ];
 
-		//this.attr('autocomplete', 'off');
-
-		var textcomplete;
-		var Textarea = Textcomplete.editors.Textarea;
-
-		$(this).each(function() {
-			var editor = new Textarea(this);
-			textcomplete = new Textcomplete(editor, {
-				dropdown: {
-					maxCount: 100
-				}
-			});
-			textcomplete.register([contacts,tags]);
-		});
-
-		textcomplete.on('selected', function() { this.editor.el.form.submit(); });
-
-	};
+      // Handle input changes
+      editor.on('change', (e) => {
+        const text = e.detail.beforeCursor;
+        if (!text) return;
+        
+        for (const strategy of strategies) {
+          const match = text.match(strategy.match);
+          if (match) {
+            const term = match[strategy.index];
+            strategy.search(term, (results) => {
+              modalComplete.showResults(
+                results.map(result => ({
+                  data: result,
+                  replace: strategy.replace,
+                  render: () => strategy.template(result)
+                }))
+              );
+            }, match);
+            break;
+          }
+        }
+      });
+    });
+  };
 })( jQuery );
-
 (function( $ ) {
 	$.fn.contact_autocomplete = function(backend_url, typ, autosubmit, onselect) {
 
