@@ -1468,7 +1468,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var DEFAULT_CLASS_NAME = "list-group textcomplete-dropdown";
+var DEFAULT_CLASS_NAME = "dropdown-menu textcomplete-dropdown";
 
 /** @typedef */
 
@@ -1487,20 +1487,12 @@ var Dropdown = function (_EventEmitter) {
       var el = document.createElement("ul");
       var style = el.style;
       style.display = "none";
-      // style.position = "absolute";
+      style.position = "absolute";
       style.zIndex = "10000";
-
-      // Change this to target your modal body
-      var modalBody = document.querySelector("#searchModal .modal-body"); 
-      if (modalBody) {
-        modalBody.appendChild(el);
-      } else {
-        // Fallback to body if modal not found
-        var body = document.body;
-        if (body) {
-          body.appendChild(el);
-        }
-      }      
+      var body = document.body;
+      if (body) {
+        body.appendChild(el);
+      }
       return el;
     }
   }]);
@@ -1661,23 +1653,28 @@ var Dropdown = function (_EventEmitter) {
   }, {
     key: "setOffset",
     value: function setOffset(cursorOffset) {
-      var modalBody = document.querySelector("#searchModal .modal-body");
-      if (!modalBody) return this;
-      
-      var modalRect = modalBody.getBoundingClientRect();
-      var input = document.querySelector("#nav-search-text");
-      var inputRect = input.getBoundingClientRect();
-      
-      // Calculate position relative to modal
-      var relativeTop = inputRect.top - modalRect.top + input.offsetHeight;
-      var relativeLeft = inputRect.left - modalRect.left;
-      
-      // Set dropdown position
-      this.el.style.top = relativeTop + "px";
-      this.el.style.left = relativeLeft + "px";
-      this.el.style.right = "auto";
-      
-      return this; 
+      var doc = document.documentElement;
+      if (doc) {
+        var elementWidth = this.el.offsetWidth;
+        if (cursorOffset.left) {
+          var browserWidth = doc.clientWidth;
+          if (cursorOffset.left + elementWidth > browserWidth) {
+            cursorOffset.left = browserWidth - elementWidth;
+          }
+          this.el.style.left = cursorOffset.left + "px";
+        } else if (cursorOffset.right) {
+          if (cursorOffset.right - elementWidth < 0) {
+            cursorOffset.right = 0;
+          }
+          this.el.style.right = cursorOffset.right + "px";
+        }
+        if (this.isPlacementTop()) {
+          this.el.style.bottom = doc.clientHeight - cursorOffset.top + cursorOffset.lineHeight + "px";
+        } else {
+          this.el.style.top = cursorOffset.top + "px";
+        }
+      }
+      return this;
     }
 
     /**
@@ -1829,7 +1826,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var DEFAULT_CLASS_NAME = exports.DEFAULT_CLASS_NAME = "list-group-item";
+var DEFAULT_CLASS_NAME = exports.DEFAULT_CLASS_NAME = "textcomplete-item";
 var CALLBACK_METHODS = ["onClick", "onMouseover"];
 
 /** @typedef */
