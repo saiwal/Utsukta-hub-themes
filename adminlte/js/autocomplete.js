@@ -317,7 +317,7 @@ class ModalAutocomplete {
             $.getJSON('/hashtags/' + '$f=&t=' + term)
               .done(data => callback(data.filter(entry => 
                 entry.text.toLowerCase().startsWith(term.toLowerCase())
-              )))
+              )));
               .always(() => $('#nav-search-spinner').addClass('d-none'));
           },
           replace: (item) => "$1" + item.text + " ",
