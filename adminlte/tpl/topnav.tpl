@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.focus();
     });
 $('#searchModal').on('hidden.bs.modal', function () {
-    $(this).find('#nav-search-text').val('');
+    $(this).find('#nav-search-text').val(' ');
     $('#nav-search-spinner').addClass('d-none'); // Also hide spinner if visible
 });
 });
