@@ -216,6 +216,86 @@ function string2bb(element) {
 })( jQuery );
 
 /**
+ * jQuery plugin 'modal_search_autocomplete'
+ */
+(function( $ ) {
+  $.fn.modal_search_autocomplete = function(backend_url, modal_id) {
+    if(! this.length) return;
+
+    // Store reference to modal and its body
+    var $modal = $(modal_id);
+    var $modalBody = $modal.find('.modal-body');
+    
+// Clear previous results when starting new search
+    this.on('input', function() {
+      $modalBody.empty();
+    });
+
+    // Autocomplete contacts
+    contacts = {
+      match: /(^@)([^\n]{2,})$/,
+      index: 2,
+      cache: true,
+      search: function(term, callback) { 
+        contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner'); 
+      },
+      replace: basic_replace,
+      template: contact_format,
+    };
+
+    // Autocomplete hashtags
+    tags = {
+      match: /(^\#)([^ \n]{2,})$/,
+      index: 2,
+      cache: true,
+      search: function(term, callback) { 
+        $.getJSON('/hashtags/' + '$f=&t=' + term)
+          .done(function(data) { 
+            callback($.map(data, function(entry) { 
+              return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; 
+            })); 
+          }); 
+      },
+      replace: function(item) { return "$1" + item.text + ' '; },
+      context: function(text) { return text.toLowerCase(); },
+      template: tag_format
+    };
+
+    // Create custom textcomplete that uses modal instead of dropdown
+    var Textarea = Textcomplete.editors.Textarea;
+
+    $(this).each(function() {
+      var editor = new Textarea(this);
+      var textcomplete = new Textcomplete(editor, {
+        dropdown: {
+          maxCount: 100
+        }
+      });
+      
+      textcomplete.register([contacts, tags]);
+      
+      // Handle selection differently - show in modal
+      textcomplete.on('hit', function(e) {
+        $modalBody.empty();
+        if (e.searchResults.length) {
+          e.searchResults.forEach(function(result) {
+            $modalBody.append(result.render());
+          });
+          $modal.modal('show');
+        } else {
+          $modal.modal('hide');
+        }
+      });
+      
+      // Handle selection
+      textcomplete.on('selected', function(e) {
+        $modal.modal('hide');
+        this.editor.el.form.submit();
+      });
+    });
+  };
+})( jQuery );
+/**
  * jQuery plugin 'search_autocomplete'
  */
 (function( $ ) {
