@@ -1022,9 +1022,5 @@ document.addEventListener('DOMContentLoaded', function() {
     searchModal.addEventListener('shown.bs.modal', function() {
         searchInput.focus();
     });
-$('#searchModal').on('hidden.bs.modal', function () {
-    $(this).find('#nav-search-text').val(' ');
-    $('#nav-search-spinner').addClass('d-none'); // Also hide spinner if visible
-});
 });
 </script>

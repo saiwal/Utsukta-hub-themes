@@ -216,53 +216,97 @@ function string2bb(element) {
 })( jQuery );
 
 /**
- * jQuery plugin 'search_autocomplete'
+ * jQuery plugin 'search_autocomplete' - MODIFIED VERSION
  */
 (function( $ ) {
-	$.fn.search_autocomplete = function(backend_url) {
+  $.fn.search_autocomplete = function(backend_url) {
+    if(! this.length) return;
 
-		if(! this.length)
-			return;
+    // Get or create modal element
+    var modalId = 'search-autocomplete-modal';
+    var $modal = $('#' + modalId);
+    if ($modal.length === 0) {
+      $modal = $([
+        '<div class="modal fade" id="' + modalId + '" tabindex="-1" role="dialog">',
+        '  <div class="modal-dialog" role="document">',
+        '    <div class="modal-content">',
+        '      <div class="modal-body p-0"></div>',
+        '    </div>',
+        '  </div>',
+        '</div>'
+      ].join('')).appendTo('body');
+    }
+    var $modalBody = $modal.find('.modal-body');
 
-		// Autocomplete contacts
-		contacts = {
-			match: /(^@)([^\n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); },
-			replace: basic_replace,
-			template: contact_format,
-		};
+    // Clear input when modal closes
+    $modal.on('hidden.bs.modal', function() {
+      $(this).find('.modal-body').empty();
+    });
 
-		// Autocomplete hashtags
-		tags = {
-			match: /(^\#)([^ \n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { callback($.map(data, function(entry) { return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; })); }); },
-			replace: function(item) { return "$1" + item.text + ' '; },
-			context: function(text) { return text.toLowerCase(); },
-			template: tag_format
-		};
+    // Autocomplete contacts
+    contacts = {
+      match: /(^@)([^\n]{2,})$/,
+      index: 2,
+      cache: true,
+      search: function(term, callback) { 
+        contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner'); 
+      },
+      replace: basic_replace,
+      template: contact_format,
+    };
 
-		//this.attr('autocomplete', 'off');
+    // Autocomplete hashtags
+    tags = {
+      match: /(^\#)([^ \n]{2,})$/,
+      index: 2,
+      cache: true,
+      search: function(term, callback) { 
+        $.getJSON('/hashtags/' + '$f=&t=' + term)
+          .done(function(data) { 
+            callback($.map(data, function(entry) { 
+              return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; 
+            })); 
+          }); 
+      },
+      replace: function(item) { return "$1" + item.text + ' '; },
+      context: function(text) { return text.toLowerCase(); },
+      template: tag_format
+    };
 
-		var textcomplete;
-		var Textarea = Textcomplete.editors.Textarea;
+    var Textarea = Textcomplete.editors.Textarea;
 
-		$(this).each(function() {
-			var editor = new Textarea(this);
-			textcomplete = new Textcomplete(editor, {
-				dropdown: {
-					maxCount: 100
-				}
-			});
-			textcomplete.register([contacts,tags]);
-		});
-
-		textcomplete.on('selected', function() { this.editor.el.form.submit(); });
-
-	};
+    $(this).each(function() {
+      var $input = $(this);
+      var editor = new Textarea(this);
+      var textcomplete = new Textcomplete(editor, {
+        dropdown: {
+          maxCount: 100
+        }
+      });
+      
+      textcomplete.register([contacts, tags]);
+      
+      // Override default behavior to use modal
+      textcomplete.on('hit', function(e) {
+        $modalBody.empty();
+        if (e.searchResults.length) {
+          e.searchResults.forEach(function(result) {
+            $modalBody.append($(result.render()).addClass('p-2 border-bottom'));
+          });
+          $modal.modal('show');
+        } else {
+          $modal.modal('hide');
+        }
+      });
+      
+      // Handle selection
+      textcomplete.on('selected', function(e) {
+        $modal.modal('hide');
+        $input.val(''); // Clear input on selection
+        this.editor.el.form.submit();
+      });
+    });
+  };
 })( jQuery );
 
 (function( $ ) {
