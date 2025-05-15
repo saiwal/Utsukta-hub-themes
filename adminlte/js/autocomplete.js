@@ -216,12 +216,11 @@ function string2bb(element) {
 })( jQuery );
 
 /**
- * ModalAutocomplete - Customized for your specific modal structure
+ * ModalAutocomplete - Matching Textcomplete's search behavior
  */
 class ModalAutocomplete {
   constructor(editor, options = {}) {
     this.editor = editor;
-    this.options = options;
     this.$modal = $('#searchModal');
     this.$modalBody = $('#search-autocomplete-results');
     this.$resultsContainer = $('<div class="autocomplete-results mt-3"></div>');
@@ -230,68 +229,62 @@ class ModalAutocomplete {
     
     // Insert results container after the search form
     this.$modalBody.find('form').after(this.$resultsContainer);
-    this.bindEvents();
-  }
-
-  bindEvents() {
-    // Clear only autocomplete results when modal hides
-    this.$modal.on('hidden.bs.modal', () => {
-      this.clearResults();
-    });
   }
 
   showResults(results) {
     this.clearResults();
     this.results = results;
 
-    if (results.length === 0) {
-      return; // Don't hide modal - preserves search form
-    }
+    if (results.length === 0) return;
+
     results.forEach(result => {
       const $item = $('<div class="autocomplete-item p-2 border-bottom"></div>');
-      // Use the template function from the result object
       $item.html(result.template(result.data));
-      $item.on('click', () => this.selectResult(result));
+      $item.on('click', () => {
+        this.applyResult(result);
+        this.$modal.modal('hide');
+      });
       this.$resultsContainer.append($item);
     });
-
-    // Show spinner while loading
-    this.showSpinner(false);
   }
 
-  selectResult(result) {
-    const replacement = result.replace(
-      this.editor.getBeforeCursor(),
-      this.editor.getAfterCursor()
-    );
+  applyResult(result) {
+    const beforeCursor = this.editor.getBeforeCursor();
+    const afterCursor = this.editor.getAfterCursor();
     
-    if (Array.isArray(replacement)) {
-      this.editor.el.value = replacement[0] + replacement[1];
-    } else {
-      this.editor.el.value = replacement;
+    // Exactly replicate Textcomplete's replace behavior
+    const replacement = result.replace(beforeCursor, afterCursor);
+    
+    if (replacement !== null) {
+      if (Array.isArray(replacement)) {
+        // Handle array format [beforeCursorReplacement, afterCursorReplacement]
+        this.editor.el.value = replacement[0] + replacement[1];
+      } else {
+        // Handle string replacement
+        const match = result.strategy.matchText(beforeCursor);
+        if (match) {
+          const replaced = replacement.replace(/\$&/g, match[0])
+                                    .replace(/\$(\d)/g, (_, p1) => match[parseInt(p1, 10)]);
+          this.editor.el.value = [
+            beforeCursor.slice(0, match.index),
+            replaced,
+            beforeCursor.slice(match.index + match[0].length)
+          ].join("") + afterCursor;
+        }
+      }
+      
+      // Trigger form submission like original
+      $(this.editor.el.form).submit();
     }
-    
-    this.clearResults();
-    this.$modal.modal('hide');
   }
 
   clearResults() {
     this.$resultsContainer.empty();
-    this.results = [];
-  }
-
-  showSpinner(show = true) {
-    this.$spinner.toggleClass('d-none', !show);
-  }
-
-  destroy() {
-    this.clearResults();
-    this.$modal.off('hidden.bs.modal');
-    this.$resultsContainer.remove();
   }
 }
+
 /**
- * Updated search_autocomplete plugin with fixed template handling
+ * Updated search_autocomplete plugin with Textcomplete behavior
  */
 (function($) {
   $.fn.search_autocomplete = function(backend_url) {
@@ -303,43 +296,39 @@ class ModalAutocomplete {
       const editor = new Textarea(this);
       const modalComplete = new ModalAutocomplete(editor);
 
-      // Search strategies with proper template references
+      // Replicate original Textcomplete strategies
       const strategies = [
         {
           match: /(^@)([^\n]{2,})$/,
           index: 2,
           search: (term, callback) => {
-            modalComplete.showSpinner(true);
+            $('#nav-search-spinner').removeClass('d-none');
             contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
           },
           replace: basic_replace,
-          template: function(item) { return contact_format(item); } // Wrapped in function
+          template: contact_format,
+          matchText: (text) => text.match(/(^@)([^\n]{2,})$/)
         },
         {
           match: /(^\#)([^ \n]{2,})$/,
           index: 2,
           search: (term, callback) => {
-            modalComplete.showSpinner(true);
+            $('#nav-search-spinner').removeClass('d-none');
             $.getJSON('/hashtags/' + '$f=&t=' + term)
-              .done(data => {
-                callback(data.filter(entry => 
-                  entry.text.toLowerCase().includes(term.toLowerCase())
-                ));
-                modalComplete.showSpinner(false);
-              })
-              .fail(() => modalComplete.showSpinner(false));
+              .done(data => callback(data.filter(entry => 
+                entry.text.toLowerCase().startsWith(term.toLowerCase())
+              ))
+              .always(() => $('#nav-search-spinner').addClass('d-none'));
           },
-          replace: item => `$1${item.text} `,
-          template: function(item) { return tag_format(item); } // Wrapped in function
+          replace: (item) => "$1" + item.text + " ",
+          template: tag_format,
+          matchText: (text) => text.match(/(^\#)([^ \n]{2,})$/)
         }
       ];
 
       editor.on('change', (e) => {
         const text = e.detail.beforeCursor;
-        if (!text) {
-          modalComplete.clearResults();
-          return;
-        }
+        if (!text) return modalComplete.clearResults();
 
         for (const strategy of strategies) {
           const match = text.match(strategy.match);
@@ -348,8 +337,9 @@ class ModalAutocomplete {
             strategy.search(term, (items) => {
               modalComplete.showResults(items.map(item => ({
                 data: item,
-                replace: strategy.replace,
-                template: strategy.template // Pass the template function directly
+                strategy: strategy,
+                template: strategy.template,
+                replace: strategy.replace
               })));
             }, match);
             break;
@@ -359,6 +349,7 @@ class ModalAutocomplete {
     });
   };
 })(jQuery);
+
 (function( $ ) {
 	$.fn.contact_autocomplete = function(backend_url, typ, autosubmit, onselect) {
 
