@@ -247,10 +247,10 @@ class ModalAutocomplete {
     if (results.length === 0) {
       return; // Don't hide modal - preserves search form
     }
-
     results.forEach(result => {
       const $item = $('<div class="autocomplete-item p-2 border-bottom"></div>');
-      $item.html(this.options.template(result.data));
+      // Use the template function from the result object
+      $item.html(result.template(result.data));
       $item.on('click', () => this.selectResult(result));
       this.$resultsContainer.append($item);
     });
@@ -290,9 +290,8 @@ class ModalAutocomplete {
     this.$resultsContainer.remove();
   }
 }
-
 /**
- * Updated search_autocomplete plugin
+ * Updated search_autocomplete plugin with fixed template handling
  */
 (function($) {
   $.fn.search_autocomplete = function(backend_url) {
@@ -304,7 +303,7 @@ class ModalAutocomplete {
       const editor = new Textarea(this);
       const modalComplete = new ModalAutocomplete(editor);
 
-      // Search strategies
+      // Search strategies with proper template references
       const strategies = [
         {
           match: /(^@)([^\n]{2,})$/,
@@ -314,7 +313,7 @@ class ModalAutocomplete {
             contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
           },
           replace: basic_replace,
-          template: contact_format
+          template: function(item) { return contact_format(item); } // Wrapped in function
         },
         {
           match: /(^\#)([^ \n]{2,})$/,
@@ -331,7 +330,7 @@ class ModalAutocomplete {
               .fail(() => modalComplete.showSpinner(false));
           },
           replace: item => `$1${item.text} `,
-          template: tag_format
+          template: function(item) { return tag_format(item); } // Wrapped in function
         }
       ];
 
@@ -350,7 +349,7 @@ class ModalAutocomplete {
               modalComplete.showResults(items.map(item => ({
                 data: item,
                 replace: strategy.replace,
-                template: strategy.template
+                template: strategy.template // Pass the template function directly
               })));
             }, match);
             break;
@@ -360,7 +359,6 @@ class ModalAutocomplete {
     });
   };
 })(jQuery);
-
 (function( $ ) {
 	$.fn.contact_autocomplete = function(backend_url, typ, autosubmit, onselect) {
 
