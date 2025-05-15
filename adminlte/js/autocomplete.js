@@ -300,8 +300,8 @@ class ModalAutocomplete {
     return this.each(function() {
       const editor = new Textarea(this);
       const modalComplete = new ModalAutocomplete(editor, {
-        modal: '#your-existing-modal',     // Your modal selector
-        modalBody: '#your-modal-body'      // Your modal body selector
+        modal: '#searchModal',     // Your modal selector
+        modalBody: '#search-autocomplete-result'      // Your modal body selector
       });
 
       // Search strategies
