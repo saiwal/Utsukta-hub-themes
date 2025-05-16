@@ -38,7 +38,7 @@ function contact_format(item) {
 		var desc = ((item.label) ? item.nick + ' ' + item.label : item.nick);
 		if(typeof desc === 'undefined') desc = '';
 		if(desc) desc = ' ('+desc+')';
-		return "<div class='mb-2 align-middle ps-1 pe-1'><img src='{1}' loading='lazy' class='rounded float-start me-2 menu-img-2 shadow'><div class='text-nowrap'><div class='d-flex justify-content-between align-items-center lh-sm'><div class='text-truncate pe-1'><strong title='{2}'>{2}</strong></div></div><div class='text-truncate'><small class='opacity-75' title='{4}'>{4}</small></div></div></div>".format(item.taggable, item.photo, item.name, desc, typeof(item.link) !== 'undefined' ? item.link : desc.replace('(','').replace(')',''));
+		return "<div class='mb-2 align-middle ps-1 pe-1'><img src='{1}' loading='lazy' class='img-thumbnail float-start me-2 menu-img-2 shadow img-size-50'><div class='text-nowrap'><div class='d-flex justify-content-between align-items-center lh-sm'><div class='text-truncate pe-1'><strong title='{2}'>{2}</strong></div></div><div class='text-truncate'><small class='opacity-75' title='{4}'>{4}</small></div></div></div>".format(item.taggable, item.photo, item.name, desc, typeof(item.link) !== 'undefined' ? item.link : desc.replace('(','').replace(')',''));
 	}
 	else
 		return "";
