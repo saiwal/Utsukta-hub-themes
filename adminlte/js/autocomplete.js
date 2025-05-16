@@ -247,20 +247,21 @@ class ModalAutocomplete {
       this.$resultsContainer.append($item);
     });
   }
-
   applyResult(result) {
     const beforeCursor = this.editor.getBeforeCursor();
     const afterCursor = this.editor.getAfterCursor();
     
-    // Exactly replicate Textcomplete's replace behavior
-    const replacement = result.replace(beforeCursor, afterCursor);
-    
-    if (replacement !== null) {
+    // Handle both contact and tag replacements properly
+    if (result.strategy.name === 'tags') {
+      // Special handling for tags to prevent "undefined"
+      const tagText = result.data.text || result.data;
+      this.editor.el.value = '#' + tagText + ' ';
+    } else {
+      // Original replacement logic for contacts
+      const replacement = result.replace(beforeCursor, afterCursor);
       if (Array.isArray(replacement)) {
-        // Handle array format [beforeCursorReplacement, afterCursorReplacement]
         this.editor.el.value = replacement[0] + replacement[1];
       } else {
-        // Handle string replacement
         const match = result.strategy.matchText(beforeCursor);
         if (match) {
           const replaced = replacement.replace(/\$&/g, match[0])
@@ -272,10 +273,10 @@ class ModalAutocomplete {
           ].join("") + afterCursor;
         }
       }
-      
-      // Trigger form submission like original
-      $(this.editor.el.form).submit();
     }
+    
+    // Submit the form
+    $(this.editor.el.form).submit();
   }
 
   clearResults() {
@@ -299,30 +300,45 @@ class ModalAutocomplete {
       // Replicate original Textcomplete strategies
       const strategies = [
         {
+          // For @mentions
           match: /(^@)([^\n]{2,})$/,
-          index: 2,
-          search: (term, callback) => {
+          index: 2, // Which regex group contains the search term
+          search: function(term, callback) {
+            // Shows spinner, calls your contact_search function
             $('#nav-search-spinner').removeClass('d-none');
             contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
           },
-          replace: basic_replace,
-          template: contact_format,
-          matchText: (text) => text.match(/(^@)([^\n]{2,})$/)
+          replace: basic_replace, // Your replacement function
+          template: contact_format, // Your contact display formatting
+          matchText: function(text) { return text.match(/(^@)([^\n]{2,})$/); }
         },
         {
+          name: 'tags',
           match: /(^\#)([^ \n]{2,})$/,
           index: 2,
-          search: (term, callback) => {
+          search: function(term, callback) {
             $('#nav-search-spinner').removeClass('d-none');
             $.getJSON('/hashtags/' + '$f=&t=' + term)
-              .done(data => callback(data.filter(entry => 
-                entry.text.toLowerCase().startsWith(term.toLowerCase())
-              )))
-              .always(() => $('#nav-search-spinner').addClass('d-none'));
+              .done(function(data) { 
+                callback(data.map(function(entry) {
+                  // Ensure we have proper text property
+                  return typeof entry === 'string' ? { text: entry } : entry;
+                }));
+              })
+              .always(function() {
+                $('#nav-search-spinner').addClass('d-none');
+              });
           },
-          replace: (item) => "$1" + item.text + " ",
-          template: tag_format,
-          matchText: (text) => text.match(/(^\#)([^ \n]{2,})$/)
+          replace: function(item) {
+            // Simple tag replacement
+            return '#' + (item.text || item) + ' ';
+          },
+          template: function(item) {
+            // Handle both object and string tag items
+            const tagText = item.text || item;
+            return "<div class='dropdown-item'>#" + tagText + "</div>";
+          },
+          matchText: function(text) { return text.match(/(^\#)([^ \n]{2,})$/); }
         }
       ];
 
