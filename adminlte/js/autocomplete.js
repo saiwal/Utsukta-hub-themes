@@ -248,17 +248,23 @@ class ModalAutocomplete {
     });
   }
   applyResult(result) {
-    const beforeCursor = this.editor.getBeforeCursor();
-    const afterCursor = this.editor.getAfterCursor();
+    // Get the current input value
+    const currentValue = this.editor.el.value;
     
-    // Handle both contact and tag replacements properly
-    if (result.strategy.name === 'tags') {
-      // Special handling for tags to prevent "undefined"
+    if (result.strategy.name === 'contacts') {
+      // Handle contact mentions
+      const username = result.data.link || result.data.name;
+      this.editor.el.value = '@' + username + ' ';
+    } else if (result.strategy.name === 'tags') {
+      // Handle tags
       const tagText = result.data.text || result.data;
       this.editor.el.value = '#' + tagText + ' ';
     } else {
-      // Original replacement logic for contacts
-      const replacement = result.replace(beforeCursor, afterCursor);
+      // Fallback to original behavior
+      const beforeCursor = this.editor.getBeforeCursor();
+      const afterCursor = this.editor.getAfterCursor();
+      const replacement = result.strategy.replace(result.data);
+      
       if (Array.isArray(replacement)) {
         this.editor.el.value = replacement[0] + replacement[1];
       } else {
@@ -274,7 +280,7 @@ class ModalAutocomplete {
         }
       }
     }
-    
+   
     // Submit the form
     $(this.editor.el.form).submit();
   }
@@ -300,16 +306,18 @@ class ModalAutocomplete {
       // Replicate original Textcomplete strategies
       const strategies = [
         {
-          // For @mentions
+          name: 'contacts',
           match: /(^@)([^\n]{2,})$/,
-          index: 2, // Which regex group contains the search term
+          index: 2,
           search: function(term, callback) {
-            // Shows spinner, calls your contact_search function
             $('#nav-search-spinner').removeClass('d-none');
             contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
           },
-          replace: basic_replace, // Your replacement function
-          template: contact_format, // Your contact display formatting
+          replace: function(item) {
+            // Return the actual replacement string, not a function
+            return '@' + (item.link || item.name) + ' ';
+          },
+          template: contact_format,
           matchText: function(text) { return text.match(/(^@)([^\n]{2,})$/); }
         },
         {
