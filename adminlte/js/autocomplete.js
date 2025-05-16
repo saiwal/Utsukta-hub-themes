@@ -38,7 +38,7 @@ function contact_format(item) {
 		var desc = ((item.label) ? item.nick + ' ' + item.label : item.nick);
 		if(typeof desc === 'undefined') desc = '';
 		if(desc) desc = ' ('+desc+')';
-		return "<div class='dropdown-item dropdown-notification lh-sm text-truncate' title='{4}'><img class='menu-img-2' src='{1}' loading='lazy'><strong>{2}</strong><br><small class='opacity-75'>{4}</small></div>".format(item.taggable, item.photo, item.name, desc, typeof(item.link) !== 'undefined' ? item.link : desc.replace('(','').replace(')',''));
+		return "<div class='mb-2 align-middle ps-1 pe-1'><img src='{1}' loading='lazy' class='img-thumbnail float-start me-2 menu-img-2 shadow img-size-50'><div class='text-nowrap'><div class='d-flex justify-content-between align-items-center lh-sm'><div class='text-truncate pe-1'><strong title='{2}'>{2}</strong></div></div><div class='text-truncate'><small class='opacity-75' title='{4}'>{4}</small></div></div></div>".format(item.taggable, item.photo, item.name, desc, typeof(item.link) !== 'undefined' ? item.link : desc.replace('(','').replace(')',''));
 	}
 	else
 		return "";
@@ -216,54 +216,163 @@ function string2bb(element) {
 })( jQuery );
 
 /**
- * jQuery plugin 'search_autocomplete'
+ * ModalAutocomplete - Matching Textcomplete's search behavior
  */
-(function( $ ) {
-	$.fn.search_autocomplete = function(backend_url) {
+class ModalAutocomplete {
+  constructor(editor, options = {}) {
+    this.editor = editor;
+    this.$modal = $('#searchModal');
+    this.$modalBody = $('#search-autocomplete-results');
+    this.$resultsContainer = $('<div class="autocomplete-results mt-3"></div>');
+    this.$spinner = $('#nav-search-spinner');
+    this.results = [];
+    
+    // Insert results container after the search form
+    this.$modalBody.find('form').after(this.$resultsContainer);
+  }
 
-		if(! this.length)
-			return;
+  showResults(results) {
+    this.clearResults();
+    this.results = results;
 
-		// Autocomplete contacts
-		contacts = {
-			match: /(^@)([^\n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { contact_search(term, callback, backend_url, 'x', [], spinelement='#nav-search-spinner'); },
-			replace: basic_replace,
-			template: contact_format,
-		};
+    if (results.length === 0) return;
 
-		// Autocomplete hashtags
-		tags = {
-			match: /(^\#)([^ \n]{2,})$/,
-			index: 2,
-			cache: true,
-			search: function(term, callback) { $.getJSON('/hashtags/' + '$f=&t=' + term).done(function(data) { callback($.map(data, function(entry) { return entry.text.toLowerCase().indexOf(term.toLowerCase()) === 0 ? entry : null; })); }); },
-			replace: function(item) { return "$1" + item.text + ' '; },
-			context: function(text) { return text.toLowerCase(); },
-			template: tag_format
-		};
+    results.forEach(result => {
+      const $item = $('<div class="autocomplete-item p-2 border-bottom"></div>');
+      $item.html(result.template(result.data));
+      $item.on('click', () => {
+        this.applyResult(result);
+        this.$modal.modal('hide');
+      });
+      this.$resultsContainer.append($item);
+    });
+  }
+  applyResult(result) {
+    // Get the current input value
+    const currentValue = this.editor.el.value;
+    
+    if (result.strategy.name === 'contacts') {
+      // Handle contact mentions
+      const username = result.data.link || result.data.name;
+      this.editor.el.value = '@' + username + ' ';
+    } else if (result.strategy.name === 'tags') {
+      // Handle tags
+      const tagText = result.data.text || result.data;
+      this.editor.el.value = '#' + tagText + ' ';
+    } else {
+      // Fallback to original behavior
+      const beforeCursor = this.editor.getBeforeCursor();
+      const afterCursor = this.editor.getAfterCursor();
+      const replacement = result.strategy.replace(result.data);
+      
+      if (Array.isArray(replacement)) {
+        this.editor.el.value = replacement[0] + replacement[1];
+      } else {
+        const match = result.strategy.matchText(beforeCursor);
+        if (match) {
+          const replaced = replacement.replace(/\$&/g, match[0])
+                                    .replace(/\$(\d)/g, (_, p1) => match[parseInt(p1, 10)]);
+          this.editor.el.value = [
+            beforeCursor.slice(0, match.index),
+            replaced,
+            beforeCursor.slice(match.index + match[0].length)
+          ].join("") + afterCursor;
+        }
+      }
+    }
+   
+    // Submit the form
+    $(this.editor.el.form).submit();
+  }
 
-		//this.attr('autocomplete', 'off');
+  clearResults() {
+    this.$resultsContainer.empty();
+  }
+}
 
-		var textcomplete;
-		var Textarea = Textcomplete.editors.Textarea;
+/**
+ * Updated search_autocomplete plugin with Textcomplete behavior
+ */
+(function($) {
+  $.fn.search_autocomplete = function(backend_url) {
+    if (!this.length) return;
 
-		$(this).each(function() {
-			var editor = new Textarea(this);
-			textcomplete = new Textcomplete(editor, {
-				dropdown: {
-					maxCount: 100
-				}
-			});
-			textcomplete.register([contacts,tags]);
-		});
+    const Textarea = Textcomplete.editors.Textarea;
 
-		textcomplete.on('selected', function() { this.editor.el.form.submit(); });
+    return this.each(function() {
+      const editor = new Textarea(this);
+      const modalComplete = new ModalAutocomplete(editor);
 
-	};
-})( jQuery );
+      // Replicate original Textcomplete strategies
+      const strategies = [
+        {
+          name: 'contacts',
+          match: /(^@)([^\n]{2,})$/,
+          index: 2,
+          search: function(term, callback) {
+            $('#nav-search-spinner').removeClass('d-none');
+            contact_search(term, callback, backend_url, 'x', [], '#nav-search-spinner');
+          },
+          replace: function(item) {
+            // Return the actual replacement string, not a function
+            return '@' + (item.link || item.name) + ' ';
+          },
+          template: contact_format,
+          matchText: function(text) { return text.match(/(^@)([^\n]{2,})$/); }
+        },
+        {
+          name: 'tags',
+          match: /(^\#)([^ \n]{2,})$/,
+          index: 2,
+          search: function(term, callback) {
+            $('#nav-search-spinner').removeClass('d-none');
+            $.getJSON('/hashtags/' + '$f=&t=' + term)
+              .done(function(data) { 
+                callback(data.map(function(entry) {
+                  // Ensure we have proper text property
+                  return typeof entry === 'string' ? { text: entry } : entry;
+                }));
+              })
+              .always(function() {
+                $('#nav-search-spinner').addClass('d-none');
+              });
+          },
+          replace: function(item) {
+            // Simple tag replacement
+            return '#' + (item.text || item) + ' ';
+          },
+          template: function(item) {
+            // Handle both object and string tag items
+            const tagText = item.text || item;
+            return "<div class='dropdown-item'>#" + tagText + "</div>";
+          },
+          matchText: function(text) { return text.match(/(^\#)([^ \n]{2,})$/); }
+        }
+      ];
+
+      editor.on('change', (e) => {
+        const text = e.detail.beforeCursor;
+        if (!text) return modalComplete.clearResults();
+
+        for (const strategy of strategies) {
+          const match = text.match(strategy.match);
+          if (match) {
+            const term = match[strategy.index];
+            strategy.search(term, (items) => {
+              modalComplete.showResults(items.map(item => ({
+                data: item,
+                strategy: strategy,
+                template: strategy.template,
+                replace: strategy.replace
+              })));
+            }, match);
+            break;
+          }
+        }
+      });
+    });
+  };
+})(jQuery);
 
 (function( $ ) {
 	$.fn.contact_autocomplete = function(backend_url, typ, autosubmit, onselect) {

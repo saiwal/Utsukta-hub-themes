@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <h5 class="modal-title" id="searchModalLabel">Search</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div class="modal-body">
+              <div class="modal-body" id="search-autocomplete-results">
                   <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
                       <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$nav.search.3}}" name="search" title="{{$nav.search.3}}" />
                       <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
