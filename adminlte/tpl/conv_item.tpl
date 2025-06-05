@@ -4,7 +4,7 @@
 </div>
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
-	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer text-body-secondary{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
+	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} card {{if $item.is_new}} card-outline card-success{{/if}} generic-content-wrapper h-entry mb-4 {{else}} u-comment h-cite card-footer text-body-secondary{{/if}} clearfix" data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}" ></a>
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
 			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
@@ -19,7 +19,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="{{if $item.is_new}} bg-primary text-white{{/if}} card-header border-bottom-0" id="wall-item-title-{{$item.id}}">
+				<div class="card-header border-bottom-0" id="wall-item-title-{{$item.id}}">
 					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="{{if $item.is_new}}text-white{{/if}} text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</div>
 				{{if ! $item.is_new}}
 				<hr class="m-0">
