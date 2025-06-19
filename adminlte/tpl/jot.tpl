@@ -1,3 +1,5 @@
+<div class="card mb-3">
+  <div class="card-body">
 <!-- Controls appearance of input form/comments/editors -->
 <input id="invisible-wall-file-upload" type="file" name="files"
   style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
@@ -13,7 +15,7 @@
     <span class="channel-id-select-desc">{{$id_seltext}}</span> {{$id_select}}
   </div>
   {{/if}}
-  <div class="mb-3" id="profile-jot-wrapper">
+  <div id="profile-jot-wrapper">
 
     {{if $parent}}
     <input type="hidden" name="parent" value="{{$parent}}" />
@@ -35,22 +37,22 @@
 
 
     <div id="jot-title-wrap" class="jothidden border-0">
-      <input class="w-100 border-1 rounded-top form-control" name="title" id="jot-title" type="text"
+      <input class="w-100 form-control mb-1" name="title" id="jot-title" type="text"
         placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
     </div>
     <div id="jot-summary-wrap" class="jothidden border-0">
-      <input class="w-100 border-1 form-control" name="summary" id="jot-summary" type="text"
+      <input class="w-100 form-control mb-1" name="summary" id="jot-summary" type="text"
         placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">
     </div>
     {{if $catsenabled}}
     <div id="jot-category-wrap" class="jothidden border-0">
-      <input class="w-100 border-1 form-control" name="category" id="jot-category" type="text"
+      <input class="w-100 form-control mb-1" name="category" id="jot-category" type="text"
         placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
     </div>
     {{/if}}
     {{if $webpage}}
     <div id="jot-pagetitle-wrap" class="jothidden border-0">
-      <input class="w-100 border-1 rounded-top form-control" name="pagetitle" id="jot-pagetitle" type="text"
+      <input class="w-100 form-control mb-1" name="pagetitle" id="jot-pagetitle" type="text"
         placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
     </div>
     {{/if}}
@@ -112,8 +114,8 @@
         </div>
       </div>
     </div>
-    <div id="profile-jot-submit-wrapper" class="clearfix p-2 jothidden border-0">
-      <div id="profile-jot-submit-right" class="btn-group float-right">
+    <div id="profile-jot-submit-wrapper" class="clearfix pt-1 jothidden border-0">
+      <div id="profile-jot-submit-right" class="btn-group float-end">
         {{foreach $customsubmitright as $csr}}
         <button type="button" class="btn btn-outline-secondary btn-sm" {{$csr.buttonparams}} title="{{$csr.preview}}">
           {{$csr.buttoncontent}}
@@ -408,3 +410,5 @@
 {{if $content || $attachment || $expanded}}
 <script>initEditor();</script>
 {{/if}}
+</div>
+</div>
