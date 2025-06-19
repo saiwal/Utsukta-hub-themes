@@ -1,4 +1,14 @@
 <div class="card mb-3">
+  <div class="card-header">
+    What's on your mind?
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" data-lte-toggle="card-maximize">
+        <i data-lte-icon="maximize" class="bi bi-fullscreen"></i>
+        <i data-lte-icon="minimize" class="bi bi-fullscreen-exit"></i>
+      </button>
+    </div>
+    <!-- /.card-tools -->
+  </div>
   <div class="card-body">
 <!-- Controls appearance of input form/comments/editors -->
 <input id="invisible-wall-file-upload" type="file" name="files"
