@@ -4470,7 +4470,8 @@ textarea.form-control-lg {
   height: var(--bs-card-height);
   color: var(--bs-body-color);
   word-wrap: break-word;
-  background-color: var(--bs-card-bg);
+  /* background-color: var(--bs-card-bg);  */
+  background-color: var(--bs-body-bg);
   background-clip: border-box;
   border: var(--bs-card-border-width) solid var(--bs-card-border-color);
   border-radius: var(--bs-card-border-radius);
