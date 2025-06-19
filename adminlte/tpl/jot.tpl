@@ -41,8 +41,8 @@
         placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
     </div>
     <div id="jot-summary-wrap" class="jothidden border-0">
-      <input class="w-100 form-control mb-1" name="summary" id="jot-summary" type="text"
-        placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">
+      <textarea class="w-100 form-control mb-1" name="summary" id="jot-summary" type="text"
+            placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
     </div>
     {{if $catsenabled}}
     <div id="jot-category-wrap" class="jothidden border-0">
