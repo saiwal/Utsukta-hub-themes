@@ -26,7 +26,7 @@
 				<hr class="m-0">
 				{{/if}}
 				{{/if}}
-				<div class="p-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
+				<div class="ps-2 pt-2 pe-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
 					<div class="lh-sm text-end float-end">
 						<div class="wall-item-ago text-body-secondary" id="wall-item-ago-{{$item.id}}">
 							{{if $item.location}}
@@ -107,7 +107,7 @@
 					</div>
 				</div>
 				{{/if}}
-				<div class="p-2 wall-item-tools d-flex justify-content-between">
+				<div class="p-2 pt-1 pb-1 wall-item-tools d-flex justify-content-between">
 					<div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
