@@ -157,3 +157,20 @@ span.spinner {
 .generic-icons-nav{
   padding-right: 0.5rem;
 }
+
+.item-indent {
+  padding-left: .5rem;
+}
+
+.item-indent::before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: .5rem;
+  top: 0;
+  left: 0;
+  border-color: var(--hz-item-indent, var(--bs-border-color));
+  border-radius: 0 var(--bs-border-radius) 0 0;
+  border-style: solid;
+  border-width: 1px 1px 0 0;
+}
