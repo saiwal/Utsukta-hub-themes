@@ -26,6 +26,10 @@ var followUpPageLoad = false;
 var window_needs_alert = true;
 var expanded_items = [];
 var updateTimeout = [];
+const singlethread_modules = ['display', 'hq'];
+const redirect_modules = ['display', 'notify'];
+let b64mids = [];
+
 
 var page_cache = {};
 
@@ -83,6 +87,146 @@ $(document).ready(function() {
 		if (e.ctrlKey && e.keyCode === 13) {
 			post_comment(this.id.replace('comment-edit-text-',''));
 		}
+	});
+
+	document.addEventListener('click', function(event) {
+		// Only handle clicks on .wall-item-reaction or its children
+		const target = event.target.closest('.wall-item-reaction');
+		if (!target) return;
+
+		let doRequest = true;
+		const isUserClick = event.isTrusted;
+
+		// Destructure relevant data attributes
+		const { itemId: id, itemMid: mid, itemParent: parentId, itemUuid: uuid, itemVerb: verb } = target.dataset;
+		const isCommentBtn = target.classList.contains('wall-item-comment');
+
+		if (isCommentBtn) {
+			if (id === parentId) {
+				// Handle blog mode
+				target.classList.add('disabled');
+				document.getElementById(`load-more-progress-wrapper-${id}`).classList.remove('d-none');
+				document.getElementById(`load-more-${id}`).classList.remove('d-none')
+				request(id, mid, 'load', parentId, uuid, isUserClick);
+				return;
+			}
+
+			// Get relevant DOM elements
+			const threadWrapper = document.getElementById(`thread-wrapper-${id}`);
+			const parentWrapper = document.getElementById(`thread-wrapper-${parentId}`);
+			const subThreadWrapper = document.getElementById(`wall-item-sub-thread-wrapper-${id}`);
+			const parentSubThreadWrapper = document.getElementById(`wall-item-sub-thread-wrapper-${parentId}`);
+
+			// Query related sub-thread and highlight elements
+			const parentIndentedThreads = document.querySelectorAll(`#wall-item-sub-thread-wrapper-${parentId} .wall-item-sub-thread-wrapper.item-indent`);
+
+			let ancestorIds = [];
+
+			doRequest = !subThreadWrapper.children.length;
+
+			// Set visual styles using UUID
+			subThreadWrapper.style.setProperty('--hz-item-indent', stringToHslColor(uuid));
+			threadWrapper.style.setProperty('--hz-item-highlight', stringToHslColor(uuid));
+			threadWrapper.style.setProperty('--hz-wall-item-expanded-before-content', '"' + aStr.dblclick_to_exit_zoom + '"');
+
+			// Clear previous highlights
+			parentSubThreadWrapper.querySelectorAll('.thread-wrapper.item-highlight').forEach(el => el.classList.remove('item-highlight'));
+
+			if (isUserClick && parentIndentedThreads.length === 0 && !subThreadWrapper.children.length) {
+				// Handle first-time expansion and highlighting but not for toplevels (blog mode)
+				threadWrapper.classList.add('item-highlight');
+			} else {
+				// Handle indentation and zooming
+				let ancestor = subThreadWrapper.parentElement;
+				ancestorIds.push(ancestor.id.slice(15)); // thread-wrapper-1234
+
+				while (ancestor) {
+					if (ancestor.classList.contains('item-indent') && ancestor.classList.contains('wall-item-sub-thread-wrapper')) {
+						ancestorIds.push(ancestor.parentElement.id.slice(15));
+					}
+					ancestor = ancestor.parentElement;
+				}
+
+				ancestorIds.reverse();
+
+				if (ancestorIds.length > 3) {
+					// Handle zooming in
+					let firstWrapper = document.getElementById('thread-wrapper-' + ancestorIds[0]);
+					let firstSubWrapper = document.getElementById('wall-item-sub-thread-wrapper-' + ancestorIds[0]);
+
+					firstWrapper.querySelector('.wall-item-comment').classList.remove('indented');
+					firstWrapper.classList.remove('wall-item-expanded', 'shadow');
+					firstSubWrapper.classList.remove('item-indent');
+
+					let newFirstWrapper = document.getElementById('thread-wrapper-' + ancestorIds[1])
+					let newFirstSubWrapper = document.getElementById('wall-item-sub-thread-wrapper-' + ancestorIds[1])
+
+					newFirstWrapper.classList.add('wall-item-expanded', 'shadow');
+					parentWrapper.classList.add('wall-item-backdrop');
+
+					// Exit zoom on double-click
+					newFirstWrapper.addEventListener('dblclick', function() {
+						parentWrapper.querySelectorAll('.wall-item-comment.indented').forEach(el => el.classList.remove('indented'));
+						parentWrapper.querySelectorAll('.wall-item-comment.collapsed').forEach(el => el.classList.remove('collapsed'));
+						parentWrapper.classList.remove('wall-item-backdrop');
+						parentWrapper.querySelectorAll('.wall-item-sub-thread-wrapper.item-indent').forEach(el => el.classList.remove('item-indent'));
+						parentWrapper.querySelectorAll('.wall-item-sub-thread-wrapper.d-none').forEach(el => el.classList.remove('d-none'));
+						parentWrapper.querySelectorAll('.thread-wrapper.wall-item-expanded').forEach(el => el.classList.remove('wall-item-expanded', 'shadow'));
+					}, { once: true });
+				}
+
+				// Toggle sub-thread visibility if indented
+				if (isUserClick && target.classList.contains('indented')) {
+					doRequest = false;
+					subThreadWrapper.classList.toggle('d-none');
+					target.classList.toggle('collapsed');
+				}
+
+				// Indenting of already expanded but flattened items
+				if (isUserClick && subThreadWrapper.classList.contains('item-expanded') && !subThreadWrapper.classList.contains('item-indent')) {
+					doRequest = false;
+
+					threadWrapper.querySelectorAll('.wall-item-sub-thread-wrapper.item-expanded').forEach(function (el, i) {
+						el.classList.add('item-indent');
+
+						el.querySelectorAll('.wall-item-comment.expanded').forEach(function (el, i) {
+							el.classList.add('collapsed', 'indented');
+						});
+
+						// Collapse everything below the first level
+						if (i > 0) {
+							el.classList.add('d-none');
+						}
+					});
+				}
+
+				// Indent the subthread
+				subThreadWrapper.classList.add('item-indent', 'item-expanded');
+
+				// Mark as indented after visibility toggle
+				target.classList.add('indented');
+			}
+
+			// Mark as expanded
+			target.classList.add('expanded');
+		}
+
+		if (doRequest) {
+			request(id, mid, verb, parentId, uuid, isUserClick);
+		}
+	});
+
+	document.addEventListener('click', function(event) {
+		const targetElement = event.target.closest('.dropdown-item-expand');
+		if (!targetElement) return;
+
+		event.preventDefault();
+
+		const id = targetElement.dataset.itemId;
+		const subWrapper = document.getElementById(`wall-item-sub-thread-wrapper-${id}`);
+
+		subWrapper.innerHTML = '';
+		autoExpand(id);
 	});
 
 	// @hilmar |->
@@ -149,8 +293,6 @@ $(document).ready(function() {
 		let notify_id = this.dataset.notify_id;
 		let path = $(this)[0].pathname.split('/')[1];
 		let stateObj = { b64mid: b64mid };
-		let singlethread_modules = ['display', 'hq'];
-		let redirect_modules = ['display', 'notify'];
 
 		if (!b64mid && !notify_id) {
 			return;
@@ -329,6 +471,13 @@ function handle_comment_form(e) {
 	var commentSaveTimer = null;
 	var emptyCommentElm = form.find('.comment-edit-text').attr('id');
 	var convId = emptyCommentElm.replace('comment-edit-text-','');
+
+	// in case parent input is set use it as convId
+	const parentInputVal = form.find(':input[name=parent]').val();
+	if (parentInputVal) {
+		convId = parentInputVal;
+	}
+
 	$('#' + emptyCommentElm).on('focusout',function(e){
 		if(commentSaveTimer)
 			clearTimeout(commentSaveTimer);
@@ -447,16 +596,18 @@ function inserteditortag(BBcode, id) {
 }
 
 function insertCommentAttach(comment,id) {
-
 	activeCommentID = id;
 	activeCommentText = comment;
-
 	$('body').css('cursor', 'wait');
-
 	$('#invisible-comment-upload').trigger('click');
-
 	return false;
+}
 
+function insertCommentEmbed(comment,id) {
+	activeCommentID = id;
+	activeCommentText = comment;
+	initializeEmbedPhotoDialog();
+	return false;
 }
 
 function insertCommentURL(comment, id) {
@@ -493,18 +644,22 @@ function viewsrc(id) {
 }
 
 function showHideComments(id) {
-	if($('#collapsed-comments-' + id).is(':visible')) {
-		$('#collapsed-comments-' + id).hide();
-		$('#hide-comments-label-' + id).html(aStr.showmore);
-		$('#hide-comments-total-' + id).show();
-		$('#hide-comments-icon-' + id).toggleClass('bi-chevron-down bi-chevron-up');
+	let collapsedComments = document.getElementById('collapsed-comments-' + id);
+	let hideCommentsLabel = document.getElementById('hide-comments-label-' + id);
+	let hideCommentsTotal = document.getElementById('hide-comments-total-' + id);
+	let hideCommentsIcon = document.getElementById('hide-comments-icon-' + id);
+	let isCollapsed = collapsedComments.style.display === 'none';
 
-	} else {
-		$('#collapsed-comments-' + id).show();
-		$('#hide-comments-label-' + id).html(aStr.showfewer);
-		$('#hide-comments-total-' + id).hide();
-		$('#hide-comments-icon-' + id).toggleClass('bi-chevron-down bi-chevron-up');
+	collapsedComments.style.display = isCollapsed ? '' : 'none';
+	hideCommentsLabel.textContent = isCollapsed ? hideCommentsLabel.dataset.expanded : hideCommentsLabel.dataset.collapsed;
+
+	if (hideCommentsTotal) {
+		hideCommentsTotal.style.display = isCollapsed ? 'none' : '';
 	}
+
+	let oldClass = isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up';
+	let newClass = isCollapsed ? 'bi-chevron-up' : 'bi-chevron-down';
+	hideCommentsIcon.classList.replace(oldClass, newClass);
 }
 
 function openClose(theID, display) {
@@ -737,7 +892,27 @@ function updateConvItems(mode, data) {
 			}
 		}
 
-		b64mids.push(...JSON.parse(elem.dataset.b64mids));
+		let data_json = JSON.parse(elem.dataset.b64mids);
+
+		if (elem.parentNode.classList.contains('wall-item-sub-thread-wrapper') && elem.parentNode.children.length) {
+			// Set the highlight state
+			if (data_json.includes(bParam_mid) && !elem.parentNode.parentNode.classList.contains('toplevel_item')) {
+				elem.parentNode.parentNode.classList.add('item-highlight');
+				document.documentElement.style.setProperty('--hz-item-highlight', stringToHslColor(JSON.parse(elem.parentNode.parentNode.dataset.b64mids)[0]));
+			}
+
+			let elemSubThreadWrapper = elem.querySelector('.wall-item-sub-thread-wrapper');
+			let elemCommentButton = elem.querySelector('.wall-item-comment');
+
+			// Set the button and sub-thread-wrapper state
+			if (elemCommentButton && elemSubThreadWrapper.children.length) {
+				elemCommentButton.classList.add('expanded');
+			}
+
+			elem.parentNode.classList.add('item-expanded');
+		}
+
+		b64mids.push(...data_json);
 	});
 
 	document.dispatchEvent(new CustomEvent('hz:sse_setNotificationsStatus', { detail: b64mids }));
@@ -768,9 +943,11 @@ function updateConvItems(mode, data) {
 	}
 
 	imagesLoaded(document.querySelectorAll('.wall-item-body img, .wall-photo-item img'), function () {
-		collapseHeight();
 		if (bParam_mid && mode === 'replace') {
 			scrollToItem();
+		}
+		else {
+			collapseHeight();
 		}
 	});
 
@@ -785,6 +962,7 @@ function updateConvItems(mode, data) {
 	}
 
 	followUpPageLoad = true;
+
 
 	updateRelativeTime('.autotime');
 }
@@ -856,19 +1034,25 @@ function imagesLoaded(elements, callback) {
 
 	// Iterate through images to add load and error event listeners
 	images.forEach((img) => {
-		img.loading = 'eager'; // Preload the image
+		let new_img = new Image();
+		new_img.src = img.src;
 
-		if (img.complete && img.naturalHeight > 0) {
+		if (new_img.complete && new_img.naturalHeight > 0) {
 			// Image is already loaded, handle immediately
-			checkComplete(img.src);
+			// console.log(`Image cached: ${new_img.src}`);
+			checkComplete(new_img.src);
 		} else {
 			// Add event listeners for load and error events
-			img.addEventListener('load', () => checkComplete(img.src));
-			img.addEventListener('error', () => {
-				console.log(`Image failed to load: ${img.src}`);
-				checkComplete(img.src);
+			new_img.addEventListener('load', () => {
+				// console.log(`Image loaded: ${new_img.src}`);
+				checkComplete(new_img.src)
+			});
+			new_img.addEventListener('error', () => {
+				console.log(`Image failed to load: ${new_img.src}`);
+				checkComplete(new_img.src);
 			});
 		}
+
 	});
 }
 
@@ -924,45 +1108,52 @@ function updateRelativeTime(selector) {
 }
 
 function scrollToItem() {
-    // auto-scroll to a particular comment in a thread (designated by mid) when in single-thread mode
+	// auto-scroll to a particular comment in a thread (designated by mid) when in single-thread mode
 
-    if (justifiedGalleryActive) return;
+	if (justifiedGalleryActive) return;
 
-    let submid = ((bParam_mid.length) ? bParam_mid : 'abcdefg');
+	let submid = ((bParam_mid.length) ? bParam_mid : 'abcdefg');
 
-    // Select all thread wrappers
-    let threadWrappers = document.querySelectorAll('.thread-wrapper');
+	// Select all thread wrappers
+	let threadWrappers = document.querySelectorAll('.thread-wrapper');
 
-    threadWrappers.forEach(thread => {
-        // Get the 'data-b64mids' attribute and check if it contains submid
-        let b64mids = thread.dataset.b64mids;
+	threadWrappers.forEach(thread => {
+		// Get the 'data-b64mids' attribute and check if it contains submid
+		let b64mids = thread.dataset.b64mids;
 
-        if (b64mids && b64mids.includes(submid) && !thread.classList.contains('toplevel_item')) {
+		if (b64mids && b64mids.includes(submid)) {
+			// Handle collapsed comments if any
+			let collapsedComments = document.querySelectorAll('.collapsed-comments');
+			if (collapsedComments.length) {
+				let scrollToId = collapsedComments[0].id.substring(19);
+				showHideComments(scrollToId);
+			}
 
-            // Handle collapsed comments if any
-            let collapsedComments = document.querySelectorAll('.collapsed-comments');
-            if (collapsedComments.length) {
-                let scrolltoid = collapsedComments[0].id.substring(19);
-                let collapsedComment = document.getElementById('collapsed-comments-' + scrolltoid);
-                let hideCommentsLabel = document.getElementById('hide-comments-label-' + scrolltoid);
-                let hideCommentsTotal = document.getElementById('hide-comments-total-' + scrolltoid);
+			collapseHeight();
 
-                if (collapsedComment) collapsedComment.style.display = 'block';
-                if (hideCommentsLabel) hideCommentsLabel.innerHTML = aStr.showfewer;
-                if (hideCommentsTotal) hideCommentsTotal.style.display = 'none';
-            }
+			if (!thread.classList.contains('toplevel_item')) {
+				// Scroll to the target element
+				let navHeight = document.getElementById('navbar-top') ? document.getElementById('navbar-top').offsetHeight : 0;
+				window.scrollTo({
+					top: getOffsetTopRelativeToBody(thread) - navHeight,
+					behavior: 'smooth'
+				});
+			}
 
-            // Scroll to the target element
-            let navHeight = document.querySelector('nav') ? document.querySelector('nav').offsetHeight : 0;
-            window.scrollTo({
-                top: thread.offsetTop - navHeight,
-                behavior: 'smooth'
-            });
+			let id = thread.id.replace('thread-wrapper-', '');
+			let content = document.getElementById('wall-item-content-wrapper-' + id);
+			// content.classList.add('item-highlight-fade');
+		}
+	});
+}
 
-            // Add highlight class
-            thread.classList.add('item-highlight');
-        }
-    });
+function getOffsetTopRelativeToBody(element) {
+	let offsetTop = 0;
+	while (element) {
+		offsetTop += element.offsetTop;
+		element = element.offsetParent;
+	}
+	return offsetTop;
 }
 
 function collapseHeight() {
@@ -991,6 +1182,8 @@ function collapseHeight() {
 					collapsedHeight: divmore_height,
 					moreLink: '<div class="d-flex justify-content-center border-top border-info"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
 					lessLink: '<div class="d-flex justify-content-center"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a></div>',
+					// moreLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a>',
+					// lessLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a>',
 					beforeToggle: function(trigger, element, expanded) {
 						if(expanded) {
 							if((($(element).offset().top + divmore_height) - $(window).scrollTop()) < 65 ) {
@@ -1150,26 +1343,16 @@ function liveUpdate(notify_id) {
 		var dready = new Date();
 		console.log('DATA ready in: ' + (dready - dstart)/1000 + ' seconds.');
 
-		if(update_mode === 'update' || preloadImages) {
-			console.log('LOADING images...');
-			imagesLoaded(data, function () {
-				var iready = new Date();
-				console.log('IMAGES ready in: ' + (iready - dready)/1000 + ' seconds.');
+		console.log('LOADING images...');
+		imagesLoaded(data, function () {
+			var iready = new Date();
+			console.log('IMAGES ready in: ' + (iready - dready)/1000 + ' seconds.');
 
-				page_load = false;
-				scroll_next = false;
-				updateConvItems(update_mode,data);
-
-				in_progress = false;
-			});
-		}
-		else {
 			page_load = false;
 			scroll_next = false;
 			updateConvItems(update_mode,data);
 			in_progress = false;
-		}
-
+		});
 	});
 }
 
@@ -1263,6 +1446,277 @@ function justifyPhotosAjax(id) {
 	$('#' + id).justifiedGallery('norewind').on('jg.complete', function(e){ justifiedGalleryActive = false; });
 }
 
+function request(id, mid, verb, parent, uuid, userClick) {
+
+	if (verb === 'load') {
+		const dots = document.getElementById('load-more-dots-' + parent);
+		dots.classList.add('jumping-dots');
+
+		const parent_sub = document.getElementById('wall-item-sub-thread-wrapper-' + parent);
+		const offset = parent_sub.children.length;
+
+		fetch('/request?offset=' + offset + '&verb=' + verb + '&mid=' + mid + '&parent=' + parent + '&module=' + module)
+		.then(response => response.json())
+		.then(obj => {
+			let parser = new DOMParser();
+			let doc = parser.parseFromString(obj.html, 'text/html');
+			let b64mids = [];
+
+			doc.querySelectorAll('.thread-wrapper').forEach(function (e) {
+				let data = JSON.parse(e.dataset.b64mids);
+				b64mids.push(...data);
+			});
+
+			imagesLoaded(doc.querySelectorAll('.wall-item-body img'), function () {
+				injectWithAnimation('wall-item-sub-thread-wrapper-' + parent, doc);
+				dots.classList.remove('jumping-dots');
+
+				const loadmore_progress = document.getElementById('load-more-progress-' + parent);
+				loadmore_progress.style.width = Math.round(100 * parent_sub.children.length / loadmore_progress.dataset.commentsTotal) + '%';
+
+				if (Number(parent_sub.children.length) === Number(loadmore_progress.dataset.commentsTotal)) {
+					const loadmore = document.getElementById('load-more-' + parent);
+					loadmore.remove();
+				}
+
+				updateRelativeTime('.autotime');
+				collapseHeight();
+
+				document.dispatchEvent(new CustomEvent('hz:sse_setNotificationsStatus', { detail: b64mids }));
+				document.dispatchEvent(new Event('hz:sse_bs_counts'));
+			});
+
+		})
+		.catch(error => {
+			console.error('Error fetching data:', error);
+		});
+
+		return;
+	}
+
+	const loading = document.getElementById('like-rotator-' + id);
+
+	if (userClick) {
+		loading.style.display = 'block';
+	}
+
+	if (verb === 'comment') {
+		if (userClick && singlethread_modules.indexOf(module) !== -1) {
+			let stateObj = { b64mid: uuid };
+			history.pushState(stateObj, '', module + '/' + uuid);
+		}
+
+		fetch('/request?verb=' + verb + '&mid=' + mid + '&parent=' + parent + '&module=' + module)
+		.then(response => response.json())
+		.then(obj => {
+			let parser = new DOMParser();
+			let doc = parser.parseFromString(obj.html, 'text/html');
+
+			doc.querySelectorAll('.thread-wrapper').forEach(function (e) {
+				let data = JSON.parse(e.dataset.b64mids);
+				b64mids.push(...data);
+			});
+
+			imagesLoaded(doc.querySelectorAll('.wall-item-body img'), function () {
+				injectWithAnimation('wall-item-sub-thread-wrapper-' + id, doc, true);
+				updateRelativeTime('.autotime');
+				collapseHeight();
+
+				if (userClick) {
+					loading.style.display = 'none';
+					document.dispatchEvent(new CustomEvent('hz:sse_setNotificationsStatus', { detail: b64mids }));
+					document.dispatchEvent(new Event('hz:sse_bs_counts'));
+				}
+			});
+
+		})
+		.catch(error => {
+			console.error('Error fetching data:', error);
+		});
+	}
+	else {
+		fetch('/request?verb=' + verb + '&mid=' + mid + '&parent=' + parent)
+		.then(response => response.json())
+		.then(obj => {
+			const modal = new bootstrap.Modal('#reactions');
+			const modal_content = document.getElementById('reactions_body');
+			const modal_title = document.getElementById('reactions_title');
+			const modal_action = document.getElementById('reactions_action');
+			modal_action.style.display = 'none';
+			modal_title.innerHTML = obj.title;
+			modal_content.innerHTML = '';
+			if (obj.action) {
+				modal_action.innerHTML = '<a href="#" onclick="' + obj.action + '(' + id + ',\'' + verb + '\'); return false;">' + obj.action_label + '</a>';
+				modal_action.style.display = 'block';
+			}
+			console.log(obj)
+			obj.result.forEach(e => {
+				let mod = '';
+				if (e.item_blocked === 4) {
+					mod = '<span onclick="moderate_approve(' + e.id + '); return false;" class="text-success pe-4 d-inline-block"><i class="bi bi-check-lg" ></i></span><span onclick="moderate_drop(' + e.id + '); return false;" class="text-danger pe-4 d-inline-block"><i class="bi bi-trash" ></i></span>';
+				}
+				modal_content.innerHTML += '<a href="' + e.url + '" class="list-group-item list-group-item-action border-0">' + mod + '<img src="' + e.photo + '" class="menu-img-1" loading="lazy">&nbsp;' + e.name + '</a>';
+
+			});
+
+			modal.show();
+			loading.style.display = 'none';
+		})
+		.catch(error => {
+			console.error('Error fetching data:', error);
+		});
+	}
+
+}
+
+function injectWithAnimation(containerId, parsedDoc, overwrite = false) {
+	const container = document.getElementById(containerId);
+	if (!container) return;
+	if (overwrite) container.innerHTML = '';
+
+	const newElements = Array.from(parsedDoc.body.children);
+
+	for (let i = newElements.length - 1; i >= 0; i--) {
+		const el = newElements[i].cloneNode(true);
+		el.classList.add('item-fade-in');
+		container.insertBefore(el, container.firstChild);
+
+		// Remove classes after transition ends
+		const onTransitionEnd = (event) => {
+			el.classList.remove('item-fade-in', 'show');
+			el.removeEventListener('transitionend', onTransitionEnd);
+		};
+		el.addEventListener('transitionend', onTransitionEnd);
+
+		setTimeout(() => {
+			el.classList.add('show');
+		}, (newElements.length - 1 - i) * 30);
+	}
+}
+
+const autoExpand = (function () {
+	const clickedElements = new Set(); // Stores clicked button references
+
+	// We wait 10 seconds for images. Set the timeout here slightly higher.
+	function waitForElement(selector, timeout = 11000) {
+		return new Promise((resolve, reject) => {
+			// Check if the element already exists
+			const element = document.querySelector(selector);
+
+			if (element) {
+				resolve(element);
+				return;
+			}
+
+			// Set up a timeout to reject the promise if the element doesn't appear in time
+			const timer = setTimeout(() => {
+				observer.disconnect();
+				reject(new Error(`Element "${selector}" not found within ${timeout}ms`));
+			}, timeout);
+
+			// Create a MutationObserver to watch for DOM changes
+			const observer = new MutationObserver(() => {
+				const el = document.querySelector(selector);
+				if (el) {
+					clearTimeout(timer);
+					observer.disconnect();
+					resolve(el);
+				}
+			});
+
+			// Start observing the document for changes
+			observer.observe(document.documentElement, {
+				childList: true,
+				subtree: true
+			});
+		});
+	}
+
+	async function autoExpand(id) {
+		const loading = document.getElementById('like-rotator-' + id);
+		let iteration = 0;
+		const maxIterations = 3;
+		clickedElements.clear();
+
+		try {
+			// Step 1: Ensure initial button is clicked
+			const initBtnSelector = '#wall-item-comment-' + id;
+			const initBtn = await waitForElement(initBtnSelector);
+
+			if (!clickedElements.has(initBtn)) {
+				initBtn.click();
+				clickedElements.add(initBtn);
+				iteration++;
+			}
+
+			// Step 2: Loop until no new buttons are found
+			let newButtonsFound;
+
+			const commentSelector = `#wall-item-sub-thread-wrapper-${id} .thread-wrapper`;
+			const commentBtnSelector = `#wall-item-sub-thread-wrapper-${id} .wall-item-comment`;
+
+			do {
+				newButtonsFound = false;
+
+				// Wait for any comment to appear
+				await waitForElement(commentSelector);
+
+				const expandButtons = document.querySelectorAll(commentBtnSelector);
+
+				for (const btn of expandButtons) {
+					if (!clickedElements.has(btn)) {
+						btn.click();
+						clickedElements.add(btn);
+						newButtonsFound = true;
+						// Optional: await waitForElement(...) to wait for new content
+					}
+				}
+
+				// Wait between iterations to allow UI to update
+				if (newButtonsFound) {
+					iteration++;
+					await new Promise(res => setTimeout(res, 700));
+				}
+
+			} while (newButtonsFound && iteration < maxIterations);
+
+			console.log('Replies loaded!');
+
+			loading.style.display = 'none';
+
+			document.dispatchEvent(new CustomEvent('hz:sse_setNotificationsStatus', { detail: b64mids }));
+			document.dispatchEvent(new Event('hz:sse_bs_counts'));
+
+		} catch (error) {
+			loading.style.display = 'none';
+			console.error("autoExpand failed:", error.message);
+		}
+	}
+
+	return autoExpand;
+})();
+
+
+function stringToHexColor(str) {
+	let hash = 0;
+	for (let i = 0; i < str.length; i++) {
+		hash = str.charCodeAt(i) + ((hash << 5) - hash);
+	}
+	let color = "#";
+	for (let i = 0; i < 3; i++) {
+		const value = (hash >> (i * 8)) & 0xFF;
+		color += value.toString(16).padStart(2, '0');
+	}
+	return color;
+}
+
+function stringToHslColor(str) {
+	let stringUniqueHash = [...str].reduce((acc, char) => {
+		return char.charCodeAt(0) + ((acc << 5) - acc);
+	}, 0);
+	return `hsl(${stringUniqueHash % 360}, 65%, 65%)`;
+}
+
 function dolike(ident, verb) {
 	$('#like-rotator-' + ident).show();
 
@@ -1318,16 +1772,72 @@ function doprofilelike(ident, verb) {
 
 
 function doreply(parent, ident, owner, hint) {
-        var form = $('#comment-edit-form-' + parent.toString());
-        form.find('input[name=parent]').val(ident);
-        var i = form.find('button[type=submit]');
-        var btn = i.html().replace(/<[^>]*>/g, '').trim();
-        i.html('<i class="bi bi-arrow-90deg-left"></i> ' + btn);
-        var sel = 'wall-item-body-' + ident.toString();
-        var quote = window.getSelection().toString().trim();
-        form.find('textarea').val("@{" + owner + "}" + ((($(window.getSelection().anchorNode).closest("#" + sel).attr("id") != sel) || (quote.length === 0))? " " : "\n[quote]" + quote + "[/quote]\n"));
-        $('#comment-edit-text-' + parent.toString()).focus();
+	const modal = new bootstrap.Modal('#reactions');
+	const modal_content = document.getElementById('reactions_body');
+	const modal_title = document.getElementById('reactions_title');
+	const modal_action = document.getElementById('reactions_action');
+
+	modal_action.style.display = 'none';
+	modal_title.innerHTML = hint;
+
+	const preview = document.getElementById('comment-edit-preview-' + parent.toString());
+	preview.innerHTML = '';
+
+	// Get the form element by ID
+	const form = document.getElementById('comment-edit-wrapper-' + parent.toString());
+	if (!form) return;
+
+	modal_content.innerHTML = '';
+	modal_content.append(form);
+
+	// Set the value of the input named 'parent'
+	const parentInput = form.querySelector('input[name=parent]');
+	if (parentInput) {
+		parentInput.value = ident;
+	}
+
+	// Find the submit button and update its HTML
+	const submitBtn = form.querySelector('button[type=submit]');
+	if (submitBtn) {
+		const btnText = submitBtn.innerHTML.replace(/<[^>]*>/g, '').trim();
+		submitBtn.innerHTML = '<i class="bi bi-arrow-90deg-left"></i> ' + btnText;
+	}
+
+	// Prepare the quote logic
+	const sel = 'wall-item-body-' + ident.toString();
+	const quote = window.getSelection().toString().trim();
+
+	// Check if the selection is inside the correct element
+	let isInSel = false;
+	const anchorNode = window.getSelection().anchorNode;
+	if (anchorNode) {
+		let node = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
+		while (node) {
+			if (node.id === sel) {
+				isInSel = true;
+				break;
+			}
+			node = node.parentNode;
+		}
+	}
+
+	modal.show();
+
+	// Set the textarea value
+	const textarea = form.querySelector('textarea');
+	if (textarea) {
+		let commentBody = localStorage.getItem('comment_body-' + ident);
+		if (commentBody) {
+			textarea.value = commentBody;
+		}
+		else {
+			textarea.value = "@{" + owner + "}" + ((!isInSel || quote.length === 0) ? " " : "\n[quote]" + quote + "[/quote]\n");
+		}
+
+		textarea.focus();
+	}
 }
+
 
 function doscroll(parent, hidden) {
 	var id;
@@ -1342,6 +1852,7 @@ function doscroll(parent, hidden) {
 		var c = '#collapsed-comments-' + x;
 		if($(c).length !== 0 && (! $(c).is(':visible'))) {
 			showHideComments(x);
+			collapseHeight();
 			pos += $(c).height();
 		}
 	}
@@ -1539,11 +2050,13 @@ function post_comment(id) {
 					window.location.href = data.reload;
 				}
 
+				close_modal();
 
 				localStorage.removeItem("comment_body-" + id);
 				$("#comment-edit-preview-" + id).hide();
 				$("#comment-edit-text-" + id).val('').blur().attr('placeholder', aStr.comment);
-				$('#wall-item-comment-wrapper-' + id).before(data.html);
+				$('#wall-item-sub-thread-wrapper-' + data.thr_parent_id).append(data.html);
+
 				updateRelativeTime('.autotime');
 				$('body').css('cursor', 'unset');
 				collapseHeight();
@@ -1724,13 +2237,6 @@ $(window).scroll(function () {
 function loadText(textRegion,data) {
 	var currentText = $(textRegion).val();
 	$(textRegion).val(currentText + data);
-}
-
-function addeditortext(data) {
- 	if(plaintext == 'none') {
-		var currentText = $("#profile-jot-text").val();
-		$("#profile-jot-text").val(currentText + data);
-	}
 }
 
 function makeid(length) {
