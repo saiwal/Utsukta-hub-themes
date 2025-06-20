@@ -14,7 +14,7 @@
 				{{/if}}
 				{{if $item.title && !$item.event}}
 				<div class="card-header border-bottom-0" id="wall-item-title-{{$item.id}}">
-            {{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="{{if $item.is_new}}text-white{{/if}} text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
+            {{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 				</div>
 				{{if ! $item.is_new}}
 				<hr class="m-0">
