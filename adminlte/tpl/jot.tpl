@@ -86,7 +86,7 @@
 			<input class="jot-attachment" name="attachment" id="jot-attachment" type="text" value="{{$attachment}}" readonly="readonly" onclick="this.select();">
 		</div>
 		{{/if}}
-		<div id="jot-poll-wrap" class="p-2 d-none">
+		<div id="jot-poll-wrap" class="pt-3 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
 					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
