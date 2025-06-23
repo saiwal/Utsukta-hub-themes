@@ -1,5 +1,5 @@
 <form>
-<div class="modal" id="aclModal">
+<div class="modal modal-lg" id="aclModal">
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -13,7 +13,11 @@
 			</div>
 			<div class="section-content-wrapper modal-body">
 				{{if $aclModalDesc}}
-				<div id="acl-dialog-description" class="section-content-info-wrapper mb-2">{{$aclModalDesc}}</div>
+				<div id="acl-dialog-description" class="section-content-info-wrapper mb-2">
+          <div class="callout callout-info mb-4">
+            <p>{{$aclModalDesc}}</p>
+          </div>
+        </div>
 				{{/if}}
 				<label for="acl-select">{{if $aclModalDesc}}<i class="bi bi-send"></i> {{/if}}{{$select_label}}</label>
 				<select id="acl-select" name="optionsRadios" class="form-control mb-3">
@@ -44,8 +48,8 @@
 				<div class="list-group-item-flush acl-list-item" rel="acl-template" style="display:none">
           <div class="d-flex justify-content-between">
 					<div class="acl-item-header clearfix d-flex">
-						<img class="mx-auto my-auto img-thumbnail rounded-circle shadow img-size-32" data-src="{0}" loading="lazy" />
-              <div class="small wall-item-author ms-2">
+						<img class="mx-auto my-auto img-thumbnail rounded-circle shadow img-size-64" data-src="{0}" loading="lazy" />
+              <div class="wall-item-author ms-2">
                 <div class="text-truncate">
                     <span class="wall-item-name" id="wall-item-name-38"><bdi>{1}</bdi></span>
                 </div>
