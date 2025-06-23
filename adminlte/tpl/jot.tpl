@@ -89,10 +89,10 @@
 		<div id="jot-poll-wrap" class="p-2 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 border-0" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 border-0" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
