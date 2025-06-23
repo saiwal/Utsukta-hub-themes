@@ -35,18 +35,28 @@
 					<div id="acl-list">
 						<input class="form-control" type="text" id="acl-search" placeholder="{{$search}}" title="{{$search}}">
 						<small class="text-muted">{{$showlimitedDesc}}</small>
+            <div class="list-group">
 						<div id="acl-list-content"></div>
+            </div>
 					</div>
 				</div>
 
-				<div class="list-group-item acl-list-item" rel="acl-template" style="display:none">
-					<div class="acl-item-header clearfix">
-						<img class="menu-img-3" data-src="{0}" loading="lazy" />
-						<span class="font-weight-bold contactname">{1}</span>
-						<span class="dropdown-sub-text">{6}</span>
-					</div>
-					<button class="acl-button-hide btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
-					<button class="acl-button-show btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
+				<div class="list-group-item-flush acl-list-item" rel="acl-template" style="display:none">
+          <div class="d-flex justify-content-between">
+					<div class="acl-item-header clearfix d-flex">
+						<img class="menu-img-3 pe-2" data-src="{0}" loading="lazy" />
+              <div class="wall-item-author">
+                <div class="text-truncate">
+                    <span class="wall-item-name" id="wall-item-name-38"><bdi>{1}</bdi></span>
+                </div>
+                  <small class="lh-sm text-truncate d-block wall-item-addr text-body-secondary">{6}</small>
+    					</div>
+          </div>
+          <div>
+  		  	  <button class="acl-button-hide btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
+	    			<button class="acl-button-show btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
+          </div>
+            </div>
 				</div>
 			</div>
 			<div class="modal-footer clear">
