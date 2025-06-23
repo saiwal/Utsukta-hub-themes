@@ -44,8 +44,8 @@
 				<div class="list-group-item-flush acl-list-item" rel="acl-template" style="display:none">
           <div class="d-flex justify-content-between">
 					<div class="acl-item-header clearfix d-flex">
-						<img class="menu-img-3 pe-2" data-src="{0}" loading="lazy" />
-              <div class="wall-item-author">
+						<img class="mx-auto my-auto img-thumbnail rounded-circle shadow img-size-32" data-src="{0}" loading="lazy" />
+              <div class="wall-item-author ms-2">
                 <div class="text-truncate">
                     <span class="wall-item-name" id="wall-item-name-38"><bdi>{1}</bdi></span>
                 </div>
