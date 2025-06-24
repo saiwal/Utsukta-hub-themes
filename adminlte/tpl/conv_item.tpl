@@ -14,7 +14,7 @@
 				</div>
 				{{/if}}
 				{{if $item.event}}
-				<div class="wall-event-item" id="wall-event-item-{{$item.id}}">
+				<div class="wall-event-item card-header border-bottom-0" id="wall-event-item-{{$item.id}}">
 					{{$item.event}}
 				</div>
 				{{/if}}
