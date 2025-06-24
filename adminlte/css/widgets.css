@@ -1,0 +1,288 @@
+.widget {
+	margin-bottom: 1rem;
+	padding: 0.5rem;
+}
+
+.widget h3 {
+	margin-top: 0px;
+}
+
+.widget .active .wall-item-ago,
+.widget .active .dropdown-sub-text {
+	color: #fff;
+}
+
+.tags {
+	word-wrap: break-word;
+}
+
+.widget-nav-pills-icons {
+	opacity: 0;
+	float: right;
+}
+
+.widget-nav-pills-checkbox {
+	padding: 0.6rem 1.4rem;
+	float: right;
+	cursor: pointer;
+}
+
+li:hover .widget-nav-pills-icons {
+	opacity: 1;
+}
+
+
+/* suggest */
+
+.suggest-widget-more {
+	margin-top: 10px;
+}
+
+/* notes */
+
+#note-text {
+	padding: 7px 10px;
+	width: 100%;
+	resize: vertical;
+	min-height: 250px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#note-text-html {
+	padding: 7px 10px;
+	height: 250px;
+	width: 100%;
+	resize: vertical;
+	min-height: 250px;
+	overflow-y: auto;
+	overflow-x: hidden;
+
+}
+
+/* saved searches */
+
+#saved-search-list {
+	margin-top: 2px;
+}
+
+
+/*  affinity slider */
+#main-slider {
+	margin: 10px 7px 4rem 7px;
+}
+
+@media screen and (max-width: 767px) {
+	#main-slider {
+		margin: 4rem 7px 4rem 7px;
+	}
+}
+
+/* posted date */
+
+.posted-date-selector-months {
+	margin: 2px 0px 0px 10px;
+}
+
+#posted-date-selector li:not(:first-child) {
+	margin-top: 2px;
+}
+
+#posted-date-selector-drop li:not(:first-child) {
+	margin-top: 2px;
+}
+
+/* categories */
+
+
+/* group */
+
+a.group-edit-tool {
+	z-index: 1;
+}
+
+.group-edit-icon {
+	opacity: 0;
+}
+
+li:hover .group-edit-icon {
+	opacity: 1;
+}
+
+/* Chatrooms */
+
+.chatroomlist td {
+	padding: 0 5px 0;
+}
+
+/* ratings */
+
+.directory-rating {
+	float: right;
+	margin-right: 5px;
+}
+
+.rating-text-label {
+	margin-top: 30px;
+}
+
+.directory-rating-text {
+	width: 90%;
+	margin-left: 5%;
+}
+
+.directory-rating-submit {
+	margin-top: 15px;
+}
+
+
+/* cover photo */
+
+#cover-photo {
+	position: relative;
+	width: 100%;
+	height: auto;
+}
+
+#cover-photo-caption {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	padding: 1rem;
+}
+
+#cover-photo-caption h1,
+#cover-photo-caption h3 {
+	color: #fff;
+	font-weight: bold;
+	text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+a.wikilist {
+	z-index: 1;
+}
+
+/* mail list */
+
+.active .conv-participants {
+	color: #fff;
+}
+
+/* notifications */
+
+.notification-content {
+	max-height: 70vh;
+	overflow: auto;
+}
+
+.notifications-textinput {
+	padding: .75rem 0.85rem;
+}
+
+.notifications-textinput input {
+	padding-left: 1.75rem;
+}
+
+.notifications-textinput-clear {
+	padding: .5rem;
+	line-height: 1;
+	position: absolute;
+	top: .5rem;
+	right: 1rem;
+	cursor: pointer;
+}
+
+.notifications-textinput-filter {
+	padding: .5rem;
+	line-height: 1;
+	position: absolute;
+}
+
+.notification-content.collapsing {
+	overflow: hidden;
+}
+
+.fs {
+	position: fixed;
+	top: 0;
+	left: 0;
+	padding: 4.5rem .5rem 1rem .5rem;
+	background-color: var(--bs-body-bg);
+	width: 100vw;
+	height: 100vh;
+	z-index: 1019;
+	overflow: auto;
+}
+
+#notifications {
+	margin-bottom: 1rem;
+	background-color: var(--bs-body-bg);
+}
+
+.tt-filter-active,
+.cn-filter-active {
+	display: none !important;
+}
+
+/* vcard */
+
+.vcard-card {
+	background-color: rgba(var(--bs-body-bg-rgb), .7);
+}
+
+.vcard {
+	word-wrap: break-word;
+}
+
+.profile-edit-side-link {
+	opacity: 0;
+	filter:alpha(opacity=0);
+}
+
+.card:hover .profile-edit-side-link {
+	opacity: 1;
+	filter:alpha(opacity=100);
+}
+
+#profile-cover-text {
+	background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+}
+
+/* contact block */
+.contact-block-div .oneway-overlay {
+	font-size: .9rem;
+	margin-left: -1rem;
+	margin-top: 1.9rem;
+}
+
+#cid-filter-wrapper {
+	position: relative;
+}
+
+/* messages (hq) */
+#messages-author-container {
+	z-index: 3 !important;
+}
+
+/* hq_controls */
+.hq_controls.hq_controls_fixed_bottom_center {
+	z-index: 1028;
+	position: fixed;
+	bottom: 0px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.hq_controls .btn.rounded-circle {
+	width: 2.6rem;
+	height: 2.6rem;
+	padding: 0;
+}
+
+.hq_controls_fixed_bottom_center .btn.rounded-circle {
+	width: 3.1rem;
+	height: 3.1rem;
+	padding: 0;
+	font-size: 1.4rem;
+}

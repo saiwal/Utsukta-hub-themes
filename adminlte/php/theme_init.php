@@ -5,7 +5,8 @@ require_once('include/plugin.php');
 head_add_css('/library/jRange/jquery.range.css');
 
 head_add_css('/view/css/conversation.css');
-head_add_css('/view/css/widgets.css');
+/* head_add_css('/view/css/widgets.css'); */
+head_add_css('/view/theme/adminlte/css/widgets.css');
 head_add_css('/view/css/colorbox.css');
 head_add_css('/library/justifiedGallery/justifiedGallery.min.css');
 head_add_css('/library/datetimepicker/jquery.datetimepicker.css');
