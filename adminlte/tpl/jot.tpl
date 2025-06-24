@@ -69,7 +69,7 @@
 		</div>
 		{{/if}}
 		<div id="jot-text-wrap" class="border-0">
-			<div id="profile-jot-tools" class="btn-group d-none">
+			<div id="profile-jot-tools" class="btn-group input-group-text p-0 d-none">
 				{{if $is_owner}}
 				<a id="profile-jot-settings" class="btn btn-outline-secondary btn-sm border-0" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
 				{{/if}}
