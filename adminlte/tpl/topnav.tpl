@@ -133,15 +133,49 @@
 	var sse_sys_only = {{$sys_only}};
 
 	document.addEventListener("DOMContentLoaded", function() {
+		let notificationsWrapper = document.getElementById('notifications_wrapper');
+		let notificationsParent = notificationsWrapper ? notificationsWrapper.parentElement.id : null;
+		let notificationsBtn = document.querySelectorAll('.notifications-btn');
 
+		// Event listener for notifications button
+		if (notificationsBtn) {
+			notificationsBtn.forEach(function (element) {
+				element.addEventListener('click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
 
-		// Prevent dropdown from closing when clicking inside
-		const dropdownMenu = document.querySelector('.dropdown-menu');
-		if (dropdownMenu) {
-			dropdownMenu.addEventListener('click', function(event) {
-				event.stopPropagation();
+					// Remove the 'd-none' class to show the notifications wrapper
+					notificationsWrapper.classList.remove('d-none');
+
+					// Check if the notifications wrapper has the 'fs' class
+					if (notificationsWrapper.classList.contains('fs')) {
+						// Prepend the notifications wrapper back to its original parent and hide it
+						document.getElementById(notificationsParent).appendChild(notificationsWrapper);
+						notificationsWrapper.classList.add('d-none');
+					} else {
+						// Otherwise, prepend the notifications wrapper to 'main'
+						// document.querySelector('main').prepend(notificationsWrapper);
+					}
+
+					// Toggle the 'fs' class
+					// notificationsWrapper.classList.toggle('fs');
+				});
 			});
 		}
+
+		// Event listener for clicking a notification
+		document.addEventListener('click', function(event) {
+			if (event.target.closest('a') && event.target.closest('a').classList.contains('notification')) {
+				console.log(1)
+				if (notificationsWrapper.classList.contains('fs')) {
+					// Move notifications wrapper back to its original parent and hide it
+					notificationsWrapper.classList.remove('fs');
+					notificationsWrapper.classList.add('d-none');
+					document.getElementById(notificationsParent).appendChild(notificationsWrapper);
+
+				}
+			}
+		});
 
 
 		if(sse_enabled) {
@@ -199,6 +233,7 @@
 		document.querySelectorAll('.notification-link').forEach(function (element) {
 			element.addEventListener('click', function (element) {
 				sse_bs_notifications(element, true, false);
+				event.stopPropagation();
 			});
 		});
 
