@@ -47,10 +47,10 @@
         <a id="notifications-btn-1" class="nav-link show notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
           <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
         </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-2" data-bs-popper="static">
           {{if !$sys_only}}
           <div id="notifications_wrapper" class=" " style="min-width:18em;">
-            <div id="no_notifications" class="p-2 d-block">
+            <div id="no_notifications" class="d-block">
           		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
           	</div>
             <div id="nav-notifications-template" rel="template" class="d-none">
