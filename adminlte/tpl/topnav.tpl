@@ -50,7 +50,7 @@
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end" data-bs-popper="static">
           {{if !$sys_only}}
           <div id="notifications_wrapper" class=" " style="min-width:18em;">
-            <div id="no_notifications" class="ps-2 pe-2 d-block">
+            <div id="no_notifications" class="p-2 d-block">
           		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
           	</div>
             <div id="nav-notifications-template" rel="template" class="d-none">
@@ -152,13 +152,6 @@
 		document.addEventListener('click', function(event) {
 			if (event.target.closest('a') && event.target.closest('a').classList.contains('notification')) {
 				console.log(1)
-				if (notificationsWrapper.classList.contains('fs')) {
-					// Move notifications wrapper back to its original parent and hide it
-					notificationsWrapper.classList.remove('fs');
-					notificationsWrapper.classList.add('d-none');
-					document.getElementById(notificationsParent).appendChild(notificationsWrapper);
-
-				}
 			}
 		});
 
@@ -729,35 +722,33 @@
 		// Update notification button icon based on the primary notification availability
 		let notificationIcon = document.querySelector('.notifications-btn-icon');
 
-		if (notificationIcon) {
-			let iconClass = primary_available ? 'bi-exclamation-triangle' : 'bi-exclamation-circle';
-			let iconToRemove = primary_available ? 'bi-exclamation-circle' : 'bi-exclamation-triangle';
-			notificationIcon.classList.replace(iconToRemove, iconClass);
+		let notificationsBtn = document.querySelectorAll('.notifications-btn');
+		if (primary_available) {
+			notificationIcon.classList.remove('text-info');
+			notificationIcon.classList.remove('bi-bell');
+			notificationIcon.classList.add('bi-bell-fill');
+			notificationIcon.classList.add('text-warning');
+		} else {
+			notificationIcon.classList.remove('bi-bell-fill');
+			notificationIcon.classList.remove('text-warning');
+			notificationIcon.classList.add('bi-bell');
 		}
 
 		// Update visibility of notification button and sections
-		let notificationsBtn = document.querySelectorAll('.notifications-btn');
 		let noNotifications = document.querySelector('#no_notifications');
 		let notifications = document.querySelector('#notifications');
-		let navbarCollapse = document.querySelector('#navbar-collapse-1');
-
-		if (any_available) {
-			notificationsBtn.forEach(btn => {
-				btn.style.opacity = 1;
-			});
-			noNotifications.style.display = 'none';
+    if (any_available) {
+      notificationIcon.classList.add('bi-bell-fill');
+			notificationIcon.classList.remove('bi-bell');
+			noNotifications.classList.add('d-none');
 			notifications.style.display = 'block';
 		} else {
-			if (notificationsBtn) {
-				notificationsBtn.forEach(btn => {
-					btn.style.opacity = 0.5;
-				});
-			}
-			if (navbarCollapse) navbarCollapse.classList.remove('show');
-			noNotifications.style.display = 'block';
+			notificationIcon.classList.remove('bi-bell-fill');
+			notificationIcon.classList.add('bi-bell');
+			noNotifications.classList.remove('d-none');
 			notifications.style.display = 'none';
 		}
-
+	
 		// Handle specific notifications if 'data' is provided
 		if (typeof data !== 'undefined') {
 			data.forEach(function (nmid) {
