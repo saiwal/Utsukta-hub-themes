@@ -133,12 +133,7 @@
 	var sse_sys_only = {{$sys_only}};
 
 	document.addEventListener("DOMContentLoaded", function() {
-		let notificationsWrapper = document.getElementById('notifications_wrapper');
-		let notificationsParent = notificationsWrapper ? notificationsWrapper.parentElement.id : null;
-		let notificationsBtn = document.querySelectorAll('.notifications-btn');
 
-		// Event listener for notifications button
-    // Removed 
 
 		// Prevent dropdown from closing when clicking inside
 		const dropdownMenu = document.querySelector('.dropdown-menu');
@@ -148,12 +143,6 @@
 			});
 		}
 
-		// Event listener for clicking a notification
-		document.addEventListener('click', function(event) {
-			if (event.target.closest('a') && event.target.closest('a').classList.contains('notification')) {
-				console.log(1)
-			}
-		});
 
 		if(sse_enabled) {
 			if(typeof(window.SharedWorker) === 'undefined') {
