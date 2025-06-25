@@ -44,7 +44,7 @@
  			{{if $localuser || $nav.pubs}}
       <!--Notification icon-->
       <li class="nav-item dropdown">
-        <a id="notifications-btn-1" class="nav-link show notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
+        <a id="notifications-btn-1" class="nav-link notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
           <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end " data-bs-popper="static">
