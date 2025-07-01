@@ -1,35 +1,38 @@
-<div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
-		<h3>{{$title}}</h3>
+<div class="generic-content-wrapper card">
+	<div class="card-header">
+		{{$title}}
 	</div>
-	<div class="section-content-wrapper">
+	<div class="section-content-wrapper card-body">
 		<form action="register" method="post" id="register-form">
 			<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 			{{if $now}}
-			<div class="section-content-danger-wrapper">
+			<div class="section-content-danger-wrapper callout callout-danger mb-2">
 				<div class="h3">{{$now}}</div>
 			</div>
 			{{/if}}
 			{{if $reg_is || $other_sites || $msg}}
-			<div class="section-content-warning-wrapper">
+			<div class="section-content-warning-wrapper callout callout-warning mb-2">
 				<div id="register-desc" class="descriptive-paragraph">{{$msg}}</div>
 				<div id="register-desc" class="descriptive-paragraph">{{$reg_is}}</div>
 				<div id="register-sites" class="descriptive-paragraph">{{$other_sites}}</div>
 			</div>
 			{{/if}}
 			{{if $registertext}}
-			<div class="section-content-info-wrapper">
+			<div class="section-content-info-wrapper callout callout-info mb-2">
 				<div id="register-text" class="descriptive-paragraph">{{$registertext}}</div>
 			</div>
 			{{/if}}
-
+    
+        
 			{{if $invitations}}
-			<a id="zar014" href="javascript:;" style="display: inline-block;">{{$haveivc}}</a>
-			<div id="zar015" style="display: none;">
+			<div class="section-content-info-wrapper">
+			<a id="zar014" href="javascript:;" style="display: none;">{{$haveivc}}</a>
+			<div id="zar015">
 				<div class="position-relative">
 					<div id="invite-spinner" class="spinner-wrapper position-absolute" style="top: 2.5rem; right: 0.5rem;"><div class="spinner s"></div></div>
 					{{include file="field_input.tpl" field=[$invite_code.0,$invite_code.1,"","",""]}}
 				</div>
+			</div>
 			</div>
 			{{/if}}
 
