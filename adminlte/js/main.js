@@ -1177,13 +1177,12 @@ function collapseHeight() {
 			if(! $(this).hasClass('divmore') && $(this).has('div.no-collapse').length == 0) {
 				$(this).readmore({
 					speed: 0,
-					startOpen: open,
+					startOpen: false,
 					heightMargin: 50,
 					collapsedHeight: divmore_height,
-					moreLink: '<div class="d-flex justify-content-center border-info" style="border-top: dashed 1px"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
+          embedCSS: true,
+					moreLink: '<div class="d-flex justify-content-center border-info" style="border-top: dashed 1px; box-shadow: 0px -10px 11px -4px var(--bs-border-color);"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
 					lessLink: '<div class="d-flex justify-content-center"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a></div>',
-					// moreLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a>',
-					// lessLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a>',
 					beforeToggle: function(trigger, element, expanded) {
 						if(expanded) {
 							if((($(element).offset().top + divmore_height) - $(window).scrollTop()) < 65 ) {
