@@ -102,8 +102,8 @@
 			<br />
 			<br />
 			<div id="profile-photo-submit-wrapper">
-			    <button type="submit" class="btn btn-outline-primary" name="submit" id="profile-photo-submit">{{$submit}}</button>
-			    <button type="submit" class="btn btn-outline-danger" name="remove" id="profile-photo-remove">{{$remove}}</button>
+			    <button type="submit" class="btn btn-primary" name="submit" id="profile-photo-submit">{{$submit}}</button>
+			    <button type="submit" class="btn btn-danger" name="remove" id="profile-photo-remove">{{$remove}}</button>
 			</div>
 		</div>
 

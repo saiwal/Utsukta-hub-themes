@@ -107,7 +107,7 @@
 						</div>
 						{{**if $item.unseen_comments}}
 						<div class="unseen-wall-indicator-{{$item.id}} btn-group">
-							<button class="btn btn-sm btn-outline-secondary border-0" title="{{$item.markseen}}" onclick="markItemRead({{$item.id}}); return false;">
+							<button class="btn btn-sm btn-secondary border-0" title="{{$item.markseen}}" onclick="markItemRead({{$item.id}}); return false;">
 								<i class="bi bi-check-square generic-icons"></i>
 							</button>
 						</div>
@@ -139,7 +139,7 @@
 												</ul>
 										</div>
 										<div class="modal-footer clear">
-											<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{$item.modal_dismiss}}</button>
+											<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$item.modal_dismiss}}</button>
 										</div>
 									</div><!-- /.modal-content -->
 								</div><!-- /.modal-dialog -->
@@ -182,8 +182,8 @@
 					</div>
 					<div class="wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
-						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
-						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
+						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
+						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
 						{{else}}
 						{{if $item.star && $item.star.isstarred}}
 						<div class="" id="star-button-{{$item.id}}">

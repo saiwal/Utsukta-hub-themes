@@ -5,10 +5,10 @@
 	<div class="section-subtitle-wrapper clearfix">
 		<div class="directory-actions float-end">
 			{{if $entry.censor_2}}
-			<a class="directory-censor directory-censor-hide btn btn-outline-danger btn-sm {{$entry.censor_2_class}}" href="{{$entry.censor_2}}"> {{$entry.censor_2_label}}</a>
+			<a class="directory-censor directory-censor-hide btn btn-danger btn-sm {{$entry.censor_2_class}}" href="{{$entry.censor_2}}"> {{$entry.censor_2_label}}</a>
 			{{/if}}
 			{{if $entry.censor}}
-			<a class="directory-censor directory-censor-unsafe btn btn-outline-warning btn-sm {{$entry.censor_class}}" href="{{$entry.censor}}"> {{$entry.censor_label}}</a>
+			<a class="directory-censor directory-censor-unsafe btn btn-warning btn-sm {{$entry.censor_class}}" href="{{$entry.censor}}"> {{$entry.censor_label}}</a>
 			{{/if}}
 			{{if $entry.ignlink}}
 			<a class="directory-ignore btn btn-info btn-sm" href="{{$entry.ignlink}}"> {{$entry.ignore_label}}</a>

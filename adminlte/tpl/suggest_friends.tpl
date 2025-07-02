@@ -8,9 +8,9 @@
     </h6>
     <div class="d-flex gap-2">
 	{{if $entry.connlnk}}
-      <a type="button" class="btn btn-sm btn-outline-success" title="{{$entry.conntxt}}" href="{{$entry.connlnk}}">{{$entry.conntxt}}</a>
+      <a type="button" class="btn btn-sm btn-success" title="{{$entry.conntxt}}" href="{{$entry.connlnk}}">{{$entry.conntxt}}</a>
 	{{/if}}
-      <a type="button" class="btn btn-sm btn-outline-warning" href="{{$entry.ignlnk}}" title="{{$entry.ignore}}" onclick="return confirmDelete();"><i class="bi bi-x-lg"></i></a>
+      <a type="button" class="btn btn-sm btn-warning" href="{{$entry.ignlnk}}" title="{{$entry.ignore}}" onclick="return confirmDelete();"><i class="bi bi-x-lg"></i></a>
     </div>
   </div>
 </li>

@@ -8,7 +8,7 @@
 			<p>
 				{{$channel_info}}
 			</p>
-			<a href="uexport/channel" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$channel_title}}</a>
+			<a href="uexport/channel" class="btn btn-primary"><i class="bi bi-download"></i> {{$channel_title}}</a>
 		</p>
 		<p class="mb-3">
 			<h3>{{$content_title}}</h3>
@@ -17,7 +17,7 @@
 				{{$items_extra_info}}
 			</p>
 			{{foreach $years as $year}}
-			<a href="uexport/{{$year}}" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$year}}</a>
+			<a href="uexport/{{$year}}" class="btn btn-primary"><i class="bi bi-download"></i> {{$year}}</a>
 			{{/foreach}}
 		</p>
 		<p class="mb-3">
@@ -26,7 +26,7 @@
 				{{$wikis_info}}
 				{{$items_extra_info}}
 			</p>
-			<a href="uexport/wikis" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$wikis_title}}</a>
+			<a href="uexport/wikis" class="btn btn-primary"><i class="bi bi-download"></i> {{$wikis_title}}</a>
 		</p>
 		<p class="mb-3">
 			<h3>{{$webpages_title}}</h3>
@@ -34,7 +34,7 @@
 				{{$webpages_info}}
 				{{$items_extra_info}}
 			</p>
-			<a href="uexport/webpages" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$webpages_title}}</a>
+			<a href="uexport/webpages" class="btn btn-primary"><i class="bi bi-download"></i> {{$webpages_title}}</a>
 		</p>
 		<p class="mb-3">
 			<h3>{{$events_title}}</h3>
@@ -42,7 +42,7 @@
 				{{$events_info}}
 				{{$items_extra_info}}
 			</p>
-			<a href="uexport/events" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$events_title}}</a>
+			<a href="uexport/events" class="btn btn-primary"><i class="bi bi-download"></i> {{$events_title}}</a>
 		</p>
 		<p class="mb-3">
 			<h3>{{$chatrooms_title}}</h3>
@@ -50,7 +50,7 @@
 				{{$chatrooms_info}}
 				{{$items_extra_info}}
 			</p>
-			<a href="uexport/chatrooms" class="btn btn-outline-primary"><i class="bi bi-download"></i> {{$chatrooms_title}}</a>
+			<a href="uexport/chatrooms" class="btn btn-primary"><i class="bi bi-download"></i> {{$chatrooms_title}}</a>
 		</p>
 	</div>
 </div>

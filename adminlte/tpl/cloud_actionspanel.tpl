@@ -10,7 +10,7 @@
 			<div class="float-end btn-group">
 				<div class="btn-group">
 					{{if $lockstate}}
-					<button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" type="button">
+					<button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" type="button">
 						<i class="jot-perms-icon bi bi-{{$lockstate}}"></i>
 					</button>
 					{{/if}}
@@ -36,7 +36,7 @@
 			<div class="float-end btn-group">
 				<div class="btn-group">
 					{{if $lockstate}}
-					<button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" type="button">
+					<button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" type="button">
 						<i class="jot-perms-icon bi bi-{{$lockstate}}"></i>
 					</button>
 					{{/if}}

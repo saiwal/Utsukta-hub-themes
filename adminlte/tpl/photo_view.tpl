@@ -4,7 +4,7 @@
 		<div class="float-end">
 			{{if $tools || $map || $edit}}
 			<div class="btn-group">
-				<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
 					<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
 				</button>
 				<div class="dropdown-menu dropdown-menu-end flex-column">
@@ -23,17 +23,17 @@
 			{{/if}}
 			{{if $lock}}
 			<div class="btn-group">
-				<button id="lockview" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="{{$lock}}" onclick="lockview('photo',{{$id}});" ><i class="bi bi-lock"></i></button>
+				<button id="lockview" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="{{$lock}}" onclick="lockview('photo',{{$id}});" ><i class="bi bi-lock"></i></button>
 				<ul id="panel-{{$id}}" class="lockview-panel dropdown-menu dropdown-menu-end"></ul>
 			</div>
 			{{/if}}
 			{{if $prevlink || $nextlink}}
 			<div class="btn-group">
 				{{if $prevlink}}
-				<a href="{{$prevlink.0}}" class="btn btn-outline-secondary btn-sm" title="{{$prevlink.1}}"><i class="bi bi-chevron-left"></i></a>
+				<a href="{{$prevlink.0}}" class="btn btn-secondary btn-sm" title="{{$prevlink.1}}"><i class="bi bi-chevron-left"></i></a>
 				{{/if}}
 				{{if $nextlink}}
-				<a href="{{$nextlink.0}}" class="btn btn-outline-secondary btn-sm" title="{{$nextlink.1}}"><i class="bi bi-chevron-right"></i></a>
+				<a href="{{$nextlink.0}}" class="btn btn-secondary btn-sm" title="{{$nextlink.1}}"><i class="bi bi-chevron-right"></i></a>
 				{{/if}}
 			</div>
 			{{/if}}
@@ -90,7 +90,7 @@
 			</div>
 			<div class="mb-3 btn-group float-end">
 				{{if $edit.aclselect}}
-				<button id="dbtn-acl" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" onclick="return false;">
+				<button id="dbtn-acl" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" onclick="return false;">
 					<i id="jot-perms-icon" class="bi bi-{{$edit.lockstate}}"></i>
 				</button>
 				{{/if}}
@@ -118,7 +118,7 @@
 				{{foreach $responses as $verb=>$response}}
 					{{if $response.count}}
 					<div class="btn-group">
-						<button type="button" class="btn btn-outline-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-{{$verb}}-{{$id}}">{{$response.count}} {{$response.button}}</button>
+						<button type="button" class="btn btn-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="wall-item-{{$verb}}-{{$id}}">{{$response.count}} {{$response.button}}</button>
 						{{if $response.list_part}}
 						<ul class="dropdown-menu" role="menu" aria-labelledby="wall-item-{{$verb}}-{{$id}}">{{foreach $response.list_part as $liker}}<li role="presentation">{{$liker}}</li>{{/foreach}}</ul>
 						{{else}}
@@ -136,7 +136,7 @@
 										<ul>{{foreach $response.list as $liker}}<li role="presentation">{{$liker}}</li>{{/foreach}}</ul>
 									</div>
 									<div class="modal-footer clear">
-										<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{$modal_dismiss}}</button>
+										<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$modal_dismiss}}</button>
 									</div>
 								</div><!-- /.modal-content -->
 							</div><!-- /.modal-dialog -->
@@ -150,10 +150,10 @@
 			{{/if}}
 			{{if $likebuttons}}
 			<div class="photo-item-tools-right btn-group float-end">
-				<button type="button" class="btn btn-outline-secondary btn-sm" onclick="dolike({{$likebuttons.id}},'like'); return false">
+				<button type="button" class="btn btn-secondary btn-sm" onclick="dolike({{$likebuttons.id}},'like'); return false">
 					<i class="bi bi-hand-thumbs-up" title="{{$likebuttons.likethis}}"></i>
 				</button>
-				<button type="button" class="btn btn-outline-secondary btn-sm" onclick="dolike({{$likebuttons.id}},'dislike'); return false">
+				<button type="button" class="btn btn-secondary btn-sm" onclick="dolike({{$likebuttons.id}},'dislike'); return false">
 					<i class="bi bi-hand-thumbs-down" title="{{$likebuttons.nolike}}"></i>
 				</button>
 			</div>

@@ -25,8 +25,8 @@
 			{{/if}}
 		{{/if}}
 		{{if $app.my}}
-		<a href="{{$baseurl}}/oauth/edit/{{$app.client_id}}" title="{{$edit}}"><i class="bi bi-pencil btn btn-outline-secondary"></i></a>
-		<a href="{{$baseurl}}/oauth/delete/{{$app.client_id}}?t={{$form_security_token}}" title="{{$delete}}"><i class="bi bi-trash btn btn-outline-secondary"></i></a>
+		<a href="{{$baseurl}}/oauth/edit/{{$app.client_id}}" title="{{$edit}}"><i class="bi bi-pencil btn btn-secondary"></i></a>
+		<a href="{{$baseurl}}/oauth/delete/{{$app.client_id}}?t={{$form_security_token}}" title="{{$delete}}"><i class="bi bi-trash btn btn-secondary"></i></a>
 		{{/if}}		
 	</div>
 	{{/foreach}}

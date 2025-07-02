@@ -3,7 +3,7 @@
 		<div class="float-end">
 			{{if $profile.like_count}}
 			<div class="btn-group">
-				<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="profile-like">{{$profile.like_count}} {{$profile.like_button_label}}</button>
+				<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="profile-like">{{$profile.like_count}} {{$profile.like_button_label}}</button>
 				{{if $profile.likers}}
 				<ul class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="profile-like">{{foreach $profile.likers as $liker}}<li role="presentation"><a href="{{$liker.url}}"><img class="menu-img-1" src="{{$liker.photo}}" alt="{{$liker.name}}" /> {{$liker.name}}</a></li>{{/foreach}}</ul>
 				{{/if}}
@@ -35,7 +35,7 @@
 			{{/if}}
 			{{** if $exportlink}}
 			<div class="btn-group">
-				<a class="btn btn-outline-secondary btn-sm" href="{{$exportlink}}" ><i class="bi fa-vcard"></i>&nbsp;{{$export}}</a>
+				<a class="btn btn-secondary btn-sm" href="{{$exportlink}}" ><i class="bi fa-vcard"></i>&nbsp;{{$export}}</a>
 			</div>
 			{{/if **}}
 		</div>
@@ -298,13 +298,13 @@
 		<li>{{if $item.img}}<a href="{{$item.url}}" ><img src="{{$item.img}}" class="profile-thing-img" width="100" height="100" alt="{{$item.term}}" /></a>{{/if}}
 		<a href="{{$item.editurl}}" >{{$item.term}}</a>
 		{{if $profile.canlike}}<br />
-		<button type="button" class="btn btn-outline-secondary btn-sm" onclick="doprofilelike('thing/' + '{{$item.term_hash}}','like'); return false;" title="{{$likethis}}" >
+		<button type="button" class="btn btn-secondary btn-sm" onclick="doprofilelike('thing/' + '{{$item.term_hash}}','like'); return false;" title="{{$likethis}}" >
 		<i class="bi fa-thumbs-o-up" title="{{$likethis}}"></i>
 		</button>
 		{{/if}}
 		{{if $item.like_count}}
 		<div class="btn-group">
-		<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="thing-like-{{$item.term_hash}}">{{$item.like_count}} {{$item.like_label}}</button>
+		<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="thing-like-{{$item.term_hash}}">{{$item.like_count}} {{$item.like_label}}</button>
 		{{if $item.likes}}
 		<ul class="dropdown-menu" role="menu" aria-labelledby="thing-like-{{$item.term_hash}}">{{foreach $item.likes as $liker}}<li role="presentation"><a href="{{$liker.xchan_url}}"><img class="dropdown-menu-img-xs" src="{{$liker.xchan_photo_s}}" alt="{{$liker.name}}" /> {{$liker.xchan_name}}</a></li>{{/foreach}}</ul>
 		{{/if}}

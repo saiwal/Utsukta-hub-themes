@@ -3,7 +3,7 @@
 		{{if $notself}}
 		<div class="float-end">
 			<div class="btn-group">
-				<button id="connection-dropdown" class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<button id="connection-dropdown" class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
 				</button>
 				<div class="dropdown-menu dropdown-menu-end" aria-labelledby="dLabel">
@@ -23,10 +23,10 @@
 			</div>
 			{{if $abook_prev || $abook_next}}
 			<div class="btn-group">
-				<a href="connedit/{{$abook_prev}}{{if $section}}?f=&section={{$section}}{{/if}}" class="btn btn-outline-secondary btn-sm{{if ! $abook_prev}} disabled{{/if}}" ><i class="bi fa-backward"></i></a>
+				<a href="connedit/{{$abook_prev}}{{if $section}}?f=&section={{$section}}{{/if}}" class="btn btn-secondary btn-sm{{if ! $abook_prev}} disabled{{/if}}" ><i class="bi fa-backward"></i></a>
 				{{if $sections}}
 				<div class="btn-group" >
-					<button class="btn btn-outline-secondary btn-sm{{if $is_pending}} disabled{{/if}}" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="bi fa-bars"></i></button>
+					<button class="btn btn-secondary btn-sm{{if $is_pending}} disabled{{/if}}" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="bi fa-bars"></i></button>
 					<div class="dropdown-menu dropdown-menu-end" aria-labelledby="dLabel">
 						{{foreach $sections as $s}}
 						<a class="dropdown-item" href="{{$s.url}}" title="{{$s.title}}">{{$s.label}}</a>
@@ -34,7 +34,7 @@
 					</div>
 				</div>
 				{{/if}}
-				<a href="connedit/{{$abook_next}}{{if $section}}?f=&section={{$section}}{{/if}}" class="btn btn-outline-secondary btn-sm{{if ! $abook_next}} disabled{{/if}}" ><i class="bi fa-forward"></i></a>
+				<a href="connedit/{{$abook_next}}{{if $section}}?f=&section={{$section}}{{/if}}" class="btn btn-secondary btn-sm{{if ! $abook_next}} disabled{{/if}}" ><i class="bi fa-forward"></i></a>
 			</div>
 			{{/if}}
 		</div>
@@ -50,7 +50,7 @@
 		<div class="section-content-wrapper">
 			<a href="permcats/{{$permcat_value}}" class="float-end"><i class="bi bi-box-arrow-up-right"></i>&nbsp;{{$permcat_new}}</a>
 			{{include file="field_select.tpl" field=$permcat}}
-			<button type="button" class="btn btn-outline-secondary float-end" data-bs-toggle="modal" data-bs-target="#perms_modal">Permissions</button>
+			<button type="button" class="btn btn-secondary float-end" data-bs-toggle="modal" data-bs-target="#perms_modal">Permissions</button>
 			<button type="submit" name="done" value="{{$submit}}" class="btn btn-primary">{{$submit}}</button>
 			<div class="modal" id="perms_modal" tabindex="-1" aria-labelledby="perms_modal_label" aria-hidden="true">
 				<div class="modal-dialog">
@@ -235,7 +235,7 @@
 			<div class="section-content-wrapper-np">
 				<div id="vcard-cancel-{{$vcard.id}}" class="vcard-cancel vcard-cancel-btn" data-id="{{$vcard.id}}" data-action="cancel"><i class="bi bi-x-lg"></i></div>
 				<div id="vcard-add-field-{{$vcard.id}}" class="dropdown float-end vcard-add-field">
-					<button data-bs-toggle="dropdown" type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"><i class="bi bi-plus-lg"></i> {{$add_field}}</button>
+					<button data-bs-toggle="dropdown" type="button" class="btn btn-secondary btn-sm dropdown-toggle"><i class="bi bi-plus-lg"></i> {{$add_field}}</button>
 					<ul class="dropdown-menu">
 						<li class="add-vcard-org"{{if $vcard.org}} style="display: none"{{/if}}><a href="#" data-add="vcard-org" data-id="{{$vcard.id}}" class="add-field" onclick="return false;">{{$org_label}}</a></li>
 						<li class="add-vcard-title"{{if $vcard.title}} style="display: none"{{/if}}><a href="#" data-add="vcard-title" data-id="{{$vcard.id}}" class="add-field" onclick="return false;">{{$title_label}}</a></li>
@@ -252,7 +252,7 @@
 					<span id="vcard-preview-{{$vcard.id}}" class="vcard-preview">
 						{{if $vcard.fn}}<span class="vcard-fn-preview">{{$vcard.fn}}</span>{{/if}}
 						{{if $vcard.emails.0.address}}<span class="vcard-email-preview d-none d-md-table-cell"><a href="mailto:{{$vcard.emails.0.address}}">{{$vcard.emails.0.address}}</a></span>{{/if}}
-						{{if $vcard.tels.0}}<span class="vcard-tel-preview d-none d-md-table-cell">{{$vcard.tels.0.nr}} <a class="btn btn-outline-secondary btn-sm" href="tel:{{$vcard.tels.0.nr}}"><i class="bi fa-phone connphone"></i></a></span>{{/if}}
+						{{if $vcard.tels.0}}<span class="vcard-tel-preview d-none d-md-table-cell">{{$vcard.tels.0.nr}} <a class="btn btn-secondary btn-sm" href="tel:{{$vcard.tels.0.nr}}"><i class="bi fa-phone connphone"></i></a></span>{{/if}}
 					</span>
 					<input id="vcard-fn-{{$vcard.id}}" class="vcard-fn" type="text" name="fn" value="{{$vcard.fn}}" size="{{$vcard.fn|count_characters:true}}" placeholder="{{$name_label}}">
 				</div>

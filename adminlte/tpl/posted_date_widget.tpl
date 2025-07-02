@@ -43,7 +43,7 @@ function toggle_posted_date_button() {
 		{{/foreach}}
 		{{if $cutoff}}
 		</div>
-		<button class="btn btn-outline-secondary btn-sm" onclick="toggle_posted_date_button(); return false;"><i id="posted-date-icon" class="bi bi-chevron-down"></i></button>
+		<button class="btn btn-secondary btn-sm" onclick="toggle_posted_date_button(); return false;"><i id="posted-date-icon" class="bi bi-chevron-down"></i></button>
 		{{/if}}
 	</ul>
   </div>

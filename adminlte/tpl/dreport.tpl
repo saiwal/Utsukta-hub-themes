@@ -2,7 +2,7 @@
 	<div class="section-title-wrapper app-content-header">
 		{{if $table == 'item'}}
 		<div class="dropdown float-end">
-			<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$options}}">
+			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$options}}">
 				<i class="bi bi-gear"></i>
 			</button>
 			<div class="dropdown-menu">
@@ -13,7 +13,6 @@
 		<h3>{{$title}}</h3>
 	</div>
 
-	<div>
 	<table>
 	{{if $entries}}
 	{{foreach $entries as $e}}

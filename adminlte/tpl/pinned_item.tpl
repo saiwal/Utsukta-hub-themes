@@ -95,7 +95,7 @@
 						<div class="btn-group">
 						{{if $isevent}}
 							<div class="btn-group">
-								<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-attend-menu-{{$id}}" title="{{$attend_title}}">
+								<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-attend-menu-{{$id}}" title="{{$attend_title}}">
 									<i class="bi fa-calendar-check-o"></i>
 								</button>
 								<div class="dropdown-menu dropdown-menu-end">
@@ -113,7 +113,7 @@
 						{{/if}}
 						{{if $canvote}}
 							<div class="btn-group">
-								<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-consensus-menu-{{$id}}" title="{{$vote_title}}">
+								<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-consensus-menu-{{$id}}" title="{{$vote_title}}">
 									<i class="bi bi-check-square"></i>
 								</button>
 								<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-consensus-menu-{{$id}}">
@@ -130,7 +130,7 @@
 							</div>
 						{{/if}}
 						<div class="btn-group">
-							<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-menu-{{$id}}">
+							<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="pinned-item-menu-{{$id}}">
 								<i class="bi bi-gear"></i>
 							</button>
 							<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$id}}">
@@ -158,7 +158,7 @@
 						{{if $attachments}}
 							<div class="wall-item-tools-left btn-group" id="pinned-item-tools-left-{{$id}}">
 								<div class="btn-group">
-									<button type="button" class="btn btn-outline-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="pinned-attachment-menu-{{$id}}">
+									<button type="button" class="btn btn-secondary btn-sm wall-item-like dropdown-toggle" data-bs-toggle="dropdown" id="pinned-attachment-menu-{{$id}}">
 										<i class="bi bi-paperclip me-2"></i>
 									</button>
 									<div class="dropdown-menu">{{$attachments}}</div>
@@ -168,7 +168,7 @@
 						{{foreach $responses as $verb=>$response}}
 							{{if $response.count}}
 								<div class="btn-group">
-									<button type="button" class="btn btn-outline-secondary btn-sm wall-item-like dropdown-toggle"{{if $response.modal}} data-bs-toggle="modal" data-bs-target="#{{$verb}}Modal-{{$id}}"{{else}} data-bs-toggle="dropdown"{{/if}} id="pinned-item-{{$verb}}-{{$id}}">{{$response.count}} {{$response.button}}</button>
+									<button type="button" class="btn btn-secondary btn-sm wall-item-like dropdown-toggle"{{if $response.modal}} data-bs-toggle="modal" data-bs-target="#{{$verb}}Modal-{{$id}}"{{else}} data-bs-toggle="dropdown"{{/if}} id="pinned-item-{{$verb}}-{{$id}}">{{$response.count}} {{$response.button}}</button>
 									{{if $response.modal}}
 										<div class="modal" id="pinned-{{$verb}}Modal-{{$id}}">
 											<div class="modal-dialog">
@@ -183,7 +183,7 @@
 														</ul>
 													</div>
 													<div class="modal-footer clear">
-														<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{$modal_dismiss}}</button>
+														<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$modal_dismiss}}</button>
 													</div>
 												</div>
 											</div>

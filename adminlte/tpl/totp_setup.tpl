@@ -17,7 +17,7 @@
 					<input type="text" id="totp_test" class="form-control" onfocus="totp_clear_code()"/>
 					<small class="text-muted">{{$test_title_sub}}</small>
 				</div>
-				<button id="otp-test-submit" type="submit" name="submit" class="btn btn-outline-primary" onclick="totp_test_code(); return false;">
+				<button id="otp-test-submit" type="submit" name="submit" class="btn btn-primary" onclick="totp_test_code(); return false;">
 					{{$test}}
 				</button>
 			</form>

@@ -28,7 +28,7 @@
 				</div>
 				<div id="chat-submit-wrapper" class="clearfix">
 					<div id="chat-submit" class="dropup float-end">
-						<button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
+						<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
 						<button class="btn btn-primary btn-sm" type="submit" id="chat-submit" name="submit" value="{{$submit}}">{{$submit}}</button>
 						<div class="dropdown-menu dropdown-menu-end">
 							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=online"><i class="bi bi-circle-fill online"></i>&nbsp;{{$online}}</a>
@@ -45,36 +45,36 @@
 					</div>
 					<div id="chat-tools" class="btn-toolbar">
 						<div class="btn-group me-2">
-							<button id="main-editor-bold" class="btn btn-outline-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
+							<button id="main-editor-bold" class="btn btn-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
 								<i class="bi bi-type-bold jot-icons"></i>
 							</button>
-							<button id="main-editor-italic" class="btn btn-outline-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
+							<button id="main-editor-italic" class="btn btn-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
 								<i class="bi bi-type-italic jot-icons"></i>
 							</button>
-							<button id="main-editor-underline" class="btn btn-outline-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
+							<button id="main-editor-underline" class="btn btn-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
 								<i class="bi bi-type-underline jot-icons"></i>
 							</button>
-							<button id="main-editor-quote" class="btn btn-outline-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
+							<button id="main-editor-quote" class="btn btn-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
 								<i class="bi bi-quote jot-icons"></i>
 							</button>
-							<button id="main-editor-code" class="btn btn-outline-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
+							<button id="main-editor-code" class="btn btn-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
 								<i class="bi bi-code jot-icons"></i>
 							</button>
 						</div>
 						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-link-wrapper" class="btn btn-outline-secondary btn-sm" onclick="chatJotGetLink(); return false;" >
+							<button id="chat-link-wrapper" class="btn btn-secondary btn-sm" onclick="chatJotGetLink(); return false;" >
 								<i id="chat-link" class="bi bi-link-45deg jot-icons" title="{{$insert}}" ></i>
 							</button>
 						</div>
 						{{if $feature_encrypt}}
 						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-encrypt-wrapper" class="btn btn-outline-secondary btn-sm" onclick="sodium_encrypt('#chatText'); return false;">
+							<button id="chat-encrypt-wrapper" class="btn btn-secondary btn-sm" onclick="sodium_encrypt('#chatText'); return false;">
 								<i id="chat-encrypt" class="bi bi-key jot-icons" title="{{$encrypt}}" ></i>
 							</button>
 						</div>
 						{{/if}}
 						<div class="btn-group dropup d-md-none">
-							<button type="button" id="more-tools" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+							<button type="button" id="more-tools" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 								<i id="more-tools-icon" class="bi bi-gear jot-icons"></i>
 							</button>
 							<div class="dropdown-menu">

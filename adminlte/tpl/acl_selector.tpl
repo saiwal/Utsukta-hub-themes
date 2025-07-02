@@ -57,14 +57,14 @@
     					</div>
           </div>
           <div>
-  		  	  <button class="acl-button-hide btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
-	    			<button class="acl-button-show btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
+  		  	  <button class="acl-button-hide btn btn-sm btn-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
+	    			<button class="acl-button-show btn btn-sm btn-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
           </div>
             </div>
 				</div>
 			</div>
 			<div class="modal-footer clear">
-				<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{$aclModalDismiss}}</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$aclModalDismiss}}</button>
 			</div>
 		</div><!-- /.modal-content -->
 	</div><!-- /.modal-dialog -->

@@ -106,9 +106,9 @@ function updateSize() {
 	<div class="section-title-wrapper app-content-header">
 		<div class="float-end">
 			<div class="btn-group">
-				<button id="prev-btn" class="btn btn-outline-secondary btn-sm" title="{{$prev}}"><i class="bi bi-chevron-left"></i></button>
-				<button id="today-btn" class="btn btn-outline-secondary btn-sm" title="{{$today}}"><span id="events-spinner" class="spinner s"></span><i class="bi bi-crosshair" style="display: none; padding: 0.065rem;"></i></button>
-				<button id="next-btn" class="btn btn-outline-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
+				<button id="prev-btn" class="btn btn-secondary btn-sm" title="{{$prev}}"><i class="bi bi-chevron-left"></i></button>
+				<button id="today-btn" class="btn btn-secondary btn-sm" title="{{$today}}"><span id="events-spinner" class="spinner s"></span><i class="bi bi-crosshair" style="display: none; padding: 0.065rem;"></i></button>
+				<button id="next-btn" class="btn btn-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
 			</div>
 		</div>
 		<h3 id="title"></h3>

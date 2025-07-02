@@ -1,4 +1,4 @@
-<div class="{{if $tiles}}section-content-wrapper{{else}}section-content-wrapper-np{{/if}}">
+<div class="section-content-wrapper">
 	{{if $tiles}}
 	<table id="cloud-index" class="table table-hover">
 		<tr id="new-upload-progress-bar-0"></tr> {{* this is needed to append the upload files in the right order *}}
@@ -116,12 +116,12 @@
 						{{include file="field_checkbox.tpl" field=$recurse}}
 						{{/if}}
 						<div id="attach-multi-submit" class="mb-3">
-							<button id="cloud-multi-tool-cancel-btn" class="btn btn-outline-secondary btn-sm cloud-multi-tool-cancel-btn" type="button">
+							<button id="cloud-multi-tool-cancel-btn" class="btn btn-secondary btn-sm cloud-multi-tool-cancel-btn" type="button">
 									{{$cancel_label}}
 							</button>
 							<div id="attach-multi-edit-perms" class="btn-group float-end">
 								{{if $is_owner}}
-								<button id="multi-dbtn-acl" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button">
+								<button id="multi-dbtn-acl" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button">
 									<i id="multi-jot-perms-icon" class="bi bi-{{$lockstate}} jot-icons jot-perms-icon"></i>
 								</button>
 								{{/if}}
@@ -230,7 +230,7 @@
 							<input type="text" class="form-control" id="link-code-input-{{$item.attach_id}}" name="link-code-input-{{$item.attach_id}}" value="{{$item.link_bbcode}}" onclick="this.select();" />
 						</div>
 						<div class="mb-3">
-							<button id="cloud-tool-close-btn-{{$item.attach_id}}" class="btn btn-outline-secondary btn-sm cloud-tool-cancel-btn" type="button" data-id="{{$item.attach_id}}">
+							<button id="cloud-tool-close-btn-{{$item.attach_id}}" class="btn btn-secondary btn-sm cloud-tool-cancel-btn" type="button" data-id="{{$item.attach_id}}">
 								{{$close_label}}
 							</button>
 						</div>
@@ -248,12 +248,12 @@
 						{{if $item.collection}}{{include file="field_checkbox.tpl" field=$item.recurse}}{{/if}}
 						{{/if}}
 						<div id="attach-submit-{{$item.attach_id}}" class="mb-3">
-							<button id="cloud-tool-cancel-btn-{{$item.attach_id}}" class="btn btn-outline-secondary btn-sm cloud-tool-cancel-btn" type="button" data-id="{{$item.attach_id}}">
+							<button id="cloud-tool-cancel-btn-{{$item.attach_id}}" class="btn btn-secondary btn-sm cloud-tool-cancel-btn" type="button" data-id="{{$item.attach_id}}">
 									{{$cancel_label}}
 							</button>
 							<div id="attach-edit-perms-{{$item.attach_id}}" class="btn-group float-end">
 								{{if $is_owner}}
-								<button id="dbtn-acl-{{$item.attach_id}}" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button">
+								<button id="dbtn-acl-{{$item.attach_id}}" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button">
 									<i id="jot-perms-icon-{{$item.attach_id}}" class="bi bi-{{$item.lockstate}} jot-icons jot-perms-icon"></i>
 								</button>
 								{{/if}}

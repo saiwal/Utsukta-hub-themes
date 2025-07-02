@@ -41,14 +41,14 @@
 
 							</div>
 							<div class="modal-footer">
-								<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 							</div>
 						</div><!-- /.modal-content -->
 					</div><!-- /.modal-dialog -->
 				</div><!-- /.modal -->
 			</div>
 			<div class="float-end">
-				<button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#apsModal">{{$permission_limits_label}}</button>
+				<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#apsModal">{{$permission_limits_label}}</button>
 			</div>
 			{{/if}}
 			<div class="settings-submit-wrapper" >

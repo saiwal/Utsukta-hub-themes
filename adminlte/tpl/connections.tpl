@@ -7,7 +7,7 @@
 			<button type="button" class="btn btn-primary btn-sm" onclick="openClose('contacts-search-form'); closeMenu('contacts-follow-form'); $('#contacts-search').focus();">
 				<i class="bi bi-search"></i>&nbsp;{{$label}}
 			</button>
-			<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$sort}}">
+			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$sort}}">
 				<i class="bi bi-funnel"></i>
 			</button>
 			<div class="dropdown-menu dropdown-menu-end">

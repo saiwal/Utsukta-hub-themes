@@ -1,7 +1,7 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper clearfix app-content-header">
 		<div class="btn-group float-end">
-			<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$sort}}">
+			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$sort}}">
 				<i class="bi bi-arrow-down-up"></i>
 			</button>
 			<div class="dropdown-menu dropdown-menu-end">

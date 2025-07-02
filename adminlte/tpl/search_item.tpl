@@ -106,8 +106,8 @@
 			<div class="p-2 clearfix wall-item-tools">
 				<div class="float-end wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
 					{{if $item.moderate}}
-					<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
-					<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
+					<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
+					<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
 					{{else}}
 					{{if $item.star && $item.star.isstarred}}
 					<div class="" id="star-button-{{$item.id}}">

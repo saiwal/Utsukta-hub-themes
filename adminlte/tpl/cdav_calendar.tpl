@@ -589,7 +589,7 @@ function exportDate() {
 	<div class="section-title-wrapper app-content-header">
 		<div class="float-end">
 			<div class="dropdown">
-				<button id="view_selector" type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"></button>
+				<button id="view_selector" type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"></button>
 				<div class="dropdown-menu">
 					<a class="dropdown-item" href="#" onclick="changeView('dayGridMonth'); return false;">{{$month}}</a>
 					<a class="dropdown-item" href="#" onclick="changeView('timeGridWeek'); return false;">{{$week}}</a>
@@ -600,9 +600,9 @@ function exportDate() {
 					<a class="dropdown-item" href="#" onclick="changeView('listDay'); return false;">{{$list_day}}</a>
 				</div>
 				<div class="btn-group">
-					<button id="prev-btn" class="btn btn-outline-secondary btn-sm" title="{{$prev}}"><i class="bi bi-chevron-left"></i></button>
-					<button id="today-btn" class="btn btn-outline-secondary btn-sm" title="{{$today}}"><span id="events-spinner" class="spinner s"></span><i class="bi bi-crosshair" style="display: none; padding: 0.065rem;"></i></button>
-					<button id="next-btn" class="btn btn-outline-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
+					<button id="prev-btn" class="btn btn-secondary btn-sm" title="{{$prev}}"><i class="bi bi-chevron-left"></i></button>
+					<button id="today-btn" class="btn btn-secondary btn-sm" title="{{$today}}"><span id="events-spinner" class="spinner s"></span><i class="bi bi-crosshair" style="display: none; padding: 0.065rem;"></i></button>
+					<button id="next-btn" class="btn btn-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
 				</div>
 			</div>
 		</div>
@@ -616,7 +616,7 @@ function exportDate() {
 			</div>
 			<div>
 				<button id="event_delete_recurrent" type="button" class="btn btn-danger btn-sm">{{$delete_all}}</button>
-				<button id="event_cancel_recurrent" type="button" class="btn btn-outline-secondary btn-sm">{{$cancel}}</button>
+				<button id="event_cancel_recurrent" type="button" class="btn btn-secondary btn-sm">{{$cancel}}</button>
 			</div>
 		</div>
 		<div id="event_form_wrapper" style="display: none">
@@ -652,14 +652,14 @@ function exportDate() {
 				</div>
 				<div class="mb-3">
 					<div class="float-end">
-						<button id="event_more" type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-caret-down"></i> {{$more}}</button>
-						<button id="dbtn-acl" class="btn btn-outline-secondary btn-sm d-none" type="button" data-bs-toggle="modal" data-bs-target="#aclModal"><i id="jot-perms-icon" class="bi bi-{{$lockstate}}"></i></button>
+						<button id="event_more" type="button" class="btn btn-secondary btn-sm"><i class="bi bi-caret-down"></i> {{$more}}</button>
+						<button id="dbtn-acl" class="btn btn-secondary btn-sm d-none" type="button" data-bs-toggle="modal" data-bs-target="#aclModal"><i id="jot-perms-icon" class="bi bi-{{$lockstate}}"></i></button>
 						<button id="event_submit" type="button" value="" class="btn btn-primary btn-sm"></button>
 
 					</div>
 					<div>
 						<button id="event_delete" type="button" class="btn btn-danger btn-sm">{{$delete}}</button>
-						<button id="event_cancel" type="button" class="btn btn-outline-secondary btn-sm">{{$cancel}}</button>
+						<button id="event_cancel" type="button" class="btn btn-secondary btn-sm">{{$cancel}}</button>
 					</div>
 					<div class="clear"></div>
 				</div>
@@ -667,7 +667,7 @@ function exportDate() {
 			{{$acl}}
 		</div>
 	</div>
-	<div class="section-content-wrapper-np">
+	<div class="section-content-wrapper">
 		<div id="calendar"></div>
 	</div>
 </div>

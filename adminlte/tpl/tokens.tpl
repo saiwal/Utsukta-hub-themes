@@ -18,7 +18,7 @@
 
 			<div class="clearfix">
 				{{if $atoken}}
-				<button type="submit" name="delete" class="btn btn-outline-danger">{{$delete}}</button>
+				<button type="submit" name="delete" class="btn btn-danger">{{$delete}}</button>
 				{{/if}}
 				<button type="submit" name="submit" class="btn btn-primary float-end">{{$submit}}</button>
 			</div>

@@ -9,10 +9,10 @@
 			<div id="roles-tool-collapse" class="accordion-collapse collapse {{if $section == 'roles'}} show{{/if}}" role="tabpanel" aria-labelledby="roles-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{include file="field_select.tpl" field=$permcat}}
-					<button class="btn btn-outline-secondary btn-sm float-end sub_section{{if $sub_section == 'perms'}} sub_section_active{{/if}}" type="button" onclick="openClose('perms-table', 'table')" data-section="perms">
+					<button class="btn btn-secondary btn-sm float-end sub_section{{if $sub_section == 'perms'}} sub_section_active{{/if}}" type="button" onclick="openClose('perms-table', 'table')" data-section="perms">
 						{{$compare_label}}
 					</button>
-					<a href="permcats/{{$permcat_value}}" class="btn btn-sm btn-outline-primary">
+					<a href="permcats/{{$permcat_value}}" class="btn btn-sm btn-primary">
 						<i class="bi bi-box-arrow-up-right"></i>&nbsp;{{$permcat_new}}
 					</a>
 					<table id="perms-table" class="table table-hover table-sm mt-3" style="display: {{if $sub_section == 'perms'}}table{{else}}none{{/if}};">
@@ -61,7 +61,7 @@
 					{{foreach $groups as $group}}
 					{{include file="field_checkbox.tpl" field=$group}}
 					{{/foreach}}
-					<a href="group/new" class="btn btn-sm btn-outline-primary">
+					<a href="group/new" class="btn btn-sm btn-primary">
 						<i class="bi bi-box-arrow-up-right"></i>&nbsp;{{$pgroups_label}}
 					</a>
 				</div>
@@ -78,7 +78,7 @@
 			<div id="profile-tool-collapse" class="accordion-collapse collapse{{if $section == 'profile'}} show{{/if}}" role="tabpanel" aria-labelledby="profile-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{$profile_select}}
-					<a href="profiles" class="btn btn-sm btn-outline-primary">
+					<a href="profiles" class="btn btn-sm btn-primary">
 						<i class="bi bi-box-arrow-up-right"></i>&nbsp;{{$profiles_label}}
 					</a>
 				</div>

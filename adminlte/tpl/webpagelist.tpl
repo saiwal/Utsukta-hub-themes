@@ -14,7 +14,7 @@
 	</div>
 	{{/if}}
 	{{if $pages}}
-	<div id="pagelist-content-wrapper" class="section-content-wrapper-np">
+	<div id="pagelist-content-wrapper" class="section-content-wrapper">
 		<table id="webpage-list-table" class="table table-hover">
       <thead>
 			<tr>
