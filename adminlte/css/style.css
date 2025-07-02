@@ -173,4 +173,9 @@ span.spinner {
   border-radius: 0 var(--bs-border-radius) 0 0;
   border-style: solid;
   border-width: 1px 1px 0 0;
+} 
+
+.section-content-wrapper{
+  background-color: rgba(var(--bs-body-bg-rgb), 0.75);
+  padding: 1rem;
 }
