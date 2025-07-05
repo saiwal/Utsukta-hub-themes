@@ -847,83 +847,49 @@
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end" style="overflow-y: auto; overflow-x:hidden; max-height: 80vh;"> <!--begin::User Image-->
           {{if $is_owner}}
           <!--begin::Menu Body-->
-          <li class="user-body p-0">
-            <!--begin::Profile Row-->
-            <div class="row">
               {{foreach $nav.usermenu as $usermenu}}
-              <div class="col-12"><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a> </div>
+          <li><a href="{{$usermenu.0}}" class="dropdown-item">{{$usermenu.1}}</a></li>
               {{/foreach}}
+            <li><hr class="dropdown-divider"></li>
               {{if $nav.group}}
-              <div class="col-12"><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a>
-              </div>
+          <li><a href="{{$nav.group.0}}" class="dropdown-item">{{$nav.group.1}}</a></li>
+            <li><hr class="dropdown-divider"></li>
               {{/if}}
-            </div> <!--end::Row-->
-          </li>
           {{if $nav.manage}}
-          <li class="user-body p-0">
-            <!--begin::Channels Row-->
-            <div class="row">
-              <div class="col-12"><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a>
-              </div>
-            </div> <!--end::Row-->
-          </li>
+          <li><a href="{{$nav.manage.0}}" class="dropdown-item">{{$nav.manage.1}}</a></li>
+            <li><hr class="dropdown-divider"></li>
           {{/if}}
           {{if $nav.channels}}
-          <li class="user-body p-0">
-            <!--begin::Channel list Row-->
-            <div class="row">
               {{foreach $nav.channels as $chan}}
-              <div class="col-12"><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
+              <li><a href="manage/{{$chan.channel_id}}" class="dropdown-item">
                   <i
                     class="bi bi-circle{{if $localuser == $chan.channel_id}}-fill text-success{{else}} text-disabled{{/if}}"></i>
                   {{$chan.channel_name}}
-                </a></div>
+                </a></li>
               {{/foreach}}
-          </li>
           {{/if}}
+            <li><hr class="dropdown-divider"></li>
           {{if $nav.settings}}
-          <li class="user-body p-0">
-            <div class="row">
-              <div class="col-12">
-                <a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem"
-                  id="{{$nav.settings.4}}">{{$nav.settings.1}}</a>
-              </div>
+          <li><a class="dropdown-item" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem"
+            id="{{$nav.settings.4}}">{{$nav.settings.1}}</a></li>
               {{if $nav.admin}}
-              <div class="col-12">
-                <a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem"
-                  id="{{$nav.admin.4}}">{{$nav.admin.1}}</a>
-              </div>
+          <li><a class="dropdown-item" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem"
+            id="{{$nav.admin.4}}">{{$nav.admin.1}}</a></li>
               {{/if}}
-            </div>
-          </li>
+          <li><hr class="dropdown-divider"></li>
           {{/if}}
-          <!--end::Menu Body-->
-          <!--begin::Menu Footer-->
-          <li class="user-body p-0">
-            <div class="row">
+
               {{if $nav.profiles}}
-              <div class="col-12">
-                <a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a>
-              </div>
+          <li><a href="{{$nav.profiles.0}}" class="dropdown-item">{{$nav.profiles.1}}</a></li>
               {{/if}}
               {{if $nav.logout}}
-              <div class="col-12">
-                <a href="{{$nav.logout.0}}" class="dropdown-item">{{$nav.logout.1}}</a>
-              </div>
+          <li><a href="{{$nav.logout.0}}" class="dropdown-item">{{$nav.logout.1}}</a></li>
               {{/if}}
-            </div> <!--end::Row-->
-          </li> <!--end::Menu Footer-->
           {{/if}}
           {{if ! $is_owner}}
           <!--begin::Menu Footer-->
-          <li class="user-footer">
-            <div class="col-12">
-              <a href="{{$nav.rusermenu.0}}" class="dropdown-item">{{$nav.rusermenu.1}}</a>
-            </div>
-            <div class="col-12">
-              <a href="{{$nav.rusermenu.2}}" class="dropdown-item">{{$nav.rusermenu.3}}</a>
-            </div>
-          </li> <!--end::Menu Footer-->
+          <li><a href="{{$nav.rusermenu.0}}" class="dropdown-item">{{$nav.rusermenu.1}}</a></li>
+          <li><a href="{{$nav.rusermenu.2}}" class="dropdown-item">{{$nav.rusermenu.3}}</a></li>
           {{/if}}
         </ul>
       </li>
@@ -1171,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="modal-body" id="search-autocomplete-results">
                   <form class="d-flex" method="get" action="{{$nav.search.4}}" role="search">
                       <input class="form-control form-control-sm me-2" id="nav-search-text" type="text" value="" placeholder="{{$nav.search.3}}" name="search" title="{{$nav.search.3}}" />
-                      <button type="submit" class="btn btn-secondary btn-sm"><i class="bi bi-search"></i></button>
+                      <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
                   </form>
                   <div id="nav-search-spinner" class="spinner-wrapper d-none">
                       <div class="spinner s"></div>
