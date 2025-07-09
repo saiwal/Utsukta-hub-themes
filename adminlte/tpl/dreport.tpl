@@ -13,7 +13,7 @@
 		<h3>{{$title}}</h3>
 	</div>
 
-	<table>
+	<table class="table">
 	{{if $entries}}
 	{{foreach $entries as $e}}
 	<tr>
