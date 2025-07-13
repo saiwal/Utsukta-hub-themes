@@ -1,6 +1,6 @@
 {{if !$item.threaded && $item.comment_firstcollapsed}}
-<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small" onclick="showHideComments({{$item.id}});">
-	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle" data-expanded="{{$item.collapse_comments}}" data-collapsed="{{$item.expand_comments}}">{{$item.expand_comments}}</span>{{if !$item.threaded}}&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>{{/if}}
+<div id="hide-comments-outer-{{$item.parent}}" class="d-flex justify-content-center hide-comments-outer fakelink small" onclick="showHideComments({{$item.id}});"><span class="badge text-bg-info">
+  <i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle" data-expanded="{{$item.collapse_comments}}" data-collapsed="{{$item.expand_comments}}">{{$item.expand_comments}}</span>{{if !$item.threaded}}&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>{{/if}}</span>
 </div>
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
