@@ -23,7 +23,7 @@
 		<div class="contact-photo-wrapper" id="directory-photo-wrapper-{{$entry.hash}}" >
 			<div class="contact-photo" id="directory-photo-{{$entry.hash}}" >
 				<a href="{{$entry.profile_link}}" class="directory-profile-link" id="directory-profile-link-{{$entry.hash}}" >
-					<img class="directory-photo-img" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy"/>
+					<img class="directory-photo-img img-thumbnail shadow" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy"/>
 				</a>
 			</div>
 		</div>

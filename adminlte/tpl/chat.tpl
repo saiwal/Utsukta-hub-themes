@@ -153,7 +153,7 @@ function update_inroom(inroom) {
 	var count = inroom.length;
 	$.each( inroom, function(index, item) {
 		var newNode = document.createElement('li');
-		$(newNode).html('<img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img img-size-32"><div class="contacts-list-info"><span class="contacts-list-name text-body-emphasis">'+ item.name +'<small class="contacts-list-date text-success float-end">' + item.status + '</small></span></div>');
+		$(newNode).html('<img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img img-thumbnail shadow img-size-32"><div class="contacts-list-info"><span class="contacts-list-name text-body-emphasis">'+ item.name +'<small class="contacts-list-date text-success float-end">' + item.status + '</small></span></div>');
 		html.appendChild(newNode);
 	});
     memberChange = chatRoomMembersChange(inroom); // get list of arrivals and departures

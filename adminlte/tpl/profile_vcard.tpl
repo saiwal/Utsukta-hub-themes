@@ -6,8 +6,8 @@
     <div class="d-flex">
       <div id="profile-photo-wrapper" class="overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
-        <img class="img-thumbnail" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
-          alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
+        <img class="img-thumbnail shadow" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
+          alt="{{$profile.fullname}}">
       </div>
       <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
         <div class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
