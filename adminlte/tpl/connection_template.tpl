@@ -29,16 +29,17 @@
 
       <!-- Category -->
       <div class="col-md-1 text-center text-md-start mt-2 mt-md-0">
-        <small><span id="contact-role-{{$contact.id}}" class="badge bg-warning text-dark me-1" title="{{$role_label}}">{{$contact.role}}</span></small>
-      </div>
-
-      <!-- Edit Icon -->
-      <div class="col-md-1 text-end mt-2 mt-md-0">
         {{if $contact.status}}
         	{{foreach $contact.states as $state}}
         		<span class="badge rounded-pill bg-danger text-white me-1" title="">{{$state}}</span>
           {{/foreach}}
     		{{/if}}
+        <small><span id="contact-role-{{$contact.id}}" class="badge bg-warning text-dark me-1" title="{{$role_label}}">{{$contact.role}}</span></small>
+      </div>
+
+      <!-- Edit Icon -->
+      <div class="col-md-1 text-end mt-2 mt-md-0">
+
         <button type="button" class="btn btn-tool contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
 	  			<i class="bi bi-pencil contact-edit-icon-{{$contact.id}}"></i>
   			</button>
