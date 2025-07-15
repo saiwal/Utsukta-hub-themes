@@ -14,7 +14,7 @@
         </div>
       </div>
       <!-- Age of Account -->
-      <div class="col-md-2 text-center text-md-start mt-2 mt-md-0">
+      <div class="col-md-2 text-center text-md-start mt-0 mt-md-0">
 			{{if $contact.connected}}
         <small></strong> <span class="autotime" title="{{$contact.connected}}"></span></small>
 			{{/if}}
@@ -39,7 +39,7 @@
       </div>
 
       <!-- Edit Icon -->
-      <div class="col-md-1 text-end mt-2 mt-md-0">
+      <div class="col-md-1 text-end mt-0 mt-md-0">
 
         <button type="button" class="btn btn-tool contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
 	  			<i class="bi bi-pencil contact-edit-icon-{{$contact.id}}"></i>
