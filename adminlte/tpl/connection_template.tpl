@@ -1,7 +1,7 @@
   <div class="card mb-3">
     <div class="row align-items-center flex-column flex-md-row card-body ">
       <!-- Profile Section (image + name) -->
-      <div class="col-12 col-md-4 mb-3 mb-md-0">
+      <div class="col-12 col-md-5 mb-3 mb-md-0">
         <div class="d-flex align-items-center">
           <a href="{{$contact.url}}"><img src="{{$contact.thumb}}" alt="{{$contact.name}}" class="rounded-circle me-3  img-size-32" alt="User"></a>
           <div class="flex-column">
@@ -14,7 +14,7 @@
         </div>
       </div>
       <!-- Age of Account -->
-      <div class="col-md-3 text-center text-md-start mt-2 mt-md-0">
+      <div class="col-md-2 text-center text-md-start mt-2 mt-md-0">
 			{{if $contact.connected}}
         <small></strong> <span class="autotime" title="{{$contact.connected}}"></span></small>
 			{{/if}}
