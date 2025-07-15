@@ -16,7 +16,7 @@
       <!-- Age of Account -->
       <div class="col-md-3 text-center text-md-start mt-2 mt-md-0">
 			{{if $contact.connected}}
-        <small><strong>{{$contact.connected_label}}:</strong> <span class="autotime" title="{{$contact.connected}}"></span></small>
+        <small></strong> <span class="autotime" title="{{$contact.connected}}"></span></small>
 			{{/if}}
       </div>
 
