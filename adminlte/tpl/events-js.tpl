@@ -25,7 +25,7 @@
 		{{$form}}
 	</div>
 	<div class="clear"></div>
-	<div class="section-content-wrapper-np">
+	<div class="section-content-wrapper">
 		<div id="events-calendar"></div>
 	</div>
 </div>
