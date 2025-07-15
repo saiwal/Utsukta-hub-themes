@@ -36,7 +36,7 @@
 			{{if $entry.about}}
       <p><strong>{{$entry.about_label}}</strong> {{$entry.about}}</p>
 			{{/if}}
-      <div class="d-flex gap-2 justify-content-end">
+      <div class="d-flex gap-2 justify-content-end position-absolute bottom-0 end-0 m-2">
       {{if $entry.censor_2}}
 			<a class="btn btn-danger btn-sm {{$entry.censor_2_class}}" href="{{$entry.censor_2}}"> {{$entry.censor_2_label}}</a>
 			{{/if}}
