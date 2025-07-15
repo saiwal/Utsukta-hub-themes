@@ -28,7 +28,7 @@
       <p><strong>{{$entry.hometown_label}}</strong> {{$entry.hometown}}</p>
 			{{/if}}
 			{{if $entry.homepage}}
-      <p><strong>{{$entry.homepage}}</strong> <a href="https://{{$entry.homepageurl}}">{{$entry.homepageurl}}</a></p>
+      <p><strong>{{$entry.homepage}}</strong> {{$entry.homepageurl}}</p>
 			{{/if}}
 			{{if $entry.kw}}
       <p><strong>{{$entry.kw}}</strong> {{$entry.keywords}}</p>
