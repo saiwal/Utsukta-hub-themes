@@ -6,7 +6,7 @@
         <a href="{{$entry.profile_link}}" class="flex-shrink-0 me-3"><img src="{{$entry.photo}}" alt="Profile Picture" class="img-thumbnail " style="width: 100px; height: 100px; object-fit: cover;"></a>
         <div class="flex-column">
         <h4 class="mb-0 text-wrap">{{if $entry.public_forum}}<i class="bi bi-chat" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}' class="link-body-emphasis" >{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</h4>
-          <p class="text-muted small">{{$entry.address}}</p></div>
+          <p class="text-muted small text-break">{{$entry.address}}</p></div>
       </div>
     </div>
 

@@ -8,7 +8,7 @@
             <h6 class="mb-0">{{include "connstatus.tpl" perminfo=$contact.perminfo}}{{if $contact.public_forum}}<i class="bi bi-chat" title="{{$group_label}}"></i>&nbsp;{{/if}}<a href="{{$contact.url}}" title="{{$contact.img_hover}}">{{$contact.name}}</a></h6>
             {{if $contact.phone}}&nbsp;<a class="btn btn-outline-secondary btn-sm" href="tel:{{$contact.phone}}" title="{{$contact.call}}"><i class=bi bi-phone connphone"></i></a>{{/if}}
 			      {{if $contact.webbie}}
-            <small class="text-muted">{{$contact.webbie}}</small>
+            <small class="text-muted text-break">{{$contact.webbie}}</small>
       			{{/if}}
           </div>
         </div>
@@ -21,14 +21,15 @@
       </div>
 
       <!-- Account Type -->
-      <div class="col-md-3 text-center text-md-start mt-2 mt-md-0">
+      <div class="col-md-2 d-flex flex-column text-center text-md-start mt-2 mt-md-0">
 			{{if $contact.network}}
-        <small>{{$contact.network}} - <a href="{{$contact.recentlink}}" rel="nofollow noopener">{{$contact.recent_label}}</a></small>
+        <small>{{$contact.network}}</small>
+        <small><a href="{{$contact.recentlink}}" rel="nofollow noopener">{{$contact.recent_label}}</a></small>
 			{{/if}}
       </div>
 
       <!-- Category -->
-      <div class="col-md-1 text-center text-md-start mt-2 mt-md-0">
+      <div class="col-md-2 text-center text-md-start mt-2 mt-md-0">
         {{if $contact.status}}
         	{{foreach $contact.states as $state}}
         		<span class="badge rounded-pill bg-danger text-white me-1" title="">{{$state}}</span>
