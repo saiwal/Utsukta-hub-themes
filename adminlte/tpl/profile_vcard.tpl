@@ -14,7 +14,7 @@
             title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
             title="{{$profile.online}}"></i>{{/if}}
         </div>
-        <div class="card-subtitle text-muted">{{$profile.reddress}}</div>
+        <div class="card-subtitle text-muted text-break">{{$profile.reddress}}</div>
       </div>
       {{if $connect}}
       <a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
