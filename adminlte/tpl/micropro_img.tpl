@@ -4,7 +4,7 @@
   <img class="img-fluid rounded-circle position-relative p-1" src="{{$photo}}" alt="" title="{{$title}}">
     {{$title}}
   </a>
-    {{if $perminfo}}<span class="position-absolute top-0 start-100">
+    {{if $perminfo}}<span class="position-absolute top-0 end-0">
     {{include "connstatus.tpl"}}</span>
     {{/if}}
   </div>
