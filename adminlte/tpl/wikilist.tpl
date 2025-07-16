@@ -24,8 +24,10 @@
 		<div class="clear"></div>
 	</div>
 	{{/if}}
-	<div class="section-content-wrapper">
-		<table id="wikis-index">
+	<div class="section-content-wrapper-np">
+  <div class="card mb-3">
+    <div class="card-body p-0">
+		<table id="wikis-index" class="table">
 			<tr>
 				<th width="96%">{{$name}}</th>
 				<th width="1%">{{$type}}</th>
@@ -74,6 +76,8 @@
 			{{/if}}
 			{{/foreach}}
 		</table>
+	</div>
+	</div>
 	</div>
 </div>
 {{$acl}}

@@ -45,6 +45,8 @@
 	{{$map}}
 	</div>
 	<div id="photo-edit" class="section-content-tools-wrapper">
+    <div class="card mb-3">
+  <div class="card-body">
 		<form action="photos/{{$edit.nickname}}/{{$edit.resource_id}}" method="post" id="photo_edit_form" class="acl-form" data-form_id="photo_edit_form" data-allow_cid='{{$edit.allow_cid}}' data-allow_gid='{{$edit.allow_gid}}' data-deny_cid='{{$edit.deny_cid}}' data-deny_gid='{{$edit.deny_gid}}'>
 			<input type="hidden" name="item_id" value="{{$edit.item_id}}" />
 			{{* album renaming is not supported atm.
@@ -97,9 +99,13 @@
 				<button id="tool-submit" class="btn btn-primary btn-sm" type="submit" name="submit" >{{$edit.submit}}</button>
 			</div>
 		</form>
+	</div>
+	</div>
 		{{$edit.aclselect}}
 		<div id="photo-edit-end" class="clear"></div>
 	</div>
+    <div class="card mb-3">
+      <div class="card-body">
 	<div id="photo-view-wrapper">
 		<div id="photo-photo"><a href="{{$photo.href}}" title="{{$photo.title}}" onclick="{{$onclick}}"><img style="width: 100%;" src="{{$photo.src}}"></a></div>
 		<div id="photo-photo-end" class="clear"></div>
@@ -161,6 +167,8 @@
 			{{/if}}
 			<div class="clear"></div>
 		</div>
+	</div>
+	</div>
 	</div>
 	{{$comments}}
 	{{if $commentbox}}

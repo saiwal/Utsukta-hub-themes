@@ -15,7 +15,9 @@
 	{{/if}}
 	{{if $pages}}
 	<div id="pagelist-content-wrapper" class="section-content-wrapper-np">
-		<table id="block-list-table">
+    <div class="card mb-3">
+      <div class="card-body p-0">
+		<table id="block-list-table" class="table">
 			<tr>
 				<th width="1%">{{$name}}</th>
 				<th width="94%">{{$blocktitle}}</th>
@@ -63,6 +65,9 @@
 			{{/foreach}}
 			{{/foreach}}
 		</table>
+
+	</div>
+	</div>
 	</div>
 	<div class="clear"></div>
 	{{/if}}

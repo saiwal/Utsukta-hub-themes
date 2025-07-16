@@ -10,6 +10,8 @@
 	</div>
 	{{$upload_form}}
 	<div class="section-content-wrapper-np clearfix">
+<div class="card mb-3">
+  <div class="card-body">
 		<div id="photo-album-contents-{{$album_id}}" style="display: none">
 			{{foreach $photos as $photo}}
 				{{include file="photo_top.tpl"}}
@@ -17,6 +19,8 @@
 			{{** make sure this element is at the bottom - we rely on that in endless scroll **}}
 			<span id="page-end" class="d-block float-start w-100" style="position: absolute; bottom: 0px"></span>
 		</div>
+	</div>
+	</div>
 	</div>
 </div>
 <div class="photos-end"></div>

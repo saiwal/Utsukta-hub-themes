@@ -1,4 +1,4 @@
-<div class="section-content-wrapper">
+<div class="section-content-wrapper-np">
 	{{if $tiles}}
 	<table id="cloud-index" class="table table-hover">
 		<tr id="new-upload-progress-bar-0"></tr> {{* this is needed to append the upload files in the right order *}}
@@ -38,6 +38,8 @@
 		{{/foreach}}
 	</div>
 	{{else}}
+    <div class="card mb-3">
+      <div class="card-body p-0">
 	<table id="cloud-index" class="table table-hover">
     <thead>
 		<tr>
@@ -269,5 +271,7 @@
 		{{/if}}
 		{{/foreach}}
 	</table>
+	</div>
+	</div>
 {{/if}}
 </div>

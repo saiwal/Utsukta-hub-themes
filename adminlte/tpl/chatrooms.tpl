@@ -10,6 +10,8 @@
 	{{/if}}
 	{{if $rooms}}
 	<div class="section-content-wrapper-np">
+    <div class="card mb-3">
+      <div class="card-body p-0">
 		<table id="chatrooms-index" class="table table-hover">
       <thead>
 			<tr>
@@ -34,6 +36,8 @@
 			{{/foreach}}
 		</table>
 
+	</div>
+	</div>
 	</div>
 	{{else}}
 	<div class="section-content-wrapper">

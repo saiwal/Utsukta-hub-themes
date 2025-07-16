@@ -11,7 +11,9 @@
 
 	{{if $menus }}
 	<div id="menulist-content-wrapper" class="section-content-wrapper-np">
-		<table id="menu-list-table">
+    <div class="card mb-3">
+      <div class="card-body p-0">
+		<table id="menu-list-table" class="table">
 			<tr>
 				<th width="1%"></th>
 				<th width="1%">{{$nametitle}}</th>
@@ -35,6 +37,8 @@
 			</tr>
 			{{/foreach}}
 		</table>
+	</div>
+	</div>
 	</div>
 	{{/if}}
 </div>

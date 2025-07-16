@@ -19,10 +19,10 @@
 			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenEditorHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
 			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineEditorHeight()"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h2>
+		<h3>
 			<span id="wiki-header-name">{{$wikiheaderName}}</span>:
 			<span id="wiki-header-page">{{$wikiheaderPage}}</span>
-		</h2>
+		</h3>
 		<div class="clear"></div>
 	</div>
 	<div id="rename-page-form-wrapper" class="section-content-tools-wrapper" style="display:none;">

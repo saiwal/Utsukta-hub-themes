@@ -610,6 +610,9 @@ function exportDate() {
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" style="display: none">
+    <div class="card mb-3">
+      <div class="card-body">
+
 		<div id="recurrence_warning" style="display: none">
 			<div class="section-content-warning-wrapper">
 				{{$recurrence_warning}}
@@ -666,8 +669,14 @@ function exportDate() {
 			</form>
 			{{$acl}}
 		</div>
+		</div>
+		</div>
 	</div>
-	<div class="section-content-wrapper">
+	<div class="section-content-wrapper-np">
+    <div class="card mb-3">
+      <div class="card-body">
 		<div id="calendar"></div>
+	</div>
+	</div>
 	</div>
 </div>
