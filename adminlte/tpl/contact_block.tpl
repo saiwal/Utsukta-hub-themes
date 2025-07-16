@@ -13,7 +13,7 @@
   </div>
   {{if $micropro}}
   <!-- /.card-header -->
-  <div class="card-body p-0">
+  <div class="card-body p-0 overflow-y-auto" style="max-height: 19rem;">
     <div class="row text-center m-1">
       {{foreach $micropro as $m}}
         {{$m}}
