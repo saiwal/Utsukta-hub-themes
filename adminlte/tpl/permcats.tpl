@@ -1,9 +1,10 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
 		<h3>{{$title}}</h3>
-		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper">
+    <div class="card mb-3">
+    <div class="card-body">
 		<form action="permcats/{{$return_path}}" id="settings-permcats-form" method="post" autocomplete="off" >
 			<input type="hidden" name="form_security_token" value="{{$form_security_token}}">
 			<input type="hidden" name="return_path" value="{{$return_path}}">
@@ -38,6 +39,8 @@
 				<button type="submit" name="submit" class="btn btn-primary float-end">{{$submit}}</button>
 			</div>
 		</form>
+	</div>
+	</div>
 	</div>
 </div>
 {{if !$is_system_role && $return_path}}
