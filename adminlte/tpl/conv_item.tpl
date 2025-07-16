@@ -131,7 +131,7 @@
 								<div class="row g-0">
 									{{foreach $item.reactions as $react}}
 									<div class="col-3 p-2">
-										<a class="" href="#" onclick="jotReact({{$item.id}},'{{$react}}'); return false;"><img class="menu-img-1" src="/images/emoji/emojitwo/{{$react}}.png" alt="{{$react}}" /></a>
+										<a class="" href="#" onclick="jotReact({{$item.id}},'{{$react}}'); return false;"><img class="img-size-32" src="/images/emoji/emojitwo/{{$react}}.png" alt="{{$react}}" /></a>
 									</div>
 									{{/foreach}}
 								</div>
