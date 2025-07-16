@@ -45,22 +45,14 @@
 					</div>
 				</div>
 
-				<div class="list-group-item-flush acl-list-item" rel="acl-template" style="display:none">
-          <div class="d-flex justify-content-between">
-					<div class="acl-item-header clearfix d-flex">
-						<img class="mx-auto my-auto img-thumbnail rounded-circle shadow img-size-64" data-src="{0}" loading="lazy" />
-              <div class="wall-item-author ms-2">
-                <div class="text-truncate">
-                    <span class="wall-item-name" id="wall-item-name-38"><bdi>{1}</bdi></span>
-                </div>
-                  <small class="lh-sm text-truncate d-block wall-item-addr text-body-secondary">{6}</small>
-    					</div>
+          <div class="list-group-item-flush acl-list-item" rel="acl-template" style="display:none">
+					<div class="acl-item-header clearfix d-flex justify-content-start align-items-center">
+						<img class="img-thumbnail rounded-circle shadow img-size-64 me-2" data-src="{0}" loading="lazy" />
+            <span class="wall-item-name me-2" id="wall-item-name-38"><bdi>{1}</bdi></span>
+            <small class="lh-sm text-truncate d-block wall-item-addr text-body-secondary">{6}</small>
           </div>
-          <div>
-  		  	  <button class="acl-button-hide btn btn-sm btn-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
-	    			<button class="acl-button-show btn btn-sm btn-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
-          </div>
-            </div>
+  		  	<button class="acl-button-hide btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> {{$hide}}</button>
+	    		<button class="acl-button-show btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$show}}</button>
 				</div>
 			</div>
 			<div class="modal-footer clear">
