@@ -119,7 +119,7 @@
 								<i class="bi bi-{{$response.button.icon}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
 							</button>
 							{{if $response.modal}}
-							<div class="modal modal-lg" id="{{$verb}}Modal-{{$item.id}}">
+							<div class="modal" id="{{$verb}}Modal-{{$item.id}}">
 								<div class="modal-dialog">
 									<div class="modal-content">
 										<div class="modal-header">
