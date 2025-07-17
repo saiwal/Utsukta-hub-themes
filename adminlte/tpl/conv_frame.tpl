@@ -9,7 +9,7 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3 class="modal-title" id="conversation_settings_label">{{$conversation_tools}}</h3>
+				<h5 class="modal-title" id="conversation_settings_label">{{$conversation_tools}}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body" id="conversation_settings_body">
@@ -19,10 +19,10 @@
 	</div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 <div class="modal modal-lg" id="reactions" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog">
+	<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3 class="modal-title" id="reactions_title"></h3>
+				<h5 class="modal-title" id="reactions_title"></h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-header" id="reactions_action">
