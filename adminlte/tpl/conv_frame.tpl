@@ -27,7 +27,7 @@
 			</div>
 			<div class="modal-header" id="reactions_action">
 			</div>
-			<div class="modal-body d-flex row row-cols-6" id="reactions_body">
+			<div class="modal-body row row-cols-2 row-cols-sm-3 row-cols-md-6 g-3" id="reactions_body">
 				{{$wait}}
 			</div>
 			<div class="ps-3 pe-3" id="reactions_extra_top"></div>
