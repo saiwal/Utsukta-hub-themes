@@ -123,7 +123,7 @@
 								<div class="modal-dialog">
 									<div class="modal-content">
 										<div class="modal-header">
-											<h3 class="modal-title">{{$response.count}} {{$response.button.label}}</h3>
+											<h5 class="modal-title">{{$response.count}} {{$response.button.label}}</h3>
 											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 										</div>
 										{{if $item.reactions_allowed && !($verb === 'announce' && $item.my_responses.$verb)}} {{** undo announce is not yet supported **}}
