@@ -1,11 +1,10 @@
 	<h3>{{$light}}</h3>
-	{{include file="field_colorinput.tpl" field=$bgcolor}}
-	{{include file="field_colorinput.tpl" field=$background_image}}
+	{{include file="field_input.tpl" field=$bgcolor}}
+	{{include file="field_input.tpl" field=$background_image}}
 
 	<h3>{{$dark}}</h3>
-	{{include file="field_colorinput.tpl" field=$bgcolor_dark}}
-	{{include file="field_colorinput.tpl" field=$background_image_dark}}
-  <hr>
+	{{include file="field_input.tpl" field=$bgcolor_dark}}
+	{{include file="field_input.tpl" field=$background_image_dark}}
 
   <div class="section-content-info-wrapper callout callout-info mb-2">You can get some seamless textures at <a href="https://www.transparenttextures.com/">https://www.transparenttextures.com/</a></div>
 
