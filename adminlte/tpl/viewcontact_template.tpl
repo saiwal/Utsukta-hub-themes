@@ -2,7 +2,7 @@
 	<div class="section-title-wrapper app-content-header">
 		<h3>{{$title}}</h3>
 	</div>
-	<div class="section-content-wrapper clearfix">
+	<div class="section-content-wrapper clearfix row row-cols-2 row-cols-sm-3 row-cols-md-3 g-3">
 		{{foreach $contacts as $contact}}
 		{{include file="contact_template.tpl"}}
 		{{/foreach}}
