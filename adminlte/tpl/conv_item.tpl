@@ -19,12 +19,9 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="card-header border-bottom-0 wall-item-title " id="wall-item-title-{{$item.id}}">
+				<div class="card-header wall-item-title " id="wall-item-title-{{$item.id}}">
 					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
 				</div>
-				{{if ! $item.is_new}}
-				<hr class="m-0">
-				{{/if}}
 				{{/if}}
 				<div class="ps-2 pt-2 pe-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
 					<div class="lh-sm text-end float-end">
