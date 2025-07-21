@@ -71,10 +71,10 @@
 		<div id="jot-text-wrap" class="border-0">
 			<div id="profile-jot-tools" class="btn-group input-group-text p-0 d-none">
 				{{if $is_owner}}
-				<a id="profile-jot-settings" class="btn btn-secondary btn-sm border-0" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
+				<a id="profile-jot-settings" class="btn btn-secondary btn-sm" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
 				{{/if}}
 				{{if $reset}}
-				<button type="button" id="profile-jot-reset" class="btn btn-secondary btn-sm border-0" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
+				<button type="button" id="profile-jot-reset" class="btn btn-secondary btn-sm" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
 					<i class="bi bi-x-lg"></i>
 				</button>
 				{{/if}}
