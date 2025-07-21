@@ -135,6 +135,11 @@
 							</div>
 						</div>
 						{{/if}}
+						{{if $item.no_comment}}
+            <a type="button" class="btn btn-sm btn-link link-secondary " href="/search?search={{$item.plink.href}}">
+							<i class="bi bi-file-earmark-arrow-down "></i>
+						</a>
+						{{/if}}
 						<div class="">
 							<div id="like-rotator-{{$item.id}}" class="spinner-wrapper">
 								<div class="spinner s"></div>
