@@ -32,14 +32,12 @@
       {{$no_pdesc}}
     </p>
     {{/if}}
-  </div>
 
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
-  <ul class="list-group list-group-flush">
+    <dl class="row">
     {{if $location}}
-    <li class="list-group-item">
-      <dt class="location-label">{{$location}}</dt>
-      <dd class="adr h-adr">
+      <dt class="location-label col-sm-4">{{$location}}</dt>
+      <dd class="adr h-adr col-sm-8">
         {{if $profile.address}}
         <div class="street-address p-street-address">{{$profile.address}}</div>
         {{/if}}
@@ -54,40 +52,30 @@
         <div class="country-name p-country-name">{{$profile.country_name}}</div>
         {{/if}}
       </dd>
-    </li>
     {{/if}}
     {{if $hometown}}
-    <li class="list-group-item">
-      <dt class="hometown-label">{{$hometown}}</dt>
-      <dd class="p-hometown">{{$profile.hometown}}</dd>
-    </li>
+      <dt class="col-sm-4 hometown-label">{{$hometown}}</dt>
+      <dd class="p-hometown col-sm-8">{{$profile.hometown}}</dd>
     {{/if}}
     {{if $gender}}
-    <li class="list-group-item">
-
-      <dt class="gender-label">{{$gender}}</dt>
-      <dd class="p-gender">{{$profile.gender}}</dd>
-    </li>
+      <dt class="col-sm-4 gender-label">{{$gender}}</dt>
+      <dd class="p-gender col-sm-8">{{$profile.gender}}</dd>
     {{/if}}
     {{if $marital}}
-    <li class="list-group-item">
-
-      <dt class="marital-label"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
-      <dd class="marital-text">{{$profile.marital}}</dd>
-    </li>
+      <dt class="marital-label col-sm-4"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
+      <dd class="marital-text col-sm-8">{{$profile.marital}}</dd>
     {{/if}}
     {{if $homepage}}
-    <li class="list-group-item">
-      <dt class="card-link">{{$homepage}}</dt>
-      <dd class="">
+      <dt class="card-link col-sm-4">{{$homepage}}</dt>
+      <dd class=" col-sm-8">
         {{$profile.homepage}}
       </dd>
-    </li>
-  </ul>
   {{/if}}
   {{/if}}
-</div>
+    </dl>
+  </div>
 
+</div>
 {{if $details}}
 {{$chanmenu}}
 {{$contact_block}}

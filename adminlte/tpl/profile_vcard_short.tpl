@@ -8,29 +8,45 @@
 {{$rating}}
 
 	{{if $pdesc}}<div class="title">{{$profile.pdesc}}</div>{{/if}}
-
-	{{if $location}}
-		<dl class="location"><dt class="location-label">{{$location}}</dt> 
-		<dd class="adr">
-			{{if $profile.address}}<div class="street-address">{{$profile.address}}</div>{{/if}}
-			<span class="city-state-zip">
-				<span class="locality">{{$profile.locality}}</span>{{if $profile.locality}}, {{/if}}
-				<span class="region">{{$profile.region}}</span>
-				<span class="postal-code">{{$profile.postal_code}}</span>
-			</span>
-			{{if $profile.country_name}}<span class="country-name">{{$profile.country_name}}</span>{{/if}}
-		</dd>
-		</dl>
-	{{/if}}
-
-	{{if $gender}}<dl class="mf"><dt class="gender-label">{{$gender}}</dt> <dd class="x-gender">{{$profile.gender}}</dd></dl>{{/if}}
-	
-
-	{{if $marital}}<dl class="marital"><dt class="marital-label"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt><dd class="marital-text">{{$profile.marital}}</dd></dl>{{/if}}
-
-	{{if $homepage}}<dl class="homepage"><dt class="homepage-label">{{$homepage}}</dt><dd class="homepage-url">{{$profile.homepage}}</dd></dl>{{/if}}
-
-<div id="clear"></div>
+<dl class="row">
+    {{if $location}}
+      <dt class="location-label col-sm-4">{{$location}}</dt>
+      <dd class="adr h-adr col-sm-8">
+        {{if $profile.address}}
+        <div class="street-address p-street-address">{{$profile.address}}</div>
+        {{/if}}
+        <div class="city-state-zip">
+          <span class="postal-code p-postal-code">{{$profile.postal_code}}</span>
+          <span class="locality p-locality">{{$profile.locality}}</span>
+        </div>
+        {{if $profile.region}}
+        <div class="region p-region">{{$profile.region}}</div>
+        {{/if}}
+        {{if $profile.country_name}}
+        <div class="country-name p-country-name">{{$profile.country_name}}</div>
+        {{/if}}
+      </dd>
+    {{/if}}
+    {{if $hometown}}
+      <dt class="col-sm-4 hometown-label">{{$hometown}}</dt>
+      <dd class="p-hometown col-sm-8">{{$profile.hometown}}</dd>
+    {{/if}}
+    {{if $gender}}
+      <dt class="col-sm-4 gender-label">{{$gender}}</dt>
+      <dd class="p-gender col-sm-8">{{$profile.gender}}</dd>
+    {{/if}}
+    {{if $marital}}
+      <dt class="marital-label col-sm-4"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
+      <dd class="marital-text col-sm-8">{{$profile.marital}}</dd>
+    {{/if}}
+    {{if $homepage}}
+      <dt class="card-link col-sm-4">{{$homepage}}</dt>
+      <dd class=" col-sm-8">
+        {{$profile.homepage}}
+      </dd>
+  {{/if}}
+  {{/if}}
+</dl>
 
 {{$chanmenu}}
 
