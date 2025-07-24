@@ -29,8 +29,9 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
-#### Variants (Schemas)
+#### Variants (Schemes)
 
+- [Brite](https://bootswatch.com/brite)
 - [Cosmo](https://bootswatch.com/cosmo/)
 - [Journal](https://bootswatch.com/journal/)
 - [Sandstone](https://bootswatch.com/sandstone/)
