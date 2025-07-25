@@ -1,5 +1,5 @@
-		<div class="comment-wwedit-wrapper w-100{{if $threaded}} threaded{{/if}}" id="comment-edit-wrapper-{{$id}}">
-			<form class="comment-edit-form" id="comment-edit-form-{{$id}}" action="item" method="post" onsubmit="post_comment({{$id}}); return false;">
+		<div class="comment-wwedit-wrapper{{if $threaded}} threaded{{/if}}" id="comment-edit-wrapper-{{$id}}">
+			<form class="comment-edit-form w-100" id="comment-edit-form-{{$id}}" action="item" method="post" onsubmit="post_comment({{$id}}); return false;">
 				<input type="hidden" name="type" value="{{$type}}" />
 				<input type="hidden" name="profile_uid" value="{{$profile_uid}}" />
 				<input type="hidden" name="parent" value="{{$parent}}" />
@@ -14,7 +14,7 @@
 					{{$anon_extras}}
 				</div>
 				{{/if}}
-				<textarea id="comment-edit-text-{{$id}}" class="comment-edit-text" placeholder="{{$comment}}" name="body" ondragenter="linkdropper(event);" ondragleave="linkdropexit(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);" ></textarea>
+				<textarea id="comment-edit-text-{{$id}}" class="comment-edit-text form-control" placeholder="{{$comment}}" name="body" ondragenter="linkdropper(event);" ondragleave="linkdropexit(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);" ></textarea>
 				<div id="comment-tools-{{$id}}" class="pt-2 comment-tools">
 					<div id="comment-edit-bb-{{$id}}" class="btn-toolbar float-start">
 						<div class="btn-group me-2">
