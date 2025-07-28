@@ -1,12 +1,11 @@
 [region=topnav]
 [widget=mynavbar][/widget]
 [/region]
-
+[template=default][/template]
 [region=aside]
 [widget=helpindex][/widget]
 [/region]
 [region=content]
-[widget=test][/widget]
 $content
 [/region]
 [region=right_aside]
