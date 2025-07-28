@@ -1,6 +1,6 @@
 <div class="card mb-3">
 	<div class="card-header">{{$title}}</div>
-  <div class="card-body">
+  <div class="card-body p-0">
 	<ul class="nav nav-pills flex-column">
 		{{foreach $menu_items as $menu_item}}
 		<li class="nav-item">
