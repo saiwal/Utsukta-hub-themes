@@ -179,3 +179,56 @@ span.spinner {
   background-color: rgba(var(--bs-body-bg-rgb), 0.75);
   padding: 1rem;
 }
+
+.shared_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.shared_header img {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.shared_header span {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.shared_header a {
+  color: var(--bs-primary);
+  text-decoration: none;
+}
+
+.shared_header a:hover {
+  text-decoration: underline;
+}
+
+.shared_header .autotime {
+  margin-left: auto;
+  color: var(--bs-secondary);
+  font-size: 0.8rem;
+  white-space: nowrap;
+} 
+
+.reshared-content {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+
+}
