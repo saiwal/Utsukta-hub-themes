@@ -2083,8 +2083,7 @@ function post_comment(id) {
 				$("#comment-edit-text-" + id).val('').blur().attr('placeholder', aStr.comment);
 				$('#wall-item-sub-thread-wrapper-' + data.thr_parent_id).append(data.html);
 
-				const comment = document.getElementById('wall-item-content-wrapper-' + data.id);
-				comment.classList.add('item-highlight-fade');
+				const comment = document.getElementById('thread-wrapper-' + data.id);
 				comment.scrollIntoView({
 					behavior: 'smooth',
 					block: 'center'
