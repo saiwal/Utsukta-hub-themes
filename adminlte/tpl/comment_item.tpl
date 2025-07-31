@@ -70,5 +70,5 @@
 				</div>
 				<div class="clear"></div>
 			</form>
-			<div id="comment-edit-preview-{{$id}}" class="comment-edit-preview mt-5"></div>
+			<div id="comment-edit-preview-{{$id}}" class="comment-edit-preview w-100"></div>
 		</div>
