@@ -48,7 +48,7 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<div class="h3">
+				<div class="h5">
 					{{$delete_label}}
 				</div>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

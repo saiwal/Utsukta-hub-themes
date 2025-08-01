@@ -136,7 +136,7 @@
 								<div class="modal-content">
 									<div class="modal-header">
 										<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
-										<h4 class="modal-title">{{$response.title}}</h4>
+										<h5 class="modal-title">{{$response.title}}</h5>
 									</div>
 									<div class="modal-body">
 										<ul>{{foreach $response.list as $liker}}<li role="presentation">{{$liker}}</li>{{/foreach}}</ul>

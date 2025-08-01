@@ -23,7 +23,7 @@
 					<div class="modal-dialog">
 						<div class="modal-content">
 							<div class="modal-header">
-								<div class="modal-title h3">{{$permission_limits_label}}</div>
+								<div class="modal-title h5">{{$permission_limits_label}}</div>
 								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 							</div>
 							<div class="modal-body">

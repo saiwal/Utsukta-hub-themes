@@ -56,7 +56,7 @@
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<div class="modal-header">
-							<div class="modal-title h3" id="perms_modal_label">Permissions Overview</div>
+							<div class="modal-title h5" id="perms_modal_label">Permissions Overview</div>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
 						<div class="modal-body">

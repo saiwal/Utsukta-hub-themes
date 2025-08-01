@@ -278,7 +278,7 @@
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h3 class="modal-title" id="expiryModalLabel">{{$jotnets_label}}</h3>
+							<h5 class="modal-title" id="expiryModalLabel">{{$jotnets_label}}</h5>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 						</div>
 						<div class="modal-body">
@@ -309,7 +309,7 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3 class="modal-title" id="expiryModalLabel">{{$expires}}</h3>
+				<h5 class="modal-title" id="expiryModalLabel">{{$expires}}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
@@ -336,7 +336,7 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3 class="modal-title" id="createdModalLabel">{{$future_txt}}</h3>
+				<h5 class="modal-title" id="createdModalLabel">{{$future_txt}}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
@@ -363,7 +363,7 @@
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3 class="modal-title" id="embedPhotoModalLabel">{{$embedPhotosModalTitle}}</h3>
+				<h5 class="modal-title" id="embedPhotoModalLabel">{{$embedPhotosModalTitle}}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body" id="embedPhotoModalBody" >

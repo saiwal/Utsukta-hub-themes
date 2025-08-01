@@ -47,7 +47,7 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h4 class="modal-title" id="embedPhotoModalLabel">{{$embedPhotosModalTitle}}</h4>
+				<h5 class="modal-title" id="embedPhotoModalLabel">{{$embedPhotosModalTitle}}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body" id="embedPhotoModalBody">
