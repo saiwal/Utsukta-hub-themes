@@ -91,7 +91,7 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="p-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="p-3 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
