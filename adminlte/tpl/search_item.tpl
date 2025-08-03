@@ -90,7 +90,7 @@
 			<hr class="wall-item-divider">
 			{{/if}}
 			{{if $item.body}}
-			<div class="p-2 clrearfix {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}" id="wall-item-content-{{$item.id}}">
+			<div class="p-2 clearfix w-100 {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}" id="wall-item-content-{{$item.id}}">
 				<div class="wall-item-body" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 					{{$item.body}}
 				</div>
