@@ -174,7 +174,7 @@ span.spinner {
   border-style: solid;
   border-width: 1px 1px 0 0;
 } 
-
+/* Shared Container  */
 .section-content-wrapper{
   background-color: rgba(var(--bs-body-bg-rgb), 0.75);
   padding: 1rem;
@@ -256,4 +256,50 @@ span.spinner {
   background-color: var(--bs-dark-bg-subtle, #f8f9fa);
   padding: 0.75rem;
   border-radius
+}
+/* Shared Container  */
+
+/* jumping dots */
+.jumping-dots span {
+	position: relative;
+	bottom: 0px;
+	transition-timing-function: ease-in-out;
+	-webkit-animation: jump 1s infinite;
+	animation: jump 1s infinite;
+}
+
+.jumping-dots .dot-1 {
+	-webkit-animation-delay: 200ms;
+	animation-delay: 200ms;
+}
+
+.jumping-dots .dot-2 {
+	-webkit-animation-delay: 400ms;
+	animation-delay: 400ms;
+}
+
+.jumping-dots .dot-3 {
+	-webkit-animation-delay: 600ms;
+	animation-delay: 600ms;
+}
+
+@-webkit-keyframes jump {
+	0% {
+		bottom: 0px;
+	}
+	20% {
+		bottom: 3px;
+	}
+	40% {
+		bottom: 0px;
+	}
+}
+
+@keyframes jump {
+	0%   {bottom: 0px;}
+	20%  {bottom: 3px;}
+	40%  {bottom: 0px;}
+}
+/* jumping dots end */
+
 
