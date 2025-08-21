@@ -14,17 +14,15 @@
         {{include file="field_textarea.tpl" field=$advanced}}
         <input type="submit" name="submit" class="btn btn-primary float-end" value="{{$submit}}" />
       </form>
-
-
     </div>
-    <div class="card mb-4">
+    {{if $cust_fields}}
+    <div class="card mb-3">
       <div class="card-header border-0">
         <h3 class="card-title">{{$cust_field_desc}}</h3>
       </div>
       <div class="card-body table-responsive p-0">
         <table class="table table-striped align-middle" role="table">
           <tbody>     {{foreach $cust_fields as $field}}
-
             <tr>
               <td>
                 {{$field.field_name}}
@@ -41,6 +39,7 @@
         </table>
       </div>
     </div>
+    {{/if}}
   </div>
 
 </div>
