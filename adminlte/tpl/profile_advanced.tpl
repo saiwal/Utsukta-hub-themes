@@ -21,7 +21,7 @@
 				<a class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" href="#" ><i class="bi bi-pencil"></i>&nbsp;{{$editmenu.edit.3}}</a>
 				<div class="dropdown-menu dropdown-menu-end">
 					{{foreach $editmenu.menu.entries as $e}}
-					<a class="dropdown-item" href="profiles/{{$e.id}}"><img class="menu-img-1" src='{{$e.photo}}'> {{$e.profile_name}}</a>
+					<a class="dropdown-item" href="profiles/{{$e.id}}"><img class="menu-img-1 img-thumbnail p-1 img-size-32" src='{{$e.photo}}'> {{$e.profile_name}}</a>
 					{{/foreach}}
 					{{if $editmenu.menu.cr_new}}
 					<a class="dropdown-item" href="profiles/new" id="profile-listing-new-link">{{$editmenu.menu.cr_new}}</a>
