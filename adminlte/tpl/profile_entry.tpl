@@ -1,7 +1,7 @@
 <div class="col m-0">
   <div class="info-box">
       <a href="profiles/{{$id}}">
-        <img src="{{$photo}}" class="img-size-64" id="profile-listing-photo-{{$id}}" alt="{{$alt}}">
+        <img src="{{$photo}}" class="img-size-64 img-thumbnail" id="profile-listing-photo-{{$id}}" alt="{{$alt}}">
       </a>
 
     <div class="info-box-content">
