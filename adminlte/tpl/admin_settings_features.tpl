@@ -20,7 +20,7 @@
 						{{include file="field_checkbox.tpl" field=$fcat.0}}
 						{{include file="field_checkbox.tpl" field=$fcat.1}}
 					{{/foreach}}
-					<div class="settings-submit-wrapper" >
+					<div class="settings-submit-wrapper d-flex justify-content-end" >
 						<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 					</div>
 				</div>

@@ -1,12 +1,13 @@
 <div class="generic-content-wrapper-styled table-responsive" id="adminpage">
 	<div class="section-title-wrapper app-content-header">
-	<h3>{{$title}} - {{$page}}</h3>
+	<h3 class="border-0">{{$title}} - {{$page}}</h3>
 	</div>
 
 	<form action="{{$baseurl}}/admin/accounts" method="post">
 		<input type="hidden" name="form_security_token" value="{{$form_security_token}}">
-
-		<h3>{{$h_pending}}</h3>
+    <div class="card mb-3">
+		<div class="card-header">{{$h_pending}}</div>
+      <div class="card-body">
 		{{if $debug}}<div>{{$debug}}</div>{{/if}}
 		{{if $pending}}
 		<table id="pending" class="table table-hover">
@@ -38,7 +39,7 @@
 			{{/foreach}}
 			</tbody>
 		</table>
-		<div class="float-end">
+		<div class="float-end pt-2">
 			<a id="zar2sat" class="btn btn-sm btn-primary" href="javascript:;">{{$sel_tall}}</a>
 			<a id="zar2aas" class="zar2xas btn btn-sm btn-success" href="javascript:;"><i class="bi bi-check-lg"></i> {{$sel_aprv}}</a>
 			<a id="zar2das" class="zar2xas btn btn-sm btn-danger" href="javascript:;"><i class="bi bi-x-lg"></i> {{$sel_deny}}</a>
@@ -51,9 +52,12 @@
 		<div class="float-start">
 			<a class="btn btn-sm btn-link" href="{{$get_all_link}}">{{$get_all}}</a>
 		</div>
-		<div class="clearfix"></div>
-		<br><br>
-		<h3>{{$h_users}}</h3>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+		<div class="card-header">{{$h_users}}</div>
+    <div class="card-body">
 		{{if $users}}
 			<table id="users" class="table table-hover">
 				<thead>
@@ -94,13 +98,15 @@
 		{{*
 			<div class="selectall"><a href="#" onclick="return toggle_selectall('users_ckbx');">{{$select_all}}</a></div>
 		*}}
-			<div class="submit">
+			<div class="submit pt-2">
                 <input type="submit" name="page_accounts_block" class="btn btn-primary" value="{{$block}}/{{$unblock}}" />
                 <input type="submit" name="page_accounts_delete" class="btn btn-primary" onclick="return confirm_delete_multi()" value="{{$delete}}" />
             </div>
 		{{else}}
 			NO USERS?!?
 		{{/if}}
+            </div>
+            </div>
 	</form>
 </div>
 {{*

@@ -1,8 +1,10 @@
 <div class="generic-content-wrapper-styled" id='adminpage'>
 	<div class="section-title-wrapper app-content-header">
-	<h3>{{$title}} - {{$page}}</h3>
+	<h3 class="border-0">{{$title}}</h3>
 	</div>
-
+  <div class="card mb-3">
+    <div class="card-header">{{$page}}</div>
+<div class="card-body">
 	<form action="{{$baseurl}}/admin/security" method="post">
 
 	<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
@@ -34,10 +36,11 @@
 	{{/if}}
 
 
-	<div class="admin-submit-wrapper">
+	<div class="admin-submit-wrapper float-end">
 		<input type="submit" name="submit" class="btn btn-primary" value="{{$submit}}" />
 	</div>
 
 	</form>
-
+    </div>
+    </div>
 </div>
