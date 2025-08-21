@@ -4,7 +4,7 @@
 		<h3>{{$header}}</h3>
 	</div>
 	<div class="section-content-wrapper">
-		<div class="profile-listing-table">
+		<div class="row row-cols-1 row-cols-md-2 g-4">
 			{{$profiles}}
 		</div>
 	</div>
