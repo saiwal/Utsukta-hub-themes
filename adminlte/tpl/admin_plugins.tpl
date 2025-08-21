@@ -5,9 +5,6 @@
 
   <div class="card">
     <div class="card-header">
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        <h5 class="mb-0 text-capitalize">plugins</h5>
-      </div>
       <!-- Static A–Z index -->
       <nav id="azIndex" class="small mt-2 user-select-none" aria-label="Alphabetical index">
         <span class="me-2 text-muted">Jump:</span>
