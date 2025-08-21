@@ -42,7 +42,6 @@
 		<h3>{{$title}}</h3>
 		<div class="clear"></div>
 	</div>
-	<div class="section-content-wrapper">
     <div class="card  mb-3">
       <ul class="list-group list-group-flush">
 	{{foreach $fields as $f}}
@@ -316,5 +315,4 @@
 		<div class="clear"></div>
 		{{/foreach}}
 		{{/if}}
-	</div>
 </div>
