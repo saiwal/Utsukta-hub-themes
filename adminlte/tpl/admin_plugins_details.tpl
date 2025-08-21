@@ -44,7 +44,7 @@
   {{/foreach}}
 
   {{if $screenshot}}
-  <a href="{{$screenshot.0}}" class='screenshot'><img class="img-fluid" src="{{$screenshot.0}}" alt="{{$screenshot.1}}" /></a>
+  <img class="img-fluid" src="{{$screenshot.0}}" alt="{{$screenshot.1}}" />
   {{/if}}
 
   {{if $admin_form}}
