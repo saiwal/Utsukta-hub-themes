@@ -94,7 +94,7 @@
 			</div>
 			<small class="opacity-75">{{$e.info}}</small>
 			{{if $e.unseen_count}}
-			<span class="badge bg-transparent border border-{{$e.unseen_class}} text-{{$e.unseen_class}} rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">{{$e.unseen_count}}</span>
+			<span class="badge bg-transparent border  text-body-{{$e.unseen_class}} rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">{{$e.unseen_count}}</span>
 			{{/if}}
 		</a>
 		{{/foreach}}
@@ -239,7 +239,7 @@
 						e.author_addr,
 						e.href,
 						e.icon,
-						e.unseen_count ? '<span class="badge bg-transparent border border-' + e.unseen_class + ' text-' + e.unseen_class + ' rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">' + e.unseen_count + '</span>' : '',
+						e.unseen_count ? '<span class="badge bg-transparent border ' + ' text-body-' + e.unseen_class + ' rounded-pill position-absolute bottom-0 end-0 m-2 unseen_count" title="{{$strings.unseen_count}}">' + e.unseen_count + '</span>' : '',
 						e.author_img
 					);
 					$('#messages-loading').before(html);
