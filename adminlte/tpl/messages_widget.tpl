@@ -61,15 +61,15 @@
       <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Message filter">
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-all" value="" autocomplete="off"
           checked>
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-all">📨 All</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-all"><i class="bi bi-inbox"></i></label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-new" value="new"
           autocomplete="off">
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-new">✉️ New</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-new"><i class="bi bi-envelope"></i></label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-active" value="active"
           autocomplete="off">
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-active">🔢 Active</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-active"><i class="bi bi-envelope-exclamation"></i></label>
       </div>
     </div>
     <div id="messages-author-container" class="list-group-item notifications-textinput">
