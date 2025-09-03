@@ -12217,7 +12217,8 @@ select.form-control {
   -moz-appearance: none;
   appearance: none;
   cursor: pointer;
-  border: none;
+  border: none;  
+  padding-right: 1rem;
 }
 [type=checkbox]::before {
   position: absolute;
