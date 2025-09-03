@@ -58,7 +58,7 @@
   <div id="messages-container" class="list-group list-group-flush" data-offset="10">
 
     <div id="messages-filter-toolbar" class="list-group-item border-0 d-flex justify-content-center align-items-center">
-      <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Message filter">
+      <div class="btn-group btn-group-sm shadow-sm w-75" role="group" aria-label="Message filter">
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-all" value="" autocomplete="off"
           checked>
         <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-all"><i class="bi bi-inbox"></i></label>
