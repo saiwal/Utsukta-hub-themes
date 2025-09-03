@@ -56,20 +56,20 @@
     </a>
   </div>
   <div id="messages-container" class="list-group list-group-flush" data-offset="10">
-    <div id="messages-filter-toolbar"
-      class="list-group-item border-0 d-flex justify-content-start align-items-center gap-2">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Message filter">
+
+    <div id="messages-filter-toolbar" class="list-group-item border-0 d-flex justify-content-center align-items-center">
+      <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Message filter">
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-all" value="" autocomplete="off"
           checked>
-        <label class="btn btn-outline-secondary" for="filter-all">📨 All</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-all">📨 All</label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-new" value="new"
           autocomplete="off">
-        <label class="btn btn-outline-secondary" for="filter-new">✉️ New</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-new">✉️ New</label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-active" value="active"
           autocomplete="off">
-        <label class="btn btn-outline-secondary" for="filter-active">🔢 Active</label>
+        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-active">🔢 Active</label>
       </div>
     </div>
     <div id="messages-author-container" class="list-group-item notifications-textinput">
@@ -143,33 +143,33 @@
   let file;
 
   let unseen_filter = '';
-function apply_unseen_filter() {
-  $('#messages-container .message').each(function () {
-    const badge = $(this).find('.unseen_count');
-    const hasBadge = badge.length > 0;
-    const badgeText = badge.text().trim();
+  function apply_unseen_filter() {
+    $('#messages-container .message').each(function () {
+      const badge = $(this).find('.unseen_count');
+      const hasBadge = badge.length > 0;
+      const badgeText = badge.text().trim();
 
-    if (unseen_filter === 'new') {
-      // badge exists but is empty/whitespace
-      if (!hasBadge || badgeText !== '') {
-        $(this).hide();
-      } else {
+      if (unseen_filter === 'new') {
+        // badge exists but is empty/whitespace
+        if (!hasBadge || badgeText !== '') {
+          $(this).hide();
+        } else {
+          $(this).show();
+        }
+      }
+      else if (unseen_filter === 'active') {
+        // badge exists with a number
+        if (!hasBadge || badgeText === '') {
+          $(this).hide();
+        } else {
+          $(this).show();
+        }
+      }
+      else {
         $(this).show();
       }
-    }
-    else if (unseen_filter === 'active') {
-      // badge exists with a number
-      if (!hasBadge || badgeText === '') {
-        $(this).hide();
-      } else {
-        $(this).show();
-      }
-    }
-    else {
-      $(this).show();
-    }
-  });
-}
+    });
+  }
   $(document).ready(function () {
     updateRelativeTime('.autotime-narrow');
 
@@ -244,30 +244,38 @@ function apply_unseen_filter() {
     }
   });
 
-  $(document).on('click', '.messages-type', function (e) {
+$(document).on('click', '.messages-type', function (e) {
     e.preventDefault();
     $('.messages-type').removeClass('active');
     $(this).addClass('active');
+
     messages_offset = 0;
     messages_type = $(this).data('messages_type');
     author = messages_type === 'notification' ? author_url : author_hash;
 
-	// Reset unseen filter toggle to "All"
-	$('#filter-all').prop('checked', true);
-	unseen_filter = '';
-    if (messages_type === 'filed') {
-      $('#messages-author-container').addClass('d-none');
-      $('#messages-file-container').removeClass('d-none');
+    // Reset unseen filter toggle to "All"
+    $('#filter-all').prop('checked', true);
+    unseen_filter = '';
+
+    // Show/hide toolbar based on tab
+    if (!messages_type) {
+        // empty string = Conversations / All messages
+        $('#messages-filter-toolbar').removeClass('d-none');
+    } else {
+        $('#messages-filter-toolbar').addClass('d-none');
     }
-    else {
-      $('#messages-author-container').removeClass('d-none');
-      $('#messages-file-container').addClass('d-none');
+
+    if (messages_type === 'filed') {
+        $('#messages-author-container').addClass('d-none');
+        $('#messages-file-container').removeClass('d-none');
+    } else {
+        $('#messages-author-container').removeClass('d-none');
+        $('#messages-file-container').addClass('d-none');
     }
 
     $('#messages-container .message').remove();
     get_messages_page();
-  });
-
+});
   function get_messages_page() {
 
     if (get_messages_page_active)
