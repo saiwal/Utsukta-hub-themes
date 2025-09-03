@@ -143,6 +143,33 @@
   let file;
 
   let unseen_filter = '';
+function apply_unseen_filter() {
+  $('#messages-container .message').each(function () {
+    const badge = $(this).find('.unseen_count');
+    const hasBadge = badge.length > 0;
+    const badgeText = badge.text().trim();
+
+    if (unseen_filter === 'new') {
+      // badge exists but is empty/whitespace
+      if (!hasBadge || badgeText !== '') {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    }
+    else if (unseen_filter === 'active') {
+      // badge exists with a number
+      if (!hasBadge || badgeText === '') {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    }
+    else {
+      $(this).show();
+    }
+  });
+}
   $(document).ready(function () {
     updateRelativeTime('.autotime-narrow');
 
@@ -151,34 +178,6 @@
       apply_unseen_filter();
     });
 
-    function apply_unseen_filter() {
-      $('#messages-container .message').each(function () {
-        const badge = $(this).find('.unseen_count');
-        const hasBadge = badge.length > 0;
-        const badgeText = badge.text().trim();
-
-        if (unseen_filter === 'new') {
-          // badge exists but is empty or whitespace
-          if (!hasBadge || badgeText !== '') {
-            $(this).hide();
-          } else {
-            $(this).show();
-          }
-        }
-        else if (unseen_filter === 'active') {
-          // badge exists and contains a number
-          if (!hasBadge || badgeText === '') {
-            $(this).hide();
-          } else {
-            $(this).show();
-          }
-        }
-        else {
-          // default: show all
-          $(this).show();
-        }
-      });
-    }
     if (bParam_mid) {
       $('.message[data-b64mid=\'' + bParam_mid + '\']').addClass('active');
     }
