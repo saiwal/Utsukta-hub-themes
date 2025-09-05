@@ -26,7 +26,7 @@
 	{{/if}}
 	<div class="section-content-wrapper-np">
   <div class="card mb-3">
-    <div class="card-body p-0">
+    <div class="card-body">
 		<table id="wikis-index" class="table">
 			<tr>
 				<th width="96%">{{$name}}</th>

@@ -16,7 +16,7 @@
 	{{if $pages}}
 	<div id="pagelist-content-wrapper" class="section-content-wrapper-np">
     <div class="card mb-3">
-      <div class="card-body p-0">
+      <div class="card-body">
 		<table id="webpage-list-table" class="table table-hover">
       <thead>
 			<tr>

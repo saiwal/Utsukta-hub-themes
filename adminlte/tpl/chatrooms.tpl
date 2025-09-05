@@ -11,7 +11,7 @@
 	{{if $rooms}}
 	<div class="section-content-wrapper-np">
     <div class="card mb-3">
-      <div class="card-body p-0">
+      <div class="card-body">
 		<table id="chatrooms-index" class="table table-hover">
       <thead>
 			<tr>

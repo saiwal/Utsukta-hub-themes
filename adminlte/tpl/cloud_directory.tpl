@@ -39,7 +39,7 @@
 	</div>
 	{{else}}
     <div class="card mb-3">
-      <div class="card-body p-0">
+      <div class="card-body">
 	<table id="cloud-index" class="table table-hover">
     <thead>
 		<tr>
