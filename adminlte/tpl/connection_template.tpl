@@ -11,6 +11,9 @@
             <small class="text-muted text-break">{{$contact.webbie}}</small>
       			{{/if}}
           </div>
+          {{if $contact.connect}}
+      			<a href="{{$contact.follow}}" class="btn btn-success btn-sm ms-auto" title="{{$contact.connect_hover}}"><i class="bi bi-plus-lg"></i> {{$contact.connect}}</a>
+			    {{/if}}
         </div>
       </div>
       <!-- Age of Account -->
@@ -32,10 +35,10 @@
       <div class="col-md-2 text-center text-md-start mt-2 mt-md-0">
         {{if $contact.status}}
         	{{foreach $contact.states as $state}}
-        		<span class="badge rounded-pill bg-danger text-white me-1" title="">{{$state}}</span>
+        		<span class="badge rounded-pill bg-danger text-white me-1 text-wrap" title="">{{$state}}</span>
           {{/foreach}}
     		{{/if}}
-        <small><span id="contact-role-{{$contact.id}}" class="badge bg-warning text-dark me-1" title="{{$role_label}}">{{$contact.role}}</span></small>
+        <small><span id="contact-role-{{$contact.id}}" class="badge bg-warning text-dark me-1 text-wrap" title="{{$role_label}}">{{$contact.role}}</span></small>
       </div>
 
       <!-- Edit Icon -->
