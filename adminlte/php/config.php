@@ -37,6 +37,7 @@ class AdminlteConfig {
 		$arr['warning_color'] = get_pconfig(local_channel(),'adminlte', 'warning_color');
 		$arr['danger_color'] = get_pconfig(local_channel(),'adminlte', 'danger_color');
 		$arr['bg_mode'] = get_pconfig(local_channel(),'adminlte', 'bg_mode');
+		$arr['dark_mode'] = get_pconfig(local_channel(),'adminlte', 'dark_mode');
 		/*$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'adminlte', 'navbar_dark_mode');*/
 		/*$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );*/
 		/*$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );*/
@@ -68,7 +69,7 @@ class AdminlteConfig {
 			set_pconfig(local_channel(), 'adminlte', 'info_color', $_POST['adminlte_info_color']);
 			set_pconfig(local_channel(), 'adminlte', 'warning_color', $_POST['adminlte_warning_color']);
 			set_pconfig(local_channel(), 'adminlte', 'danger_color', $_POST['adminlte_danger_color']);
-			/*set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);*/
+			set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'bg_mode', $_POST['adminlte_bg_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color', $_POST['adminlte_background_color']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color_dark', $_POST['adminlte_background_color_dark']);

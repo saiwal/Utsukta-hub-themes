@@ -24,6 +24,7 @@ if(!App::$install) {
 		$background_image = get_pconfig($uid, 'adminlte', 'background_image');
 		$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');
 		$bg_mode = get_pconfig($uid, 'adminlte', 'bg_mode');
+		$dark_mode = get_pconfig($uid, 'adminlte', 'dark_mode');
 		/*$converse_width = get_pconfig($uid,'adminlte','converse_width');*/
 		/*$top_photo = get_pconfig($uid,'adminlte','top_photo');*/
 		/*  $reply_photo = get_pconfig($uid,'adminlte','reply_photo');*/
@@ -32,10 +33,11 @@ if(!App::$install) {
 
 
 # set some defaults 
-$bgcolor = $bgcolor ?: '';
-$bgcolor_dark = $bgcolor_dark ?: '';
+$bgcolor = $bgcolor ?: 'var(--bs-body-bg)';
+$bgcolor_dark = $bgcolor_dark ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: '';
 $background_image_dark = $background_image_dark ?: '';
+$dark_mode = 0;
 $bg_mode = ($bg_mode == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
@@ -43,6 +45,7 @@ $options = array (
   '$background_image' => $background_image,
   '$background_image_dark' => $background_image_dark,
   '$bg_mode' => $bg_mode,
+  '$dark_mode' => $dark_mode,
 );
 /**/
 // Allow layouts to over-ride the schema

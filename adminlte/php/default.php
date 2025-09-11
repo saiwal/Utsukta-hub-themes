@@ -1,6 +1,7 @@
 <?php
+
 /**
- *   * Name: default
+ * * Name: default
  *   * Description: AdminLTE default 2-column layout
  *   * Version: 1.6
  *   * Author: Saiwal
@@ -26,7 +27,7 @@
 <body class="layout-fixed sidebar-expand-md sidebar-mini app-loaded sidebar-open">
   <div class="app-wrapper">
 
-    <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
     
     <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
 
@@ -71,12 +72,14 @@
       "use strict";
 
       const storedTheme = localStorage.getItem("theme");
-
+      const defaultTheme = "<?php echo $page['color_mode'] ?? 'light'; ?>"; // Hubzilla setting
       const getPreferredTheme = () => {
         if (storedTheme) {
           return storedTheme;
         }
-
+        if (defaultTheme === "dark" || defaultTheme === "light" || defaultTheme === "auto") {
+          return defaultTheme;
+        }
         return window.matchMedia("(prefers-color-scheme: dark)").matches ?
           "dark" :
           "light";

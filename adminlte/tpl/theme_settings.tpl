@@ -10,7 +10,7 @@
 
   {{include file="field_select.tpl" field=$bg_mode}}
 
-<!--{{include file="field_checkbox.tpl" field=$advanced_theming}}-->
+{{include file="field_checkbox.tpl" field=$dark_mode}}
 
 <!--{{if $expert}}-->
 <!--	<hr>-->

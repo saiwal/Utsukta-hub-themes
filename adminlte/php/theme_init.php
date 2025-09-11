@@ -65,3 +65,20 @@ head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
 head_add_js('/view/theme/adminlte/js/adminlte.min.js');
 head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');
+
+
+$adminlte_mode = '';
+
+if (local_channel()) {
+	$adminlte_mode = ((get_pconfig(local_channel(), 'adminlte', 'dark_mode')) ? 'dark' : 'light');
+}
+
+if (App::$profile_uid) {
+	$adminlte_mode = ((get_pconfig(App::$profile_uid, 'adminlte', 'dark_mode')) ? 'dark' : 'light');
+}
+
+if (!$adminlte_mode) {
+	$adminlte_mode = ((Config::Get('adminlte', 'dark_mode')) ? 'dark' : 'light');
+}
+
+App::$page['color_mode'] = $adminlte_mode;
