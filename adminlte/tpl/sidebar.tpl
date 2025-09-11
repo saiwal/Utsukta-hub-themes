@@ -91,7 +91,13 @@
   </div>
   <!--end::Sidebar Wrapper-->
   <div class="d-flex justify-content-around bg-body-tertiary p-2">
-      <a href="/siteinfo" class="btn btn-dark btn-sm"><i class="bi bi-info-circle"> Siteinfo</i></a>
+    <ul class="nav sidebar-menu">
+    <li class="nav-item">
+      <a href="/siteinfo" class="nav-link">
+      <i class="nav-icon bi bi-person-circle ps-1"></i> <p>Siteinfo</p>
+    </a>
+      </ul>
+</li>
   </div>
 </aside>
 <!--end::Sidebar-->
