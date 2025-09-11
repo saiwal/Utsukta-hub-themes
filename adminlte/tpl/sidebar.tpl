@@ -94,7 +94,7 @@
     <ul class="nav sidebar-menu">
     <li class="nav-item">
       <a href="/siteinfo" class="nav-link">
-      <i class="nav-icon bi bi-person-circle ps-1"></i> <p>Siteinfo</p>
+      <i class="nav-icon bi bi-info-circle ps-1"></i> <p>Siteinfo</p>
     </a>
       </ul>
 </li>
