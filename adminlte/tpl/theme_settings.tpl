@@ -8,7 +8,7 @@
 
   <div class="section-content-info-wrapper callout callout-info mb-2">You can get some seamless textures at <a href="https://www.transparenttextures.com/">https://www.transparenttextures.com/</a></div>
 
-  <!--{{include file="field_select.tpl" field=$bg_mode}}-->
+  {{include file="field_select.tpl" field=$bg_mode}}
 
 <!--{{include file="field_checkbox.tpl" field=$advanced_theming}}-->
 

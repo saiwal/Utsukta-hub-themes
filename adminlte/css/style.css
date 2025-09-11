@@ -148,10 +148,12 @@ span.spinner {
 [data-bs-theme="light"] .app-main{
   background-color: $bgcolor;
   background-image: url($background_image);
+  background-size: $bg_mode;
 }
 [data-bs-theme="dark"] .app-main{
   background-color: $bgcolor_dark;
   background-image: url($background_image_dark);
+  background-size: $bg_mode;
 }
 
 .generic-icons-nav{

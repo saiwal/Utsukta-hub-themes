@@ -36,8 +36,7 @@ $bgcolor = $bgcolor ?: '';
 $bgcolor_dark = $bgcolor_dark ?: '';
 $background_image = $background_image ?: '';
 $background_image_dark = $background_image_dark ?: '';
-$bg_mode = $bg_mode ?: '';
-
+$bg_mode = ($bg_mode == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
   '$bgcolor_dark' => $bgcolor_dark,
