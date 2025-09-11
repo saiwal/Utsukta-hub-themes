@@ -38,7 +38,7 @@ class AdminlteConfig {
 		$arr['danger_color'] = get_pconfig(local_channel(),'adminlte', 'danger_color');
 		$arr['bg_mode'] = get_pconfig(local_channel(),'adminlte', 'bg_mode');
 		$arr['dark_mode'] = get_pconfig(local_channel(),'adminlte', 'dark_mode');
-		/*$arr['navbar_dark_mode'] = get_pconfig(local_channel(),'adminlte', 'navbar_dark_mode');*/
+		$arr['sidebar_mode'] = get_pconfig(local_channel(),'adminlte', 'sidebar_mode');
 		/*$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );*/
 		/*$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );*/
 		/*$arr['nav_bg_dark'] = get_pconfig(local_channel(),'adminlte', 'nav_bg_dark' );*/
@@ -70,6 +70,7 @@ class AdminlteConfig {
 			set_pconfig(local_channel(), 'adminlte', 'warning_color', $_POST['adminlte_warning_color']);
 			set_pconfig(local_channel(), 'adminlte', 'danger_color', $_POST['adminlte_danger_color']);
 			set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);
+			set_pconfig(local_channel(), 'adminlte', 'sidebar_mode', $_POST['adminlte_sidebar_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'bg_mode', $_POST['adminlte_bg_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color', $_POST['adminlte_background_color']);
 			set_pconfig(local_channel(), 'adminlte', 'background_color_dark', $_POST['adminlte_background_color_dark']);
@@ -104,6 +105,7 @@ class AdminlteConfig {
 			'$warning_color' => array('adminlte_warning_color', t('Warning theme color'), $arr['warning_color'], '<i class="bi bi-circle-fill text-warning"></i> ' . t('Current color, leave empty for default')),
 			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
 			'$dark_mode' => array('adminlte_dark_mode',t('Default to dark mode'),$arr['dark_mode'], '', array(t('No'),t('Yes'))),
+			'$sidebar_mode' => array('adminlte_sidebar_mode',t('Choose sidebar mode'),$arr['sidebar_mode'], '', array(t('Expanded'),t('Collapsed'))),
 			'$bg_mode' => array('adminlte_bg_mode',t('Set background image tile mode'),$arr['bg_mode'], '', array(t('Tiled'),t('Cover'))),
 			'$bgcolor' => array('adminlte_background_color', t('Set the background color(e.g. #ffffff, blank for default)'), $arr['bgcolor']),
 			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color(e.g. #000000, blank for default)'), $arr['bgcolor_dark']),

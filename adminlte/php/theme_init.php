@@ -68,17 +68,22 @@ head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');
 
 
 $adminlte_mode = '';
+$adminlte_sidebar_mode = '';
 
 if (local_channel()) {
 	$adminlte_mode = ((get_pconfig(local_channel(), 'adminlte', 'dark_mode')) ? 'dark' : 'light');
+	$adminlte_sidebar_mode = ((get_pconfig(local_channel(), 'adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse' : 'sidebar-mini');
 }
 
 if (App::$profile_uid) {
 	$adminlte_mode = ((get_pconfig(App::$profile_uid, 'adminlte', 'dark_mode')) ? 'dark' : 'light');
+	$adminlte_sidebar_mode = ((get_pconfig(App::$profile_uid, 'adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse' : 'sidebar-mini');
 }
 
 if (!$adminlte_mode) {
 	$adminlte_mode = ((Config::Get('adminlte', 'dark_mode')) ? 'dark' : 'light');
+	$adminlte_sidebar_mode = ((Config::Get('adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse coll' : 'sidebar-mini');
 }
 
 App::$page['color_mode'] = $adminlte_mode;
+App::$page['sidebar_mode'] = $adminlte_sidebar_mode;

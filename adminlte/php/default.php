@@ -24,7 +24,7 @@
   <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
-<body class="layout-fixed sidebar-expand-md sidebar-mini app-loaded sidebar-open">
+  <body class="layout-fixed sidebar-expand-lg <?php echo $page['sidebar_mode'] ?> app-loaded sidebar-open">
   <div class="app-wrapper">
 
     <header><?php if (x($page, 'header')) echo $page['header']; ?></header>

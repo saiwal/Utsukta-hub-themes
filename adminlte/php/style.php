@@ -38,6 +38,7 @@ $bgcolor_dark = $bgcolor_dark ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: '';
 $background_image_dark = $background_image_dark ?: '';
 $dark_mode = 0;
+$sidebar_mode = 0;
 $bg_mode = ($bg_mode == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
@@ -45,6 +46,7 @@ $options = array (
   '$background_image' => $background_image,
   '$background_image_dark' => $background_image_dark,
   '$bg_mode' => $bg_mode,
+  '$sidebar_mode' => $sidebar_mode,
   '$dark_mode' => $dark_mode,
 );
 /**/
