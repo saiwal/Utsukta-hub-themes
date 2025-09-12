@@ -4,10 +4,8 @@
     src="{{$cover.url}}"></img>
   <div class="card-body">
     <div class="d-flex">
-      <div id="profile-photo-wrapper" class="overflow-hidden me-2"
-        style="min-width: 5rem; min-height: 5rem;">
-        <img class="img-thumbnail shadow" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
-          alt="{{$profile.fullname}}">
+      <div id="profile-photo-wrapper" class="overflow-hidden me-2" style="min-width: 5rem; min-height: 5rem;">
+        <img class="img-thumbnail shadow" src="{{$profile.thumb}}?rev={{$profile.picdate}}" alt="{{$profile.fullname}}">
       </div>
       <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
         <div class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
@@ -33,9 +31,9 @@
     </p>
     {{/if}}
 
-  {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
+    {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
     <dl class="row">
-    {{if $location}}
+      {{if $location}}
       <dt class="location-label col-sm-4">{{$location}}</dt>
       <dd class="adr h-adr col-sm-8">
         {{if $profile.address}}
@@ -52,29 +50,31 @@
         <div class="country-name p-country-name">{{$profile.country_name}}</div>
         {{/if}}
       </dd>
-    {{/if}}
-    {{if $hometown}}
+      {{/if}}
+      {{if $hometown}}
       <dt class="col-sm-4 hometown-label">{{$hometown}}</dt>
       <dd class="p-hometown col-sm-8">{{$profile.hometown}}</dd>
-    {{/if}}
-    {{if $gender}}
+      {{/if}}
+      {{if $gender}}
       <dt class="col-sm-4 gender-label">{{$gender}}</dt>
       <dd class="p-gender col-sm-8">{{$profile.gender}}</dd>
-    {{/if}}
-    {{if $marital}}
+      {{/if}}
+      {{if $marital}}
       <dt class="marital-label col-sm-4"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
       <dd class="marital-text col-sm-8">{{$profile.marital}}</dd>
-    {{/if}}
-    {{if $homepage}}
+      {{/if}}
+      {{if $homepage}}
       <dt class="card-link col-sm-4">{{$homepage}}</dt>
       <dd class=" col-sm-8">
         {{$profile.homepage}}
       </dd>
-  {{/if}}
-  {{/if}}
+      {{/if}}
+      {{/if}}
     </dl>
   </div>
-
+  <div class="card-footer">
+    <a href="/profile/{{$profile.channel_address}}" class="float-end"><i class="bi bi-info-square"></i></a>
+  </div>
 </div>
 {{if $details}}
 {{$chanmenu}}
