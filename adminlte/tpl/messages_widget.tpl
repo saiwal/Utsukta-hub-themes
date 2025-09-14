@@ -238,6 +238,15 @@
 
   });
 
+// Close offcanvas when a message is clicked (mobile only)
+$(document).on('click', '#messages-container .message', function (e) {
+    // Only trigger if viewport is smaller than large (lg)
+    if (window.innerWidth < 992) {
+        const offcanvasEl = document.getElementById('offcanvasResponsive');
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+        bsOffcanvas.hide();
+    }
+});
   $('#messages-widget').on('scroll', function () {
     if (this.scrollTop > this.scrollHeight - this.clientHeight - (this.scrollHeight / 7)) {
       get_messages_page();
