@@ -18,6 +18,5 @@
 
 function spurgeon_init() {
 
-    App::$theme_info['extends'] = 'redbasic';
 
 }

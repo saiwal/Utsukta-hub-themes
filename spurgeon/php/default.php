@@ -1,7 +1,7 @@
 <?php
 /**
  *   * Name: default
- *   * Description: Spurgeons default layout
+ *   * Description: Spurgeons landing page layout
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
@@ -17,12 +17,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php if (x($page, 'title')) echo $page['title'] ?></title>
-    <link rel="stylesheet" href="/view/theme/spurgeon/css/bootstrap.css" type="text/css" media="screen">
-    <link rel="stylesheet" href="/view/theme/spurgeon/css/vendor.css" type="text/css" media="screen">
-    <link rel="stylesheet" href="/view/theme/spurgeon/css/styles.css" type="text/css" media="screen">
     <script>
       var baseurl = "<?php echo z_root() ?>";
     </script>
+    <script>
+        document.documentElement.classList.remove('no-js');
+        document.documentElement.classList.add('js');
+    </script>
+
+
     <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
@@ -45,10 +48,10 @@
     <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
       <div id="content" class="s-content s-content--page app-main">
-        <main>
+        <main class="app-main">
           <div class="row entry-wrap">
             <div class="column lg-12">
-              <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              <?php if (x($page, 'toolbar')) echo $page['toolbar']; ?>
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
           </div>
