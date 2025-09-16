@@ -23,10 +23,10 @@
   <?php if (x($page, 'htmlhead')) echo $page['htmlhead'] ?>
 </head>
 
-<body class="layout-fixed sidebar-expand-md sidebar-mini app-loaded sidebar-open">
+  <body class="layout-fixed sidebar-expand-lg <?php echo $page['sidebar_mode'] ?> app-loaded sidebar-open">
   <div class="app-wrapper">
 
-    <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
     
     <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
 
@@ -71,12 +71,14 @@
       "use strict";
 
       const storedTheme = localStorage.getItem("theme");
-
+      const defaultTheme = "<?php echo $page['color_mode'] ?? 'light'; ?>"; // Hubzilla setting
       const getPreferredTheme = () => {
         if (storedTheme) {
           return storedTheme;
         }
-
+        if (defaultTheme === "dark" || defaultTheme === "light" || defaultTheme === "auto") {
+          return defaultTheme;
+        }
         return window.matchMedia("(prefers-color-scheme: dark)").matches ?
           "dark" :
           "light";
@@ -168,3 +170,4 @@
 </body>
 
 </html>
+
