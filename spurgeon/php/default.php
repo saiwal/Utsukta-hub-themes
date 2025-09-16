@@ -17,7 +17,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php if (x($page, 'title')) echo $page['title'] ?></title>
-    <link rel="stylesheet" href="/view/theme/adminlte/css/bootstrap.min.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="/view/theme/spurgeon/css/bootstrap.css" type="text/css" media="screen">
     <link rel="stylesheet" href="/view/theme/spurgeon/css/vendor.css" type="text/css" media="screen">
     <link rel="stylesheet" href="/view/theme/spurgeon/css/styles.css" type="text/css" media="screen">
     <script>
