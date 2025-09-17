@@ -181,7 +181,7 @@
 
         const animateBlocks = document.querySelectorAll('[data-animate-block]');
         const pageWrap = document.querySelector('.s-pagewrap');
-        if (!(pageWrap && animateBlocks)) return;
+        if (!(pageWrap && animateBlocks.length)) return;
 
         // on homepage do animate on scroll
         if (pageWrap.classList.contains('ss-home')) {
@@ -196,6 +196,7 @@
 
         // do animate
         function doAnimate(current) {
+            if (!current) return; // avoid undefined
             const els = current.querySelectorAll('[data-animate-el]');
             const p = new Promise(function(resolve, reject) {
 
