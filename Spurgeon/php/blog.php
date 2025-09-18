@@ -47,9 +47,7 @@
 
       <div id="content" class="s-content app-main">
         <main class="app-main">
-          <div id="bricks" class="bricks">
               <?php if (x($page, 'content')) echo $page['content']; ?>
-          </div>
         </main>
       </div>
 
