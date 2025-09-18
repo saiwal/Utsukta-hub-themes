@@ -1,13 +1,11 @@
 <?php
+
 /**
  *   * Name: blog
  *   * Description: Spurgeons blog layout
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: aside, right_aside_wrapper
- *   * ContentRegion: right_aside, left_aside_wrapper
- *   * ContentRegion: content, region_2
  */
 ?>
 <!DOCTYPE html>
@@ -40,28 +38,23 @@
         </div>
     </div>
 
-
-	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
     <div id="page" class="s-pagewrap">
+      <?php if(x($page,'header')) echo $page['header']; ?>
 
+      <header id="masthead" class="s-header">
+        <?php if (x($page, 'nav')) echo $page['nav']; ?>
+      </header>
 
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
-
-      <div id="content" class="s-content s-content--page app-main">
+      <div id="content" class="s-content app-main">
         <main class="app-main">
-          <div class="row entry-wrap">
-            <div class="column lg-4">
-              <?php if (x($page, 'aside')) echo $page['aside']; ?>
-            </div>
-            <div class="column lg-8">
+          <div id="bricks" class="bricks">
               <?php if (x($page, 'content')) echo $page['content']; ?>
-            </div>
           </div>
         </main>
       </div>
 
 
-        <footer id="colophon" class="s-footer">
+      <footer id="colophon" class="s-footer">
           <div class="row s-footer__main">
             <?php if (x($page, 'footer')) echo $page['footer']; ?>
           </div> <!-- end s-footer__main -->
@@ -88,10 +81,10 @@
                 </a>
           </div> <!-- end ss-go-top -->
 
-        </footer><!-- end s-footer -->
+      </footer><!-- end s-footer -->
     </div>
-<script src="/view/theme/spurgeon/js/plugins.js"></script>
-<script src="/view/theme/spurgeon/js/scripts.js"></script>
+<script src="/view/theme/Spurgeon/js/plugins.js"></script>
+<script src="/view/theme/Spurgeon/js/scripts.js"></script>
 </body>
 </html>
 

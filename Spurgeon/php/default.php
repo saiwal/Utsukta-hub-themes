@@ -1,4 +1,5 @@
 <?php
+
 /**
  *   * Name: default
  *   * Description: Spurgeons landing page layout
@@ -41,11 +42,12 @@
     </div>
 
 
-	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
     <div id="page" class="s-pagewrap">
-
-
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
+	    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
+  
+      <header id="masthead" class="s-header">
+        <?php if (x($page, 'nav')) echo $page['nav']; ?>
+      </header>
 
       <div id="content" class="s-content s-content--page app-main">
         <main class="app-main">
@@ -90,8 +92,8 @@
 
         </footer><!-- end s-footer -->
     </div>
-<script src="/view/theme/spurgeon/js/plugins.js"></script>
-<script src="/view/theme/spurgeon/js/scripts.js"></script>
+<script src="/view/theme/Spurgeon/js/plugins.js"></script>
+<script src="/view/theme/Spurgeon/js/scripts.js"></script>
 </body>
 </html>
 

@@ -8,7 +8,7 @@ use ScssPhp\ScssPhp\OutputStyle;
 class SpurgeonConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/spurgeon/schema/*.css');
+		$files = glob('view/theme/Spurgeon/schema/*.css');
 
 		$scheme_choices = [];
 

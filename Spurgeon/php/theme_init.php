@@ -49,9 +49,9 @@ if($channel && file_exists($channel['channel_address'] . '.js'))
 
 // Add your custom CSS files here.
 head_add_css('/vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
-head_add_css('/view/theme/spurgeon/css/bootstrap.css');
-head_add_css('/view/theme/spurgeon/css/vendor.css');
-head_add_css('/view/theme/spurgeon/css/styles.css');
+head_add_css('/view/theme/Spurgeon/css/bootstrap.css');
+head_add_css('/view/theme/Spurgeon/css/vendor.css');
+head_add_css('/view/theme/Spurgeon/css/styles.css');
 
 head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');

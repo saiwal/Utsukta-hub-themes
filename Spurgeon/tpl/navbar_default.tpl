@@ -1,4 +1,3 @@
-        <header id="masthead" class="s-header">
 
             <div class="s-header__branding">
             <p class="site-title">
@@ -58,6 +57,5 @@
                 </svg>
             </a>
 
-        </header> <!-- end s-header -->
 
 
