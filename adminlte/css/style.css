@@ -347,4 +347,24 @@ span.spinner {
     font-size : 1.8em !important;
   }
 
+.fakelink {
+  color: var(--bs-link-color);
+  text-decoration: none;
+  cursor: pointer;
+}
 
+.fakelink:hover {
+  color: var(--bs-link-hover-color);
+}
+
+.fakelink:active {
+  color: var(--bs-link-active-color, var(--bs-link-hover-color));
+}
+
+.fakelink.disabled,
+.fakelink[aria-disabled="true"] {
+  color: var(--bs-secondary-color);
+  pointer-events: none;
+  cursor: default;
+  text-decoration: none;
+}
