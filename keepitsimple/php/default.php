@@ -1,6 +1,7 @@
 <?php
+
 /**
- *   * Name: default
+ * * Name: default
  *   * Description: keepitsimples default layout
  *   * Version: 1.0
  *   * Author: Saiwal
@@ -42,13 +43,23 @@
         </div>
     </div>
 
-	  <header><?php if(x($page,'header')) echo $page['header']; ?></header>
+	  <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
     <!-- Header
     ================================================== -->
-    <?php if (x($page, 'nav')) echo $page['nav']; ?>
-    
+    <header class="s-header">
+      <div class="row">
 
+            <div class="s-header__content column">
+                <h1 class="s-header__logotext">
+            <a href="/" title=""><?php echo $page['title'] ?></a>
+                </h1>
+                <!--<p class="s-header__tagline">Put your awesome tagline here.</p>-->
+            </div>
 
+        </div> <!-- end row -->
+        <?php if (x($page, 'nav')) echo $page['nav']; ?>
+
+    </header> <!-- Header End -->
     <!-- Content
     ================================================== -->
     <div class="s-content">
@@ -68,6 +79,7 @@
 
            <div id="sidebar" class="s-content__sidebar large-4 column">
 
+              <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
               <?php if (x($page, 'aside')) echo $page['aside']; ?>
               
            </div> <!-- end sidebar -->
