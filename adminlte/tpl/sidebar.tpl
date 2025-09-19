@@ -63,7 +63,7 @@
         {{/if}}
 
         {{if $is_owner}}
-        <!-- Starred user apps -->
+        <!-- Starred/Featured user apps -->
         <li class="nav-item">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
