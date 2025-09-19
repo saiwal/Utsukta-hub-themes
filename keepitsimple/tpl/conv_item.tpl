@@ -14,7 +14,7 @@
     class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} entry generic-content-wrapper h-entry mb-4{{else}} u-comment h-cite card-footer text-body-secondary ps-1 pe-0{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}"
     data-b64mids='{{$item.mids}}'>
     <a name="item_{{$item.id}}"></a>
-    <div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
+    <div class="wall-item-outside-wrapper entry__header{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
       id="wall-item-outside-wrapper-{{$item.id}}">
       <div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}"
         id="wall-item-content-wrapper-{{$item.id}}">
@@ -23,11 +23,11 @@
           {{$item.photo}}
           {{/if}}
           {{if $item.event}}
-          <div class="wall-event-item entry__header border-bottom-0" id="wall-event-item-{{$item.id}}">
+          <div class="wall-event-item border-bottom-0" id="wall-event-item-{{$item.id}}">
             {{$item.event}}
             {{/if}}
             {{if $item.title && $item.toplevel && !$item.event}}
-            <div class="entry__header wall-item-title " id="wall-item-title-{{$item.id}}">
+            <div class="wall-item-title " id="wall-item-title-{{$item.id}}">
               {{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}"
                 class="entry__title h1 text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})"
                 rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if
@@ -71,33 +71,33 @@
           <hr class="wall-item-divider">
           {{/if}}
           {{if $item.body}}
-          <div class="p-3 pt-2 pb-2 wall-item-content entry__content clearfix" id="wall-item-content-{{$item.id}}">
+          <div class="wall-item-content entry__content clearfix" id="wall-item-content-{{$item.id}}">
             <div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
-              {{$item.body}}
+            <p>{{$item.body}}</p>
             </div>
           </div>
           {{/if}}
           {{if $item.has_tags}}
-          <div class="p-2 wall-item-tools clearfix">
+          <div class="wall-item-tools clearfix">
             <div class="body-tags">
               <span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
             </div>
           </div>
           {{/if}}
-          <div class="p-2 pt-1 pb-1 wall-item-tools d-flex justify-content-between">
-            <div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
+          <div class="entry__meta wall-item-tools d-flex justify-content-between">
+            <ul class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
               {{foreach $item.responses as $verb=>$response}}
               {{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
               {{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
-              <a href="{{$item.viewthread}}" target="_thread" title="{{$response.count}} {{$response.button.label}}"
+            <li><a href="{{$item.viewthread}}" target="_thread" title="{{$response.count}} {{$response.button.label}}"
                 class="{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-{{$response.button.class}}"
                 id="wall-item-{{$verb}}-{{$item.id}}">
                 <i class="bi bi-chat generic-icons"></i>{{if $response.count}}<span
                   style="display: inline-block; margin-top: -.25rem;"
                   class="align-top">{{$response.count}}</span>{{/if}}
-              </a>
+            </a></li>
               {{else}}
-              <a type="button" title="{{$response.count}} {{$response.button.label}}"
+            <li><a type="button" title="{{$response.count}} {{$response.button.label}}"
                 class="{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-reaction wall-item-{{$response.button.class}}"
                 id="wall-item-{{$verb}}-{{$item.id}}" data-item-id="{{$item.id}}" data-item-mid="{{$item.rawmid}}"
                 data-item-verb="{{$verb}}" data-item-parent="{{$item.parent}}" data-item-uuid="{{$item.mid}}"
@@ -105,16 +105,15 @@
                 <i class="bi bi-{{$response.button.icon}} generic-icons"></i>{{if $response.count}}<span
                   style="display: inline-block; margin-top: -.25rem;"
                   class="align-top">{{$response.count}}</span>{{/if}}
-              </a>
+            </a></li>
               {{/if}}
               {{/if}}
               {{/foreach}}
               {{if $item.toplevel && $item.emojis && $item.reactions}}
-              <div class="">
-                <a type="button" class="" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
+              <li><a type="button" class="" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
                   <i class="bi bi-emoji-smile generic-icons"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-start container text-center w-25">
+              </a>
+              <div class="dropdown-menu dropdown-menu-start container text-center w-25">
                   <div class="row g-0">
                     {{foreach $item.reactions as $react}}
                     <div class="col-3 p-2">
@@ -124,7 +123,7 @@
                     {{/foreach}}
                   </div>
                 </div>
-              </div>
+              </li>
               {{/if}}
               {{if $item.no_comment}}
               <a type="button" class=" " href="/search?search={{$item.plink.href}}">
@@ -136,34 +135,34 @@
                   <div class="spinner s"></div>
                 </div>
               </div>
-            </div>
-            <div class="wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
+            </ul>
+            <ul class="wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
               {{if $item.moderate}}
-              <a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;"
-                class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$item.moderate_approve}}</a>
-              <a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;"
-                class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{$item.moderate_delete}}</a>
+            <li><a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;"
+              class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> {{$item.moderate_approve}}</a></li>
+            <li><a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;"
+              class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{$item.moderate_delete}}</a></li>
               {{else}}
               {{if $item.star && $item.star.isstarred}}
-              <div class="" id="star-a-{{$item.id}}">
+              <li class="" id="star-a-{{$item.id}}">
                 <a type="button" class=" wall-item-star" onclick="dostar({{$item.id}});"><i
                     class="bi bi-star generic-icons"></i></a>
-              </div>
+              </li>
               {{/if}}
               {{if $item.attachments}}
-              <div class="">
+              <li class="">
                 <a type="button" class=" wall-item-attach" data-bs-toggle="dropdown"
                   id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
                 <div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
-              </div>
+              </li>
               {{/if}}
               {{if $item.reply_to}}
-              <a type="button" title="{{$item.reply_to.0}}" class=""
+            <li><a type="button" title="{{$item.reply_to.0}}" class=""
                 onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}}: {{$item.name|escape:javascript}}');">
                 <i class="bi bi-arrow-90deg-left generic-icons"></i>
-              </a>
+            </a></li>
               {{/if}}
-              <div class="">
+              <li class="">
                 <a type="button" class="" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
                   <i class="bi bi-three-dots-vertical generic-icons"></i>
                 </a>
@@ -243,10 +242,10 @@
                   <a class="dropdown-item conversation-settings-link" href="#" data-bs-toggle="modal"
                     data-bs-target="#conversation_settings">{{$item.settings}}</a>
                   {{/if}}
-                </div>
+                </li>
               </div>
               {{/if}}
-            </div>
+            </li>
           </div>
         </div>
       </div>
