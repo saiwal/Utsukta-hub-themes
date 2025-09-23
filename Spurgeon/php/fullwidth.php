@@ -1,11 +1,12 @@
 <?php
 
 /**
- *   * Name: blog
- *   * Description: Spurgeons blog layout
+ * * Name: fullwidth
+ *   * Description: Spurgeons fullwidth page layout
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
+ *   * ContentRegion: content, region_2
  */
 ?>
 <!DOCTYPE html>
@@ -38,21 +39,28 @@
         </div>
     </div>
 
-    <div id="page" class="s-pagewrap">
-      <?php if(x($page,'header')) echo $page['header']; ?>
 
+    <div id="page" class="s-pagewrap">
+	    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
+  
       <header id="masthead" class="s-header">
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <div id="content" class="s-content app-main">
+      <div id="content" class="s-content s-content--page app-main">
         <main class="app-main">
-              <?php if (x($page, 'content')) echo $page['content']; ?>
+          <div class="row entry-wrap">
+            <div class="column lg-12">
+              <div id="region_2">
+                  <?php if (x($page, 'content')) echo $page['content']; ?>
+              </div>
+            </div>
+          </div>
         </main>
       </div>
 
 
-      <footer id="colophon" class="s-footer">
+        <footer id="colophon" class="s-footer">
           <div class="row s-footer__main">
             <?php if (x($page, 'footer')) echo $page['footer']; ?>
           </div> <!-- end s-footer__main -->
@@ -79,7 +87,7 @@
                 </a>
           </div> <!-- end ss-go-top -->
 
-      </footer><!-- end s-footer -->
+        </footer><!-- end s-footer -->
     </div>
 <script src="/view/theme/Spurgeon/js/plugins.js"></script>
 <script src="/view/theme/Spurgeon/js/scripts.js"></script>

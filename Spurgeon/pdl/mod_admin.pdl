@@ -1,0 +1,8 @@
+[template]doubleleft[/template]
+[region=aside]
+[widget=notifications][var=sys_only]1[/var][/widget]
+[widget=admin][/widget]
+[/region]
+[region=content]
+$content
+[/region]

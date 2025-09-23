@@ -1,0 +1,11 @@
+[template]fullwidth[/template]
+[region=aside]
+[widget=profile][/widget]
+[/region]
+[region=content]
+$content
+[/region]
+[region=right_aside]
+[widget=notifications][/widget]
+[widget=newmember][/widget]
+[/region]

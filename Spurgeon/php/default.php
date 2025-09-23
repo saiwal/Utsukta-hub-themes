@@ -54,6 +54,7 @@
           <div class="row entry-wrap">
             <div class="column lg-4">
               <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
             </div>
             <div class="column lg-8">
               <?php if (x($page, 'content')) echo $page['content']; ?>
