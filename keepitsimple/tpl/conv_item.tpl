@@ -41,7 +41,7 @@
                   $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span></li>
                 <li>{{$item.name}}</li>
               </ul>
-              <ul class="entry__meta text-body-secondary ms-auto" id="wall-item-ago-{{$item.id}}">
+              <ul class="ms-auto" id="wall-item-ago-{{$item.id}}">
                 {{if $item.location}}
                 <li>{{$item.location}}</li>
                 {{/if}}
