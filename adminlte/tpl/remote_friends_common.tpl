@@ -5,7 +5,8 @@
 	<div class="contact-block-content">
 		{{foreach $items as $item}}
 		<div class="contact-block-div">
-			<a class="contact-block-link mpfriend" href="{{$base}}/chanview?f=&url={{$item.xchan_url}}"><img class="contact-block-img mpfriend" src="{{$item.xchan_photo_s}}" alt="{{$item.xchan_name}}" title="{{$item.xchan_name}} [{{$item.xchan_addr}}]" /></a>
+        <a class="btn fw-bold fs-7 text-body-secondary text-truncate w-100 p-0" href="{{$base}}/chanview?f=&url={{$item.xchan_url}}"><img class="img-fluid rounded-circle position-relative p-1" src="{{$item.xchan_photo_s}}" alt="{{$item.xchan_name}}" title="{{$item.xchan_name}}">
+  </a>
 		</div>
 		{{/foreach}}
 	</div>
