@@ -2,6 +2,7 @@
 	<div class="card-header">{{$desc}}</div>
   <div class="card-body">
 	{{if $items}}
+    <div class="row row-cols-5 g-2">
 	<div class="contact-block-content col">
 		{{foreach $items as $item}}
 		<div class="fs-8 position-relative">
@@ -9,6 +10,7 @@
   </a>
 		</div>
 		{{/foreach}}
+	</div>
 	</div>
 	{{/if}}
   </div>
