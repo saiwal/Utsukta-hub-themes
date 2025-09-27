@@ -16,8 +16,6 @@
 			</div>
 			{{/if}}
 			<button type="button" class="btn btn-outline-secondary btn-sm" title="{{$sharePage}}" onclick="window.location.href='rpost?f=&body={{$shareLink}}';"><i class="bi bi-arrow-90deg-right"></i></button>
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenEditorHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineEditorHeight()"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
 		<h3>
 			<span id="wiki-header-name">{{$wikiheaderName}}</span>:
@@ -40,7 +38,9 @@
 		</form>
 	</div>
 	<div id="wiki-content-container" class="section-content-wrapper-np">
-		<ul class="nav nav-tabs" id="wiki-nav-tabs">
+    <div class="card">
+      <div class="card-body">
+		<ul class="nav nav-underline" id="wiki-nav-tabs">
 			<li class="nav-item" id="edit-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#edit-pane">{{$editOrSourceLabel}}</a></li>
 			<li class="nav-item" id="preview-pane-tab"><a class="nav-link active" data-bs-toggle="tab" href="#preview-pane" id="wiki-get-preview">{{$view_lbl}}</a></li>
 			<li class="nav-item" id="page-history-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#page-history-pane" id="wiki-get-history">{{$history_lbl}}</a></li>
@@ -72,6 +72,8 @@
 			</div>
 			{{/if}}
 		</div>
+    </div>
+    </div>
 	</div>
 </div>
 
@@ -133,7 +135,7 @@
 	{{if !$mimeType || $mimeType == 'text/markdown'}}
 	var editor = ace.edit("ace-editor");
 	editor.setOptions({
-		theme: "ace/theme/github",
+		theme: "ace/theme/solarized_dark",
 		mode: "ace/mode/markdown",
 
 		maxLines: Infinity,
