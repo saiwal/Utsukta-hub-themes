@@ -39,7 +39,7 @@
 			</div>
 		</form>
 	</div>
-	<div id="wiki-content-container" class="section-content-wrapper">
+	<div id="wiki-content-container" class="section-content-wrapper-np">
 		<ul class="nav nav-tabs" id="wiki-nav-tabs">
 			<li class="nav-item" id="edit-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#edit-pane">{{$editOrSourceLabel}}</a></li>
 			<li class="nav-item" id="preview-pane-tab"><a class="nav-link active" data-bs-toggle="tab" href="#preview-pane" id="wiki-get-preview">{{$view_lbl}}</a></li>
