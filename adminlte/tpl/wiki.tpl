@@ -137,13 +137,24 @@
 	editor.setOptions({
 		theme: "ace/theme/solarized_dark",
 		mode: "ace/mode/markdown",
-
+    fontSize: "0.95rem",
 		maxLines: Infinity,
 		minLines: 30,
 
 		wrap: true,
 
-		printMargin: false
+		printMargin: false,
+    // Editing behavior
+    tabSize: 4,
+    useSoftTabs: true,             // spaces instead of tabs
+    navigateWithinSoftTabs: true,  // makes cursor movement more natural
+    scrollPastEnd: 0.5,            // scroll past last line for padding
+    autoScrollEditorIntoView: true,
+
+    // Accessibility & UX
+    cursorStyle: "smooth",         // block | smooth | wide
+    highlightGutterLine: false,     // highlight gutter line number
+    animatedScroll: true,          // smooth scrolling
 	});
 
 	editor.getSession().setValue(window.wiki_page_content);
