@@ -46,7 +46,7 @@
 			<li class="nav-item" id="page-history-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#page-history-pane" id="wiki-get-history">{{$history_lbl}}</a></li>
 		</ul>
 		<div class="tab-content" id="wiki-page-tabs">
-			<div id="edit-pane" class="tab-pane">
+			<div id="edit-pane" class="tab-pane pt-3 ">
 				{{if !$mimeType || $mimeType == 'text/markdown'}}
 				<div id="ace-editor"></div>
 				{{else}}
@@ -60,7 +60,7 @@
 					{{$renderedContent}}
 				</div>
 			</div>
-			<div id="page-history-pane" class="tab-pane">
+			<div id="page-history-pane" class="tab-pane pt-3">
 				<div id="page-history-list"></div>
 			</div>
 			{{if $showPageControls}}
@@ -493,12 +493,11 @@
 </script>
 
 <style>
-/* Override Ace background & text to match Bootstrap theme */
 .ace_editor {
     background-color: var(--bs-body-bg) !important;
     color: var(--bs-body-color) !important;
     border: 1px solid var(--bs-border-color);
-    border-radius: .5rem;
+    border-radius: var(--bs-border-radius);
 }
 
 /* Gutter (line numbers) */
