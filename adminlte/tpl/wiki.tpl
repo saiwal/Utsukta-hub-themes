@@ -480,3 +480,30 @@
 		}
 	});
 </script>
+
+<style>
+/* Override Ace background & text to match Bootstrap theme */
+.ace_editor {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+}
+
+/* Gutter (line numbers) */
+.ace_gutter {
+    background: var(--bs-tertiary-bg) !important;
+    color: var(--bs-secondary-color) !important;
+}
+
+/* Cursor */
+.ace_cursor {
+    color: var(--bs-primary) !important;
+}
+
+/* Selected text */
+.ace_marker-layer .ace_selection {
+    background: var(--bs-primary-bg-subtle) !important;
+}
+
+</style>
