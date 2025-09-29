@@ -114,7 +114,7 @@
 						</a>
 						{{else}}
             <button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-sm btn-link {{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-reaction wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}" data-item-id="{{$item.id}}" data-item-mid="{{$item.rawmid}}" data-item-verb="{{$verb}}" data-item-parent="{{$item.parent}}" data-item-uuid="{{$item.mid}}" data-item-reaction-count="{{$response.count}}">
-              <i class="bi bi-{{$response.button.icon}}{{if $item.observer_activity.$verb}}-fill{{/if}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
+              <i class="bi bi-{{$response.button.icon}}{{if $item.observer_activity.$verb && $response.button.icon !="repeat"}}-fill{{/if}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
 						</button>
 						{{/if}}
 						{{/if}}
