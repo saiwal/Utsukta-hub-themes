@@ -5,7 +5,7 @@
 			<form id="chat-destroy" method="post" action="chat">
 				<input type="hidden" name="room_name" value="{{$room_name}}" />
 				<input type="hidden" name="action" value="drop" />
-				<button class="btn btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
+				<button class="btn btn-sm btn-tool" type="submit" name="submit" value="{{$drop}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$drop}}</button>
 			</form>
 			{{/if}}
 		</div>

@@ -3,7 +3,7 @@
     <div class="card-header">
       <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a>
       <div class="card-tools"> 
-        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse"> <i data-lte-icon="expand" class="bi bi-plus-lg"></i> <i data-lte-icon="collapse" class="bi bi-dash-lg"></i> </button> 
+        <button type="button" class="btn btn-sm btn-tool" data-lte-toggle="card-collapse"> <i data-lte-icon="expand" class="bi bi-plus-lg"></i> <i data-lte-icon="collapse" class="bi bi-dash-lg"></i> </button> 
       </div> <!-- /.card-tools -->
     </div> <!-- /.card-header -->
     <div class="card-body" style="display: block; box-sizing: border-box;">

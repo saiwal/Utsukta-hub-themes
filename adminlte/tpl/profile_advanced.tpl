@@ -334,11 +334,11 @@
       <h3 class="card-title">{{$profile.fullname.1}} {{$key}}</h3>
 
       <div class="card-tools">
-        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
+        <button type="button" class="btn btn-sm btn-tool" data-lte-toggle="card-collapse">
           <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
           <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
         </button>
-        <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
+        <button type="button" class="btn btn-tool btn-sm" data-lte-toggle="card-remove">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>

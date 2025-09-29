@@ -6,7 +6,7 @@
   <div class="card-header">
     What's on your mind?
     <div class="card-tools">
-      <button type="button" class="btn btn-tool" data-lte-toggle="card-maximize">
+      <button type="button" class="btn btn-sm btn-tool" data-lte-toggle="card-maximize">
         <i data-lte-icon="maximize" class="bi bi-fullscreen"></i>
         <i data-lte-icon="minimize" class="bi bi-fullscreen-exit"></i>
       </button>

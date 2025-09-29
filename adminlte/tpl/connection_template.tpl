@@ -44,7 +44,7 @@
       <!-- Edit Icon -->
       <div class="col-md-1 text-end mt-0 mt-md-0">
 
-        <button type="button" class="btn btn-tool contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
+        <button type="button" class="btn btn-sm btn-tool contact-edit" title="{{$contact.edit_hover}}" data-id="{{$contact.id}}">
 	  			<i class="bi bi-pencil contact-edit-icon-{{$contact.id}}"></i>
   			</button>
       </div>
