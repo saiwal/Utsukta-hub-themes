@@ -190,6 +190,10 @@ span.spinner {
   font-family: var(--bs-body-font-family);
   font-size: var(--bs-body-font-size);
   color: var(--bs-body-color);
+  border-style: solid;
+  border-width: var(--bs-border-width);
+  border-color: var(--bs-border-color-translucent);
+
 }
 
 .shared_container .shared_header {
