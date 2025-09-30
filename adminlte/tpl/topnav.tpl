@@ -1,4 +1,5 @@
-<nav class="app-header navbar navbar-expand  bg-body-tertiary border-0 sticky-top"> <!--begin::Container-->
+<nav class="app-header navbar navbar-expand  bg-body-tertiary border-0 sticky-top shadow"> 
+  <!--begin::Container-->
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
       <li class="nav-item">
