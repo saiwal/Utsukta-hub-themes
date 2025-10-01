@@ -1,30 +1,30 @@
 <div id="pdledit_gui_offcanvas" class="offcanvas offcanvas-bottom shadow border rounded-top start-50 translate-middle-x" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true" style="min-width: 300px">
-	<div id="pdledit_gui_offcanvas_body" class="offcanvas-body"></div>
 	<div class="offcanvas-header">
 		<div class="offcanvas-title h3"></div>
 		<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
+	<div id="pdledit_gui_offcanvas_body" class="offcanvas-body"></div>
 </div>
 
 <div id="pdledit_gui_offcanvas_edit" class="offcanvas offcanvas-bottom shadow border rounded-top start-50 translate-middle-x" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true" style="min-width: 300px">
-	<div id="pdledit_gui_offcanvas_edit_body" class="offcanvas-body">
-		<textarea id="pdledit_gui_offcanvas_edit_textarea" class="form-control font-monospace h-100"></textarea>
-	</div>
 	<div class="offcanvas-header">
 		<button id="pdledit_gui_offcanvas_edit_submit" type="button" class="btn btn-primary">Submit</button>
 		<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
+  <div id="pdledit_gui_offcanvas_edit_body" class="offcanvas-body">
+		<textarea id="pdledit_gui_offcanvas_edit_textarea" class="form-control font-monospace h-100"></textarea>
+	</div>
 </div>
 
 <div id="pdledit_gui_offcanvas_submit" class="offcanvas offcanvas-bottom shadow border rounded-top start-50 translate-middle-x" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true" style="min-width: 300px">
-	<div id="pdledit_gui_offcanvas_submit_body" class="offcanvas-body"></div>
 	<div class="offcanvas-header">
 		<button id="pdledit_gui_offcanvas_submit_submit" type="button" class="btn btn-primary">Submit</button>
 		<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
+	<div id="pdledit_gui_offcanvas_submit_body" class="offcanvas-body"></div>
 </div>
 
-<ul class="nav position-fixed bottom-0 start-50 bg-light translate-middle-x text-uppercase" style="min-width: 300px">
+<ul class="nav position-fixed bottom-0 start-50 bg-light translate-middle-x text-uppercase z-1" style="min-width: 300px">
 	<li class="nav-item">
 		<a id="pdledit_gui_modules" class="nav-link" href="#">Modules</a>
 	</li>

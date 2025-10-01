@@ -7,7 +7,7 @@ if(!App::$install) {
 
 	if($uid) {
 		// Load the owners pconfig
-		load_pconfig($uid, 'Spurgeon');
+		load_pconfig($uid, 'spurgeon');
 
 		/*$custom_bs = get_pconfig($uid, 'adminlte', 'bootstrap');*/
 		/*$nav_bg = get_pconfig($uid, 'adminlte', 'nav_bg');*/

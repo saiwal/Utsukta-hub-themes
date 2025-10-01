@@ -52,13 +52,22 @@
       <div id="content" class="s-content s-content--page app-main">
         <main class="app-main">
           <div class="row entry-wrap">
-            <div class="column lg-4">
-              <?php if (x($page, 'aside')) echo $page['aside']; ?>
-              <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
-            </div>
-            <div class="column lg-8">
+            <div class="column lg-8" id="region_2">
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
+            <div class="column lg-4">
+              <div id="region_1">
+                <div id="left_aside_wrapper">
+                <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+              </div>
+              </div>
+              <div id="region_3">
+                <div id="right_aside_wrapper">
+              <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
+              </div>
+            </div>
+
           </div>
         </main>
       </div>
@@ -93,8 +102,8 @@
 
         </footer><!-- end s-footer -->
     </div>
-<script src="/view/theme/Spurgeon/js/plugins.js"></script>
-<script src="/view/theme/Spurgeon/js/scripts.js"></script>
+<script src="/view/theme/spurgeon/js/plugins.js"></script>
+<script src="/view/theme/spurgeon/js/scripts.js"></script>
 </body>
 </html>
 

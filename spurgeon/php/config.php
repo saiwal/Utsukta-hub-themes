@@ -5,10 +5,10 @@ namespace Zotlabs\Theme;
 use ScssPhp\ScssPhp\Compiler;
 use ScssPhp\ScssPhp\OutputStyle;
 
-class SpurgeonConfig {
+class spurgeonConfig {
 
 	function get_schemas() {
-		$files = glob('view/theme/Spurgeon/schema/*.css');
+		$files = glob('view/theme/spurgeon/schema/*.css');
 
 		$scheme_choices = [];
 
