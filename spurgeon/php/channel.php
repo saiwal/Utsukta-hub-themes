@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: default
- *   * Description: Spurgeons landing page layout with only content
+ *   * Name: channel
+ *   * Description: Spurgeons layout for channel view
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
@@ -40,16 +40,17 @@
     </div>
 
 
-    <div id="page" class="s-pagewrap">
+    <div id="page" class="s-pagewrap ss-home">
 	    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
   
       <header id="masthead" class="s-header">
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <div id="content" class="s-content s-content--page app-main">
+      <div id="content" class="s-content">
         <main class="app-main">
-          <div class="row">
+          <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
+          <div class="row bricks">
             <div class="column lg-12">
               <div id="region_2">
                 <?php if (x($page, 'content')) echo $page['content']; ?>

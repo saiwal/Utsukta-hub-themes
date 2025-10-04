@@ -1,9 +1,6 @@
-<div class="col">
-  <div class="card mb-4">
-    <div class="card-header">
+    <h3>
       <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a>
-    </div> <!-- /.card-header -->
-    <div class="card-body" style="display: block; box-sizing: border-box;">
+    </h3> <!-- /.card-header -->
       <div id="photo-album" class="mb-4">
       {{foreach $items as $i}}
       <a href="{{$i.url}}" title="{{$i.alt}}">
@@ -20,7 +17,4 @@
         waitThumbnailsLoad: false
       });
       </script>
-    </div> <!-- /.card-body -->
-  </div> <!-- /.card -->
-</div>
 

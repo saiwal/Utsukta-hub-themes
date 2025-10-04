@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: default
- *   * Description: Spurgeons landing page layout with only content
+ *   * Name: article
+ *   * Description: Spurgeons article layout
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal

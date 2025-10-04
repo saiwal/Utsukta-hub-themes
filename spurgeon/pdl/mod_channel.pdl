@@ -1,6 +1,6 @@
-[template]fullwidth[/template]
-[region=banner]
-[widget=cover_photo][/widget]
+[template=channel]channel[/template]
+[region=chan_hero]
+[widget=hero][/widget]
 [/region]
 [region=aside]
 [widget=fullprofile][/widget]
@@ -9,8 +9,7 @@
 [widget=categories][/widget]
 [widget=tagcloud_wall][var=limit]24[/var][/widget]
 [/region]
+
 [region=content]
 $content
-[/region]
-[region=right_aside]
 [/region]

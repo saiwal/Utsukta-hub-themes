@@ -1,11 +1,12 @@
 <?php
 
 /**
- *   * Name: default
- *   * Description: Spurgeons landing page layout with only content
+ *   * Name: top aside
+ *   * Description: Spurgeons landing page layout with top aside
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
+ *   * ContentRegion: aside, right_aside_wrapper
  *   * ContentRegion: content, region_2
  */
 ?>
@@ -48,9 +49,12 @@
       </header>
 
       <div id="content" class="s-content s-content--page app-main">
-        <main class="app-main">
-          <div class="row">
+        <main class="app-main bricks">
+          <div class="masonry row">
             <div class="column lg-12">
+                  <div id="right_aside_wrapper">
+                    <?php if (x($page, 'aside')) echo $page['aside']; ?>
+                  </div>
               <div id="region_2">
                 <?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
@@ -62,8 +66,6 @@
 
         <footer id="colophon" class="s-footer">
           <div class="row s-footer__main">
-            <div id="right_aside_wrapper">
-            </div>
             <div id="left_aside_wrapper">
               <?php if (x($page, 'footer')) echo $page['footer']; ?>
             </div>

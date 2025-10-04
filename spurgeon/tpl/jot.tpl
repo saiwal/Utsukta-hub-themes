@@ -2,12 +2,6 @@
 <div id="jot-popup" style="display:none">
 {{/if}}
 
-<div class="card mb-3">
-  <div class="card-header">
-    What's on your mind?
-  </div>
-
-  <div class="card-body">
 <input id="invisible-wall-file-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
 <input id="invisible-comment-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
 <form id="profile-jot-form" action="{{$action}}" method="post" class="acl-form mb-3" data-form_id="profile-jot-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}' data-bang='{{$bang}}'>
@@ -41,19 +35,19 @@
 
 
 		<div id="jot-title-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 form-control" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
+			<input class="w-100 mb-1" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
 		</div>
 		<div id="jot-summary-wrap" class="jothidden border-0">
-            <textarea class="w-100 mb-1 form-control" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
+            <textarea class="w-100 mb-1" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
 		</div>
 		{{if $catsenabled}}
 		<div id="jot-category-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 form-control" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
+			<input class="w-100 mb-1" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
 		</div>
 		{{/if}}
 		{{if $webpage}}
 		<div id="jot-pagetitle-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 form-control" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
+			<input class="w-100 mb-1 " name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
 		</div>
 		{{/if}}
 		{{if $customjotheaders}}
@@ -72,7 +66,7 @@
 				</button>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
+			<textarea class="profile-jot-text border-1 " id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">
@@ -82,10 +76,10 @@
 		<div id="jot-poll-wrap" class="pt-3 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 " name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 " name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
@@ -97,8 +91,8 @@
 				</div>
 				<div id="poll-tools-right" class="float-end">
 					<div class="input-group">
-						<input type="text" name="poll_expire_value" class="form-control" value="10" size="3">
-						<select class="form-control" id="duration-select" name="poll_expire_unit">
+						<input type="text" name="poll_expire_value" class="" value="10" size="3">
+						<select class="" id="duration-select" name="poll_expire_unit">
 							<option value="Minutes">{{$poll_expire_unit_label.0}}</option>
 							<option value="Hours">{{$poll_expire_unit_label.1}}</option>
 							<option value="Days" selected="selected">{{$poll_expire_unit_label.2}}</option>
@@ -307,7 +301,7 @@
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="form-control" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="" />
 				</div>
 				<script>
 					$(function () {
@@ -334,7 +328,7 @@
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" class="form-control" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" />
 				</div>
 				<script>
 					$(function () {
@@ -373,5 +367,3 @@
 {{if $content || $attachment || $expanded}}
 <script>initEditor();</script>
 {{/if}}
-</div>
-</div>

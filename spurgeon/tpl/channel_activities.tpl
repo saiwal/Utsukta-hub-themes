@@ -1,13 +1,11 @@
-<div class="col">
-  <div class="card mb-4">
-    <div class="card-header">
+    <h3>
       <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a>
-    </div> <!-- /.card-header -->
-    <div class="card-body" style="display: block; box-sizing: border-box;">
-    <table class="table">
-        <tbody>
+    </h3>
+    <div class="table-responsive">
+        <table>
+          <tbody>
 	          {{foreach $items as $i}}
-            <tr class="align-middle">
+            <tr>
 					      {{if $i.title}}
                 <td><a href="{{$i.url}}" class="text-decoration-none">{{$i.title}}</a></td>
                 {{/if}}
@@ -15,10 +13,8 @@
 				        <td class="text-muted autotime" title="{{$i.footer}}">{{$i.footer}}</td>
             </tr>
             {{/foreach}}
-        </tbody>
-    </table>     
+          </tbody>
+        </table>
+    </div>     
 
-    </div> <!-- /.card-body -->
-  </div> <!-- /.card -->
-</div>
 

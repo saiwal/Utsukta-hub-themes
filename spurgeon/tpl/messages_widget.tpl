@@ -1,4 +1,4 @@
-<ul class="nav nav-underline nav-fill clearfix">
+<ul class="stats-tabs d-flex justify-content-center mb-0 pt-3 shadow">
   <li class="nav-item">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
@@ -30,7 +30,7 @@
     </a>
   </li>
 </ul>
-<div id="messages-widget" class="overflow-auto clearfix card border-top-0 mb-3" style="height: 70vh;">
+<div id="messages-widget" class="overflow-auto clearfix card border-0 mb-3 shadow" style="height: 70vh;">
   <div id="messages-template" rel="template" class="d-none">
     <a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
       <div class="mb-2 align-middle">
@@ -58,23 +58,23 @@
   <div id="messages-container" class="list-group list-group-flush" data-offset="10">
 
     <div id="messages-filter-toolbar" class="list-group-item border-0 d-flex justify-content-center align-items-center">
-      <div class="btn-group btn-group-sm shadow-sm w-75 gap-2" role="group" aria-label="Message filter">
+      <div class="" role="group" aria-label="Message filter">
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-all" value="" autocomplete="off"
           checked>
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-all"><i class="bi bi-inbox"></i></label>
+        <label class="btn btn-outline-secondary" for="filter-all"><i class="bi bi-inbox"></i></label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-new" value="new"
           autocomplete="off">
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-new"><i class="bi bi-envelope"></i></label>
+        <label class="btn btn-outline-secondary" for="filter-new"><i class="bi bi-envelope"></i></label>
 
         <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-active" value="active"
           autocomplete="off">
-        <label class="btn btn-outline-secondary rounded-pill px-3" for="filter-active"><i class="bi bi-envelope-exclamation"></i></label>
+        <label class="btn btn-outline-secondary" for="filter-active"><i class="bi bi-envelope-exclamation"></i></label>
       </div>
     </div>
     <div id="messages-author-container" class="list-group-item notifications-textinput">
-      <div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div>
-      <input id="messages-author" type="text" class="form-control form-control-sm" placeholder="{{$strings.filter}}">
+      <!-- <div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div> -->
+      <input id="messages-author" type="text" class="u-fullwidth" placeholder="{{$strings.filter}}">
       <div id="messages-author-input-clear" class="text-muted notifications-textinput-clear d-none"><i
           class="bi bi-x-lg"></i></div>
     </div>
