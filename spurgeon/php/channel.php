@@ -47,18 +47,18 @@
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <div id="content" class="s-content">
+      <section id="content" class="s-content">
         <main class="app-main">
           <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
-          <div class="row bricks">
-            <div class="column lg-12">
+          <div class="row">
+            <div id="bricks" class="column lg-12 bricks">
               <div id="region_2">
                 <?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
             </div>
           </div>
         </main>
-      </div>
+      </section>
 
 
         <footer id="colophon" class="s-footer">
