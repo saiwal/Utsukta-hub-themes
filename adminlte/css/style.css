@@ -368,3 +368,9 @@ span.spinner {
   cursor: default;
   text-decoration: none;
 }
+.wall-item-comment.collapsed::before {
+  content: '\2212';
+  position: absolute;
+  left: 0.75rem;
+  top: 0.28rem;
+}
