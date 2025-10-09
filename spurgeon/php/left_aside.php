@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Left Aside
- *   * Description: Spurgeons left sidebar page layout
+ *   * Description: Spurgeons default layout with left column
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
