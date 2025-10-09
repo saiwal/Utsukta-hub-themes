@@ -1,7 +1,7 @@
 <?php
 
 /**
- *   * Name: fullwidth
+ *   * Name: Full
  *   * Description: Spurgeons content only layout
  *   * Version: 1.0
  *   * Author: Saiwal

@@ -78,7 +78,7 @@
 
         <footer id="colophon" class="s-footer">
         <div class="row s-footer__main">
-          <div id="right_aside_wrapper">
+          <div id="left_aside_wrapper">
             <?php if (x($page, 'footer')) echo $page['footer']; ?>
             </div>
           </div> <!-- end s-footer__main -->
