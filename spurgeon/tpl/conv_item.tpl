@@ -29,7 +29,7 @@
         </div>
         {{/if}}
         {{if $item.title && $item.toplevel && !$item.event}}
-        <h3 class="wall-item-title entry__header mb-3" id="wall-item-title-{{$item.id}}">
+        <h3 class="wall-item-title  entry__header mb-2" id="wall-item-title-{{$item.id}}">
           {{if $item.title_tosource}}
             {{if $item.plink}}
               <a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow"> 
@@ -70,10 +70,9 @@
                 </svg>
                   <span class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span>
             </div>
-        {{if $item.has_tags}}
-            {{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}
-        {{/if}}
-            </div>
+            {{if $item.has_tags}}
+              {{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}
+            {{/if}}
           </div>
         </div>
         {{if $item.divider}}
@@ -139,16 +138,22 @@
             </div>
             {{/if}}
             {{if $item.attachments}}
-            <div class="">
+            <div class="comment__meta">
               <a type="button" class="p-2 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
               <div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
             </div>
             {{/if}}
             {{if $item.reply_to}}
-            <a type="button" title="{{$item.reply_to.0}}" class="p-2 link-secondary"
-              onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}}: {{$item.name|escape:javascript}}');">
-              <i class="bi bi-arrow-90deg-left generic-icons"></i>
-            </a>
+            <div class="comment__meta">
+              <div class="comment__reply">
+                {{if $item.reply_to}}
+                  <a type="button" title="{{$item.reply_to.0}}" class="comment-reply-link"
+                    onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}}: {{$item.name|escape:javascript}}');">
+                    Reply
+                  </a>
+                {{/if}}
+              </div>
+            </div>
             {{/if}}
             <div class="">
               <a type="button" class="p-2 link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
@@ -293,6 +298,13 @@
       <div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
         {{if $item.divider}}
         <hr class="wall-item-divider">
+        {{/if}}
+        {{if $item.has_tags}}
+        <div class="p-2 wall-item-tools clearfix">
+          <div class="body-tags">
+            <span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
+          </div>
+        </div>
         {{/if}}
         <div class="p-2 pt-1 pb-1 wall-item-tools d-flex justify-content-between">
           <div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
