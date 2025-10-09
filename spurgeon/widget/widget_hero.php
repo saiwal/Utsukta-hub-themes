@@ -11,8 +11,19 @@ require_once ('include/conversation.php');  // for helper functions
 function widget_hero($args)
 {
     // If viewing a specific post (e.g., ?mid=...), return nothing
-    if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) {
-        return '';
+  if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) {
+    $o = '';
+    $o .= <<<EOT
+<style>
+.ss-home .s-header__branding a {
+ color: black;
+}
+.ss-home .s-header__nav-wrap {
+ margin-left: 0%;
+}
+</style>
+EOT;  
+      return $o;
     }
     if (isset($args['channel'])) {
         $channel = channelx_by_nick($args['channel']);
@@ -42,7 +53,8 @@ if ($cat || $tag) {
       </h1>
     </div>
   </div>
-</div>
+    </div>
+
 EOT;
   return $o;
   }

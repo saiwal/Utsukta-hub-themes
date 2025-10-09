@@ -125,16 +125,16 @@ $(document).ready(function() {
 			doRequest = !subThreadWrapper.children.length;
 
 			// Set visual styles using UUID
-			subThreadWrapper.style.setProperty('--hz-item-indent', stringToHslColor(uuid));
-			threadWrapper.style.setProperty('--hz-item-highlight', stringToHslColor(uuid));
-			threadWrapper.style.setProperty('--hz-wall-item-expanded-before-content', '"' + aStr.dblclick_to_exit_zoom + '"');
-
+			// subThreadWrapper.style.setProperty('--hz-item-indent', stringToHslColor(uuid));
+			// threadWrapper.style.setProperty('--hz-item-highlight', stringToHslColor(uuid));
+			// threadWrapper.style.setProperty('--hz-wall-item-expanded-before-content', '"' + aStr.dblclick_to_exit_zoom + '"');
+			//
 			// Clear previous highlights
-			parentSubThreadWrapper.querySelectorAll('.thread-wrapper.item-highlight').forEach(el => el.classList.remove('item-highlight'));
+			// parentSubThreadWrapper.querySelectorAll('.thread-wrapper.item-highlight').forEach(el => el.classList.remove('item-highlight'));
 
 			if (isUserClick && parentIndentedThreads.length === 0 && !subThreadWrapper.children.length) {
 				// Handle first-time expansion and highlighting but not for toplevels (blog mode)
-				threadWrapper.classList.add('item-highlight');
+				// threadWrapper.classList.add('item-highlight');
 			} else {
 				// Handle indentation and zooming
 				let ancestor = subThreadWrapper.parentElement;

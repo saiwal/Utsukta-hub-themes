@@ -190,14 +190,6 @@ a.wall-item-name-link {
 .ivoted {
 	color: var(--bs-primary);
 }
-
-.item-highlight,
-.item-indent,
-.wall-item-comment,
-.thread-wrapper {
-	position: relative;
-}
-
 .item-fade-in {
 	opacity: 0;
 	transform: scale(.7) translateY(-20px);
@@ -206,22 +198,6 @@ a.wall-item-name-link {
 .item-fade-in.show {
 	opacity: 1;
 	transform: scale(1) translateY(0);
-}
-
-.item-highlight::after {
-	content: '';
-	position: absolute;
-	pointer-events: none;
-	box-shadow: inset .15rem 0 0 0 var(--hz-item-highlight);
-	width: 100%;
-	top: 0;
-	bottom: 0;
-/*	margin: var(--bs-border-radius) 0 var(--bs-border-radius) 0; */
-}
-
-.item-highlight-fade {
-	background-color: var(--bs-primary-bg-subtle);
-	animation: fadeBgOut .35s .7s backwards;
 }
 
 @keyframes fadeBgOut {

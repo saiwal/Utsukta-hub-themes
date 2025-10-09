@@ -3,7 +3,7 @@
 
 <div id="conversation-end"></div>
 <!-- pagination -->
-<div class="row pagination">
+<div class="row pagination invisible">
   <div class="column lg-12">
     <nav class="pgn">
       <ul>

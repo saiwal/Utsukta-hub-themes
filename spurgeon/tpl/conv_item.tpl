@@ -18,6 +18,7 @@
     <a name="item_{{$item.id}}"></a>
     <div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}">
       <div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
+      <div class="entry__header mb-5">
         {{if $item.photo}}
         <div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
           {{$item.photo}}
@@ -29,7 +30,7 @@
         </div>
         {{/if}}
         {{if $item.title && $item.toplevel && !$item.event}}
-        <h3 class="wall-item-title  entry__header mb-2" id="wall-item-title-{{$item.id}}">
+        <h3 class="wall-item-title  " id="wall-item-title-{{$item.id}}">
           {{if $item.title_tosource}}
             {{if $item.plink}}
               <a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow"> 
@@ -75,6 +76,7 @@
             {{/if}}
           </div>
         </div>
+      </div>
         {{if $item.divider}}
         <hr class="wall-item-divider">
         {{/if}}
@@ -235,10 +237,12 @@
       </span>
     </div>
     {{/if}}
-    <div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
+    <div id="comments">
+    <ol class="commentlist mt-3" id="wall-item-sub-thread-wrapper-{{$item.id}}">
       {{foreach $item.children as $child}}
       {{include file="{{$child.template}}" item=$child}}
       {{/foreach}}
+    </ol>
     </div>
     {{if $item.comment}}
     <div id="wall-item-comment-wrapper-{{$item.id}}" class="p-2 rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
@@ -247,22 +251,20 @@
     {{/if}}
 
     {{else}}
-    <div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
+    <div class="wall-item-sub-thread-wrapper">
+    <ol class="commentlist" id="wall-item-sub-thread-wrapper-{{$item.id}}">
       {{foreach $item.children as $child}}
       {{include file="{{$child.template}}" item=$child}}
       {{/foreach}}
+    </ol>
     </div>
     {{/if}}
   </div>
   {{else}}
-  <div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} generic-content-wrapper h-entry mb-4{{else}} u-comment h-cite text-body-secondary ps-1 pe-0{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
+  <li id="thread-wrapper-{{$item.id}}" class="comment" data-b64mids='{{$item.mids}}'>
     <a name="item_{{$item.id}}"></a>
-    <div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}">
       <div class="comment__avatar">              
-        <img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name shadow img-thumbnail" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown"/>
-        {{if $item.author_is_group_actor}}
-        <i class="bi bi-chat-quote-fill wall-item-photo-group-actor" title="{{$item.author_is_group_actor}}"></i>
-        {{/if}}
+        <img src="{{$item.thumb}}" class="avatar" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown"/>
         {{if $item.thread_author_menu}}
         <i class="bi bi-caret-down-fill wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
         <div class="dropdown-menu">
@@ -435,13 +437,12 @@
           </div>
         </div>
       </div>
-    </div>
     {{if $item.thread_level == 1}}
-    <div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
+    <ul class="children" id="wall-item-sub-thread-wrapper-{{$item.id}}">
       {{foreach $item.children as $child}}
       {{include file="{{$child.template}}" item=$child}}
       {{/foreach}}
-    </div>
+    </ul>
     {{if $item.comment}}
     <div id="wall-item-comment-wrapper-{{$item.id}}" class="p-2 rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
       {{$item.comment}}
@@ -449,13 +450,11 @@
     {{/if}}
 
     {{else}}
-    <div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
       {{foreach $item.children as $child}}
       {{include file="{{$child.template}}" item=$child}}
       {{/foreach}}
-    </div>
     {{/if}}
-  </div>
+  </li>
   {{/if}}
   {{if !$item.threaded && $item.comment_lastcollapsed}}
 </div>
