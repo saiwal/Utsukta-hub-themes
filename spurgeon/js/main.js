@@ -1188,7 +1188,7 @@ function collapseHeight() {
 					heightMargin: 50,
 					collapsedHeight: divmore_height,
           embedCSS: true,
-					moreLink: '<div class="d-flex justify-content-center border-info" style="border-top: dashed 1px; box-shadow: 0px -10px 11px -4px var(--bs-border-color);"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
+					moreLink: '<div class="d-flex justify-content-center border-info" style="position: relative; margin-top:-24px; bottom: 0; left: 0; width: 100%;  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
 					lessLink: '<div class="d-flex justify-content-center"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a></div>',
 					beforeToggle: function(trigger, element, expanded) {
 						if(expanded) {

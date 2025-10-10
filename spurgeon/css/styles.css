@@ -5462,3 +5462,9 @@ body.search-is-visible .s-header__search-inner {
   max-width: 100%;
   height: auto;
 }
+.wall-item-content img.emoji {
+  display: inline;
+  height: var(--base-font-size);
+  vertical-align: baseline;
+  margin-bottom: -.2rem;
+}

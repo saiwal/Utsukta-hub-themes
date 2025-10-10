@@ -92,11 +92,11 @@
             {{foreach $item.responses as $verb=>$response}}
             {{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
             {{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
-            <a href="{{$item.viewthread}}" target="_thread" title="{{$response.count}} {{$response.button.label}}" class="p-2{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}">
+            <a href="{{$item.viewthread}}" target="_thread" title="{{$response.count}} {{$response.button.label}}" class="p-4{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}">
               <i class="bi bi-chat generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
             </a>
             {{else}}
-            <a type="button" title="{{$response.count}} {{$response.button.label}}" class="p-2{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-reaction wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}" data-item-id="{{$item.id}}" data-item-mid="{{$item.rawmid}}" data-item-verb="{{$verb}}" data-item-parent="{{$item.parent}}" data-item-uuid="{{$item.mid}}" data-item-reaction-count="{{$response.count}}">
+            <a type="button" title="{{$response.count}} {{$response.button.label}}" class="p-4{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-reaction wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}" data-item-id="{{$item.id}}" data-item-mid="{{$item.rawmid}}" data-item-verb="{{$verb}}" data-item-parent="{{$item.parent}}" data-item-uuid="{{$item.mid}}" data-item-reaction-count="{{$response.count}}">
               <i class="bi bi-{{$response.button.icon}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
             </a>
             {{/if}}
@@ -104,7 +104,7 @@
             {{/foreach}}
             {{if $item.toplevel && $item.emojis && $item.reactions}}
             <div class="">
-              <a type="button" class="p-2 link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
+              <a type="button" class="p-4 link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
                 <i class="bi bi-emoji-smile generic-icons"></i>
               </a>
               <div class="dropdown-menu dropdown-menu-start container text-center w-25">
@@ -119,7 +119,7 @@
             </div>
             {{/if}}
             {{if $item.no_comment}}
-            <a type="button" class="p-2 link-secondary " href="/search?search={{$item.plink.href}}">
+            <a type="button" class="p-4 link-secondary " href="/search?search={{$item.plink.href}}">
               <i class="bi bi-file-earmark-arrow-down "></i>
             </a>
             {{/if}}
@@ -136,12 +136,12 @@
             {{else}}
             {{if $item.star && $item.star.isstarred}}
             <div class="" id="star-button-{{$item.id}}">
-              <a type="button" class="p-2 link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></a>
+              <a type="button" class="p-4 link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></a>
             </div>
             {{/if}}
             {{if $item.attachments}}
             <div class="comment__meta">
-              <a type="button" class="p-2 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
+              <a type="button" class="p-4 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
               <div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
             </div>
             {{/if}}
@@ -158,7 +158,7 @@
             </div>
             {{/if}}
             <div class="">
-              <a type="button" class="p-2 link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
+              <a type="button" class="p-4 link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
                 <i class="bi bi-three-dots-vertical generic-icons"></i>
               </a>
               <div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$item.id}}">
@@ -325,7 +325,7 @@
             {{/foreach}}
             {{if $item.toplevel && $item.emojis && $item.reactions}}
             <div class="">
-              <a type="button" class="p-2 link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
+              <a type="button" class="p-4 link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
                 <i class="bi bi-emoji-smile generic-icons"></i>
               </a>
               <div class="dropdown-menu dropdown-menu-start container text-center w-25">
@@ -340,7 +340,7 @@
             </div>
             {{/if}}
             {{if $item.no_comment}}
-            <a type="button" class="p-2 link-secondary " href="/search?search={{$item.plink.href}}">
+            <a type="button" class="p-4 link-secondary " href="/search?search={{$item.plink.href}}">
               <i class="bi bi-file-earmark-arrow-down "></i>
             </a>
             {{/if}}
@@ -357,23 +357,23 @@
             {{else}}
             {{if $item.star && $item.star.isstarred}}
             <div class="" id="star-button-{{$item.id}}">
-              <a type="button" class="p-2 link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></a>
+              <a type="button" class="p-4 link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></a>
             </div>
             {{/if}}
             {{if $item.attachments}}
             <div class="">
-              <a type="button" class="p-2 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
+              <a type="button" class="p-4 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
               <div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
             </div>
             {{/if}}
             {{if $item.reply_to}}
-            <a type="button" title="{{$item.reply_to.0}}" class="p-2 link-secondary"
+            <a type="button" title="{{$item.reply_to.0}}" class="p-4 link-secondary"
               onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}}: {{$item.name|escape:javascript}}');">
               <i class="bi bi-arrow-90deg-left generic-icons"></i>
             </a>
             {{/if}}
             <div class="">
-              <a type="button" class="p-2 link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
+              <a type="button" class="p-4 link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
                 <i class="bi bi-three-dots-vertical generic-icons"></i>
               </a>
               <div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$item.id}}">
