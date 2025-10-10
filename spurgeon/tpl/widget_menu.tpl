@@ -1,14 +1,12 @@
-<div class="card mb-3">
-  <div class="card-header">
+<div class="mb-3">
+  <div class="h4">
 	{{$title}}
   </div>
-  <div class="card-body">
-	<ul class="nav nav-pills flex-column">
+	<ul style="list-style: none;">
 		{{foreach $menu_items as $menu_item}}
-		<li class="nav-item">
-			<a class="nav-link{{if $menu_item.active}} active{{/if}}" href="{{$menu_item.href}}" title="{{$menu_item.title}}">{{$menu_item.label}}</a>
+		<li class="h6 mt-0">
+			<a href="{{$menu_item.href}}" title="{{$menu_item.title}}">{{$menu_item.label}}</a>
 		<li>
 		{{/foreach}}
 	</ul>
-  </div>
 </div>

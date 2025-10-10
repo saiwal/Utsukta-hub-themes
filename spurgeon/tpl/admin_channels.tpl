@@ -14,11 +14,11 @@
 	<div class="section-title-wrapper app-content-header">
 	<h3 class="border-0">{{$title}}</h3>
 	</div>
-  <div class="card mb-4">
-    <div class="card-header">
+  <div class="mb-4">
+    <div class="h4">
       {{$page}}
     </div>
-    <div class="card-body table-responsive">
+    <div class="table-responsive">
 	<form action="{{$baseurl}}/admin/channels" method="post">
         <input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 

@@ -94,8 +94,19 @@ EOT;
     $items = q($sql, intval($channel['channel_id']), intval($limit));
 
     if (!$items) {
-        $display = htmlspecialchars($rawcat, ENT_QUOTES, 'UTF-8');
-        return '<p>No posts found in ' . ($is_hashtag ? "hashtag '{$display}'." : "category '{$display}'.") . '</p>';
+    $display = htmlspecialchars($rawcat, ENT_QUOTES, 'UTF-8');
+    $o = '';
+    $o .= <<<EOT
+<style>
+.ss-home .s-header__branding a {
+ color: black;
+}
+.ss-home .s-header__nav-wrap {
+ margin-left: 0%;
+}
+</style>
+EOT;  
+      return $o;
     }
 
     xchan_query($items);
@@ -182,13 +193,14 @@ EOT;
     $html .= '<span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>';
     $html .= '</div>';  // hero__slider
 
-    $html .= '<a href="#bricks" class="hero__scroll-down smoothscroll">';
+    $html .= '<a href="#region_2" class="hero__scroll-down smoothscroll">';
     $html .= '<svg width="24" height="24" fill="none" viewBox="0 0 24 24">';
     $html .= '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.25 6.75L4.75 12L10.25 17.25"></path>';
     $html .= '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 12H5"></path>';
     $html .= '</svg><span>Scroll</span></a>';
 
     $html .= '</div>';  // hero
+    $html .= '<style>.s-content{ padding-top: 0;} .s-header__nav-wrap{ margin-left: 50%;} .s-header__branding a{color: white;}</style>';  // hero
 
     return $html;
 }

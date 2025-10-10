@@ -1,10 +1,9 @@
-	<div class="dirtagblock card mb-3">
-    <div class="card-header">{{$title}}</div>
-    <div class="tags card-body" align="center">
-      {{foreach $tags as $tag}}
-      <span class="tag{{$tag['normalise']}}">#</span><a href="{{$baseurl}}{{$tag['term']}}" class="tag{{$tag['normalise']}}" rel="nofollow">{{$tag['term']}}</a>
-      {{/foreach}}
-		</div>
-    </div>
+<div class="dirtagblock mb-3">
+  <div class="h4">{{$title}}</div>
+  <span class="entry__tag-list">
+    {{foreach $tags as $tag}}
+    <a href="{{$baseurl}}{{$tag['term']}}">#{{$tag['term']}}</a>
+    {{/foreach}}
+  </span>
 
-
+</div>

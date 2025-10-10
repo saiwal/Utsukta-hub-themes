@@ -58,17 +58,18 @@
   </svg>
 </a>
       <section id="content" class="s-content">
-        <main class="app-main bricks">
-          <div class="row masonry ">
+        <main class="app-main">
+          <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
+          <div class="row">
           <div class="column lg-4" id="sidebar-column">
-            <div id="region_3">
+            <div id="region_3" class="pt-5">
                 <div id="right_aside_wrapper">
                   <?php if (x($page, 'aside')) echo $page['aside']; ?>
                 </div>
             </div>
           </div>
           <div class="column lg-8 md-12">
-            <div id="region_2">
+            <div id="region_2" class="pt-5">
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
           </div>
