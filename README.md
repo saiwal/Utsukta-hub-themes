@@ -15,5 +15,6 @@ or manually extract the release in `view/themes`
 ## Themes
 
 ### 1. [AdminLTE4](./adminlte/README.md)
+### 2. [Spurgeon](./spurgeon/README.md)
 
 
