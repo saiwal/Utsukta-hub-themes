@@ -1,8 +1,6 @@
-<div class="card mb-3">
-  <div class="card-header">
+<div class="mb-3">
+  <div class="h4">
     {{$title}}
   </div>
-  <div class="card-body">
     {{$content}}
-  </div>
 </div>

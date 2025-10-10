@@ -1,5 +1,5 @@
-<div class="card mb-3">
-  <div class="card-header">
+<div class="mb-3">
+  <div class="h4">
 	<span class="d-flex justify-content-between align-items-center">
 		{{$title}}
 		{{if $reset}}

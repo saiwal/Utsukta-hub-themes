@@ -1,8 +1,6 @@
-<div class="clearfix card mb-3">
-  <div class="card-header">
-    <span id="search">{{$title}}</span>
-  </div>
-  <div class="card-body">
+<div class="clearfix mb-3">
+    <h4 id="search">{{$title}}</h4>
+  <p>
 	{{$searchbox}}
 	<ul id="saved-search-list" class="nav nav-pills flex-column">
 		{{foreach $saved as $search}}
@@ -12,5 +10,5 @@
 		</li>
 		{{/foreach}}
 	</ul>
-  </div>
+  </p>
 </div>

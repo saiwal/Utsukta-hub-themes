@@ -1,6 +1,6 @@
-<ul class="nav nav-pills flex-column">
+<ul class="flex-column" style="list-style:none;">
 	{{foreach $pills as $p}}
-	<li class="nav-item hover-fx-show"{{if $p.id}} id="{{$p.id}}"{{/if}}>
+	<li class="pb-2 hover-fx-show"{{if $p.id}} id="{{$p.id}}"{{/if}}>
 		<a class="nav-link{{if $p.sel}} {{$p.sel}}{{/if}}" href="{{$p.url}}"{{if $p.title}} title="{{$p.title}}"{{/if}}{{if $p.sub}} onclick="{{if $p.sel}}closeOpen('{{$p.id}}_sub');{{else}}openClose('{{$p.id}}_sub');{{/if}} return false;"{{/if}}>
 			{{if $p.icon}}<i class="bi bi-{{$p.icon}}"></i>{{/if}}
 			{{if $p.img}}<img class="menu-img-1" src="{{$p.img}}">{{/if}}
@@ -8,7 +8,7 @@
 			{{if $p.sub}}<i class="bi bi-caret-down hover-fx-hide"></i>{{/if}}
 		</a>
 		{{if $p.sub}}
-		<ul class="nav nav-pills flex-column ml-4" id="{{$p.id}}_sub"{{if !$p.sel}} style="display: none;"{{/if}}>
+		<ul class="flex-column ml-4" id="{{$p.id}}_sub"{{if !$p.sel}} style="display: none;"{{/if}}>
 			{{foreach $p.sub as $ps}}
 			<li class="nav-item"{{if $ps.id}} id="{{$ps.id}}"{{/if}}>
 				<a class="nav-link{{if $ps.sel}} {{$ps.sel}}{{/if}}" href="{{$ps.url}}"{{if $ps.title}} title="{{$ps.title}}"{{/if}}>
