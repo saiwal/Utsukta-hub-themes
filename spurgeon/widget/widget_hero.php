@@ -56,30 +56,37 @@ function widget_hero($args) {
  * Get items for hero widget
  */
 
+
 function widget_hero_get_items($uid, $args) {
-    
+
+    $observer = App::get_observer();
+    $ob_hash = $observer['xchan_hash'] ?? '';
+
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
-    
-    $item_normal = item_normal(); // This includes: item_blocked = 0 AND item_pending_remove = 0 AND item_deleted = 0
-    $permission_sql = item_permissions_sql($uid);
-    
+
+    // Normal items (exclude deleted, pending remove, blocked)
+    $item_normal = item_normal();  
+
+    // Permissions SQL respects viewer
+    $permission_sql = item_permissions_sql($uid, $ob_hash);
+
     logger('hero widget: item_normal=' . $item_normal);
     logger('hero widget: permission_sql=' . $permission_sql);
-    
+
     $sql_extra = '';
-    
+
     // Add category filter
     if (!empty($args['category'])) {
         $category_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
-        $sql_extra .= $category_query;
+        $sql_extra .= ' ' . $category_query;
         logger('hero widget: category filter added: ' . $args['category']);
         logger('hero widget: category query=' . $category_query);
     }
-    
+
     // Add hashtag filter
     if (!empty($args['hashtags'])) {
         $hashtag_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
-        $sql_extra .= $hashtag_query;
+        $sql_extra .= ' ' . $hashtag_query;
         logger('hero widget: hashtag filter added: ' . $args['hashtags']);
         logger('hero widget: hashtag query=' . $hashtag_query);
     }
@@ -88,18 +95,18 @@ function widget_hero_get_items($uid, $args) {
     $sql = "SELECT item.parent AS item_id, item.created 
             FROM item 
             WHERE item.uid = %d 
-            AND item.id = item.parent 
-            AND item.item_wall = 1 
-            $item_normal 
-            $permission_sql 
-            $sql_extra 
-            ORDER BY item.created DESC 
+              AND item.id = item.parent          -- top-level posts
+              AND item.item_wall = 1
+              AND item.author_xchan = '%s'      -- authored by this channel
+              $item_normal
+              $permission_sql
+              $sql_extra
+            ORDER BY item.created DESC
             LIMIT %d";
-    
+
     logger('hero widget: executing query: ' . $sql);
-    
-    // Get posts with category filter and item_normal conditions
-    $r = q($sql, intval($uid), intval($args['count']));
+
+    $r = q($sql, intval($uid), dbesc(App::$profile['channel_hash']), intval($args['count']));
 
     if (!$r) {
         logger('hero widget: no items found in initial query');
@@ -108,29 +115,32 @@ function widget_hero_get_items($uid, $args) {
 
     logger('hero widget: found ' . count($r) . ' parent items');
 
+    // Fetch full item data with permissions considered
     $items = items_by_parent_ids($r, null, $permission_sql, false);
-    
+
     if (empty($items)) {
         logger('hero widget: items_by_parent_ids returned empty - checking if this is a permission issue');
-        
-        // Debug: Let's see what items_by_parent_ids received
+
+        // Debug: See input to items_by_parent_ids
         logger('hero widget: input to items_by_parent_ids: ' . print_r($r, true));
-        
+
         // Try without permission SQL to see if that's the issue
         $items = items_by_parent_ids($r, null, '', false);
         if (!empty($items)) {
             logger('hero widget: items found without permission SQL - permission issue detected');
+        } else {
+            return [];
         }
-        
-        return [];
     }
 
     logger('hero widget: items_by_parent_ids returned ' . count($items) . ' items');
-    
+
+    // Resolve authors and tags
     xchan_query($items);
     $items = fetch_post_tags($items, true);
-    
+
     logger('hero widget: returning ' . count($items) . ' formatted items');
+
     return widget_hero_format_items($items, $args);
 }
 /**
