@@ -3,12 +3,21 @@
 /**
  * Hero Widget
  * Displays featured posts in a slider format
- * 
+ *
  * @param array $args
  * @return string
  */
-function widget_hero($args) {
-    
+function widget_hero($args)
+{
+    // Minimal styles if viewing a specific post
+    if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) {
+        return <<<EOT
+            <style>
+            .ss-home .s-header__branding a { color: black; }
+            .ss-home .s-header__nav-wrap { margin-left: 0%; }
+            </style>
+            EOT;
+    }
     if (!App::$profile['profile_uid']) {
         return '';
     }
@@ -17,10 +26,30 @@ function widget_hero($args) {
         return '';
     }
 
+    $cat = x($_REQUEST, 'cat') ? notags(trim($_REQUEST['cat'])) : '';
+    $tag = x($_REQUEST, 'tag') ? notags(trim($_REQUEST['tag'])) : '';
+
+    // Render category/tag header if present
+    if ($cat || $tag) {
+        $label_type = $cat ? t('Category:') : t('Tag:');
+        $label_value = $cat ? htmlspecialchars($cat) : htmlspecialchars($tag);
+        return <<<EOT
+            <div class="s-pageheader">
+              <div class="row">
+                <div class="column large-12">
+                  <h1 class="page-title">
+                    <span class="page-title__small-type">$label_type</span>
+                    $label_value
+                  </h1>
+                </div>
+              </div>
+            </div>
+            EOT;
+    }
     // Default arguments
     $defaults = [
-        'count' => 8,  
-        'category' => 'featured', // Default to featured category
+        'count' => 8,
+        'category' => 'featured',  // Default to featured category
         'hashtags' => '',
         'title' => t('Featured Posts'),
         'show_categories' => true,
@@ -30,13 +59,16 @@ function widget_hero($args) {
     $args = array_merge($defaults, $args);
 
     $uid = App::$profile['profile_uid'];
-    
+
     // Get posts
     $items = widget_hero_get_items($uid, $args);
-    
-    if (empty($items)) {
-        logger('hero widget: no featured items found for uid ' . $uid);
-        return '';
+    if (!$items) {
+        return <<<EOT
+            <style>
+            .ss-home .s-header__branding a { color: black; }
+            .ss-home .s-header__nav-wrap { margin-left: 0%; }
+            </style>
+            EOT;
     }
 
     // Prepare template variables
@@ -55,11 +87,10 @@ function widget_hero($args) {
 /**
  * Get items for hero widget
  */
-
-function widget_hero_get_items($uid, $args = []) {
-
+function widget_hero_get_items($uid, $args = [])
+{
     $observer = App::get_observer();
-    $ob_hash  = $observer['xchan_hash'] ?? '';
+    $ob_hash = $observer['xchan_hash'] ?? '';
 
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
 
@@ -120,18 +151,20 @@ function widget_hero_get_items($uid, $args = []) {
 
     return widget_hero_format_items($items, $args);
 }
+
 /**
  * Format items for display
  */
-function widget_hero_format_items($items, $args) {
+function widget_hero_format_items($items, $args)
+{
     $formatted = [];
-    
+
     foreach ($items as $item) {
         // Skip if we don't have basic content
         if (empty($item['body']) && empty($item['title'])) {
             continue;
         }
-        
+
         $title = $item['title'];
         if (empty($title)) {
             // Create title from body
@@ -143,7 +176,7 @@ function widget_hero_format_items($items, $args) {
                 $title = $body_text;
             }
         }
-        
+
         $entry = [
             'id' => $item['id'],
             'title' => $title,
@@ -156,38 +189,41 @@ function widget_hero_format_items($items, $args) {
             'categories' => $args['show_categories'] ? widget_hero_get_categories($item) : [],
             'image' => widget_hero_get_image($item)
         ];
-        
+
         $formatted[] = $entry;
     }
-    
+
     return $formatted;
 }
 
 /**
  * Create excerpt from post body
  */
-function widget_hero_create_excerpt($text, $length = 200) {
-    if (empty($text)) return '';
-    
+function widget_hero_create_excerpt($text, $length = 200)
+{
+    if (empty($text))
+        return '';
+
     $text = bbcode($text, ['drop_media' => true]);
     $text = strip_tags($text);
     $text = str_replace(["\n", "\r", '<br>', '<br/>', '<br />'], ' ', $text);
     $text = preg_replace('/\s+/', ' ', $text);
     $text = trim($text);
-    
+
     if (mb_strlen($text) > $length) {
         $text = mb_substr($text, 0, $length) . '...';
     }
-    
+
     return $text;
 }
 
 /**
  * Get categories from item
  */
-function widget_hero_get_categories($item) {
+function widget_hero_get_categories($item)
+{
     $categories = [];
-    
+
     if (!empty($item['term']) && is_array($item['term'])) {
         foreach ($item['term'] as $term) {
             if ($term['ttype'] == TERM_CATEGORY) {
@@ -198,33 +234,40 @@ function widget_hero_get_categories($item) {
             }
         }
     }
-    
+
     return $categories;
 }
 
 /**
  * Get hero image from item
  */
-function widget_hero_get_image($item) {
-    // Check for attached images
-    if (!empty($item['attach']) && is_array($item['attach'])) {
-        foreach ($item['attach'] as $attachment) {
-            if (strpos($attachment['filetype'], 'image/') === 0) {
-                return z_root() . '/photo/' . $attachment['resource_id'] . '-0';
-            }
-        }
+function widget_hero_get_image($item)
+{
+    $mid = $item['mid'];
+
+    if (preg_match('#/item/([a-f0-9\-]+)$#', $mid, $matches)) {
+        $mid = $matches[1];
     }
-    
-    // Check for embedded images in body
-    if (preg_match('/<img[^>]+src=["\']([^"\']+\.(jpg|jpeg|png|gif|webp))["\']/i', $item['body'], $matches)) {
-        return $matches[1];
+
+    $plink = z_root() . '/item/' . $mid;
+    $title = htmlspecialchars($item['title'] ?: '(No title)', ENT_QUOTES, 'UTF-8');
+    $desc = htmlspecialchars(trim(substr(strip_tags(bbcode($item['body'])), 0, 200)), ENT_QUOTES, 'UTF-8');
+
+    // Extract image
+    $img = '';
+    if (preg_match_all('/\[zmg=(https?:\/\/[^\]]+)\]/i', $item['body'], $matches)) {
+        $img = $matches[1][0];
     }
-    
-    // Check for [img] BBCode
-    if (preg_match('/\[img\]([^\[]+\.(jpg|jpeg|png|gif|webp))\[\/img\]/i', $item['body'], $matches)) {
-        return $matches[1];
+    if (!$img && preg_match('/(https?:\/\/[^\s"\'<>]+\.(?:jpg|jpeg|png|gif))(?:\?[^\s"\'<>]*)?/i', $item['body'], $m)) {
+        $img = $m[1];
     }
-    
-    // Default placeholder image
-    return z_root() . '/images/placeholder-hero.jpg';
+    if (!$img)
+        $img = z_root() . '/images/default_featured.jpg';
+    $img = htmlspecialchars($img, ENT_QUOTES, 'UTF-8');
+  if ($img) {
+    return $img;
+  }
+  else {
+  return z_root() . '/images/placeholder-hero.jpg';
+  }
 }
