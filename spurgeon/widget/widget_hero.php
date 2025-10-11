@@ -147,6 +147,9 @@ function widget_hero_get_items($uid, $args = [])
     xchan_query($items);
     $items = fetch_post_tags($items, true);
 
+    usort($items, function ($a, $b) {
+        return strtotime($b['created']) <=> strtotime($a['created']);
+    });
     logger('hero widget: returning ' . count($items) . ' formatted items');
 
     return widget_hero_format_items($items, $args);
@@ -169,19 +172,19 @@ function widget_hero_format_items($items, $args)
         $rendered_body = prepare_text($item['body'], $item['mime_type']);
         // If title is empty, create from rendered body
 
-$title = trim($item['title'] ?? '');
+        $title = trim($item['title'] ?? '');
 
-if (empty($title)) {
-    // Create a title from body if none exists
-    $body_text = bbcode($item['body'], ['drop_media' => true]);
-    $body_text = strip_tags($body_text);
-    $title = trim($body_text);
-}
+        if (empty($title)) {
+            // Create a title from body if none exists
+            $body_text = bbcode($item['body'], ['drop_media' => true]);
+            $body_text = strip_tags($body_text);
+            $title = trim($body_text);
+        }
 
-// Always trim title to 45 characters max
-if (mb_strlen($title) > 45) {
-    $title = mb_substr($title, 0, 45) . '…';
-}
+        // Always trim title to 45 characters max
+        if (mb_strlen($title) > 45) {
+            $title = mb_substr($title, 0, 45) . '…';
+        }
         $entry = [
             'id' => $item['id'],
             'title' => $title,
