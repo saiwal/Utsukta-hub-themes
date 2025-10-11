@@ -160,33 +160,35 @@ function widget_hero_format_items($items, $args)
     $formatted = [];
 
     foreach ($items as $item) {
-        // Skip if we don't have basic content
+        // Skip empty posts
         if (empty($item['body']) && empty($item['title'])) {
             continue;
         }
 
+        // Render full post body (Markdown or BBCode)
+        $rendered_body = prepare_text($item['body'], $item['mime_type']);
+        // If title is empty, create from rendered body
         $title = $item['title'];
         if (empty($title)) {
-            // Create title from body
-            $body_text = bbcode($item['body'], ['drop_media' => true]);
-            $body_text = strip_tags($body_text);
-            if (mb_strlen($body_text) > 80) {
-                $title = mb_substr($body_text, 0, 80) . '...';
-            } else {
-                $title = $body_text;
-            }
+            $plain = strip_tags($rendered_body);
+            $title = mb_strlen($plain) > 80 ? mb_substr($plain, 0, 80) . '...' : $plain;
         }
 
         $entry = [
             'id' => $item['id'],
             'title' => $title,
-            'body' => $item['body'],
-            'excerpt' => $args['show_excerpt'] ? widget_hero_create_excerpt($item['body'], 200) : '',
-            'link' => $item['plink'] ?: z_root() . '/channel/' . App::$profile['channel_address'] . '?mid=' . $item['mid'],
+            'body' => $rendered_body,
+            'excerpt' => $args['show_excerpt']
+                ? widget_hero_create_excerpt($rendered_body, 200)
+                : '',
+            'link' => $item['plink']
+                ?: z_root() . '/channel/' . App::$profile['channel_address'] . '?mid=' . $item['mid'],
             'created' => $item['created'],
             'created_relative' => relative_date($item['created']),
             'author' => $item['author']['xchan_name'] ?? '',
-            'categories' => $args['show_categories'] ? widget_hero_get_categories($item) : [],
+            'categories' => $args['show_categories']
+                ? widget_hero_get_categories($item)
+                : [],
             'image' => widget_hero_get_image($item)
         ];
 
@@ -264,10 +266,9 @@ function widget_hero_get_image($item)
     if (!$img)
         $img = z_root() . '/images/default_featured.jpg';
     $img = htmlspecialchars($img, ENT_QUOTES, 'UTF-8');
-  if ($img) {
-    return $img;
-  }
-  else {
-  return z_root() . '/images/placeholder-hero.jpg';
-  }
+    if ($img) {
+        return $img;
+    } else {
+        return z_root() . '/images/placeholder-hero.jpg';
+    }
 }

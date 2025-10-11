@@ -13,10 +13,8 @@
                             <span class="cat-links">
                                 {{foreach $item.categories as $cat}}
                                 <a href="{{$cat.link}}">{{$cat.name}}</a>
-                                {{if !$cat@last}}, {{/if}}
                                 {{/foreach}}
                             </span>
-                            <span class="entry-date">{{$item.created_relative}}</span>
                         </div>
                         {{/if}}
                         
