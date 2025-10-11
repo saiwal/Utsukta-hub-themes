@@ -20,7 +20,7 @@ function widget_hero($args) {
     // Default arguments
     $defaults = [
         'count' => 3,
-        'category' => 'featured', // Default to featured category
+        'category' => 'featured',
         'hashtags' => '',
         'title' => t('Featured Posts'),
         'show_categories' => true,
@@ -35,7 +35,6 @@ function widget_hero($args) {
     $items = widget_hero_get_items($uid, $args);
     
     if (empty($items)) {
-        logger('hero widget: no featured items found for uid ' . $uid);
         return '';
     }
 
@@ -57,7 +56,7 @@ function widget_hero($args) {
  */
 function widget_hero_get_items($uid, $args) {
     
-    $item_normal = item_normal(); // This includes: item_blocked = 0 AND item_pending_remove = 0 AND item_deleted = 0
+    $item_normal = item_normal();
     $permission_sql = item_permissions_sql($uid);
     
     $sql_extra = '';
@@ -65,7 +64,6 @@ function widget_hero_get_items($uid, $args) {
     // Add category filter
     if (!empty($args['category'])) {
         $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
-        logger('hero widget: filtering by category: ' . $args['category']);
     }
     
     // Add hashtag filter
@@ -73,11 +71,11 @@ function widget_hero_get_items($uid, $args) {
         $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
     }
 
-    // Get posts with category filter and item_normal conditions
-    $r = q("SELECT item.parent AS item_id, item.created 
+    // Get only top-level posts (where id = parent) with proper filtering
+    $r = q("SELECT item.id, item.mid, item.parent, item.created, item.title, item.body, item.author_xchan, item.owner_xchan, item.plink
             FROM item 
             WHERE item.uid = %d 
-            AND item.id = item.parent 
+            AND item.id = item.parent  // Only top-level posts
             AND item.item_wall = 1 
             $item_normal 
             $permission_sql 
@@ -89,23 +87,16 @@ function widget_hero_get_items($uid, $args) {
     );
 
     if (!$r) {
-        logger('hero widget: no items found with category filter: ' . $args['category']);
         return [];
     }
 
-    logger('hero widget: found ' . count($r) . ' items with category: ' . $args['category']);
-
-    $items = items_by_parent_ids($r, null, $permission_sql, false);
+    // We already have the full items, no need for items_by_parent_ids
+    $items = $r;
     
-    if (empty($items)) {
-        logger('hero widget: items_by_parent_ids returned empty');
-        return [];
-    }
-
+    // Enrich the items with additional data
     xchan_query($items);
     $items = fetch_post_tags($items, true);
     
-    logger('hero widget: returning ' . count($items) . ' formatted items');
     return widget_hero_format_items($items, $args);
 }
 
