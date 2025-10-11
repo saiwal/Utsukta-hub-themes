@@ -63,44 +63,31 @@ function widget_hero_get_items($uid, $args = []) {
 
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
 
+    // Normal items (exclude deleted, pending remove, blocked)
     $item_normal = item_normal();
+
+    // Permissions SQL respects viewer
     $permission_sql = item_permissions_sql($uid, $ob_hash);
 
-    $sql_extra_parts = [];
-
-    // Category filter (supports array)
-    if (!empty($args['category'])) {
-        $categories = is_array($args['category']) ? $args['category'] : [$args['category']];
-        foreach ($categories as $cat) {
-            $cat_sql = term_item_parent_query($uid, 'item', $cat, TERM_CATEGORY);
-            if ($cat_sql) {
-                $sql_extra_parts[] = '(' . $cat_sql . ')';
-                logger('hero widget: category filter added: ' . $cat . ' sql=' . $cat_sql);
-            }
-        }
-    }
-
-    // Hashtag filter (supports array)
-    if (!empty($args['hashtags'])) {
-        $hashtags = is_array($args['hashtags']) ? $args['hashtags'] : [$args['hashtags']];
-        foreach ($hashtags as $tag) {
-            $tag_sql = term_item_parent_query($uid, 'item', $tag, TERM_HASHTAG, TERM_COMMUNITYTAG);
-            if ($tag_sql) {
-                $sql_extra_parts[] = '(' . $tag_sql . ')';
-                logger('hero widget: hashtag filter added: ' . $tag . ' sql=' . $tag_sql);
-            }
-        }
-    }
-
-    // Combine extra filters safely
+    // Extra SQL filters
     $sql_extra = '';
-    if ($sql_extra_parts) {
-        $sql_extra = ' AND ' . implode(' AND ', $sql_extra_parts);
+
+    // Category filter
+    if (!empty($args['category'])) {
+        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
+        logger('hero widget: category filter added: ' . $args['category']);
     }
 
+    // Hashtag filter
+    if (!empty($args['hashtags'])) {
+        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
+        logger('hero widget: hashtag filter added: ' . $args['hashtags']);
+    }
+
+    // Limit number of posts
     $limit = intval($args['count'] ?? 10);
 
-    // Build final query
+    // Fetch top-level items
     $sql = "SELECT item.parent AS item_id, item.created 
             FROM item 
             WHERE item.uid = %d
@@ -123,9 +110,10 @@ function widget_hero_get_items($uid, $args = []) {
 
     logger('hero widget: found ' . count($r) . ' parent items');
 
-    // Fetch full items
+    // Fetch full item data with permissions considered
     $items = items_by_parent_ids($r, null, $permission_sql, false);
 
+    // Resolve authors and tags
     xchan_query($items);
     $items = fetch_post_tags($items, true);
 
