@@ -57,12 +57,12 @@ function widget_hero($args) {
  */
 function widget_hero_get_items($uid, $args) {
     
-    $item_normal = item_normal();
+    $item_normal = item_normal(); // This includes: item_blocked = 0 AND item_pending_remove = 0 AND item_deleted = 0
     $permission_sql = item_permissions_sql($uid);
     
     $sql_extra = '';
     
-    // Add category filter - this is the key change
+    // Add category filter
     if (!empty($args['category'])) {
         $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
         logger('hero widget: filtering by category: ' . $args['category']);
@@ -73,13 +73,12 @@ function widget_hero_get_items($uid, $args) {
         $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
     }
 
-    // Get posts with category filter
+    // Get posts with category filter and item_normal conditions
     $r = q("SELECT item.parent AS item_id, item.created 
             FROM item 
             WHERE item.uid = %d 
             AND item.id = item.parent 
             AND item.item_wall = 1 
-            AND item.item_deleted = 0
             $item_normal 
             $permission_sql 
             $sql_extra 
