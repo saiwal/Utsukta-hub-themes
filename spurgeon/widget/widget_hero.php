@@ -82,9 +82,6 @@ EOT;
 
     $sql = "SELECT item.* FROM item
             WHERE item.uid = %d
-            AND item.item_wall = 1
-            AND item.item_restrict = 0
-            AND item.parent = item.id
             $item_normal
             $term_sql
             $permission_sql

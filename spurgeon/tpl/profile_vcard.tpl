@@ -1,6 +1,5 @@
-<div class="card mb-3">
+<div class="mb-3">
   <!--<h3 class="card-header">Card header</h3>-->
-  <div class="card-body">
     <div class="d-flex">
       <div id="profile-photo-wrapper" class="overflow-hidden me-2"
         style="min-width: 5rem; min-height: 5rem;">
@@ -20,9 +19,7 @@
       </a>
       {{/if}}
     </div>
-  </div>
 
-  <div class="card-body pt-0">
     {{if $profile.pdesc}}
     <p class="card-text">{{$profile.pdesc}}</p>
     {{else}}
@@ -30,7 +27,6 @@
       {{$no_pdesc}}
     </p>
     {{/if}}
-  </div>
 
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
   <ul class="list-group list-group-flush">

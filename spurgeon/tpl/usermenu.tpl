@@ -1,13 +1,12 @@
 {{if $wrap}}
-<div id="pmenu-{{$id}}" class="pmenu{{if !$class}} {{else}} {{$class}}{{/if}} card mb-3">
+<div id="pmenu-{{$id}}" class="pmenu{{if !$class}} {{else}} {{$class}}{{/if}} mb-3">
   {{/if}}
   {{if $menu.menu_desc}}
-  <div class="card-header">
+  <div class="h4">
     {{$menu.menu_desc}}{{if $edit}} <a href="mitem/{{$nick}}/{{$menu.menu_id}}"
         title="{{$edit}}"><i class="bi bi-pencil fakelink" title="{{$edit}}"></i></a>{{/if}}
   </div>
   {{/if}}
-  <div class="card-body">
     {{if $items}}
     <ul
       class="pmenu-body{{if $wrap || !$class}} nav nav-pills flex-column{{elseif !$wrap || $class}} {{$class}}{{/if}}">
@@ -24,6 +23,5 @@
     {{/if}}
     {{if $wrap}}
     <div class="pmenu-end"></div>
-  </div>
 </div>
 {{/if}}
