@@ -168,12 +168,20 @@ function widget_hero_format_items($items, $args)
         // Render full post body (Markdown or BBCode)
         $rendered_body = prepare_text($item['body'], $item['mime_type']);
         // If title is empty, create from rendered body
-        $title = $item['title'];
-        if (empty($title)) {
-            $plain = strip_tags($rendered_body);
-            $title = mb_strlen($plain) > 80 ? mb_substr($plain, 0, 80) . '...' : $plain;
-        }
 
+$title = trim($item['title'] ?? '');
+
+if (empty($title)) {
+    // Create a title from body if none exists
+    $body_text = bbcode($item['body'], ['drop_media' => true]);
+    $body_text = strip_tags($body_text);
+    $title = trim($body_text);
+}
+
+// Always trim title to 45 characters max
+if (mb_strlen($title) > 45) {
+    $title = mb_substr($title, 0, 45) . '…';
+}
         $entry = [
             'id' => $item['id'],
             'title' => $title,
