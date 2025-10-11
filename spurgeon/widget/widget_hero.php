@@ -111,8 +111,7 @@ function widget_hero_get_items($uid, $args = []) {
     logger('hero widget: found ' . count($r) . ' parent items');
 
     // Fetch full item data with permissions considered
-    $items = items_by_parent_ids($r, null, $permission_sql, false);
-
+    $items = items_by_parent_ids($r, null, $permission_sql, false, true);
     // Resolve authors and tags
     xchan_query($items);
     $items = fetch_post_tags($items, true);
