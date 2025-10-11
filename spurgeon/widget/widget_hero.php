@@ -19,7 +19,7 @@ function widget_hero($args) {
 
     // Default arguments
     $defaults = [
-        'count' => 3,
+        'count' => 8,  
         'category' => 'featured', // Default to featured category
         'hashtags' => '',
         'title' => t('Featured Posts'),
