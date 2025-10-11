@@ -56,6 +56,7 @@ function widget_hero($args) {
  * Get items for hero widget
  */
 
+
 function widget_hero_get_items($uid, $args = []) {
 
     $observer = App::get_observer();
@@ -63,25 +64,43 @@ function widget_hero_get_items($uid, $args = []) {
 
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
 
-    // Normal items (exclude deleted, pending remove, blocked)
+    // Base filter for normal items
     $item_normal = item_normal();
 
     // Permissions SQL respects viewer
     $permission_sql = item_permissions_sql($uid, $ob_hash);
 
     // Extra SQL filters
-    $sql_extra = '';
+    $sql_extra = [];
 
-    // Category filter
+    // Category filter (supports multiple categories as array)
     if (!empty($args['category'])) {
-        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
-        logger('hero widget: category filter added: ' . $args['category']);
+        $categories = is_array($args['category']) ? $args['category'] : [$args['category']];
+        foreach ($categories as $cat) {
+            $cat_sql = term_item_parent_query($uid, 'item', $cat, TERM_CATEGORY);
+            if ($cat_sql) {
+                $sql_extra[] = '(' . $cat_sql . ')';
+                logger('hero widget: category filter added: ' . $cat . ' sql=' . $cat_sql);
+            }
+        }
     }
 
-    // Hashtag filter
+    // Hashtag filter (supports multiple hashtags as array)
     if (!empty($args['hashtags'])) {
-        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
-        logger('hero widget: hashtag filter added: ' . $args['hashtags']);
+        $hashtags = is_array($args['hashtags']) ? $args['hashtags'] : [$args['hashtags']];
+        foreach ($hashtags as $tag) {
+            $tag_sql = term_item_parent_query($uid, 'item', $tag, TERM_HASHTAG, TERM_COMMUNITYTAG);
+            if ($tag_sql) {
+                $sql_extra[] = '(' . $tag_sql . ')';
+                logger('hero widget: hashtag filter added: ' . $tag . ' sql=' . $tag_sql);
+            }
+        }
+    }
+
+    // Combine all extra SQL with AND
+    $sql_extra_str = '';
+    if (!empty($sql_extra)) {
+        $sql_extra_str = ' AND ' . implode(' AND ', $sql_extra);
     }
 
     // Limit number of posts
@@ -95,7 +114,7 @@ function widget_hero_get_items($uid, $args = []) {
               AND item.item_wall = 1
               $item_normal
               $permission_sql
-              $sql_extra
+              $sql_extra_str
             ORDER BY item.created DESC
             LIMIT $limit";
 
