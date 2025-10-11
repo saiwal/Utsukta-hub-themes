@@ -5468,3 +5468,17 @@ body.search-is-visible .s-header__search-inner {
   vertical-align: baseline;
   margin-bottom: -.2rem;
 }
+
+.shared_header {
+  display: flex;
+  align-items: center;
+  gap: 0.4em; /* small spacing between avatar and text */  
+  justify-content: center;
+}
+.shared_header img {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 50%; /* optional: makes it circular */
+  margin-right: 0.4em;
+  margin-bottom: 0.4em;
+}
