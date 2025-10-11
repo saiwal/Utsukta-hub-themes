@@ -20,7 +20,7 @@ function widget_hero($args) {
     // Default arguments
     $defaults = [
         'count' => 3,
-        'category' => 'featured',
+        'category' => 'featured', // Default to featured category
         'hashtags' => '',
         'title' => t('Featured Posts'),
         'show_categories' => true,
@@ -35,6 +35,7 @@ function widget_hero($args) {
     $items = widget_hero_get_items($uid, $args);
     
     if (empty($items)) {
+        logger('hero widget: no featured items found for uid ' . $uid);
         return '';
     }
 
@@ -54,52 +55,84 @@ function widget_hero($args) {
 /**
  * Get items for hero widget
  */
+
 function widget_hero_get_items($uid, $args) {
     
-    $item_normal = item_normal();
+    logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
+    
+    $item_normal = item_normal(); // This includes: item_blocked = 0 AND item_pending_remove = 0 AND item_deleted = 0
     $permission_sql = item_permissions_sql($uid);
+    
+    logger('hero widget: item_normal=' . $item_normal);
+    logger('hero widget: permission_sql=' . $permission_sql);
     
     $sql_extra = '';
     
     // Add category filter
     if (!empty($args['category'])) {
-        $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
+        $category_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
+        $sql_extra .= $category_query;
+        logger('hero widget: category filter added: ' . $args['category']);
+        logger('hero widget: category query=' . $category_query);
     }
     
     // Add hashtag filter
     if (!empty($args['hashtags'])) {
-        $sql_extra .= protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
+        $hashtag_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
+        $sql_extra .= $hashtag_query;
+        logger('hero widget: hashtag filter added: ' . $args['hashtags']);
+        logger('hero widget: hashtag query=' . $hashtag_query);
     }
 
-    // Get only top-level posts (where id = parent) with proper filtering
-    $r = q("SELECT item.id, item.mid, item.parent, item.created, item.title, item.body, item.author_xchan, item.owner_xchan, item.plink
+    // Build the SQL query
+    $sql = "SELECT item.parent AS item_id, item.created 
             FROM item 
             WHERE item.uid = %d 
-            AND item.id = item.parent  // Only top-level posts
+            AND item.id = item.parent 
             AND item.item_wall = 1 
             $item_normal 
             $permission_sql 
             $sql_extra 
             ORDER BY item.created DESC 
-            LIMIT %d",
-            intval($uid),
-            intval($args['count'])
-    );
+            LIMIT %d";
+    
+    logger('hero widget: executing query: ' . $sql);
+    
+    // Get posts with category filter and item_normal conditions
+    $r = q($sql, intval($uid), intval($args['count']));
 
     if (!$r) {
+        logger('hero widget: no items found in initial query');
         return [];
     }
 
-    // We already have the full items, no need for items_by_parent_ids
-    $items = $r;
+    logger('hero widget: found ' . count($r) . ' parent items');
+
+    $items = items_by_parent_ids($r, null, $permission_sql, false);
     
-    // Enrich the items with additional data
+    if (empty($items)) {
+        logger('hero widget: items_by_parent_ids returned empty - checking if this is a permission issue');
+        
+        // Debug: Let's see what items_by_parent_ids received
+        logger('hero widget: input to items_by_parent_ids: ' . print_r($r, true));
+        
+        // Try without permission SQL to see if that's the issue
+        $items = items_by_parent_ids($r, null, '', false);
+        if (!empty($items)) {
+            logger('hero widget: items found without permission SQL - permission issue detected');
+        }
+        
+        return [];
+    }
+
+    logger('hero widget: items_by_parent_ids returned ' . count($items) . ' items');
+    
     xchan_query($items);
     $items = fetch_post_tags($items, true);
     
+    logger('hero widget: returning ' . count($items) . ' formatted items');
     return widget_hero_format_items($items, $args);
 }
-
 /**
  * Format items for display
  */
