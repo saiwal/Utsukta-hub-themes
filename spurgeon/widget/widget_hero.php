@@ -56,60 +56,55 @@ function widget_hero($args) {
  * Get items for hero widget
  */
 
-
-function widget_hero_get_items($uid, $args) {
+function widget_hero_get_items($uid, $args = []) {
 
     $observer = App::get_observer();
-    $ob_hash = $observer['xchan_hash'] ?? '';
+    $ob_hash  = $observer['xchan_hash'] ?? '';
 
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
 
     // Normal items (exclude deleted, pending remove, blocked)
-    $item_normal = item_normal();  
+    $item_normal = item_normal();
 
     // Permissions SQL respects viewer
     $permission_sql = item_permissions_sql($uid, $ob_hash);
 
-    logger('hero widget: item_normal=' . $item_normal);
-    logger('hero widget: permission_sql=' . $permission_sql);
-
+    // Extra SQL filters
     $sql_extra = '';
 
-    // Add category filter
+    // Category filter
     if (!empty($args['category'])) {
-        $category_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
-        $sql_extra .= ' ' . $category_query;
+        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['category'], TERM_CATEGORY));
         logger('hero widget: category filter added: ' . $args['category']);
-        logger('hero widget: category query=' . $category_query);
     }
 
-    // Add hashtag filter
+    // Hashtag filter
     if (!empty($args['hashtags'])) {
-        $hashtag_query = protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
-        $sql_extra .= ' ' . $hashtag_query;
+        $sql_extra .= ' ' . protect_sprintf(term_item_parent_query($uid, 'item', $args['hashtags'], TERM_HASHTAG, TERM_COMMUNITYTAG));
         logger('hero widget: hashtag filter added: ' . $args['hashtags']);
-        logger('hero widget: hashtag query=' . $hashtag_query);
     }
 
-    // Build the SQL query
+    // Limit number of posts
+    $limit = intval($args['count'] ?? 10);
+
+    // Fetch top-level items
     $sql = "SELECT item.parent AS item_id, item.created 
             FROM item 
-            WHERE item.uid = %d 
-              AND item.id = item.parent          -- top-level posts
+            WHERE item.uid = %d
+              AND item.id = item.parent
               AND item.item_wall = 1
-              AND item.author_xchan = '%s'      -- authored by this channel
               $item_normal
               $permission_sql
               $sql_extra
             ORDER BY item.created DESC
-            LIMIT %d";
+            LIMIT $limit";
 
     logger('hero widget: executing query: ' . $sql);
 
-    $r = q($sql, intval($uid), dbesc(App::$profile['channel_hash']), intval($args['count']));
+    $r = q($sql, intval($uid));
 
     if (!$r) {
-        logger('hero widget: no items found in initial query');
+        logger('hero widget: no items found');
         return [];
     }
 
@@ -117,23 +112,6 @@ function widget_hero_get_items($uid, $args) {
 
     // Fetch full item data with permissions considered
     $items = items_by_parent_ids($r, null, $permission_sql, false);
-
-    if (empty($items)) {
-        logger('hero widget: items_by_parent_ids returned empty - checking if this is a permission issue');
-
-        // Debug: See input to items_by_parent_ids
-        logger('hero widget: input to items_by_parent_ids: ' . print_r($r, true));
-
-        // Try without permission SQL to see if that's the issue
-        $items = items_by_parent_ids($r, null, '', false);
-        if (!empty($items)) {
-            logger('hero widget: items found without permission SQL - permission issue detected');
-        } else {
-            return [];
-        }
-    }
-
-    logger('hero widget: items_by_parent_ids returned ' . count($items) . ' items');
 
     // Resolve authors and tags
     xchan_query($items);
