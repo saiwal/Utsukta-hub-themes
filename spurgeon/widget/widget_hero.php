@@ -56,7 +56,6 @@ function widget_hero($args) {
  * Get items for hero widget
  */
 
-
 function widget_hero_get_items($uid, $args = []) {
 
     $observer = App::get_observer();
@@ -64,49 +63,44 @@ function widget_hero_get_items($uid, $args = []) {
 
     logger('hero widget: starting with uid=' . $uid . ' args=' . print_r($args, true));
 
-    // Base filter for normal items
     $item_normal = item_normal();
-
-    // Permissions SQL respects viewer
     $permission_sql = item_permissions_sql($uid, $ob_hash);
 
-    // Extra SQL filters
-    $sql_extra = [];
+    $sql_extra_parts = [];
 
-    // Category filter (supports multiple categories as array)
+    // Category filter (supports array)
     if (!empty($args['category'])) {
         $categories = is_array($args['category']) ? $args['category'] : [$args['category']];
         foreach ($categories as $cat) {
             $cat_sql = term_item_parent_query($uid, 'item', $cat, TERM_CATEGORY);
             if ($cat_sql) {
-                $sql_extra[] = '(' . $cat_sql . ')';
+                $sql_extra_parts[] = '(' . $cat_sql . ')';
                 logger('hero widget: category filter added: ' . $cat . ' sql=' . $cat_sql);
             }
         }
     }
 
-    // Hashtag filter (supports multiple hashtags as array)
+    // Hashtag filter (supports array)
     if (!empty($args['hashtags'])) {
         $hashtags = is_array($args['hashtags']) ? $args['hashtags'] : [$args['hashtags']];
         foreach ($hashtags as $tag) {
             $tag_sql = term_item_parent_query($uid, 'item', $tag, TERM_HASHTAG, TERM_COMMUNITYTAG);
             if ($tag_sql) {
-                $sql_extra[] = '(' . $tag_sql . ')';
+                $sql_extra_parts[] = '(' . $tag_sql . ')';
                 logger('hero widget: hashtag filter added: ' . $tag . ' sql=' . $tag_sql);
             }
         }
     }
 
-    // Combine all extra SQL with AND
-    $sql_extra_str = '';
-    if (!empty($sql_extra)) {
-        $sql_extra_str = ' AND ' . implode(' AND ', $sql_extra);
+    // Combine extra filters safely
+    $sql_extra = '';
+    if ($sql_extra_parts) {
+        $sql_extra = ' AND ' . implode(' AND ', $sql_extra_parts);
     }
 
-    // Limit number of posts
     $limit = intval($args['count'] ?? 10);
 
-    // Fetch top-level items
+    // Build final query
     $sql = "SELECT item.parent AS item_id, item.created 
             FROM item 
             WHERE item.uid = %d
@@ -114,7 +108,7 @@ function widget_hero_get_items($uid, $args = []) {
               AND item.item_wall = 1
               $item_normal
               $permission_sql
-              $sql_extra_str
+              $sql_extra
             ORDER BY item.created DESC
             LIMIT $limit";
 
@@ -129,10 +123,9 @@ function widget_hero_get_items($uid, $args = []) {
 
     logger('hero widget: found ' . count($r) . ' parent items');
 
-    // Fetch full item data with permissions considered
+    // Fetch full items
     $items = items_by_parent_ids($r, null, $permission_sql, false);
 
-    // Resolve authors and tags
     xchan_query($items);
     $items = fetch_post_tags($items, true);
 
