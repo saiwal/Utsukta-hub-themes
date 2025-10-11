@@ -32,6 +32,11 @@ EOT;
         $channel = channelx_by_nick('admin', true); // change to your public channel
     }
 
+    // If still no channel, return empty
+    if (!$channel) {
+        return '';
+    }
+
     $cat = x($_REQUEST, 'cat') ? notags(trim($_REQUEST['cat'])) : '';
     $tag = x($_REQUEST, 'tag') ? notags(trim($_REQUEST['tag'])) : '';
 
@@ -58,6 +63,16 @@ EOT;
     $limit  = isset($args['limit']) ? intval($args['limit']) : 3;
     $is_hashtag = (substr($rawcat, 0, 1) === '#');
 
+    // Get observer and check permissions like the channel module does
+    $observer = App::get_observer();
+    $ob_hash  = ($observer) ? $observer['xchan_hash'] : '';
+    
+    // Check if viewer has permission to view stream
+    $perms = get_all_perms($channel['channel_id'], $ob_hash);
+    if (!$perms['view_stream']) {
+        return '';
+    }
+
     if ($is_hashtag) {
         $term_sql = protect_sprintf(term_item_parent_query(
             intval($channel['channel_id']),
@@ -77,15 +92,14 @@ EOT;
 
     $item_normal = item_normal();
 
-    // Permissions respecting public viewers
-    $observer = App::get_observer();
-    $ob_hash  = $observer['xchan_hash'] ?? '';
+    // Use the same permission SQL as the channel module
     $permission_sql = item_permissions_sql(intval($channel['channel_id']), $ob_hash);
 
-    // Fetch top-level items (item_wall = 1 optional)
+    // Fetch top-level items - match the channel module query structure
     $sql = "SELECT item.* FROM item
             WHERE item.uid = %d
             AND item.id = item.parent
+            AND item.item_wall = 1
             $item_normal
             $term_sql
             $permission_sql
@@ -181,4 +195,3 @@ EOT;
 
     return $html;
 }
-
