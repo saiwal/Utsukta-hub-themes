@@ -41,7 +41,7 @@
 
     </div>
 
-    <a href="#bricks" class="hero__scroll-down smoothscroll">
+    <a href="#region_2" class="hero__scroll-down smoothscroll">
         <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.25 6.75L4.75 12L10.25 17.25"></path>
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.25 12H5"></path>

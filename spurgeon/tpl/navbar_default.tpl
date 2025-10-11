@@ -10,7 +10,7 @@
 
     <h3 class="s-header__nav-heading">Navigate to</h3>
 
-    <ul class="s-header__nav">
+    <ul class="s-header__nav flex-wrap">
       <!-- Pinned user apps -->
       {{if $navbar_apps.0}}
       {{foreach $navbar_apps as $navbar_app}}
