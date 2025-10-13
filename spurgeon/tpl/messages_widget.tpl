@@ -1,4 +1,4 @@
-<ul class="stats-tabs d-flex justify-content-center mb-0 pt-3 shadow">
+<ul class="nav nav-underline stats-tabs d-flex justify-content-center mb-0 pt-3 shadow">
   <li class="nav-item">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
