@@ -1,5 +1,5 @@
-<div class="card mb-3">
-  <div class="card-body row">
+<div class="mb-3">
+  <div class="row">
     <!-- Section 1: Profile Image + Name -->
     <div class="col-12 col-md-5 mb-2 mb-md-0 border-end">
       <div class="d-flex align-items-center mb-2">

@@ -1,35 +1,28 @@
 <div class="mb-3">
-  <!--<h3 class="card-header">Card header</h3>-->
-    <div class="d-flex">
-      <div id="profile-photo-wrapper" class="overflow-hidden me-2"
-        style="min-width: 5rem; min-height: 5rem;">
-        <img class="img-thumbnail" src="{{$profile.thumb}}?rev={{$profile.picdate}}"
-          alt="{{$profile.fullname}}" style="width: 5rem; height: 5rem;">
-      </div>
-      <div class="vstack d-flex flex-column justify-content-start mt-auto mb-auto">
-        <div class="card-title">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
-            title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
-            title="{{$profile.online}}"></i>{{/if}}
-        </div>
-        <div class="card-subtitle text-muted">{{$profile.reddress}}</div>
-      </div>
-      {{if $connect}}
-      <a href="{{$connect_url}}" class="btn btn-success btn-sm m-2 position-absolute top-0 end-0" rel="nofollow">
-        <i class="bi bi-plus-lg"></i> {{$connect}}
-      </a>
-      {{/if}}
-    </div>
 
+  <div class="h4 m-2">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
+      title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
+      title="{{$profile.online}}"></i>{{/if}}
+  </div>
+  <div class="h5 mt-0 text-muted">{{$profile.reddress}}</div>
+  <p>
+    <a href="#"><img width="80" height="80" class="u-pull-left" alt="sample-image" src="{{$profile.thumb}}"></a>
     {{if $profile.pdesc}}
-    <p class="card-text">{{$profile.pdesc}}</p>
+    {{$profile.pdesc}}
     {{else}}
-    <p class="card-text text-muted">
-      {{$no_pdesc}}
-    </p>
+    {{$no_pdesc}}
     {{/if}}
+  </p>
+  {{if $connect}}
+  <a href="{{$connect_url}}" class="btn" rel="nofollow">
+    <i class="bi bi-plus-lg"></i> {{$connect}}
+  </a>
+  {{/if}}
+
+
 
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
-  <ul class="list-group list-group-flush">
+  <ul class="list-group list-group-flush ms-0">
     {{if $location}}
     <li class="list-group-item">
       <dt class="location-label">{{$location}}</dt>

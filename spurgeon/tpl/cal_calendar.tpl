@@ -103,7 +103,7 @@ function updateSize() {
 </script>
 
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
 		<div class="float-end">
 			<div class="btn-group">
 				<button id="prev-btn" class="btn btn-secondary btn-sm" title="{{$prev}}"><i class="bi bi-chevron-left"></i></button>
@@ -111,12 +111,12 @@ function updateSize() {
 				<button id="next-btn" class="btn btn-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
 			</div>
 		</div>
-		<h3 id="title"></h3>
+		<div id="title" class="h3 mt-0"></div>
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-wrapper-np">
-    <div class="card mb-3">
-      <div class="card-body ">
+    <div class="mb-3">
+      <div class=" p-0">
 		<div id="calendar"></div>
 	</div>
 	</div>

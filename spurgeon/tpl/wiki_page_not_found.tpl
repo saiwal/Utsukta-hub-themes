@@ -1,4 +1,4 @@
-	<h3>Page does not exist</h3>
+	<div class="h3 mt-0">Page does not exist</div>
         <br /><br /><br />
 		{{if $canadd}}
 			<form id="new-page-form" action="/wiki/{{$channel_address}}/create/page" method="post" >

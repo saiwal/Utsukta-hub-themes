@@ -1,13 +1,9 @@
-<div id="design-tools" class="card mb-3">
-  <div class="card-header">
+<div id="design-tools" class="mb-3">
+  <div class="h4 mt-0">
     {{$title}}
   </div>
-  <div class="card-body">
-    <div class="list-group list-group-flush">
-      <a class="list-group-item" href="blocks/{{$who}}">{{$blocks}}</a>
-      <a class="list-group-item" href="menu/{{$who}}">{{$menus}}</a>
-      <a class="list-group-item" href="layouts/{{$who}}">{{$layout}}</a>
-      <a class="list-group-item" href="webpages/{{$who}}">{{$pages}}</a>
-    </div>  
-  </div>
+  <a class="h6" href="blocks/{{$who}}">{{$blocks}}</a><br>
+      <a class="h6" href="menu/{{$who}}">{{$menus}}</a><br>
+      <a class="h6" href="layouts/{{$who}}">{{$layout}}</a><br>
+      <a class="h6" href="webpages/{{$who}}">{{$pages}}</a>
 </div>

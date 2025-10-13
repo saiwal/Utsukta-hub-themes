@@ -1,7 +1,7 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper">
+	<div class="section-title-wrapper clearfix">
 		<div class="float-end">
-			<span class="text-muted wiki-typename">[{{$typename}}]&nbsp;</span>
+			<span class="h6 mt-0 text-muted wiki-typename">[{{$typename}}]&nbsp;</span>
 			{{if $showPageControls}}
 			<div id="page-tools" class="btn-group" style="display: none;">
 				<button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
@@ -19,11 +19,10 @@
 			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenEditorHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
 			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineEditorHeight()"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<h3>
+		<div class="h3 mt-0">
 			<span id="wiki-header-name">{{$wikiheaderName}}</span>:
 			<span id="wiki-header-page">{{$wikiheaderPage}}</span>
-		</h3>
-		<div class="clear"></div>
+		</div>
 	</div>
 	<div id="rename-page-form-wrapper" class="section-content-tools-wrapper" style="display:none;">
 		<form id="rename-page-form" action="wiki/rename/page" method="post" >
@@ -40,7 +39,7 @@
 		</form>
 	</div>
 	<div id="wiki-content-container" class="section-content-wrapper">
-		<ul class="nav nav-tabs" id="wiki-nav-tabs">
+		<ul class="nav nav-underline" id="wiki-nav-tabs">
 			<li class="nav-item" id="edit-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#edit-pane">{{$editOrSourceLabel}}</a></li>
 			<li class="nav-item" id="preview-pane-tab"><a class="nav-link active" data-bs-toggle="tab" href="#preview-pane" id="wiki-get-preview">{{$view_lbl}}</a></li>
 			<li class="nav-item" id="page-history-pane-tab"><a class="nav-link" data-bs-toggle="tab" href="#page-history-pane" id="wiki-get-history">{{$history_lbl}}</a></li>

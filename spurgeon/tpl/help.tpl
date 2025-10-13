@@ -1,6 +1,6 @@
 <div id="help-content" class="generic-content-wrapper">
 	<div class="clearfix section-title-wrapper app-content-header">
-		<h3>{{$module->get_page_title()}}</h3>
+		<div class="h3 mt-0">{{$module->get_page_title()}}</div>
 	</div>
 	{{if $module->missing_translation()}}
 	<div class="notice section-content-info-wrapper">
@@ -8,7 +8,7 @@
 	</div>
 	{{/if}}
 	<div class="section-content-wrapper-np">
-    <div class="card mb-3">
+    <div class="card mb-3 border-0">
       <div class="card-body">
 		<details id="doco-top-toc-wrapper" class="alert alert-info position-absolute top-0 end-0 m-2 p-2">
 			<summary id="doco-top-toc-heading">{{$module->get_toc_heading()}}</summary>

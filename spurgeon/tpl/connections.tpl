@@ -16,7 +16,7 @@
 				{{/foreach}}
 			</div>
 		</div>
-		{{if $finding}}<h3>{{$finding}}</h3>{{else}}<h3>{{$header}}{{if $total}} ({{$total}}){{/if}}</h3>{{/if}}
+		{{if $finding}}<div class="h3 mt-0">{{$finding}}</div>{{else}}<div class="h3 mt-0">{{$header}}{{if $total}} ({{$total}}){{/if}}</div>{{/if}}
 	</div>
 	<div id="contacts-search-form" class="section-content-tools-wrapper">
 		<form action="{{$cmd}}" method="get" name="contacts-search-form">

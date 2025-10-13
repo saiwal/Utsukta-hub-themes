@@ -3,7 +3,7 @@
 		{{if $owner}}
 		<button type="button" class="btn btn-success btn-sm float-end acl-form-trigger" onclick="openClose('new-wiki-form-wrapper');" data-form_id="new-wiki-form"><i class="bi bi-plus-lg"></i>&nbsp;{{$create}}</button>
 		{{/if}}
-		<h2>{{$header}}</h2>
+		<div class="h4 mt-0">{{$header}}</div>
 	</div>
 	{{if $owner}}
 	<div id="new-wiki-form-wrapper" class="section-content-tools-wrapper">
@@ -25,8 +25,7 @@
 	</div>
 	{{/if}}
 	<div class="section-content-wrapper-np">
-  <div class="card mb-3">
-    <div class="card-body">
+  <div class="mb-3">
 		<table id="wikis-index" class="table">
 			<tr>
 				<th width="96%">{{$name}}</th>
@@ -76,7 +75,6 @@
 			{{/if}}
 			{{/foreach}}
 		</table>
-	</div>
 	</div>
 	</div>
 </div>

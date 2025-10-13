@@ -1,22 +1,20 @@
-<div class="card card-outline card-success collapsed-card mb-3">
-  <div class="card-header">
+<div class="mb-3">
+  <div class="h4 mt-0">
     {{$title}}
   </div>
   <!-- /.card-header -->
   {{if $options}}
-  <div class="card-body">
-    <ul class="list-group list-group-flush">
+    <ul class="list-group list-group-flush ms-0" style="list-style: none;">
     {{foreach $options as $x}}
     {{if is_array($x) }}
     {{foreach $x as $y => $z}}
-      <a href="{{$y}}" class="list-group-item list-group-item-action">{{$z}}</a>
+      <a href="{{$y}}" class="h6 mt-0 ms-3">{{$z}}</a>
     {{/foreach}}
     {{else}}
-      <li class="list-group-item list-group-item-primary">{{$x}}</li>
+      <li class="h5 mt-3">{{$x}}</li>
     {{/if}}
     {{/foreach}}
     </ul>
-  </div>
   <!-- /.card-body -->
   {{/if}}
 </div>

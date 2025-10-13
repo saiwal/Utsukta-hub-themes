@@ -1,12 +1,11 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
 		<div class="float-end">
 			{{if $can_post}}
-			<button class="btn btn-sm btn-success acl-form-trigger" title="{{$usage}}" onclick="openClose('photo-upload-form');" data-form_id="photos-upload-form"><i class="bi bi-plus-lg"></i>&nbsp;{{$upload.0}}</button>
+			<button class="btn btn-sm btn--primary acl-form-trigger" title="{{$usage}}" onclick="openClose('photo-upload-form');" data-form_id="photos-upload-form"><i class="bi bi-plus-lg"></i>&nbsp;{{$upload.0}}</button>
 			{{/if}}
 		</div>
-		<h3>{{$title}}</h3>
-		<div class="clear"></div>
+		<div class="h3 mt-0">{{$title}}</div>
 	</div>
 	{{$upload_form}}
 	<div class="section-content-wrapper-np clearfix">

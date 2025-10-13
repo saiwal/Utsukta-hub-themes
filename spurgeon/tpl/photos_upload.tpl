@@ -1,6 +1,5 @@
 
-<div id="photo-upload-form"><div class="card mb-3">
-  <div class="card-body">
+<div id="photo-upload-form"><div class="mb-3">
 
 	<input id="invisible-photos-file-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple data-nickname='{{$nickname}}' >
 	<div class="section-content-tools-wrapper">
@@ -62,6 +61,5 @@
 	</table>
 	{{$aclselect}}
 	<div id="photos-upload-end" class="clear"></div>
-</div>
 </div>
 </div>
