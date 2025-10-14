@@ -648,11 +648,10 @@ $.colorbox.settings.scalePhotos = true;
 $(document).bind('cbox_complete', function(){
     var imgUrl = $('#cboxLoadedContent img').attr('src');
   if (imgUrl) {
-    
-  
     $('#cboxTitle').append(
-        '<br><a href="' + imgUrl + '" target="_blank" style="color:white;text-decoration:underline;">View full size</a>'
-    );}
+        '<br><a href="' + imgUrl + '" target="_blank" style="color:var(--bs-body-text);text-decoration:none;">View full size</a>'
+    );
+  }
 });
 function showHideComments(id) {
 	let collapsedComments = document.getElementById('collapsed-comments-' + id);
