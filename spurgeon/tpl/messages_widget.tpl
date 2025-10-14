@@ -80,11 +80,8 @@
     </div>
     {{if $feature_file}}
     <div id="messages-file-container" class="list-group-item notifications-textinput d-none">
-      <div class="input-group input-group-sm">
-        <label class="input-group-text text-muted" for="messages-file">
-          <i class="bi bi-folder"></i>
-        </label>
-        <select id="messages-file" class="form-select">
+      <div class="ss-custom-select">
+        <select id="messages-file" class="u-fullwidth">
           <option value="">{{$strings.file_filter}}</option>
           {{foreach $file_tags as $opt=>$val}}
           <option value="{{$val}}">{{$val}}</option>
