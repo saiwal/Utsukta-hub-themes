@@ -5,7 +5,6 @@
 	[var=entry_class]btn-outline-primary[/var]
 [/widget]
 [/region]
-
 [region=content]
 [widget=channel_activities][/widget]
 [widget=notes]
@@ -18,4 +17,7 @@ $content
 	[var=entry_class]btn-lg btn-primary shadow[/var]
 [/widget]
 [/region]
-
+[region=right_aside]
+[widget=notifications][/widget]
+[widget=newmember][/widget]
+[/region]
