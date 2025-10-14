@@ -381,7 +381,9 @@ span.spinner {
   margin-right: auto;
   max-width: 100%;
 }
-
+.wall-item-content .fakelink img {
+  display: inline;
+}
 .wall-item-content img.emoji {
   display: inline;
   height: 1.3rem;
