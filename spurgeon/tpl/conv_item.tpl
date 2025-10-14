@@ -44,6 +44,17 @@
           {{/if}}
         </h3>
         {{/if}}
+      </div>
+        {{if $item.divider}}
+        <hr class="wall-item-divider">
+        {{/if}}
+        {{if $item.body}}
+        <div class="p-3 pt-2 pb-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+          <div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
+            {{$item.body}}
+          </div>
+        </div>
+        {{/if}}
         <div class="ps-2 pt-2 pe-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
           <div class="entry__meta">
             <div class="entry__meta-author">
@@ -76,17 +87,7 @@
             {{/if}}
           </div>
         </div>
-      </div>
-        {{if $item.divider}}
-        <hr class="wall-item-divider">
-        {{/if}}
-        {{if $item.body}}
-        <div class="p-3 pt-2 pb-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
-          <div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
-            {{$item.body}}
-          </div>
-        </div>
-        {{/if}}
+
         <div class="p-2 pt-1 pb-1 wall-item-tools d-flex justify-content-between">
           <div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
             {{foreach $item.responses as $verb=>$response}}
