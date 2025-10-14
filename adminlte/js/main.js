@@ -642,7 +642,18 @@ function doFollowAuthor(url) {
 function viewsrc(id) {
 	$.colorbox({href: 'viewsrc/' + id, maxWidth: '80%', maxHeight: '80%' });
 }
-
+$.colorbox.settings.maxWidth = "95%";
+$.colorbox.settings.maxHeight = "95%";
+$.colorbox.settings.scalePhotos = true;
+$(document).bind('cbox_complete', function(){
+    var imgUrl = $('#cboxLoadedContent img').attr('src');
+  if (imgUrl) {
+    
+  
+    $('#cboxTitle').append(
+        '<br><a href="' + imgUrl + '" target="_blank" style="color:white;text-decoration:underline;">View full size</a>'
+    );}
+});
 function showHideComments(id) {
 	let collapsedComments = document.getElementById('collapsed-comments-' + id);
 	let hideCommentsLabel = document.getElementById('hide-comments-label-' + id);
