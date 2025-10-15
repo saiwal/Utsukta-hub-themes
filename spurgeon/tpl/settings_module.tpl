@@ -1,7 +1,6 @@
 <div class="generic-content-wrapper">
-  <div class="card mb-3">
-    <div class="card-header">{{$title}}</div>
-    <div class="card-body">
+  <div class="mb-3">
+    <div class="h4 mt-0">{{$title}}</div>
       <form action="{{$action_url}}" method="post" autocomplete="off">
         <input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
         {{if $rpath}}
@@ -17,6 +16,5 @@
           <button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
         </div>
       </form>
-    </div>
   </div>
 </div>

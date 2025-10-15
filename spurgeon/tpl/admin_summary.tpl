@@ -8,11 +8,11 @@
   {{if $upgrade}}
   <p class="callout callout-warning" role="alert">{{$upgrade}}</p>
   {{/if}}
-  <div class="card mb-3">
-    <div class="card-header">
+  <div class="mb-3">
+    <div class="h4 mt-0">
       {{$page}}
     </div>
-    <div class="card-body table-responsive">
+    <div class="table-responsive">
       <table role="table" class="table align-middle">
         <tbody>
           <tr>

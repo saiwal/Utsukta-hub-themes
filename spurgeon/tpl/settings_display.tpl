@@ -9,8 +9,8 @@
 			{{if $theme}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="theme-settings-title">
-					<h2 class="accordion-header">
-						<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#theme-settings-content" aria-expanded="true" aria-controls="theme-settings-content">
+					<h2 class="accordion-header mt-0">
+						<button class="accordion-button m-0" type="button" data-bs-toggle="collapse" data-bs-target="#theme-settings-content" aria-expanded="true" aria-controls="theme-settings-content">
 							{{$d_tset}}
 						</button>
 					</h2>
@@ -33,8 +33,8 @@
 			{{if $theme_config}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="custom-settings-title">
-					<h2 class="accordion-header">
-						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#custom-settings-content"  aria-controls="custom-settings-content">
+					<h2 class="accordion-header mt-0">
+						<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#custom-settings-content"  aria-controls="custom-settings-content">
 							{{$d_ctset}}
 						</button>
 					</h2>
@@ -48,8 +48,8 @@
 			{{/if}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="content-settings-title">
-					<h2 class="accordion-header">
-						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#content-settings-content" aria-controls="content-settings-content">
+					<h2 class="accordion-header mt-0">
+						<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#content-settings-content" aria-controls="content-settings-content">
 							{{$d_cset}}
 						</button>
 					</h2>

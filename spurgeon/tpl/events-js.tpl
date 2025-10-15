@@ -22,10 +22,8 @@
 		<div class="clear"></div>
 	</div>
 	<div id="form" class="section-content-tools-wrapper"{{if !$expandform}} style="display:none;"{{/if}}>
-<div class="card mb-3">
-  <div class="card-body">
+<div class="mb-3">
 		{{$form}}
-	</div>
 	</div>
 	</div>
 	<div class="clear"></div>

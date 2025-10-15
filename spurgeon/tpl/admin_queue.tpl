@@ -3,8 +3,7 @@
     <h3 class="border-0">{{$banner}}
   </div>
   {{if $hasentries}}
-  <div class="card mb-3">
-    <div class="card-body">
+  <div class="mb-3">
 
       <table cellpadding="10" id="admin-queue-table">
         <tr>
@@ -30,7 +29,6 @@
         {{/foreach}}
 
       </table>
-    </div>
   </div>
   {{/if}}
 </div>

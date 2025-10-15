@@ -5,7 +5,7 @@
   </div>
 
   <div class="section-content-tools-wrapper">
-    <div class="card card-body mb-3">
+    <div class="mb-3">
       <div class="callout callout-info mb-2">{{$all_desc}}<br><br>
         {{$all}}
       </div>
@@ -16,11 +16,11 @@
       </form>
     </div>
     {{if $cust_fields}}
-    <div class="card mb-3">
-      <div class="card-header border-0">
-        <h3 class="card-title">{{$cust_field_desc}}</h3>
+    <div class="mb-3">
+      <div class="h4 mt-0 border-0">
+        {{$cust_field_desc}}
       </div>
-      <div class="card-body table-responsive p-0">
+      <div class="table-responsive p-0">
         <table class="table table-striped align-middle" role="table">
           <tbody>     {{foreach $cust_fields as $field}}
             <tr>

@@ -15,11 +15,10 @@ function toggle_posted_date_button() {
 </script>
 
 
-<div id="datebrowse-sidebar" class="card mb-3">
-  <div class="card-header">
+<div id="datebrowse-sidebar" class="mb-3">
+  <div class="h4 mt-0">
 	{{$title}}
   </div>
-  <div class="card-body">
 	<script>function dateSubmit(dateurl) { window.location.href = dateurl; } </script>
 	<ul id="posted-date-selector" class="nav nav-pills flex-column">
 		{{foreach $dates as $y => $arr}}
@@ -46,5 +45,4 @@ function toggle_posted_date_button() {
 		<button class="btn btn-secondary btn-sm" onclick="toggle_posted_date_button(); return false;"><i id="posted-date-icon" class="bi bi-chevron-down"></i></button>
 		{{/if}}
 	</ul>
-  </div>
 </div>

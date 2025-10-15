@@ -1,6 +1,5 @@
-<div class="card mb-3">
-  <div class="card-header">{{$title}}</div>
-  <div class="card-body">
+<div class="mb-3">
+  <div class="h4 mt-0">{{$title}}</div>
     {{if $entries}}
     <ul class="list-group list-group-flush">
       {{foreach $entries as $child}}
@@ -8,8 +7,5 @@
       {{/foreach}}
     </ul>
     {{/if}}
-  </div>
-  <div class="card-footer">
     <a href="directory?f=&suggest=1">{{$more}}</a>
-  </div>
 </div>

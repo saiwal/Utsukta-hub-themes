@@ -11,13 +11,11 @@
 		</div>
 		{{/if}}
 		<div class="section-content-wrapper-np">
-<div class="card mb-3">
-  <div class="card-body">
+<div class="mb-3">
 			<div class="page-author"><a class="page-author-link" href="{{$auth_url}}">{{$author}}</a></div>
 			<div class="page-date">{{$date}}</div>
 			<div class="page-body">{{$body}}</div>
 		</div>
-	</div>
 	</div>
 	</div>
 </div>

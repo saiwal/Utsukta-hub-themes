@@ -4,11 +4,9 @@
   * and implement the `title()` and `contents()` functions as public methods
   * on the widget class.
   *}}
-<div class="widget card">
+<div class="widget">
 	{{if $widget->title()}}
-  <div class="card-header">{{$widget->title()}}</div>
+  <div class="h4 mt-0">{{$widget->title()}}</div>
 	{{/if}}
-  <div class="card-body">
 	{{$widget->contents()}}
-  </div>
 </div>

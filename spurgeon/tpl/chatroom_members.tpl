@@ -1,8 +1,6 @@
-<div id="chatroom_members" class="card mb-3">
-  <div class="card-header">
+<div id="chatroom_members" class="mb-3">
+  <div class="h4 mt-0">
     {{$header}}
   </div>
-  <div class="card-body">
     <div id="chatMembers"></div>
-  </div>
 </div>

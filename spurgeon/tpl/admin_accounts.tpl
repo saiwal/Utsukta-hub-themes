@@ -1,12 +1,12 @@
 <div class="generic-content-wrapper-styled table-responsive" id="adminpage">
-	<div class="section-title-wrapper app-content-header">
-	<h3 class="border-0">{{$title}} - {{$page}}</h3>
+	<div class="section-title-wrapper app-content-header clearfix">
+	<h3 class="border-0 mt-0">{{$title}} - {{$page}}</h3>
 	</div>
 
 	<form action="{{$baseurl}}/admin/accounts" method="post">
 		<input type="hidden" name="form_security_token" value="{{$form_security_token}}">
-    <div class="card mb-3">
-		<div class="card-header">{{$h_pending}}</div>
+    <div class="mb-3">
+		<div class="h4 mt-0">{{$h_pending}}</div>
       <div class="card-body">
 		{{if $debug}}<div>{{$debug}}</div>{{/if}}
 		{{if $pending}}
@@ -55,9 +55,9 @@
       </div>
     </div>
 
-    <div class="card mb-3">
-		<div class="card-header">{{$h_users}}</div>
-    <div class="card-body">
+    <div class="mb-3">
+		<div class="h4 mt-0">{{$h_users}}</div>
+    <div class="clearfix">
 		{{if $users}}
 			<table id="users" class="table table-hover">
 				<thead>
