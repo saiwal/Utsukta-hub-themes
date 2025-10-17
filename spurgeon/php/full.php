@@ -47,7 +47,7 @@
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <div id="content" class="s-content s-content--page app-main">
+      <div id="content" class="s-content">
         <main class="app-main">
           <div class="row">
             <div class="column lg-12">

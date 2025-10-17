@@ -1,6 +1,5 @@
-<div class="card mb-3" id="group-sidebar">
-	<div class="card-header">{{$title}}</div>
-	<div class="card-body">
+<div class="mb-3" id="group-sidebar">
+	<div class="h4 mt-0">{{$title}}</div>
 		<ul class="nav nav-pills flex-column">
 			{{foreach $groups as $group}}
 			<li class="nav-item nav-item-hack">
@@ -19,8 +18,6 @@
 			</li>
 			{{/if}}
 		</ul>
-
-	</div>
 </div>
 
 

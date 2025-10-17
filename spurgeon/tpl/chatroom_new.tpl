@@ -1,7 +1,6 @@
 <div id="chatroom-new" class="section-content-tools-wrapper">
-<div class="card mb-3">
-  <div class="card-body">
-	<form id="chatroom-new-form" action="chat" method="post" class="acl-form" data-form_id="chatroom-new-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
+<div class="mb-3">
+	<form id="chatroom-new-form" action="chat" method="post" class="acl-form clearfix" data-form_id="chatroom-new-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 		{{include file="field_input.tpl" field=$name}}
 		{{include file="field_input.tpl" field=$chat_expire}}
 		<div class="btn-group float-end pb-2">
@@ -10,7 +9,6 @@
 		</div>
 		<div class="clear"></div>
 	</form>
-</div>
 </div>
 </div>
 {{$acl}}

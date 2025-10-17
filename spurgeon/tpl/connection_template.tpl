@@ -1,4 +1,4 @@
-  <div class="card mb-3">
+  <div class="mb-3">
     <div class="row align-items-center flex-column flex-md-row card-body ">
       <!-- Profile Section (image + name) -->
       <div class="col-12 col-md-5 mb-3 mb-md-0">

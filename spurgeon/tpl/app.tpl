@@ -1,5 +1,5 @@
-<div class="card mb-3">
-<div class="section-subtitle-wrapper clearfix card-header pb-0 border-bottom-0">
+<div class="mb-3">
+<div class="section-subtitle-wrapper clearfix h4 mt-0 pb-0 border-bottom-0">
 	<div class="float-end">
 		{{if $app.type !== 'system'}}
 		{{if $purchase}}
@@ -24,7 +24,7 @@
 	</div>
     <div><a href="{{$app.url}}">{{$app.name}}{{if $app.price}} ({{$app.price}}){{/if}}</a></div>
 </div>
-<div class="section-content-tools-wrapper container card-body">
+<div class="section-content-tools-wrapper container">
 	<div class="{{if $deleted}} app-deleted{{/if}} mb-3">
 		<a class="app-icon app-link" href="{{$app.url}}"{{if $app.target}} target="{{$app.target}}"{{/if}}{{if $installed}} data-papp="{{$app.papp}}" data-icon="{{$icon}}" data-url="{{$app.url}}" data-name="{{$app.name}}"{{/if}}>
 			{{if $icon}}

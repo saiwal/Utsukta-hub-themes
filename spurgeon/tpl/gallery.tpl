@@ -4,15 +4,13 @@
 		<h3>{{$title}}</h3>
 	</div>
 	<div class="section-content-wrapper-np">
-    <div class="card mb-3">
-      <div class="card-body">
+    <div class="mb-3">
 		<div id="photo-albums" style="display: none">
 			{{foreach $albums as $album}}
 				<div class="init-gallery cursor-pointer" data-aid="{{$album.folder}}" data-album="{{$album.album}}">
 					<img src="photo/{{$album.resource_id}}-3" width="{{$album.width}}" height="{{$album.height}}" alt="{{$album.album}}" />
 				</div>
 			{{/foreach}}
-		</div>
 		</div>
 		</div>
 	</div>

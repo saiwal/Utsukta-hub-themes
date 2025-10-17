@@ -5486,3 +5486,34 @@ body.search-is-visible .s-header__search-inner {
   margin-right: 0.4em;
   margin-bottom: 0.4em;
 }
+
+/* User Menu styled like ss-go-top, using <a> */
+.user-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  bottom: 4.8rem;
+  left : 2.4rem;
+  width: 5.2rem;
+  height: 5.2rem;
+  border-radius: 50%;
+  background-color: var(--color-gray-7);
+  color: black;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  z-index: 1100;
+  text-decoration: none; /* remove underline */
+}
+
+.user-menu svg {
+  width: 22px;
+  height: 22px;
+}
+
+.user-menu:hover,
+.user-menu:focus {
+  background-color: black;
+  color: white;
+  outline: none;
+}

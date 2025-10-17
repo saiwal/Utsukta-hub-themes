@@ -38,8 +38,7 @@
 		{{/foreach}}
 	</div>
 	{{else}}
-    <div class="card mb-3">
-      <div class="card-body">
+    <div class="mb-3">
 	<table id="cloud-index" class="table table-hover">
     <thead>
 		<tr>
@@ -271,7 +270,6 @@
 		{{/if}}
 		{{/foreach}}
 	</table>
-	</div>
 	</div>
 {{/if}}
 </div>

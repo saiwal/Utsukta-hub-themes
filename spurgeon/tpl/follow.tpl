@@ -1,6 +1,5 @@
-<div id="follow-sidebar" class="card mb-3">
-  <div class="card-header">{{$connect}}</div>
-  <div class="card-body">
+<div id="follow-sidebar" class="mb-3">
+  <div class="h4 mt-0">{{$connect}}</div>
 	<form action="follow" method="post" />
 		<div class="input-group">
 			<input class="form-control" type="text" name="url" title="{{$hint}}" placeholder="{{$desc}}" />
@@ -10,5 +9,4 @@
 	{{if $abook_usage_message}}
 	<div class="usage-message" id="abook-usage-message">{{$abook_usage_message}}</div>
 	{{/if}}
-  </div>
 </div>

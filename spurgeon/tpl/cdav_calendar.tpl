@@ -615,8 +615,7 @@
     <div class="clear"></div>
   </div>
   <div class="section-content-tools-wrapper" style="display: none">
-    <div class="card mb-3">
-      <div class="card-body p-0">
+    <div class="mb-3">
         <div id="recurrence_warning" style="display: none">
           <div class="section-content-warning-wrapper">
             {{$recurrence_warning}}
@@ -680,7 +679,6 @@
           </form>
           {{$acl}}
         </div>
-      </div>
     </div>
   </div>
   <div class="section-content-wrapper-np">

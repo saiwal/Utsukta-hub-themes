@@ -1,6 +1,5 @@
-<div class="card mb-3">
-	<div class="card-header">{{$roles_label}}</div>
-  <div class="card-body">
+<div class="mb-3">
+	<div class="h4 mt-0">{{$roles_label}}</div>
 	<ul class="nav nav-pills flex-column">
 		{{foreach $roles as $role}}
 		<li class="nav-item">
@@ -10,13 +9,12 @@
 		</li>
 		{{/foreach}}
 	</ul>
-  </div>
 </div>
 
 {{if $members}}
-<div class="card mb-3">
-	<div class="card-header">{{$members_label}}</div>
-	<div class="card-body p-0 overflow-auto" style="height: 19rem;">
+<div class="mb-3">
+	<div class="h4 mt-0">{{$members_label}}</div>
+	<div class="p-0 overflow-auto" style="height: 19rem;">
 		{{foreach $members as $member}}
 		<a href="{{$member.url}}" class="lh-sm border-bottom p-2 d-block text-truncate">
 			<img src="{{$member.photo}}" class="float-start rounded me-2" style="height: 2.2rem; width: 2.2rem;" loading="lazy">
