@@ -53,6 +53,7 @@ head_add_css('/vendor/twbs/bootstrap-icons/font/bootstrap-icons.min.css');
 head_add_css('/library/bootstrap-tagsinput/bootstrap-tagsinput.css');
 head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 
+head_add_css('/view/theme/typerite/css/bootstrap.css');
 head_add_css('/view/theme/typerite/css/base.css');
 head_add_css('/view/theme/typerite/css/vendor.css');
 head_add_css('/view/theme/typerite/css/main.css');

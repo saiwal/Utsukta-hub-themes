@@ -252,7 +252,7 @@
 					<i id="jot-perms-icon" class="bi bi-{{$lockstate}} jot-icons{{if $bang}} jot-lock-warn{{/if}}"></i>
 				</a>
 				{{/if}}
-				<a id="dbtn-submit" class="btn btn--primary btn-sm" type="submit" tabindex="3" name="a-submit">{{$share}}</a>
+				<button id="dbtn-submit" class="btn btn--primary btn-sm" type="submit" tabindex="3" name="button-submit">{{$share}}</button>
 			</div>
 			<div class="clear"></div>
 			{{if $jotplugins}}

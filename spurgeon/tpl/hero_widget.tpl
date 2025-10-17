@@ -50,4 +50,17 @@
     </a>
 
 </div>
-<style>.s-content{ padding-top: 0;} .s-header__nav-wrap{ margin-left: 50%;} .s-header__branding a{color: white;}</style>
+<style>
+.s-content{
+  padding-top: 0;
+}
+.s-header__nav-wrap{ 
+  margin-left: 50%;
+} 
+.s-header__branding a{
+  color: white;
+}
+.bricks {
+  padding-top: 0px;
+}
+</style>
