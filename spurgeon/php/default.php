@@ -42,7 +42,7 @@
     </div>
 
 
-    <div id="page" class="s-pagewrap s-pagewrap">
+    <div id="page" class="s-pagewrap">
 	    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
   
       <header id="masthead" class="s-header">
@@ -59,14 +59,13 @@
         </svg>
       </a>
       <section id="content" class="s-content s-content--page">
-        <main id="bricks" class="bricks">
-          <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
-          <div class="masonry">
-            <div id="region_2" class="pt-5">
+        <div id="bricks" class="bricks">
+            <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
+            <div id="region_2" class="masonry">
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
-          </div>
-        </main>
+        </div>
+
       </section>
 
 
