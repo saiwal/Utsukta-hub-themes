@@ -467,10 +467,10 @@
 			if (count) {
 				if (buttonElement) buttonElement.style.display = 'block';  // Fade-in effect replaced by display block
 				if (replace || followup) {
-					updateElement.textContent = count >= 100 ? '99+' : count;
+          updateElement.textContent = count >= {{$count_limit}} ? '{{$count_limit - 1}}+' : count;
 				} else {
 					count = count + Number(updateElement.textContent.replace(/\++$/, ''));
-					updateElement.textContent = count >= 100 ? '99+' : count;
+					updateElement.textContent = count >= {{$count_limit}} ? '{{$count_limit - 1}}+' : count;
 				}
 			} else {
 				if (updateElement) updateElement.textContent = '0';
@@ -509,6 +509,12 @@
 			return;
 		}
 
+    {{if $invert_notifications_order}}
+		if (!replace && !followup && Array.from(notify_menu.querySelectorAll('.notification')).filter(isVisible).length >= 30) {
+			return;
+		}
+		{{/if}}
+
 		if (replace && !followup) {
 			notify_menu.innerHTML = '';  // Clear menu
 			notify_loading.style.display = 'none';  // Hide loading
@@ -545,10 +551,17 @@
 		// Sort notifications by date
 		if (!replace && !followup) {
 			let notifications = Array.from(notify_menu.getElementsByClassName('notification'));
+
 			notifications.sort((a, b) => {
-				let dateA = new Date(a.dataset.when);
-				let dateB = new Date(b.dataset.when);
-				return dateA > dateB ? -1 : dateA < dateB ? 1 : 0;
+        let dateA = new Date(a.dataset.when).getTime();
+				let dateB = new Date(b.dataset.when).getTime();
+
+				{{if $invert_notifications_order}}
+				return dateA - dateB; // Sort in ascending order
+				{{else}}
+				return dateB - dateA; // Sort in descending order
+				{{/if}}
+
 			});
 			notifications.forEach(notification => notify_menu.appendChild(notification));
 		}
