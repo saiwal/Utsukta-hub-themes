@@ -10,8 +10,8 @@
 	{{$create}}
 
 	{{if $mlist }}
-	<div id="mitemlist-content-wrapper" class="section-content-wrapper-np">
-		<table id="mitem-list-table">
+	<div id="mitemlist-content-wrapper" class="section-content-wrapper-np card card-body">
+		<table id="mitem-list-table" class="table table-hover">
 			<tr>
 				<th width="1%">{{$nametitle}}</th>
 				<th width="96%">{{$targettitle}}</th>

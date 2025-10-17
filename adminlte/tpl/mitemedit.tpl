@@ -4,7 +4,7 @@
 		<h3>{{$header}}</h3>
 	</div>
 {{/if}}
-	<div id="menu-element-creator" class="section-content-tools-wrapper" style="display: {{$display}};">
+	<div id="menu-element-creator" class="section-content-tools-wrapper card card-body mb-3" style="display: {{$display}};">
 		<form id="mitemedit" action="mitem/{{$nick}}/{{$menu_id}}{{if $mitem_id}}/{{$mitem_id}}{{/if}}{{if $sys}}?f=&sys=1{{/if}}" method="post" class="acl-form" data-form_id="mitemedit" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 			<input type="hidden" name="menu_id" value="{{$menu_id}}" />
 			{{if $mitem_id}}
