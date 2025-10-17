@@ -1,5 +1,5 @@
 <div class="mb-3">
-  <div class="h4 mt-0">
+  <div class="h4">
     {{$title}}
   </div>
   <!-- /.card-header -->
