@@ -3,7 +3,7 @@
 /**
  *   * Name: KeepItSimple
  *   * Description: KeepItSimple theme by Styleshout adapted for Hubzilla
- *   * Version: 1.0
+ *   * Version: 1.0-alpha
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: Saiwal sk@hub.utsukta.org
