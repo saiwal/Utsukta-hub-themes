@@ -47,15 +47,7 @@
     <!-- Header
     ================================================== -->
     <header class="s-header">
-      <div class="row">
 
-        <div class="s-header__content column">
-          <h1 class="s-header__logotext">
-            <a href="/" title=""><?php echo $sys['banner'] ?></a>
-          </h1>
-          <p class="s-header__tagline"><?php echo $page['description'] ?></p>
-         </div>
-      </div> <!-- end row -->
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
 
     </header> <!-- Header End -->

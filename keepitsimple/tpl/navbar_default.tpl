@@ -1,3 +1,15 @@
+<div class="row">
+
+  <div class="s-header__content column">
+    <h1 class="s-header__logotext">
+      <a href="/" title="">
+        {{$banner}}
+      </a>
+    </h1>
+    <p class="s-header__tagline">
+    </p>
+  </div>
+</div> <!-- end row -->
 <nav class="s-header__nav-wrap">
 
   <div class="row">
@@ -19,7 +31,7 @@
       <li class="has-children"><a href="#0">{{$featured_apps}}</a>
         <ul>
           {{foreach $nav_apps as $nav_app}}
-            {{$nav_app}}
+          {{$nav_app}}
           {{/foreach}}
         </ul>
       </li>
@@ -27,9 +39,9 @@
       <!-- System apps   -->
       <li class="has-children"><a href="#0">{{$sysapps}}</a>
         <ul>
-        {{foreach $nav_apps as $nav_app}}
+          {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
-        {{/foreach}}
+          {{/foreach}}
         </ul>
       </li>
       {{/if}}
