@@ -2241,31 +2241,6 @@ function zFormError(elm,x) {
 	}
 }
 
-$(window).scroll(function () {
-	if(typeof buildCmd == 'function') {
-		// This is a content page with items and/or conversations
-		if($('#conversation-end').length && ($(window).scrollTop() + $(window).height()) > $('#conversation-end').position().top) {
-			if((pageHasMoreContent) && (! loadingPage)) {
-				next_page++;
-				scroll_next = true;
-				loadingPage = true;
-				liveUpdate();
-			}
-		}
-	}
-	else {
-		// This is some other kind of page - perhaps a directory
-		if($('#page-end').length && ($(window).scrollTop() + $(window).height()) > $('#page-end').position().top) {
-			if((pageHasMoreContent) && (! loadingPage) && (! justifiedGalleryActive)) {
-				next_page++;
-				scroll_next = true;
-				loadingPage = true;
-				pageUpdate();
-			}
-		}
-	}
-});
-
 function loadText(textRegion,data) {
 	var currentText = $(textRegion).val();
 	$(textRegion).val(currentText + data);
@@ -2363,3 +2338,67 @@ function close_modal() {
 		modal.hide();
 	}
 }
+$(document).ready(function () {
+
+    // 🔹 Disable infinite scroll
+    $(window).off('scroll');
+
+    // 🔹 Insert a "Load more" button using a Bootstrap icon (down arrow)
+    const loadMoreBtn = $(`
+        <div id="load-more-container" style="text-align:center; margin:20px 0;">
+            <button id="load-more" class="btn btn-outline-secondary rounded-pill">
+                <i class="bi bi-arrow-down-circle"></i>
+            </button>
+        </div>
+    `);
+
+    // Append below conversation or directory end
+    if ($('#conversation-end').length) {
+        $('#conversation-end').after(loadMoreBtn);
+    } else if ($('#page-end').length) {
+        $('#page-end').after(loadMoreBtn);
+    }
+
+    // 🔹 Click handler
+    $('#load-more').on('click', function () {
+        if (typeof buildCmd === 'function') {
+            // Conversation or posts page
+            if (pageHasMoreContent && !loadingPage) {
+                next_page++;
+                scroll_next = true;
+                loadingPage = true;
+
+                // show spinner icon
+                $('#load-more i').removeClass('bi-arrow-down-circle').addClass('spinner-border spinner-border-sm');
+
+                liveUpdate();
+            }
+        } else {
+            // Other pages (directory, etc.)
+            if (pageHasMoreContent && !loadingPage && !justifiedGalleryActive) {
+                next_page++;
+                scroll_next = true;
+                loadingPage = true;
+
+                $('#load-more i').removeClass('bi-arrow-down-circle').addClass('spinner-border spinner-border-sm');
+
+                pageUpdate();
+            }
+        }
+    });
+
+    // 🔹 Monitor for completion of loading to restore button icon
+    const observer = setInterval(function () {
+        if (typeof loadingPage !== 'undefined' && !loadingPage) {
+            $('#load-more i').removeClass('spinner-border spinner-border-sm').addClass('bi bi-arrow-down-circle');
+        }
+
+        // Disable if no more content
+        if (typeof pageHasMoreContent !== 'undefined' && !pageHasMoreContent) {
+            $('#load-more').prop('disabled', true);
+            $('#load-more i').removeClass().addClass('bi bi-check-circle text-success');
+            clearInterval(observer);
+        }
+    }, 1000);
+
+});

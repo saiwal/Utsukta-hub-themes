@@ -28,7 +28,7 @@
           </div>
           <div id="bricks" class="bricks">
             <div class="masonry">
-                <div class="bricks-wrapper ss-animated">
+                <div class="bricks-wrapper">
                 </div>
             </div>
           </div>
