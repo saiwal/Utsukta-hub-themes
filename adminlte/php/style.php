@@ -25,6 +25,7 @@ if(!App::$install) {
 		$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');
 		$bg_mode = get_pconfig($uid, 'adminlte', 'bg_mode');
 		$dark_mode = get_pconfig($uid, 'adminlte', 'dark_mode');
+		$tour = get_pconfig($uid, 'adminlte', 'tour_done');
 		/*$converse_width = get_pconfig($uid,'adminlte','converse_width');*/
 		/*$top_photo = get_pconfig($uid,'adminlte','top_photo');*/
 		/*  $reply_photo = get_pconfig($uid,'adminlte','reply_photo');*/
@@ -38,6 +39,7 @@ $bgcolor_dark = $bgcolor_dark ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: '';
 $background_image_dark = $background_image_dark ?: '';
 $dark_mode = 0;
+$tour = 0;
 $sidebar_mode = 0;
 $bg_mode = ($bg_mode == 1) ? 'cover' : '';
 $options = array (
@@ -48,6 +50,7 @@ $options = array (
   '$bg_mode' => $bg_mode,
   '$sidebar_mode' => $sidebar_mode,
   '$dark_mode' => $dark_mode,
+  '$tour' => $tour,
 );
 /**/
 // Allow layouts to over-ride the schema
