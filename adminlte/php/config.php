@@ -94,7 +94,7 @@ class AdminlteConfig {
 
 		$istour = false;
    # dirty way to check if adminlte_tour addon is installed 
-    if (file_exists(__DIR__ . '/../../../../addon/adminlte_tour/adminlte_tour.php')) {
+    if (file_exists(__DIR__ . '/../../../../../addon/adminlte_tour/adminlte_tour.php')) {
         $istour = true;
     } 
 
