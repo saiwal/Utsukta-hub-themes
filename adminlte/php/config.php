@@ -92,11 +92,18 @@ class AdminlteConfig {
 			$expert = true;
 		}
 
+		$istour = false;
+   # dirty way to check if adminlte_tour addon is installed 
+    if (file_exists(__DIR__ . '/../../../../addon/adminlte_tour/adminlte_tour.php')) {
+        $istour = true;
+    } 
+
 	  	$o = replace_macros(get_markup_template('theme_settings.tpl'), array(
 			'$submit' => t('Submit'),
 			'$baseurl' => z_root(),
 			'$theme' => \App::$channel['channel_theme'],
-			'$expert' => $expert,
+      '$expert' => $expert,
+      '$istour' => $istour,
 			'$title' => t("Theme settings"),
 			'$dark' => t('Dark style'),
 			'$light' => t('Light style'),

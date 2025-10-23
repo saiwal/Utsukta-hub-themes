@@ -24,7 +24,7 @@ if(!App::$install) {
 		$background_image = get_pconfig($uid, 'adminlte', 'background_image');
 		$background_image_dark = get_pconfig($uid, 'adminlte', 'background_image_dark');
 		$bg_mode = get_pconfig($uid, 'adminlte', 'bg_mode');
-		$dark_mode = get_pconfig($uid, 'adminlte', 'dark_mode');
+    $dark_mode = get_pconfig($uid, 'adminlte', 'dark_mode');
 		$tour = get_pconfig($uid, 'adminlte', 'tour_done');
 		/*$converse_width = get_pconfig($uid,'adminlte','converse_width');*/
 		/*$top_photo = get_pconfig($uid,'adminlte','top_photo');*/
