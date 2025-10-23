@@ -29,12 +29,10 @@
               data-bs-theme-value="auto">
             <label class="btn btn-sm btn-dark" for="btnradio1"><i
                 class="bi bi-circle-half me-1"></i>Auto</label>
-
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"
               data-bs-theme-value="dark">
             <label class="btn btn-sm btn-dark" for="btnradio2"><i
                 class="bi bi-moon-fill me-1"></i>Dark</label>
-
             <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"
               data-bs-theme-value="light">
             <label class="btn btn-sm btn-dark" for="btnradio3"><i
@@ -75,7 +73,8 @@
             {{/foreach}}
           </ul>
         </li>
-        <li class="nav-header" id="manage-apps"><a class="nav-link" href="/apps"><i class="bi bi-plus-lg"></i>
+        <li class="nav-item" id="manage-apps">
+          <a class="nav-link" href="/apps"><i class="bi bi-plus-lg nav-icon"></i>
             <p>{{$addapps}}</p>
           </a></li>
         {{else}}
