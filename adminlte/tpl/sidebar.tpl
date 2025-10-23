@@ -43,7 +43,7 @@
         </li>
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
-        <li class="nav-item menu-open">
+        <li class="nav-item menu-open" id="pinned-apps">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-pin-angle-fill"></i>
             <p>{{$pinned_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
@@ -63,8 +63,8 @@
         {{/if}}
 
         {{if $is_owner}}
-        <!-- Starred user apps -->
-        <li class="nav-item">
+        <!-- Starred/Featured user apps -->
+        <li class="nav-item" id="featured-apps">
           <a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
             <p>{{$featured_apps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
           </a>
@@ -75,7 +75,7 @@
             {{/foreach}}
           </ul>
         </li>
-        <li class="nav-header"><a class="nav-link" href="/apps"><i class="bi bi-plus-lg"></i>
+        <li class="nav-header" id="manage-apps"><a class="nav-link" href="/apps"><i class="bi bi-plus-lg"></i>
             <p>{{$addapps}}</p>
           </a></li>
         {{else}}

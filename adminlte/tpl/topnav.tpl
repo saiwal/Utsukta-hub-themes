@@ -2,7 +2,7 @@
   <!--begin::Container-->
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
-      <li class="nav-item">
+      <li class="nav-item" id="toggle-sidebar">
         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
       </li>
     </ul>
