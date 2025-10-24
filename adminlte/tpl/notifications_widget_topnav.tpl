@@ -692,7 +692,7 @@
 </script>
 
 {{if !$sys_only}}
-<div id="notifications_wrapper" class="mb-0">
+<div id="notifications_wrapper" class="mb-0" style="min-width:18em;">
 	<div id="no_notifications" class="p-2">
 		{{$no_notifications}}
   </div>
