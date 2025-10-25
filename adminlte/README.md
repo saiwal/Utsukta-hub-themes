@@ -52,4 +52,6 @@ Just upload the logo with public access and replace the url in code below and se
 
 Note: This may break the banner on other themes so only implement if other themes are not being used by others. 
 
-**Sortable navigation menu:** The items on the navigation menu can be dragged in the order you wish for them to appear. 
+**Sortable navigation menu:** The items on the navigation menu can be dragged in the order you wish for them to appear.
+
+**Interface tour(via addon):** Install the addon `adminlte_tour` via the [addon repo](https://github.com/saiwal/utsukta-hub-addons) to give new members a quick tour of the interface.
