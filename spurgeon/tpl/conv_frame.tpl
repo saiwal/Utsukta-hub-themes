@@ -1,8 +1,8 @@
-<div class="bricks-wrapper" data-animate-block>
+<!-- <div class="bricks-wrapper" data-animate-block> -->
   <div id="threads-begin" class="grid-sizer"></div>
   <div id="threads-end"></div>
   <div id="conversation-end"></div>
-</div>
+<!-- </div> -->
 <!-- pagination -->
 <div class="row pagination invisible">
   <div class="column lg-12">

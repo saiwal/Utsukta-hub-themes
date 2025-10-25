@@ -1,6 +1,6 @@
 {{if $item.toplevel}}
 <article id="thread-wrapper-{{$item.id}}" class="brick entry thread-wrapper {{$item.toplevel}} "
-  data-b64mids='{{$item.mids}}' data-animate-el>
+  data-b64mids='{{$item.mids}}'>
   <a name="item_{{$item.id}}"></a>
   <div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
     id="wall-item-outside-wrapper-{{$item.id}}">

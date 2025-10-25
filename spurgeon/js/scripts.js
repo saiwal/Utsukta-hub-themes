@@ -357,7 +357,7 @@
         ssMobileMenu();
         ssSearch();
         ssMasonry();
-        ssAnimateBricks();
+        // ssAnimateBricks();
         ssSwiper();
         ssAlertBoxes();
         ssBackToTop();

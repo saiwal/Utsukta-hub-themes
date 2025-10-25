@@ -49,28 +49,30 @@
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <a href="#" id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round"
-             stroke-linejoin="round" viewBox="0 0 24 24">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </a>
+        <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
       <section id="content" class="s-content s-content--page">
-        <div id="bricks" class="bricks">
-            <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
-            <div id="region_2" class="masonry">
+          <div id="region_2" class="row entry-wrap">
+            <div class="column lg-12">
               <?php if (x($page, 'content')) echo $page['content']; ?>
             </div>
-        </div>
+          </div>
 
       </section>
 
 
         <footer id="colophon" class="s-footer">
-          <div class="row s-footer__main">
+        <div class="row s-footer__main">
+          <div id="region_1" class="pe-0">
+                <div id="left_aside_wrapper">
+                <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+                </div>
+                </div>
+                <div id="region_3" class="pe-0">
+                <div id="right_aside_wrapper">
+                <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
+              </div>
+
               <?php if (x($page, 'footer')) echo $page['footer']; ?>
           </div> <!-- end s-footer__main -->
 

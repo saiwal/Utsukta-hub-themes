@@ -44,6 +44,10 @@ function widget_hero($args)
                 </div>
               </div>
             </div>
+            <style>
+            .s-pageheader {  padding-top: calc(6.5 * var(--space)); }
+            .s-content--page {  padding-top: 0px;}
+            </style>
             EOT;
     }
     // Default arguments
