@@ -1,6 +1,6 @@
 <div id="help-content" class="generic-content-wrapper">
 	<div class="clearfix section-title-wrapper app-content-header">
-		<div class="h3 mt-0">{{$module->get_page_title()}}</div>
+		<div class="h3">{{$module->get_page_title()}}</div>
 	</div>
 	{{if $module->missing_translation()}}
 	<div class="notice section-content-info-wrapper">

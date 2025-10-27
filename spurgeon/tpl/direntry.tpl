@@ -1,9 +1,8 @@
-<div class="mb-3">
   <div class="row">
     <!-- Section 1: Profile Image + Name -->
-    <div class="col-12 col-md-5 mb-2 mb-md-0 border-end">
+    <div class="col-12 col-md-5 mb-2 mb-md-0">
       <div class="d-flex align-items-center mb-2">
-        <a href="{{$entry.profile_link}}" class="flex-shrink-0 me-3"><img src="{{$entry.photo}}" alt="Profile Picture" class="img-thumbnail " style="width: 100px; height: 100px; object-fit: cover;"></a>
+        <a href="{{$entry.profile_link}}" class="flex-shrink-0 me-3"><img src="{{$entry.photo}}" alt="Profile Picture" class="rounded-circle img-size-32 mb-1" style="width: 100px; height: 100px; object-fit: cover;"></a>
         <div class="flex-column">
         <h5 class="mb-0 text-wrap">{{if $entry.public_forum}}<i class="bi bi-chat" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}' class="link-body-emphasis" >{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</h5>
           <p class="text-muted small text-break">{{$entry.address}}</p></div>
@@ -11,7 +10,7 @@
     </div>
 
     <!-- Section 2: Other Details -->
-    <div class="col-12 col-md-7 directory-collapse">
+    <div class="col-12 col-md-7 directory-collapse p-2">
 			{{if $entry.common_friends}}
       <p><strong>{{$entry.common_label}}</strong> {{$entry.common_count}}</p>
 			{{/if}}
@@ -53,5 +52,4 @@
 
     </div>
   </div>
-</div>
-
+  <h6></h6>

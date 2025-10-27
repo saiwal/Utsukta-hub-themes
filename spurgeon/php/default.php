@@ -58,17 +58,17 @@
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
       </a>    <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
-      <section id="content" class="s-content s-content--page" style="padding-top: var(--vspace-1);">
+      <section id="content" class="s-content s-content--page" style="padding-top: var(--vspace-2);">
         <main id="bricks" class="bricks" style="padding-top: var(--vspace-2);">
           <div class="masonry">
           <div class="row" style="max-width: 100%;">
             <div class="column lg-8 md-12">
-              <div id="region_2" class="pt-5">
+              <div id="region_2">
                 <?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
             </div>
             <div class="column lg-4" id="sidebar-column">
-              <div id="region_3" class="pt-5">
+              <div id="region_3">
                 <div id="left_aside_wrapper">
                   <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>

@@ -5,7 +5,7 @@
 			<button id="webpage-create-btn" class="btn btn-sm btn-success acl-form-trigger" onclick="openClose('webpage-editor');" data-form_id="profile-jot-form"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$create}}</button>
 		</div>
 		{{/if}}
-		<div class="h4 mt-0">{{$listtitle}}</div>
+		<div class="h3">{{$listtitle}}</div>
 	</div>
 	{{if $editor}}
 	<div id="webpage-editor" class="section-content-tools-wrapper">
@@ -14,8 +14,7 @@
 	{{/if}}
 	{{if $pages}}
 	<div id="pagelist-content-wrapper" class="section-content-wrapper-np">
-    <div class=" mb-3">
-		<table id="webpage-list-table" class="table table-hover">
+		<table id="webpage-list-table" class="table-responsive">
       <thead>
 			<tr>
 				<th width="1%">{{$pagelink_txt}}</th>
@@ -74,7 +73,6 @@
 			{{/foreach}}
       </tbody>
 		</table>
-    </div>
 	</div>
 	{{/if}}
 	<div class="clear"></div>

@@ -6,7 +6,6 @@
 	<div class="row row-cols-2 row-cols-md-4">
 		{{if $parentpath}}
 		<div class="col mb-4">
-			<div class="card h-100">
 				<a href="{{$parentpath}}" class="text-decoration-none">
 					<div class="d-flex align-items-center justify-content-center m-1" style="height: 4.5rem;">
 						<i class="bi bi-arrow-90deg-up" style="font-size: 4rem"></i>
@@ -15,12 +14,10 @@
 						<small class="text-muted text-truncate">..</small>
 					</div>
 				</a>
-			</div>
 		</div>
 		{{/if}}
 		{{foreach $entries as $item}}
 		<div class="col mb-4">
-			<div class="card h-100">
 				<a href="{{$item.rel_path}}" title="{{$item.name}}" class="text-decoration-none">
 					<div class="d-flex align-items-center justify-content-center m-1" style="height: 4.5rem;">
 						{{if $item.photo_icon}}
@@ -33,7 +30,6 @@
 						<small class="text-muted">{{$item.name}}</small>
 					</div>
 				</a>
-			</div>
 		</div>
 		{{/foreach}}
 	</div>
@@ -101,7 +97,7 @@
 		</tr>
 		<tr id="cloud-multi-tools">
 			<td id="attach-multi-edit-panel" colspan="8">
-				<form id="attach_multi_edit_form" action="attach_edit" method="post" class="acl-form" data-form_id="attach_multi_edit_form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
+				<form id="attach_multi_edit_form" action="attach_edit" method="post" class="acl-form mb-0" data-form_id="attach_multi_edit_form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 					<input type="hidden" name="channel_id" value="{{$channel_id}}" />
 					<input id="multi-perms" type="hidden" name="permissions" value="0">
 					<input type="hidden" name="return_path" value="{{$return_path}}">
@@ -206,7 +202,7 @@
 		{{if ($is_owner || ($item.is_creator && $has_perms)) && $item.attach_id}}
 		<tr id="cloud-tools-{{$item.attach_id}}" class="cloud-tools">
 			<td id="attach-edit-panel-{{$item.attach_id}}" class="attach-edit-panel" colspan="8">
-				<form id="attach_edit_form_{{$item.attach_id}}" action="attach_edit" method="post" class="acl-form" data-form_id="attach_edit_form_{{$item.attach_id}}" data-allow_cid='{{$item.allow_cid}}' data-allow_gid='{{$item.allow_gid}}' data-deny_cid='{{$item.deny_cid}}' data-deny_gid='{{$item.deny_gid}}'>
+				<form id="attach_edit_form_{{$item.attach_id}}" action="attach_edit" method="post" class="acl-form mb-0" data-form_id="attach_edit_form_{{$item.attach_id}}" data-allow_cid='{{$item.allow_cid}}' data-allow_gid='{{$item.allow_gid}}' data-deny_cid='{{$item.deny_cid}}' data-deny_gid='{{$item.deny_gid}}'>
 					<input type="hidden" name="attach_id" value="{{$item.attach_id}}" />
 					<input type="hidden" name="channel_id" value="{{$channel_id}}" />
 					<input type="hidden" name="return_path" value="{{$return_path}}">
