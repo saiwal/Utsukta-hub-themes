@@ -1,4 +1,4 @@
-<div class="h4">
+<div class="h5">
   <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a>
 </div>
 <div class="table-responsive">

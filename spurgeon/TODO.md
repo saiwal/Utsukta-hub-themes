@@ -69,12 +69,13 @@
     </body>
 
 ## layouts
-- default: network, channel, 
-- page: directory, connections
+- default: network, channel 
 
 ## regions
+- content: 
 - aside:
 - right_aside:
+- footer: optional footer widgets
 
 ## special considerations:
 - channel: hero widget

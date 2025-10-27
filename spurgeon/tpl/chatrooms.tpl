@@ -11,7 +11,7 @@
 	{{if $rooms}}
 	<div class="section-content-wrapper-np">
     <div class="mb-3">
-		<table id="chatrooms-index" class="table table-hover">
+		<table id="chatrooms-index" class="table">
       <thead>
 			<tr>
 				<th width="97%">{{$name}}</th>

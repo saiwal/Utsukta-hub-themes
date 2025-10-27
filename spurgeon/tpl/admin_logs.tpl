@@ -15,7 +15,7 @@
 
     </form>
 
-    <h4>{{$logname}}</h4>
+    <h5>{{$logname}}</h5>
     <div style="width:100%; height:400px; overflow: auto; ">
       <pre>{{$data}}</pre>
     </div>

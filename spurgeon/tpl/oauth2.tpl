@@ -18,7 +18,7 @@
 <input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 <input type='hidden' name='name' value='{{$app.client_id}}'>
 	<div class='oauthapp'>
-		{{if $app.client_id}}<h4>{{$app.client_id}}</h4>{{else}}<h4>{{$noname}}</h4>{{/if}}
+		{{if $app.client_id}}<h5>{{$app.client_id}}</h5>{{else}}<h5>{{$noname}}</h5>{{/if}}
 		{{if $app.my}}
 			{{if $app.oauth_token}}
 			<div class="settings-submit-wrapper" ><button class="settings-submit"  type="submit" name="remove" value="{{$app.oauth_token}}">{{$remove}}</button></div>

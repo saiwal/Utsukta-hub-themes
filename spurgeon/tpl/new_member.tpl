@@ -1,5 +1,5 @@
 <div class="mb-3">
-  <div class="h4">
+  <div class="h5">
     {{$title}}
   </div>
   <!-- /.card-header -->
@@ -8,10 +8,10 @@
     {{foreach $options as $x}}
     {{if is_array($x) }}
     {{foreach $x as $y => $z}}
-      <a href="{{$y}}" class="h6 mt-0 ms-3">{{$z}}</a>
+      <a href="{{$y}}" class="mt-0 ms-3">{{$z}}</a>
     {{/foreach}}
     {{else}}
-      <li class="h5 mt-3">{{$x}}</li>
+    <li class="mt-3"><strong>{{$x}}</strong></li>
     {{/if}}
     {{/foreach}}
     </ul>

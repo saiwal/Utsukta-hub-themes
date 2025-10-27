@@ -1,9 +1,9 @@
-<div class="generic-content-wrapper card">
-	<div class="section-title-wrapper card-header">
-		<h3 class="card-title">{{$room_name}}</h3>
+<div class="generic-content-wrapper">
+	<div class="section-title-wrapper">
+		<h3>{{$room_name}}</h3>
 		<div class="clear"></div>
 	</div>
-	<div id="chatContainer" class="section-content-wrapper p-2">
+	<div id="chatContainer" class="section-content-wrapper p-2 card">
 		<div id="chatTopBar">
 			<div id="chat-top-spinner" class="spinner-wrapper">
 				<div class="spinner m"></div>
@@ -11,57 +11,41 @@
 			<div id="chatLineHolder"></div>
 		</div>
 		<div class="clear"></div>
-		<div id="chatBottomBar" class="card-footer">
+		<div id="chatBottomBar">
 			<form id="chat-form" method="post" action="#">
 				<input type="hidden" name="room_id" value="{{$room_id}}" />
 				<div class="mb-3">
-					<textarea id="chatText" name="chat_text" class="form-control"></textarea>
+					<textarea id="chatText" name="chat_text" class="u-fullwidth"></textarea>
 				</div>
-				<div id="chat-submit-wrapper" class="clearfix">
-					<div id="chat-submit" class="dropup float-end">
-						<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
-						<button class="btn btn-primary btn-sm" type="submit" id="chat-submit" name="submit" value="{{$submit}}">{{$submit}}</button>
-						<div class="dropdown-menu dropdown-menu-end">
-							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=online"><i class="bi bi-circle-fill online"></i>&nbsp;{{$online}}</a>
-							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
-							<a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
-                       					<div class="dropdown-divider"></div>
-                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-fill"></i>&nbsp;Toggle notifications</a>
-                        				<a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
-							{{if $bookmark_link}}
-                         				<div class="dropdown-divider"></div>
-							<a class="dropdown-item" href="{{$bookmark_link}}" target="_blank" ><i class="bi bi-bookmark-fill"></i>&nbsp;{{$bookmark}}</a>
-							{{/if}}
-						</div>
-					</div>
+				<div id="chat-submit-wrapper" class="d-flex align-items-center justify-content-between">
 					<div id="chat-tools" class="btn-toolbar">
 						<div class="btn-group me-2">
-							<button id="main-editor-bold" class="btn btn-secondary btn-sm" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
+							<a id="main-editor-bold" class="pe-3 ps-3" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
 								<i class="bi bi-type-bold jot-icons"></i>
-							</button>
-							<button id="main-editor-italic" class="btn btn-secondary btn-sm" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
+							</a>
+							<a id="main-editor-italic" class="pe-3" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
 								<i class="bi bi-type-italic jot-icons"></i>
-							</button>
-							<button id="main-editor-underline" class="btn btn-secondary btn-sm" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
+							</a>
+							<a id="main-editor-underline" class="pe-3" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
 								<i class="bi bi-type-underline jot-icons"></i>
-							</button>
-							<button id="main-editor-quote" class="btn btn-secondary btn-sm" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
+							</a>
+							<a id="main-editor-quote" class="pe-3" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
 								<i class="bi bi-quote jot-icons"></i>
-							</button>
-							<button id="main-editor-code" class="btn btn-secondary btn-sm" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
+							</a>
+							<a id="main-editor-code" class="pe-3" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
 								<i class="bi bi-code jot-icons"></i>
-							</button>
+							</a>
 						</div>
 						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-link-wrapper" class="btn btn-secondary btn-sm" onclick="chatJotGetLink(); return false;" >
+							<a id="chat-link-wrapper" class="pe-3" onclick="chatJotGetLink(); return false;" >
 								<i id="chat-link" class="bi bi-link-45deg jot-icons" title="{{$insert}}" ></i>
-							</button>
+							</a>
 						</div>
 						{{if $feature_encrypt}}
 						<div class="btn-group me-2 d-none d-md-flex">
-							<button id="chat-encrypt-wrapper" class="btn btn-secondary btn-sm" onclick="sodium_encrypt('#chatText'); return false;">
+							<a id="chat-encrypt-wrapper" class="pe-3" onclick="sodium_encrypt('#chatText'); return false;">
 								<i id="chat-encrypt" class="bi bi-key jot-icons" title="{{$encrypt}}" ></i>
-							</button>
+							</a>
 						</div>
 						{{/if}}
 						<div class="btn-group dropup d-md-none">
@@ -82,6 +66,23 @@
 							</div>
 						</div>
 					</div>
+          <div id="chat-submit" class="dropup">
+						<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-gear"></i></button>
+						<button class="btn btn-primary btn-sm" type="submit" id="chat-submit" name="submit" value="{{$submit}}">{{$submit}}</button>
+						<div class="dropdown-menu dropdown-menu-end">
+							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=online"><i class="bi bi-circle-fill online"></i>&nbsp;{{$online}}</a>
+							<a class="dropdown-item" href="{{$baseurl}}/chatsvc?f=&room_id={{$room_id}}&status=away"><i class="bi bi-circle-fill away"></i>&nbsp;{{$away}}</a>
+							<a class="dropdown-item" href="{{$baseurl}}/chat/{{$nickname}}/{{$room_id}}/leave"><i class="bi bi-circle-fill leave"></i>&nbsp;{{$leave}}</a>
+                       					<div class="dropdown-divider"></div>
+                        				<a id="toggle-notifications" class="dropdown-item" href="" onclick="toggleChatNotifications(); return false;"><i id="toggle-notifications-icon" class="bi bi-bell-fill"></i>&nbsp;Toggle notifications</a>
+                        				<a id="toggle-notifications-audio" class="dropdown-item disabled" href="" onclick="toggleChatNotificationAudio(); return false;"><i id="toggle-notifications-audio-icon" class="bi bi-volume-mute-fill"></i>&nbsp;Toggle sound</a>
+							{{if $bookmark_link}}
+                         				<div class="dropdown-divider"></div>
+							<a class="dropdown-item" href="{{$bookmark_link}}" target="_blank" ><i class="bi bi-bookmark-fill"></i>&nbsp;{{$bookmark}}</a>
+							{{/if}}
+						</div>
+					</div>
+
 				</div>
 			</form>
 		</div>
@@ -141,10 +142,11 @@ var currentChatRoomMembers = null; // initialize chat room member change registe
 function update_inroom(inroom) {
 	var html = document.createElement('ul');
   html.setAttribute('class', 'contacts-list');
+  html.setAttribute('style', 'list-style:none;');
 	var count = inroom.length;
 	$.each( inroom, function(index, item) {
 		var newNode = document.createElement('li');
-		$(newNode).html('<img src="'+ item.img +'" alt="'+ item.name +'" class="contacts-list-img shadow img-size-32"><div class="contacts-list-info"><span class="contacts-list-name text-body-emphasis">'+ item.name +'<small class="contacts-list-date text-success float-end">' + item.status + '</small></span></div>');
+		$(newNode).html('<div class="contacts-list-info"><span class="contacts-list-name text-body-emphasis">'+ item.name +'<small class="contacts-list-date text-success float-end">' + item.status + '</small></span></div>');
 		html.appendChild(newNode);
 	});
     memberChange = chatRoomMembersChange(inroom); // get list of arrivals and departures

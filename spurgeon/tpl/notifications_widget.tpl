@@ -699,6 +699,7 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="mb-4">
+  <div class="h5"></div>
 	<div id="no_notifications" class="">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 	</div>
@@ -720,7 +721,7 @@
 		{{foreach $notifications as $notification}}
 		<div class="rounded-top rounded-bottom border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
 			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
-				<div class="h6 m-0">
+				<div class="m-0">
 					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
 					{{$notification.label}}
 				</div>

@@ -9,9 +9,9 @@
 	{{/if}}
 	<div class="section-content-wrapper-np">
     <div class="mb-3 border-0">
-		<details id="doco-top-toc-wrapper" class="alert alert-info position-absolute top-0 end-0 m-2 p-2">
+		<details id="doco-top-toc-wrapper" class="alert osition-absolute top-0 end-0 m-2 p-2">
 			<summary id="doco-top-toc-heading">{{$module->get_toc_heading()}}</summary>
-			<ul id="doco-top-toc"></ul>
+			<ul id="doco-top-toc" style="list-style: none;"></ul>
 		</details>
 		<div id="doco-content">
 			{{$module->render_content()}}

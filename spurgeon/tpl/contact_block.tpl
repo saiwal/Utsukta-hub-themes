@@ -1,5 +1,5 @@
 <div class="mb-3">
-  <div class="h4">
+  <div class="h5">
     {{$contacts}}
   </div>
   {{if $micropro}}

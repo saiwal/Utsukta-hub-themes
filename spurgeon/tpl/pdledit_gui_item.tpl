@@ -1,5 +1,5 @@
 <div class="pdledit_gui_item mb-3" data-src="{{$entry.src}}">
-	<div class="h4 mt-0 d-flex justify-content-between">
+	<div class="h5 d-flex justify-content-between">
 		<span class="text-uppercase">{{$entry.name}}</span>
 		<div class="badge rounded-pill{{if $entry.type === 'widget'}} bg-info text-dark{{/if}}{{if $entry.type === 'content'}} bg-primary{{/if}}{{if $entry.type === 'menu'}} bg-secondary{{/if}}{{if $entry.type === 'block'}} bg-warning text-dark{{/if}}">
 			{{$entry.type}}

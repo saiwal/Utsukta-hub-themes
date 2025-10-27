@@ -17,7 +17,7 @@
     </div>
     {{if $cust_fields}}
     <div class="mb-3">
-      <div class="h4 mt-0 border-0">
+      <div class="h5 mt-0 border-0">
         {{$cust_field_desc}}
       </div>
       <div class="table-responsive p-0">
