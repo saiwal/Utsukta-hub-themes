@@ -19,12 +19,12 @@
   </a>
   {{/if}}
 
-
+  <div class="clearfix"></div>
 
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
   <ul class="list-group list-group-flush ms-0">
     {{if $location}}
-    <li class="list-group-item">
+    <li class="list-group-item border-0">
       <dt class="location-label">{{$location}}</dt>
       <dd class="adr h-adr">
         {{if $profile.address}}
@@ -44,27 +44,27 @@
     </li>
     {{/if}}
     {{if $hometown}}
-    <li class="list-group-item">
+    <li class="list-group-item border-0">
       <dt class="hometown-label">{{$hometown}}</dt>
       <dd class="p-hometown">{{$profile.hometown}}</dd>
     </li>
     {{/if}}
     {{if $gender}}
-    <li class="list-group-item">
+    <li class="list-group-item border-0">
 
       <dt class="gender-label">{{$gender}}</dt>
       <dd class="p-gender">{{$profile.gender}}</dd>
     </li>
     {{/if}}
     {{if $marital}}
-    <li class="list-group-item">
+    <li class="list-group-item border-0">
 
       <dt class="marital-label"><span class="heart"><i class="bi fa-heart"></i>&nbsp;</span>{{$marital}}</dt>
       <dd class="marital-text">{{$profile.marital}}</dd>
     </li>
     {{/if}}
     {{if $homepage}}
-    <li class="list-group-item">
+    <li class="list-group-item border-0">
       <dt class="card-link">{{$homepage}}</dt>
       <dd class="">
         {{$profile.homepage}}

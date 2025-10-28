@@ -57,7 +57,8 @@
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
-      </a>    <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
+      </a>
+      <?php if (x($page, 'chan_hero')) echo $page['chan_hero']; ?>
       <section id="content" class="s-content s-content--page" style="padding-top: var(--vspace-2);">
         <main id="bricks" class="bricks" style="padding-top: var(--vspace-2);">
           <div class="masonry">
