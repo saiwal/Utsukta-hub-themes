@@ -40,7 +40,7 @@
 			{{/if **}}
 		</div>
 		<h3>{{$title}}</h3>
-		<div class="clear"></div>
+		<div class="clearfix"></div>
 	</div>
     <div class="card  mb-3">
       <ul class="list-group list-group-flush">
