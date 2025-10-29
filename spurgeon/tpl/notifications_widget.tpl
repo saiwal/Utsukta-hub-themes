@@ -698,6 +698,7 @@
 </script>
 
 <!-- Notifications Button -->
+<div class="h5"></div>
 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#notificationsModal">
   <i class="bi bi-bell"></i> Notifications
 </button>
@@ -714,7 +715,6 @@
       <div class="modal-body">
         <!-- 🔔 Your existing notifications wrapper -->
         <div id="notifications_wrapper" class="mb-4">
-          <div class="h5 mt-0"></div>
           <div id="no_notifications" class="">
             {{$no_notifications}}
             <span class="jumping-dots">

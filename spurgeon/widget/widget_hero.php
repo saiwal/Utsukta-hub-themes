@@ -15,6 +15,7 @@ function widget_hero($args)
             <style>
             .ss-home .s-header__branding a { color: black; }
             .ss-home .s-header__nav-wrap { margin-left: 0%; }
+            #load-more-container { display: none;}
             </style>
             EOT;
     }
