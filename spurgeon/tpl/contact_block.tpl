@@ -1,11 +1,10 @@
-<div class="mb-3">
   <div class="h5">
     {{$contacts}}
   </div>
   {{if $micropro}}
   <!-- /.card-header -->
   <div class="p-1 overflow-y-auto" style="max-height: 19rem;">
-    <div class="row row-cols-5 g-2">
+    <div class="d-flex flex-wrap">
       {{foreach $micropro as $m}}
         {{$m}}
       {{/foreach}}
@@ -21,4 +20,3 @@
   </div>
   <!-- /.card-footer -->
   {{/if}}
-</div>
