@@ -1,12 +1,12 @@
 {{if $item.toplevel}}
 <article id="thread-wrapper-{{$item.id}}" class="brick entry thread-wrapper {{$item.toplevel}} "
-  data-b64mids='{{$item.mids}}'>
+  data-b64mids='{{$item.mids}}' >
   <a name="item_{{$item.id}}"></a>
   <div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
     id="wall-item-outside-wrapper-{{$item.id}}">
     <div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}"
       id="wall-item-content-wrapper-{{$item.id}}">
-      <div class="entry__header mb-5">
+      <div class="entry__header">
         {{if $item.photo}}
         <div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
           {{$item.photo}}
@@ -18,7 +18,7 @@
         </div>
         {{/if}}
         {{if $item.title && $item.toplevel && !$item.event}}
-        <h3 class="wall-item-title  " id="wall-item-title-{{$item.id}}">
+        <h2 class="wall-item-title " id="wall-item-title-{{$item.id}}">
           {{if $item.title_tosource}}
           {{if $item.plink}}
           <a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})"
@@ -33,19 +33,7 @@
           {{/if}}
         </h3>
         {{/if}}
-      </div>
-      {{if $item.divider}}
-      <hr class="wall-item-divider">
-      {{/if}}
-      {{if $item.body}}
-      <div class="p-3 pt-2 pb-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
-        <div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
-          {{$item.body}}
-        </div>
-      </div>
-      {{/if}}
-      <div
-        class="ps-2 pt-2 pe-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
+        <div class="wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
         <div class="entry__meta">
           <div class="entry__meta-author">
             {{if $item.author_is_group_actor}}
@@ -84,7 +72,18 @@
           {{/if}}
         </div>
       </div>
+      </div>
 
+      {{if $item.divider}}
+      <hr class="wall-item-divider">
+      {{/if}}
+      {{if $item.body}}
+      <div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+        <div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
+          {{$item.body}}
+        </div>
+      </div>
+      {{/if}}
       <div class="p-2 pt-1 pb-1 wall-item-tools d-flex justify-content-between">
         <div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
           {{foreach $item.responses as $verb=>$response}}

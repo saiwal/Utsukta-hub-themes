@@ -235,6 +235,7 @@
             });
         }
 
+        console.log('ssAnimateBricks run');
     }; // end ssAnimateOnScroll
 
 
@@ -357,13 +358,11 @@
         ssMobileMenu();
         ssSearch();
         ssMasonry();
-        // ssAnimateBricks();
+        ssAnimateBricks();
         ssSwiper();
         ssAlertBoxes();
         ssBackToTop();
         ssMoveTo();
-
     })();
-
 })(document.documentElement);
 

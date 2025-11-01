@@ -1,8 +1,8 @@
 <?php
 
 /**
- * * Name: Default
- *   * Description: Spurgeons default layout with left column
+ *   * Name: Full
+ *   * Description: Spurgeons masonry layout
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
@@ -58,13 +58,12 @@
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
       </a>
-	    <?php if(!empty($page['banner'])) echo $page['banner']; ?>
-      <section id="content" class="s-content s-content--page">
-        <main class="bricks"">
+      <section id="content" class="s-content">
+        <main class="bricks">
           <div class="masonry">
-          <div class="row entry-wrap" >
+          <div class="row" >
             <div class="column lg-8 md-12">
-              <div id="region_2">
+              <div id="region_2" class="bricks-wrapper" data-animate-block>
                 <?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
             </div>

@@ -5,10 +5,11 @@ This theme is based on the template ['Spurgeon' by Styleshout](https://styleshou
 ## Features
 
 ### Channel 'Hero' widget
-The channel page has a *hero* widget to showcase featured posts. To include a post in this section, simply add a `featured` category to the post. Any post in this category will be showcased in this section. The widget is added to the channel page with the following in the corresponding pdl: 
+The channel page has a *hero* widget to showcase featured posts. To include post(s) in this section, simply add a `featured` category to the post. Any post within this category will be showcased in this section. The widget is added to the channel page with the following in the corresponding pdl:
 ```
-[region=chan_hero]
+[region=banner]
 [widget=hero][/widget]
 [/region]
 ```
+
 
