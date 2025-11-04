@@ -3,7 +3,7 @@
 /**
  * * Name: full
  *   * Description: AdminLTE fullwidth layout
- *   * Version: 1.7
+ *   * Version: 1.8
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: content, region_2
