@@ -2,7 +2,7 @@
 /**
  *   * Name: doubleleft
  *   * Description: AdminLTE doubleleft layout
- *   * Version: 1.7
+ *   * Version: 1.8
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper

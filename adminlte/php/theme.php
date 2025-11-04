@@ -3,7 +3,7 @@
 /**
  *   * Name: Adminlte
  *   * Description: AdminLTE theme adapted for Hubzilla
- *   * Version: 1.7
+ *   * Version: 1.8
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
  *   * Author: Saiwal sk@utsukta.org
