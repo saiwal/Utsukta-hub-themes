@@ -13,14 +13,15 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
 #### Variants (Schemes)
 
-- [Brite](https://bootswatch.com/brite)
-- [Cosmo](https://bootswatch.com/cosmo/)
-- [Journal](https://bootswatch.com/journal/)
-- [Sandstone](https://bootswatch.com/sandstone/)
-- [Sketchy](https://bootswatch.com/sketchy/)
-- [Solar](https://bootswatch.com/solar/)
-- [Superhero](https://bootswatch.com/superhero/)
-- [Vapor](https://bootswatch.com/vapor/)
+- [Brite](https://utsukta.org/page/utsukta-themes/adminlte-brite)
+- [Cosmo](https://utsukta.org/page/utsukta-themes/adminlte-cosmo/)
+- [Journal](https://utsukta.org/page/utsukta-themes/adminlte-journal/)
+- [Morph](https://utsukta.org/page/utsukta-themes/adminlte-morph)
+- [Sandstone](https://utsukta.org/page/utsukta-themes/adminlte-sandstone/)
+- [Sketchy](https://utsukta.org/page/utsukta-themes/adminlte-sketchy/)
+- [Solar](https://utsukta.org/page/utsukta-themes/adminlte-solar/)
+- [Superhero](https://utsukta.org/page/utsukta-themes/adminlte-superhero/)
+- [Vapor](https://utsukta.org/page/utsukta-themes/adminlte-vapor/)
 
 #### Features and Setup
 
@@ -50,3 +51,7 @@ Just upload the logo with public access and replace the url in code below and se
 ```
 
 Note: This may break the banner on other themes so only implement if other themes are not being used by others. 
+
+**Sortable navigation menu:** The items on the navigation menu can be dragged in the order you wish for them to appear.
+
+**Interface tour(via addon):** Install the addon `adminlte_tour` via the [addon repo](https://github.com/saiwal/utsukta-hub-addons) to give new members a quick tour of the interface.

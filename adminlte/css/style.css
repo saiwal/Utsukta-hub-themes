@@ -390,3 +390,23 @@ span.spinner {
   vertical-align: baseline;
   margin-bottom: -.2rem;
 }
+/* Style images inside Hubzilla post wrapper */
+.wall-item-content-wrapper img {
+  border: 1px solid var(--bs-border-color, #dee2e6); /* Bootstrap variable with fallback */
+  border-radius: 0.375rem; /* Matches Bootstrap's .rounded class */
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Soft Bootstrap-like shadow */
+  max-width: 100%; /* Responsive images */
+  height: auto;
+}
+
+/* Optional: subtle hover effect */
+.wall-item-content-wrapper img:hover {
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+[data-bs-theme="dark"] .wall-item-content-wrapper img {
+  border-color: var(--bs-border-color, #444);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.6);
+}
+

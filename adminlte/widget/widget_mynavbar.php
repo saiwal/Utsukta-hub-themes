@@ -491,6 +491,7 @@ function widget_mynavbar($args)
     $tpl = get_markup_template("navbar_" . purify_filename($template) . ".tpl");
 
     $channel = \App::get_channel();
+
 		$notifications = [];
 
 		if(local_channel()) {
@@ -602,18 +603,30 @@ function widget_mynavbar($args)
 				]
 			];
 
-			$notifications[] = [
-				'type' => 'forums',
-				'icon' => 'chat-quote',
-				'severity' => 'secondary',
-				'label' => t('Forums'),
-				'title' => t('Unseen forums activity'),
-				'filter' => [
-					'name_label' => t('Filter by name or address')
-				]
-			];
-		}
+    $forums = get_forum_channels(local_channel());
+			foreach($forums as $forum) {
+				$notifications[] = [
+					'type' => 'forum_' . $forum['abook_id'],
+					'icon' => 'chat-quote',
+					'severity' => 'secondary',
+					'label' => $forum['xchan_name'],
+					'title' => t('Unseen forum activity'),
+					'filter' => [
+						'posts_label' => t('Conversation starters'),
+						'name_label' => t('Filter by name or address')
+					],
+					'viewall' => [
+						'url' => 'network?pf=1&cid=' . $forum['abook_id'],
+						'label' => t('View all')
+					],
+					'markall' => [
+						'label' => t('Mark all seen')
+					],
+        ];
+      }
 
+    }
+    
 		if(local_channel() && is_site_admin()) {
 			$notifications[] = [
 				'type' => 'register',
@@ -635,11 +648,9 @@ function widget_mynavbar($args)
 					'url' => 'pubstream',
 					'label' => t('Public stream')
 				],
-				/*
 				'markall' => [
 					'label' => t('Mark all notifications seen')
 				],
-				*/
 				'filter' => [
 					'posts_label' => t('Conversation starters'),
 					'name_label' => t('Filter by name or address')
@@ -704,6 +715,7 @@ function widget_mynavbar($args)
         '$no_notifications' => t("No Notifications"),
         '$loading' => t("Loading"),
         '$sys_only' => empty($arr["sys_only"]) ? 0 : 1,
+			  '$count_limit' => get_pconfig(local_channel(), 'system', 'notifications_count_limit', 100),
     ]);
 
     if (x($_SESSION, "reload_avatar") && $observer) {
