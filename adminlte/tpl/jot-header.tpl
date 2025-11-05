@@ -125,6 +125,29 @@
 			},
 		});
 
+    $(document).on('paste', '#profile-jot-text', function(e) {
+      const items = (e.originalEvent.clipboardData || e.clipboardData).items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          e.preventDefault();
+          console.log('Clipboard image detected');
+          $('#profile-rotator').show();
+
+          // Reuse jQuery File Upload instance
+          $('#invisible-wall-file-upload').fileupload('add', {
+            files: [file]
+          });
+
+          break;
+        }
+      }
+    });
+
 	});
 
 	function jotSetMime() {
