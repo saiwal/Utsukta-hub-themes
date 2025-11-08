@@ -393,6 +393,10 @@ span.spinner {
   max-width: 100%; /* Responsive images */
   height: auto;
 }
+[data-bs-theme="dark"] .wall-item-content-wrapper img {
+  border-color: var(--bs-border-color, #444);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.6);
+}
 .wall-item-content img.emoji {
   display: inline;
   height: 1.3rem;
@@ -407,8 +411,5 @@ span.spinner {
   transition: box-shadow 0.2s ease-in-out;
 }
 
-[data-bs-theme="dark"] .wall-item-content-wrapper img {
-  border-color: var(--bs-border-color, #444);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.6);
-}
+
 
