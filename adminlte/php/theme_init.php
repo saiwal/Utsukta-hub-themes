@@ -15,14 +15,12 @@ head_add_js('jquery.js');
 head_add_js('/library/datetimepicker/jquery.datetimepicker.js');
 
 head_add_js('/library/justifiedGallery/jquery.justifiedGallery.min.js');
-head_add_js('/library/sprintf.js/dist/sprintf.min.js');
 
 head_add_js('/view/theme/adminlte/js/textcomplete.js');
 head_add_js('/view/theme/adminlte/js/autocomplete.js');
 
 head_add_js('/library/readmore.js/readmore.js');
 
-head_add_js('/library/sjcl/sjcl.js');
 head_add_js('/library/sodium-plus/dist/sodium-plus.min.js');
 
 head_add_js('acl.js');
@@ -59,7 +57,6 @@ head_add_css('/view/theme/adminlte/css/overlayscrollbar.min.css');
 /*head_add_css('/view/theme/adminlte/css/style.css');*/
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
-head_add_js('/library/bootbox/bootbox.min.js');
 head_add_js('/view/theme/adminlte/js/bootstrap-tagsinput.js');
 head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
