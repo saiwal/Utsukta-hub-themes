@@ -383,8 +383,14 @@ span.spinner {
 }
 .wall-item-content .fakelink img {
   display: inline;
+  border: none; 
+  box-shadow: 0 0 ;
 }
-
+img[alt*="#^"] {
+  display: inline;
+  border: none; 
+  box-shadow: 0 0 ;
+}
 /* Style images inside Hubzilla post wrapper */
 .wall-item-content-wrapper img {
   border: 1px solid var(--bs-border-color, #dee2e6); /* Bootstrap variable with fallback */
