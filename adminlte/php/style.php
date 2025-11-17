@@ -36,25 +36,21 @@ if(!App::$install) {
 $sys = \App::$config['theme_adminlte'] ?? [];
 # set some defaults
 
-$schema = $schema ?: $sys['schema'] ?: 'cosmo';
+$schema = $schema ?: $sys['schema'] ?: 'default';
 $bgcolor = $bgcolor ?: $sys['bgcolor'] ?: 'var(--bs-body-bg)';
 $bgcolor_dark = $bgcolor_dark ?: $sys['bgcolor_dark'] ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: $sys['background_image'] ?: '';
 $background_image_dark = $background_image_dark ?: $sys['background_image_dark'] ?: '';
-$dark_mode = 0;
-$tour = 0;
-$sidebar_mode = 0;
-$bg_mode = $bg_mode ?: ($sys['bg_mode'] ?: 0);
-$bg_mode = ($bg_mode == 1) ? 'cover' : '';
+$bg_val =
+    (is_numeric($bg_mode) ? intval($bg_mode) :
+    (is_numeric($sys['bg_mode'] ?? null) ? intval($sys['bg_mode']) : 0));
+$bg_mode = ($bg_val == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
   '$bgcolor_dark' => $bgcolor_dark,
   '$background_image' => $background_image,
   '$background_image_dark' => $background_image_dark,
   '$bg_mode' => $bg_mode,
-  '$sidebar_mode' => $sidebar_mode,
-  '$dark_mode' => $dark_mode,
-  '$tour' => $tour,
 );
 /**/
 // Allow layouts to over-ride the schema
