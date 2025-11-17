@@ -66,6 +66,7 @@ head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');
 
 $adminlte_mode = '';
 $adminlte_sidebar_mode = '';
+$sys = \App::$config['theme_adminlte'] ?? [];
 
 if (local_channel()) {
 	$adminlte_mode = ((get_pconfig(local_channel(), 'adminlte', 'dark_mode')) ? 'dark' : 'light');
@@ -82,5 +83,5 @@ if (!$adminlte_mode) {
 	$adminlte_sidebar_mode = ((Config::Get('adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse coll' : 'sidebar-mini');
 }
 
-App::$page['color_mode'] = $adminlte_mode;
-App::$page['sidebar_mode'] = $adminlte_sidebar_mode;
+App::$page['color_mode'] = $sys['dark_mode'] ?: $adminlte_mode;
+App::$page['sidebar_mode'] = $sys['sidebar_mode'] ?: $adminlte_sidebar_mode;

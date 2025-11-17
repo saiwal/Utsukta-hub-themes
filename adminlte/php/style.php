@@ -1,5 +1,6 @@
 <?php
 
+use Zotlabs\Lib\Config;
 if(!App::$install) {
 
 	// Get the UID of the channel owner
@@ -32,15 +33,18 @@ if(!App::$install) {
 	}
 }
 
+$sys = \App::$config['theme_adminlte'] ?? [];
+# set some defaults
 
-# set some defaults 
-$bgcolor = $bgcolor ?: 'var(--bs-body-bg)';
-$bgcolor_dark = $bgcolor_dark ?: 'var(--bs-body-bg)';
-$background_image = $background_image ?: '';
-$background_image_dark = $background_image_dark ?: '';
+$schema = $schema ?: $sys['schema'] ?: 'cosmo';
+$bgcolor = $bgcolor ?: $sys['bgcolor'] ?: 'var(--bs-body-bg)';
+$bgcolor_dark = $bgcolor_dark ?: $sys['bgcolor_dark'] ?: 'var(--bs-body-bg)';
+$background_image = $background_image ?: $sys['background_image'] ?: '';
+$background_image_dark = $background_image_dark ?: $sys['background_image_dark'] ?: '';
 $dark_mode = 0;
 $tour = 0;
 $sidebar_mode = 0;
+$bg_mode = $bg_mode ?: ($sys['bg_mode'] ?: 0);
 $bg_mode = ($bg_mode == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
