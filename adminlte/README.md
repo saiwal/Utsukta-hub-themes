@@ -40,13 +40,13 @@ App::$config['theme_adminlte'] = [
     // Background images (url)
     // 'background_image'      => '',
     // 'background_image_dark' => '',
-    // Background-size mode — recommended flexible value
+    // Background-size mode 
     // Accepted: 1 for 'cover', 0 for tiled
     'bg_mode'               => 1,
 
     // Enable dark mode globally (0/1)
     'dark_mode'             => 1,
-    // Sidebar style 0 -> expanded, 1 -> collapsed
+    // Sidebar style 1 -> expanded, 0 -> collapsed
     'sidebar_mode'          => 0,
    ];
 ```
