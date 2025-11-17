@@ -41,16 +41,16 @@ $bgcolor = $bgcolor ?: $sys['bgcolor'] ?: 'var(--bs-body-bg)';
 $bgcolor_dark = $bgcolor_dark ?: $sys['bgcolor_dark'] ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: $sys['background_image'] ?: '';
 $background_image_dark = $background_image_dark ?: $sys['background_image_dark'] ?: '';
-$tour = 0;
-$bg_mode = $bg_mode ?: ($sys['bg_mode'] ?: 0);
-$bg_mode = ($bg_mode == 1) ? 'cover' : '';
+$bg_val =
+    (is_numeric($bg_mode) ? intval($bg_mode) :
+    (is_numeric($sys['bg_mode'] ?? null) ? intval($sys['bg_mode']) : 0));
+$bg_mode = ($bg_val == 1) ? 'cover' : '';
 $options = array (
   '$bgcolor' => $bgcolor,
   '$bgcolor_dark' => $bgcolor_dark,
   '$background_image' => $background_image,
   '$background_image_dark' => $background_image_dark,
   '$bg_mode' => $bg_mode,
-  '$tour' => $tour,
 );
 /**/
 // Allow layouts to over-ride the schema
