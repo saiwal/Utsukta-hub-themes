@@ -29,23 +29,26 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 ```
 // System-wide settings for theme_adminlte
 App::$config['theme_adminlte'] = [
-    // Default scheme 
-    'schema' => 'sketchy',
-    // Light / default background color
+    // Default scheme (default, cosmo, journal, etc.)
+    'schema' => 'default',
+
+    // Light / default background color (bootstrap color variable or hex value)
     // 'bgcolor'               => '#ff0000',
     // Dark mode background
     // 'bgcolor_dark'          => '#121212',
-    // Background images
-    'background_image'      => 'https://www.transparenttextures.com/patterns/skulls.png',
-    'background_image_dark' => 'https://www.goodfreephotos.com/albums/italy/other-italy/beautiful-landscape-with-mountains-and-lakes-with-sky-in-italy.jpg',
+
+    // Background images (url)
+    // 'background_image'      => '',
+    // 'background_image_dark' => '',
+    // Background-size mode 
+    // Accepted: 1 for 'cover', 0 for tiled
+    'bg_mode'               => 1,
+
     // Enable dark mode globally (0/1)
     'dark_mode'             => 1,
-    // Sidebar style 0 -> expanded, 1 -> collapsed
+    // Sidebar style 1 -> expanded, 0 -> collapsed
     'sidebar_mode'          => 0,
-    // Background-size mode — recommended flexible value
-    // Accepted: 1 -> cover or 0 -> tiled
-    'bg_mode'               => 0,
-];
+   ];
 ```
 
 **Notification Dropdown:** It may happen that the notification dropdown does not display by default. This is because AdminLTE uses a custom navbar that needs to be specified in the `pdl` file if you have previously used the pdleditor and customised your layouts. To do this simply go to the pdleditor and `reset` the layout, or to preserve your previous edits, add the following to the `source`:
