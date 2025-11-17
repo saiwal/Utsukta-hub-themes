@@ -40,10 +40,9 @@ App::$config['theme_adminlte'] = [
     'background_image_dark' => '',
     // Enable dark mode globally (0/1)
     'dark_mode'             => 1,
-    // Sidebar style (your theme defines expected values)
+    // Sidebar style (0 for collapsed, 1 for expanded)
     'sidebar_mode'          => 0,
-    // Background-size mode — recommended flexible value
-    // Accepted: 1 for 'cover', 0 for tiled
+    // Background-size mode (1 for 'cover', 0 for tiled)
     'bg_mode'               => 1,
 ];
 ```
