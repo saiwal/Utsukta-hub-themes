@@ -78,10 +78,5 @@ if (App::$profile_uid) {
 	$adminlte_sidebar_mode = ((get_pconfig(App::$profile_uid, 'adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse' : 'sidebar-mini');
 }
 
-if (!$adminlte_mode) {
-	$adminlte_mode = ((Config::Get('adminlte', 'dark_mode')) ? 'dark' : 'light');
-	$adminlte_sidebar_mode = ((Config::Get('adminlte', 'sidebar_mode')) ? 'sidebar-mini sidebar-collapse' : 'sidebar-mini');
-}
-
 App::$page['color_mode'] =  $adminlte_mode ?: ($sys['dark_mode'] ? 'dark' : 'light');
 App::$page['sidebar_mode'] = $adminlte_sidebar_mode ?: ($sys['sidebar_mode'] ? 'sidebar-mini sidebar-collapse' : 'sidebar-mini');
