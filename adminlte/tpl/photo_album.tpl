@@ -2,7 +2,7 @@
 	<div class="section-title-wrapper app-content-header">
 		<div class="float-end">
 			{{if $order}}
-			<a class="btn btn-outline-secondary btn-sm" href="{{$order.1}}" title="{{$order.0}}"><i class="bi bi-arrow-down-up"></i></a>
+			<a class="btn btn-secondary btn-sm" href="{{$order.1}}" title="{{$order.0}}"><i class="bi bi-arrow-down-up"></i></a>
 			{{/if}}
 			<div class="btn-group btn-group">
 				{{if $album_edit.1}}

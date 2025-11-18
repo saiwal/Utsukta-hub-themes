@@ -125,6 +125,29 @@
 			},
 		});
 
+    $(document).on('paste', '#profile-jot-text', function(e) {
+      const items = (e.originalEvent.clipboardData || e.clipboardData).items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          const file = item.getAsFile();
+          if (!file) continue;
+
+          e.preventDefault();
+          console.log('Clipboard image detected');
+          $('#profile-rotator').show();
+
+          // Reuse jQuery File Upload instance
+          $('#invisible-wall-file-upload').fileupload('add', {
+            files: [file]
+          });
+
+          break;
+        }
+      }
+    });
+
 	});
 
 	function jotSetMime() {
@@ -225,14 +248,9 @@
 
 			if ($('#jot-popup').length != 0) $('#jot-popup').show();
 
-			$('#like-rotator-' + id).show();
-			$.get('{{$baseurl}}/embed/' + id, function(data) {
-				if (!editor) $("#profile-jot-text").val("");
-				initEditor(function(){
-					addeditortext(data);
-					$('#like-rotator-' + id).hide();
-					$(window).scrollTop(0);
-				});
+  			initEditor(function(){
+	  			addeditortext('[share=' + id + '][/share]');
+		  		$(window).scrollTop(0);  
 			});
 		}
 	}
