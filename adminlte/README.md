@@ -46,7 +46,7 @@ App::$config['theme_adminlte'] = [
 
     // Enable dark mode globally (0/1)
     'dark_mode'             => 1,
-    // Sidebar style 1 -> expanded, 0 -> collapsed
+    // Sidebar style 1 -> collapsed 0 -> expanded
     'sidebar_mode'          => 0,
    ];
 ```
