@@ -140,6 +140,23 @@ namespace {
   function adminlte_theme_admin_enable() {
     // This function is called once when the theme is being enabled by the admin
     // It can be used to register hooks etc.
+  
+    $defaults = [
+        'schema'              => '---',
+        'dark_mode'           => 0,
+        'sidebar_mode'        => 0,
+        'bg_mode'             => 0,
+        'background_color'    => '',
+        'background_color_dark' => '',
+        'background_image'    => '',
+        'background_image_dark' => '',
+    ];
+
+    foreach ($defaults as $k => $v) {
+        if (Config::Get('theme_adminlte', $k) === false) {
+            Config::Set('theme_adminlte', $k, $v);
+        }
+    }
   }
 
   function adminlte_theme_admin_disable() {
