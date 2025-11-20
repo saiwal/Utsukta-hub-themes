@@ -25,32 +25,12 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
 #### Features and Setup
 
-**Setting default system options:** You can set default options for the theme(scheme, dark mode, background color, images etc.) through specifying the values in your `.htconfig` file. Simply include a section as shown below in your `.htconfig` file in your hubzilla root folder:
-```
-// System-wide settings for theme_adminlte
-App::$config['theme_adminlte'] = [
-    // Default scheme (default, cosmo, journal, etc.)
-    'schema' => 'default',
+**Setting default system options:** You can set default options for the theme(scheme, dark mode, background color, images etc.) for your hub in /admin/site and clicking on `change theme settings`
+![set system pref](README/%20admin-settings.png)
 
-    // Light / default background color (bootstrap color variable or hex value)
-    // 'bgcolor'               => '#ff0000',
-    // Dark mode background
-    // 'bgcolor_dark'          => '#121212',
+and you will see the various theme settings that can be set fo your hub.
 
-    // Background images (url)
-    // 'background_image'      => '',
-    // 'background_image_dark' => '',
-    // Background-size mode 
-    // Accepted: 1 for 'cover', 0 for tiled
-    'bg_mode'               => 1,
-
-    // Enable dark mode globally (0/1)
-    'dark_mode'             => 1,
-    // Sidebar style 1 -> expanded, 0 -> collapsed
-    'sidebar_mode'          => 0,
-   ];
-```
-
+![settings ui](README/%20settings.png)
 **Notification Dropdown:** It may happen that the notification dropdown does not display by default. This is because AdminLTE uses a custom navbar that needs to be specified in the `pdl` file if you have previously used the pdleditor and customised your layouts. To do this simply go to the pdleditor and `reset` the layout, or to preserve your previous edits, add the following to the `source`:
 
 ```
