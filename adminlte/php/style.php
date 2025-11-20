@@ -33,12 +33,21 @@ if(!App::$install) {
 	}
 }
 
-$sys = \App::$config['theme_adminlte'] ?? [];
+$sys = [
+    'schema'              => Config::Get('theme_adminlte','schema'),
+    'dark_mode'           => Config::Get('theme_adminlte','dark_mode'),
+    'sidebar_mode'        => Config::Get('theme_adminlte','sidebar_mode'),
+    'bg_mode'             => Config::Get('theme_adminlte','bg_mode'),
+    'background_color'    => Config::Get('theme_adminlte','background_color'),
+    'background_color_dark' => Config::Get('theme_adminlte','background_color_dark'),
+    'background_image'      => Config::Get('theme_adminlte','background_image'),
+    'background_image_dark' => Config::Get('theme_adminlte','background_image_dark'),
+];
 # set some defaults
 
 $schema = $schema ?: $sys['schema'] ?: 'default';
-$bgcolor = $bgcolor ?: $sys['bgcolor'] ?: 'var(--bs-body-bg)';
-$bgcolor_dark = $bgcolor_dark ?: $sys['bgcolor_dark'] ?: 'var(--bs-body-bg)';
+$bgcolor = $bgcolor ?: $sys['background_color'] ?: 'var(--bs-body-bg)';
+$bgcolor_dark = $bgcolor_dark ?: $sys['background_color_dark'] ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: $sys['background_image'] ?: '';
 $background_image_dark = $background_image_dark ?: $sys['background_image_dark'] ?: '';
 $bg_val =

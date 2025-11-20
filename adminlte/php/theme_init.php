@@ -66,7 +66,10 @@ head_add_js('/view/theme/adminlte/js/overlayscrollbar.min.js');
 
 $adminlte_mode = '';
 $adminlte_sidebar_mode = '';
-$sys = \App::$config['theme_adminlte'] ?? [];
+$sys = [
+    'dark_mode'           => Config::Get('theme_adminlte','dark_mode'),
+    'sidebar_mode'        => Config::Get('theme_adminlte','sidebar_mode'),
+];
 
 if (local_channel()) {
 	$adminlte_mode = ((get_pconfig(local_channel(), 'adminlte', 'dark_mode')) ? 'dark' : 'light');
