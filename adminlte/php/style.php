@@ -34,14 +34,14 @@ if(!App::$install) {
 }
 
 $sys = [
-    'schema'              => Config::Get('theme_adminlte','schema'),
-    'dark_mode'           => Config::Get('theme_adminlte','dark_mode'),
-    'sidebar_mode'        => Config::Get('theme_adminlte','sidebar_mode'),
-    'bg_mode'             => Config::Get('theme_adminlte','bg_mode'),
-    'background_color'    => Config::Get('theme_adminlte','background_color'),
-    'background_color_dark' => Config::Get('theme_adminlte','background_color_dark'),
-    'background_image'      => Config::Get('theme_adminlte','background_image'),
-    'background_image_dark' => Config::Get('theme_adminlte','background_image_dark'),
+    'schema'                => Config::Get('theme_adminlte','schema', '---'),
+    'dark_mode'             => Config::Get('theme_adminlte','dark_mode', 0),
+    'sidebar_mode'          => Config::Get('theme_adminlte','sidebar_mode', 0),
+    'bg_mode'               => Config::Get('theme_adminlte','bg_mode', 0),
+    'background_color'      => Config::Get('theme_adminlte','background_color', ''),
+    'background_color_dark' => Config::Get('theme_adminlte','background_color_dark', ''),
+    'background_image'      => Config::Get('theme_adminlte','background_image', ''),
+    'background_image_dark' => Config::Get('theme_adminlte','background_image_dark', ''),
 ];
 # set some defaults
 
