@@ -1,6 +1,6 @@
 <?php
 
-namespace Zotlabs\Theme;
+namespace Zotlabs\Theme {
 
 use ScssPhp\ScssPhp\Compiler;
 use ScssPhp\ScssPhp\OutputStyle;
@@ -129,13 +129,134 @@ class AdminlteConfig {
 	}
 
 }
-
-function adminlte_theme_admin_enable() {
-	// This function is called once when the theme is being enabled by the admin
-	// It can be used to register hooks etc.
 }
+//////////////////////////////////////////////
+// THEME ADMIN FUNCTIONS (GLOBAL NAMESPACE)
+//////////////////////////////////////////////
+namespace { 
 
-function adminlte_theme_admin_disable() {
-	// This function is called once when the theme is being disabled by the admin
-	// It can be used to unregister hooks etc.
+  use Zotlabs\Lib\Config;
+
+  function adminlte_theme_admin_enable() {
+    // This function is called once when the theme is being enabled by the admin
+    // It can be used to register hooks etc.
+  }
+
+  function adminlte_theme_admin_disable() {
+    // This function is called once when the theme is being disabled by the admin
+    // It can be used to unregister hooks etc.
+  }
+
+  function adminlte_get_schemas() {
+      $files = glob('view/theme/adminlte/schema/*.css');
+      $scheme_choices = [];
+
+      if($files) {
+          $scheme_choices['---'] = t('default');
+          foreach($files as $file) {
+              $f = basename($file, ".css");
+              $scheme_choices[$f] = $f;
+          }
+      }
+
+      return $scheme_choices;
+  }
+  function theme_admin() {
+      
+      $schema   = Config::Get('theme_adminlte', 'schema', '---');
+      $schemas  = adminlte_get_schemas();
+      // Load system-level (admin) theme config
+      $dark_mode   = Config::Get('theme_adminlte', 'dark_mode', 0);
+      $sidebar     = Config::Get('theme_adminlte', 'sidebar_mode', 0);
+      $bg_mode     = Config::Get('theme_adminlte', 'bg_mode', 0);
+      $bgcolor     = Config::Get('theme_adminlte', 'background_color', '');
+      $bgcolor_dark = Config::Get('theme_adminlte', 'background_color_dark', '');
+      $bg_image     = Config::Get('theme_adminlte', 'background_image', '');
+      $bg_image_dark = Config::Get('theme_adminlte', 'background_image_dark', '');
+
+      $t = get_markup_template('adminlte_admin.tpl');
+
+      return replace_macros($t, [
+
+          '$title' => t('AdminLTE Theme Settings (System Defaults)'),
+          '$schema' => [
+              'schema',
+              t('Default scheme'),
+              $schema,
+              '',
+              $schemas
+          ],
+          '$dark_mode' => [
+              'dark_mode',
+              t('Default color mode'),
+              $dark_mode,
+              '',
+              [0 => t('Light'), 1 => t('Dark')]
+          ],
+
+          '$sidebar_mode' => [
+              'sidebar_mode',
+              t('Default sidebar mode'),
+              $sidebar,
+              '',
+              [0 => t('Expanded'), 1 => t('Collapsed')]
+          ],
+
+          '$bg_mode' => [
+              'bg_mode',
+              t('Background image mode'),
+              $bg_mode,
+              '',
+              [0 => t('Tile'), 1 => t('Cover')]
+          ],
+
+          '$background_color' => [
+              'background_color',
+              t('Background color (light mode)'),
+              $bgcolor,
+              t('Leave empty for default')
+          ],
+
+          '$background_color_dark' => [
+              'background_color_dark',
+              t('Background color (dark mode)'),
+              $bgcolor_dark,
+              t('Leave empty for default')
+          ],
+
+          '$background_image' => [
+              'background_image',
+              t('Background image URL (light mode)'),
+              $bg_image,
+              t('Leave empty for none')
+          ],
+
+          '$background_image_dark' => [
+              'background_image_dark',
+              t('Background image URL (dark mode)'),
+              $bg_image_dark,
+              t('Leave empty for none')
+          ],
+
+          '$submit' => t('Submit'),
+          '$form_security_token' => get_form_security_token('admin_themes'),
+      ]);
+  }
+
+  function theme_admin_post() {
+
+      check_form_security_token_redirectOnErr('/admin/themes/adminlte', 'admin_themes');
+
+      // Save all system admin settings
+      Config::Set('theme_adminlte', 'dark_mode', intval($_POST['dark_mode']));
+      Config::Set('theme_adminlte', 'sidebar_mode', intval($_POST['sidebar_mode']));
+      Config::Set('theme_adminlte', 'bg_mode', intval($_POST['bg_mode']));
+      Config::Set('theme_adminlte', 'background_color', trim($_POST['background_color']));
+      Config::Set('theme_adminlte', 'background_color_dark', trim($_POST['background_color_dark']));
+      Config::Set('theme_adminlte', 'background_image', trim($_POST['background_image']));
+      Config::Set('theme_adminlte', 'background_image_dark', trim($_POST['background_image_dark']));
+
+      Config::Set('theme_adminlte', 'schema', $_POST['schema']);
+      info(t('Theme settings updated.'));
+  }
 }
