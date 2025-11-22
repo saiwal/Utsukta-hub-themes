@@ -5,11 +5,7 @@
     <!--begin::Brand Link-->
     <a href="/" class="brand-link">
       <!--begin::Brand Image-->
-      <!--      <img
-        src="./assets/img/AdminLTELogo.png"
-        alt="U"
-        class="brand-image opacity-75 shadow"
-      /> -->
+      <img class="brand-image opacity-75 shadow"/>
       <!--end::Brand Image-->
       <!--begin::Brand Text-->
       <span class="brand-text fw-light">{{$banner}}</span>

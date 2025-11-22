@@ -189,6 +189,7 @@ namespace {
       $bgcolor     = Config::Get('theme_adminlte', 'background_color', '');
       $bgcolor_dark = Config::Get('theme_adminlte', 'background_color_dark', '');
       $bg_image     = Config::Get('theme_adminlte', 'background_image', '');
+      $logo     = Config::Get('theme_adminlte', 'logo', '/view/theme/adminlte/img/hz.png');
       $bg_image_dark = Config::Get('theme_adminlte', 'background_image_dark', '');
 
       $t = get_markup_template('adminlte_admin.tpl');
@@ -240,6 +241,12 @@ namespace {
               $bgcolor_dark,
               t('Leave empty for default')
           ],
+          '$logo' => [
+              'logo',
+              t('Logo image URL'),
+              $logo,
+              t('Leave empty for none')
+          ],
 
           '$background_image' => [
               'background_image',
@@ -271,6 +278,7 @@ namespace {
       Config::Set('theme_adminlte', 'background_color', trim($_POST['background_color']));
       Config::Set('theme_adminlte', 'background_color_dark', trim($_POST['background_color_dark']));
       Config::Set('theme_adminlte', 'background_image', trim($_POST['background_image']));
+      Config::Set('theme_adminlte', 'logo', trim($_POST['logo']));
       Config::Set('theme_adminlte', 'background_image_dark', trim($_POST['background_image_dark']));
 
       Config::Set('theme_adminlte', 'schema', $_POST['schema']);
