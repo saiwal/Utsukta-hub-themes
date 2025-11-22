@@ -44,19 +44,14 @@ and you will see the various theme settings that can be set fo your hub.
 
 **Personalization options:** AdminLTE offers some ways to further customize the look and feel of your theme by specifying color and background image for your pages. This can be specified by going to `Settings`->`Display Settings`-> `Custom Theme Settings`. 
 
-**Custom Logo:** The AdminLTE themes support only display of banner text which disappears when you collapse the sidebar. However with a little tweak of the banner code you can use a logo image to display alongside banner text, and on collapse the logo still displays.
-Just upload the logo with public access and replace the url in code below and set it as your site banner
+**Custom Logo:** To have a customized logo on the top left corner, upload the logo with public access and provide the url in `/admin/site` under `theme settings`
+
+
+![logo](README/%20logo_field.png)
 
 ![logo-collapsed](README/%20logo-collapsed.png)
 
 ![logo-expand](README/%20logo-expand.png)
-```
-</span>
-<img  src="<link to image>"  alt="U" class="brand-image opacity-75 shadow"/> 
-<span class="brand-text fw-light"><your hub name></span>
-```
-
-Note: This may break the banner on other themes so only implement if other themes are not being used by others. 
 
 **Sortable navigation menu:** The items on the navigation menu can be dragged in the order you wish for them to appear.
 
