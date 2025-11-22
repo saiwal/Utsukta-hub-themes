@@ -7,7 +7,8 @@
 
         <!-- SCHEME -->
 							{{include file="field_select.tpl" field=$schema}}
-
+        <!-- LOGO -->
+            {{include file="field_input.tpl" field=$logo}}
         <!-- DARK MODE -->
             {{include file="field_select.tpl" field=$dark_mode}}
 

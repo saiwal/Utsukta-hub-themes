@@ -417,5 +417,7 @@ img[alt*="#^"] {
   transition: box-shadow 0.2s ease-in-out;
 }
 
-
+.brand-image{
+  content:url("$logo");
+}
 

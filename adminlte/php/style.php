@@ -40,6 +40,7 @@ $sys = [
     'bg_mode'               => Config::Get('theme_adminlte','bg_mode', 0),
     'background_color'      => Config::Get('theme_adminlte','background_color', ''),
     'background_color_dark' => Config::Get('theme_adminlte','background_color_dark', ''),
+    'logo'      => Config::Get('theme_adminlte','logo', '/view/theme/adminlte/img/hz.png'),
     'background_image'      => Config::Get('theme_adminlte','background_image', ''),
     'background_image_dark' => Config::Get('theme_adminlte','background_image_dark', ''),
 ];
@@ -49,6 +50,7 @@ $schema = $schema ?: $sys['schema'] ?: 'default';
 $bgcolor = $bgcolor ?: $sys['background_color'] ?: 'var(--bs-body-bg)';
 $bgcolor_dark = $bgcolor_dark ?: $sys['background_color_dark'] ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: $sys['background_image'] ?: '';
+$logo = $sys['logo'];
 $background_image_dark = $background_image_dark ?: $sys['background_image_dark'] ?: '';
 $bg_val =
     (is_numeric($bg_mode) ? intval($bg_mode) :
@@ -58,6 +60,7 @@ $options = array (
   '$bgcolor' => $bgcolor,
   '$bgcolor_dark' => $bgcolor_dark,
   '$background_image' => $background_image,
+  '$logo' => $logo,
   '$background_image_dark' => $background_image_dark,
   '$bg_mode' => $bg_mode,
 );
