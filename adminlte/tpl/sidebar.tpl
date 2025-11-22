@@ -23,21 +23,23 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-        <li class="nav-header pb-3 pt-1"><div class="d-flex justify-content-center">
-          <div id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked
+        <li class="nav-item pb-2 pt-1">
+          <span class="nav-link">
+            <p class="d-flex justify-content-center">
+          <span id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" 
               data-bs-theme-value="auto">
             <label class="btn btn-sm btn-dark" for="btnradio1"><i
                 class="bi bi-circle-half me-1"></i>Auto</label>
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"
               data-bs-theme-value="dark">
             <label class="btn btn-sm btn-dark" for="btnradio2"><i
-                class="bi bi-moon-fill me-1"></i>Dark</label>
+                class="bi bi-moon-fill me-1"></i>Night</label>
             <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"
               data-bs-theme-value="light">
             <label class="btn btn-sm btn-dark" for="btnradio3"><i
-                class="bi bi-sun-fill me-1"></i>Light</label>
-          </div></div>
+                class="bi bi-sun-fill me-1"></i>Day</label>
+            </p></span></span>
         </li>
         <!-- Pinned user apps -->
         {{if $navbar_apps.0}}
