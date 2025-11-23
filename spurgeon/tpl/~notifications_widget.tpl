@@ -659,12 +659,14 @@
 			});
 			noNotifications.style.display = 'none';
 			notifications.style.display = 'block';
+      notifications-btn-icon.classList.remove('display-none');
 		} else {
 			if (notificationsBtn) {
 				notificationsBtn.forEach(btn => {
 					btn.style.opacity = 0.5;
 				});
 			}
+        notifications-btn-icon.classList.add('display-none');
 			if (navbarCollapse) navbarCollapse.classList.remove('show');
 			noNotifications.style.display = 'block';
 			notifications.style.display = 'none';
@@ -698,10 +700,9 @@
 </script>
 
 <!-- Notifications Button -->
-<div class="h5"></div>
-<button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#notificationsModal">
-  <i class="bi bi-bell"></i> Notifications
-</button>
+<a type="button" class="notifications-btn-icon" data-bs-toggle="modal" data-bs-target="#notificationsModal">
+  <i class="bi bi-bell-fill"></i> Notifications
+</a>
 {{if !$sys_only}}
 <!-- Notifications Modal -->
 <div class="modal fade" id="notificationsModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">

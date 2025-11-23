@@ -24,7 +24,7 @@
       {{/foreach}}
       {{/if}}
       {{if $is_owner}}
-      <li class="has-children"><a href="#">{{$featured_apps}}</a>
+      <li class="has-children"><a class="">{{$featured_apps}}</a>
         <ul class="sub-menu">
           {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
@@ -33,7 +33,7 @@
       </li>
       {{else}}
       <!-- System apps   -->
-      <li class="has-children"><a href="#">{{$sysapps}}</a>
+      <li class="has-children"><a class="">{{$sysapps}}</a>
         <ul class="sub-menu">
           {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
@@ -41,7 +41,7 @@
         </ul>
       </li>
       {{/if}}
-      <li class="has-children"><a href="#" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
+      <li class="has-children"><a id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
         <ul class="sub-menu"> <!--begin::User Image-->
           {{if $is_owner}}
           <!--begin::Menu Body-->

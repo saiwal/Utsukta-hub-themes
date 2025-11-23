@@ -3,7 +3,7 @@
 /**
  *   * Name: DoubleLeft
  *   * Description: Spurgeons default layout with left column
- *   * Version: 1.0
+ *   * Version: 0.0-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper

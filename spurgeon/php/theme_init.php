@@ -14,14 +14,14 @@ head_add_js('jquery.js');
 head_add_js('/library/datetimepicker/jquery.datetimepicker.js');
 
 head_add_js('/library/justifiedGallery/jquery.justifiedGallery.min.js');
-head_add_js('/library/sprintf.js/dist/sprintf.min.js');
+/* head_add_js('/library/sprintf.js/dist/sprintf.min.js'); */
 
 head_add_js('/library/textcomplete/textcomplete.min.js');
 head_add_js('autocomplete.js');
 
 head_add_js('/library/readmore.js/readmore.js');
 
-head_add_js('/library/sjcl/sjcl.js');
+/* head_add_js('/library/sjcl/sjcl.js'); */
 head_add_js('/library/sodium-plus/dist/sodium-plus.min.js');
 
 head_add_js('acl.js');
@@ -58,7 +58,6 @@ head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.
 
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
-head_add_js('/library/bootbox/bootbox.min.js');
 head_add_js('/library/bootstrap-tagsinput/bootstrap-tagsinput.js');
 head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 

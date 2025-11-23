@@ -3,7 +3,7 @@
 /**
  * * Name: Default
  *   * Description: Spurgeons default layout with left column
- *   * Version: 1.0
+ *   * Version: 0.0-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
@@ -60,7 +60,7 @@
       </a>
 	    <?php if(!empty($page['banner'])) echo $page['banner']; ?>
       <section id="content" class="s-content s-content--page">
-        <main class="bricks"">
+        <main class="bricks pt-0">
           <div class="masonry">
           <div class="row entry-wrap" >
             <div class="column lg-8 md-12">
@@ -113,7 +113,6 @@
     </div>
 <script src="/view/theme/spurgeon/js/plugins.js"></script>
     <script src="/view/theme/spurgeon/js/scripts.js"></script>
-    <script src="/view/theme/spurgeon/js/main.js"></script>
     <script>
 document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.getElementById("sidebar-column");
