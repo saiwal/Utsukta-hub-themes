@@ -104,7 +104,7 @@
         <input type="submit" class="s-header__search-submit" value="Search">
       </form>
 
-      <a href="#0" title="Close Search" class="s-header__search-close">Close</a>
+      <a title="Close Search" class="s-header__search-close">Close</a>
 
     </div> <!-- end row -->
   </div> <!-- s-header__search-inner -->
