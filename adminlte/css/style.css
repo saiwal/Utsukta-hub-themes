@@ -145,12 +145,12 @@ span.spinner {
 	border-width: 5px;
 }
 
-[data-bs-theme="light"] .app-main{
+[data-bs-theme="light"] .app-wrapper{
   background-color: $bgcolor;
   background-image: url($background_image);
   background-size: $bg_mode;
 }
-[data-bs-theme="dark"] .app-main{
+[data-bs-theme="dark"] .app-wrapper{
   background-color: $bgcolor_dark;
   background-image: url($background_image_dark);
   background-size: $bg_mode;
