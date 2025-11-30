@@ -69,6 +69,13 @@
 
 
            <div id="sidebar" class="s-content__sidebar large-4 column">
+             <div class="widget widget--search">
+                  <h3 class="h6">Search</h3> 
+                  <form action="#">
+                     <input type="search" value="" onblur="if(this.value == '') { this.value = 'Search here...'; }" onfocus="if (this.value == 'Search here...') { this.value = ''; }" class="text-search" id="nav-search-text">
+                     <input type="submit" value="Search" class="submit-search">
+                  </form>
+               </div>
               <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
               <?php if (x($page, 'aside')) echo $page['aside']; ?>
               
@@ -99,54 +106,8 @@
 
         <div class="row s-footer__bottom">
 
-            <div class="large-6 tab-full column s-footer__info">
-                <h3 class="h6">About Keep It Simple</h3>
-
-                <p>
-                Lorem ipsum Ullamco commodo laboris sit dolore commodo aliquip incididunt fugiat esse dolor 
-                aute fugiat minim eiusmod do velit labore fugiat officia ad sit culpa labore in consectetur 
-                sint cillum sint consectetur voluptate adipisicing Duis
-                </p>
-
-                <p>
-                Lorem ipsum Sed nulla deserunt voluptate elit occaecat culpa cupidatat sit irure sint 
-                sint incididunt cupidatat esse in Ut sed commodo tempor consequat culpa fugiat incididunt.
-                </p>
-            </div>
-
-            <div class="large-6 tab-full column">
-                <div class="row">
-                    <div class="large-8 tab-full column">
-
-                        <h3 class="h6">Photostream</h3>
-                        
-                        <ul class="photostream group">
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                            <li><a href="#0"><img alt="thumbnail" src="images/thumb.jpg"></a></li>
-                        </ul>
-        
-                    </div>
-        
-                    <div class="large-4 tab-full column">
-                        <h3  class="h6">Navigate</h3>
-        
-                        <ul class="s-footer__list s-footer-list--nav group">
-                            <li><a href="#0">Home</a></li>
-                            <li><a href="#0">Blog</a></li>
-                            <li><a href="#0">Demo</a></li>
-                            <li><a href="#0">Archives</a></li>
-                            <li><a href="#0">About</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
+            <?php if (x($page, 'footer')) echo $page['footer']; ?>
+           
             <div class="ss-copyright">
                 <span>© Copyright Keep It Simple 2019</span> 
                 <span>Design by <a href="https://www.styleshout.com/">StyleShout</a></span>
@@ -163,7 +124,6 @@
 
     </footer> <!-- end Footer-->
 
-<script src="/view/theme/keepitsimple/js/jquery-3.2.1.min.js"></script>
 <script src="/view/theme/keepitsimple/js/maintr.js"></script>
 </body>
 </html>
