@@ -1,6 +1,6 @@
 <?php
 
-namespace Zotlabs\Theme;
+namespace Zotlabs\Theme{
 
 use ScssPhp\ScssPhp\Compiler;
 use ScssPhp\ScssPhp\OutputStyle;
@@ -213,13 +213,16 @@ class spurgeonConfig {
 	}
 
 }
-
-function spurgeon_theme_admin_enable() {
-	// This function is called once when the theme is being enabled by the admin
-	// It can be used to register hooks etc.
 }
 
-function spurgeon_theme_admin_disable() {
-	// This function is called once when the theme is being disabled by the admin
-	// It can be used to unregister hooks etc.
+namespace { 
+
+  function spurgeon_theme_admin_enable() {
+      register_hook('display_item', 'view/theme/spurgeon/hooks/article_layout.php', 'spurgeon_article_layout');
+  }
+
+  function spurgeon_theme_admin_disable() {
+      unregister_hook('display_item', 'view/theme/spurgeon/hooks/article_layout.php', 'spurgeon_article_layout');
+  }
+
 }

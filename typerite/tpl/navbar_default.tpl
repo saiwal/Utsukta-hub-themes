@@ -26,7 +26,7 @@
       {{/foreach}}
       {{/if}}
       {{if $is_owner}}
-      <li class="has-children"><a class="">{{$featured_apps}}</a>
+      <li class="has-children"><a href="" class="">{{$featured_apps}}</a>
         <ul class="sub-menu">
           {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
@@ -35,7 +35,7 @@
       </li>
       {{else}}
       <!-- System apps   -->
-      <li class="has-children"><a class="">{{$sysapps}}</a>
+      <li class="has-children"><a href="" class="">{{$sysapps}}</a>
         <ul class="sub-menu">
           {{foreach $nav_apps as $nav_app}}
           {{$nav_app}}
@@ -43,7 +43,7 @@
         </ul>
       </li>
       {{/if}}
-      <li class="has-children"><a class="" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
+      <li class="has-children"><a href="" class="" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
         <ul class="sub-menu"> <!--begin::User Image-->
           {{if $is_owner}}
           <!--begin::Menu Body-->
@@ -95,7 +95,7 @@
   </nav> <!-- end header__nav-wrap -->
 
   <!-- menu toggle -->
-  <a href="#0" class="header__menu-toggle">
+  <a href="" class="header__menu-toggle">
     <span>Menu</span>
   </a>
 
@@ -115,12 +115,12 @@
                     <input type="submit" class="search-submit" value="Search">
                 </form>
     
-                <a href="#0" title="Close Search" class="search-close">Close</a>
+                <a title="Close Search" class="search-close">Close</a>
     
             </div>  <!-- end search-block -->
 
             <!-- search modal trigger -->
-            <a href="#0" class="search-trigger">
+            <a href="" class="search-trigger">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill:rgba(0, 0, 0, 1);transform:;-ms-filter:"><path d="M10,18c1.846,0,3.543-0.635,4.897-1.688l4.396,4.396l1.414-1.414l-4.396-4.396C17.365,13.543,18,11.846,18,10 c0-4.411-3.589-8-8-8s-8,3.589-8,8S5.589,18,10,18z M10,4c3.309,0,6,2.691,6,6s-2.691,6-6,6s-6-2.691-6-6S6.691,4,10,4z"></path></svg>
                 <span>Search</span>
             </a>

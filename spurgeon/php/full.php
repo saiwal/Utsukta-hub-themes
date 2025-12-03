@@ -61,12 +61,17 @@
       <section id="content" class="s-content">
         <main class="bricks">
           <div class="masonry">
-          <div class="row" >
-            <div class="column lg-8 md-12">
               <div id="region_2" class="bricks-wrapper" data-animate-block>
                 <?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
-            </div>
+          </div>
+        </main>
+      </section>
+
+
+        <footer id="colophon" class="s-footer">
+          <div class="row s-footer__main">
+              <?php if (x($page, 'footer')) echo $page['footer']; ?>
             <div class="column lg-4" id="sidebar-column">
               <div id="region_3">
                 <div id="left_aside_wrapper">
@@ -77,15 +82,7 @@
                 </div>
               </div>
             </div>
-          </div>
-          </div>
-        </main>
-      </section>
 
-
-        <footer id="colophon" class="s-footer">
-          <div class="row s-footer__main">
-              <?php if (x($page, 'footer')) echo $page['footer']; ?>
           </div> <!-- end s-footer__main -->
 
           <div class="row s-footer__bottom">
@@ -112,7 +109,6 @@
     </div>
 <script src="/view/theme/spurgeon/js/plugins.js"></script>
     <script src="/view/theme/spurgeon/js/scripts.js"></script>
-    <script src="/view/theme/spurgeon/js/main.js"></script>
     <script>
 document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.getElementById("sidebar-column");
