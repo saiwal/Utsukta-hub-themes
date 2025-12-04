@@ -361,7 +361,6 @@
         ssAlertBoxes();
         ssBackToTop();
         ssMoveTo();
- };
     })();
 
 })(document.documentElement);
