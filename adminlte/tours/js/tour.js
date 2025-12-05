@@ -1,27 +1,19 @@
 function startTour(tourName) {
   if (typeof Shepherd === 'undefined') return;
-
+  console.log(currentHubzillaPage);
   const userLang = (typeof hubzillaLang !== 'undefined' && hubzillaLang)
   ? hubzillaLang.split('-')[0]  // normalize (e.g., pt-br → pt)
   : (navigator.language || 'en').split('-')[0];
-  // Get current page/module name safely (first segment only)
-  let page = typeof currentHubzillaPage !== 'undefined'
-    ? currentHubzillaPage
-    : window.location.pathname.split('/').filter(Boolean)[0] || 'hq';
+  let page = currentHubzillaPage;
 
-  // Remove subpaths like "chat/admin" → "chat"
-  page = page.split('/')[0];
-
-  // Allow explicit override (so you can call startTour('post'))
   if (tourName) page = tourName;
 
   // Try localized JSON first, fallback to default
-  const localizedUrl = `view/theme/adminlte/tours/steps/${page}.${userLang}.json`;
-  const defaultUrl   = `view/theme/adminlte/tours/steps/${page}.json`;
+  const defaultUrl   = `view/theme/adminlte/tours/steps/${page}.${userLang}.json`;
 
   console.log(`Loading tour for "${page}" (lang: ${userLang})`);
 
-  fetch(localizedUrl)
+  fetch(defaultUrl)
     .then(async res => {
       if (!res.ok) {
         console.warn(`No ${userLang} tour found, falling back to default.`);
@@ -78,67 +70,67 @@ function startTour(tourName) {
           when: {}
         };
 
-// Custom onShow logic
-if (step.onShow === 'expandSidebar') {
-  stepOptions.when.show = () => {
-    const body = document.body;
-    const toggle = document.querySelector('[data-lte-toggle="sidebar"]');
-    if (body.classList.contains('sidebar-collapse') && toggle) {
-      console.log('Expanding sidebar...');
-      toggle.click(); // simulate the click to expand
-    }
-  };
-}
+        // Custom onShow logic
+        if (step.onShow === 'expandSidebar') {
+          stepOptions.when.show = () => {
+            const body = document.body;
+            const toggle = document.querySelector('[data-lte-toggle="sidebar"]');
+            if (body.classList.contains('sidebar-collapse') && toggle) {
+              console.log('Expanding sidebar...');
+              toggle.click(); // simulate the click to expand
+            }
+          };
+        }
 
-if (step.onShow === 'collapseSidebar') {
-  stepOptions.when.show = () => {
-    const body = document.body;
-    const toggle = document.querySelector('[data-lte-toggle="sidebar"]');
-    if (!body.classList.contains('sidebar-collapse') && toggle) {
-      console.log('Collapsing sidebar...');
-      toggle.click(); // collapse the sidebar
-    }
-  };
-}
+        if (step.onShow === 'collapseSidebar') {
+          stepOptions.when.show = () => {
+            const body = document.body;
+            const toggle = document.querySelector('[data-lte-toggle="sidebar"]');
+            if (!body.classList.contains('sidebar-collapse') && toggle) {
+              console.log('Collapsing sidebar...');
+              toggle.click(); // collapse the sidebar
+            }
+          };
+        }
 
-if (step.onShow === 'toggleOffcanvas') {
-  stepOptions.when = {
-    show: () => {
-      const offcanvasEl = document.querySelector('#offcanvasResponsive');
-      if (offcanvasEl) {
-        const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-        offcanvas.show(); // opens it
-      }
-    }
-  };
-}
+        if (step.onShow === 'toggleOffcanvas') {
+          stepOptions.when = {
+            show: () => {
+              const offcanvasEl = document.querySelector('#offcanvasResponsive');
+              if (offcanvasEl) {
+                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+                offcanvas.show(); // opens it
+              }
+            }
+          };
+        }
 
-if (step.onShow === 'closeOffcanvas') {
-  stepOptions.when = {
-    show: () => {
-      const offcanvasEl = document.querySelector('#offcanvasResponsive');
-      if (offcanvasEl) {
-        const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
-        offcanvas.hide(); // closes it
-      }
-    }
-  };
-}
+        if (step.onShow === 'closeOffcanvas') {
+          stepOptions.when = {
+            show: () => {
+              const offcanvasEl = document.querySelector('#offcanvasResponsive');
+              if (offcanvasEl) {
+                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+                offcanvas.hide(); // closes it
+              }
+            }
+          };
+        }
         tour.addStep(stepOptions);
       });
 
-      // ✅ Start tour *after* all steps are added
+      // Start tour *after* all steps are added
       if (tour.steps.length > 0) {
         tour.start();
 
         tour.on('complete', () => {
-          fetch('/adminlte_tour')
+          fetch(`/adminlte?tour=${currentHubzillaPage}`)
             .then(res => res.json())
             .then(() => console.log('Tour marked complete'));
         });
 
         tour.on('cancel', () => {
-          fetch('/adminlte_tour')
+          fetch(`/adminlte?tour=${currentHubzillaPage}`)
             .then(res => res.json())
             .then(() => console.log('Tour cancelled'));
         });

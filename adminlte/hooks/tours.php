@@ -4,21 +4,19 @@ function adminlte_tours(&$b) {
     $uid = local_channel();
     if (!$uid) return;
 
-    // Only run when the active theme is spurgeon
+    // Only run when the active theme is adminlte
     $current_theme = App::$channel['channel_theme'];
     if ($current_theme !== 'adminlte') {
         return;
     }
-    // Check mode from $arr['output']
-    $mode = $arr['output']['mode'] ?? null;
 
-    $done = get_pconfig($uid, 'adminlte', 'tour_done');
+    $current_page = App::$module; // e.g., 'hq', 'network', 'connections'
+    $done = get_pconfig($uid, 'adminlte', 'tour_'. $current_page);
     if ($done) return;
 
     head_add_css('/view/theme/adminlte/tours/css/shepherd.min.css');
     head_add_css('/view/theme/adminlte/tours/css/tour.css');
 
-    $current_page = App::$cmd; // e.g., 'hq', 'network', 'connections'
     $lang = App::$language ?: 'en';
 
     $b .= "<script>const currentHubzillaPage = '$current_page'; const hubzillaLang = '$lang';</script>";

@@ -46,7 +46,7 @@ class AdminlteConfig {
 		$arr['bgcolor_dark'] = get_pconfig(local_channel(),'adminlte', 'background_color_dark' );
 		$arr['background_image'] = get_pconfig(local_channel(),'adminlte', 'background_image' );
 		$arr['background_image_dark'] = get_pconfig(local_channel(),'adminlte', 'background_image_dark' );
-		$arr['tour'] = get_pconfig(local_channel(),'adminlte', 'tour_done' );
+		$arr['tourhq'] = get_pconfig(local_channel(),'adminlte', 'tour_hq' );
 		/*$arr['font_size'] = get_pconfig(local_channel(),'adminlte', 'font_size' );*/
 		/*$arr['radius'] = get_pconfig(local_channel(),'adminlte', 'radius' );*/
 		/*$arr['converse_width']=get_pconfig(local_channel(),"adminlte","converse_width");*/
@@ -77,7 +77,7 @@ class AdminlteConfig {
 			set_pconfig(local_channel(), 'adminlte', 'background_color_dark', $_POST['adminlte_background_color_dark']);
 			set_pconfig(local_channel(), 'adminlte', 'background_image', $_POST['adminlte_background_image']);
 			set_pconfig(local_channel(), 'adminlte', 'background_image_dark', $_POST['adminlte_background_image_dark']);
-			set_pconfig(local_channel(), 'adminlte', 'tour_done', $_POST['adminlte_tour']);
+			set_pconfig(local_channel(), 'adminlte', 'tour_hq', $_POST['adminlte_tourhq']);
 			set_pconfig(local_channel(), 'adminlte', 'advanced_theming', $_POST['adminlte_advanced_theming']);
 		
 			// This is used to refresh the cache
@@ -113,7 +113,7 @@ class AdminlteConfig {
 			'$bgcolor_dark' => array('adminlte_background_color_dark', t('Set the dark background color(e.g. #000000, blank for default)'), $arr['bgcolor_dark']),
 			'$background_image' => array('adminlte_background_image', t('Set the background image(url link, blank for none)'), $arr['background_image']),
 			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image(url link, blank for none)'), $arr['background_image_dark']),
-			'$tour' => array('adminlte_tour', t('Welcome tour completed'), $arr['tour']),
+			'$tourhq' => array('adminlte_tourhq', t('HQ tour completed'), $arr['tourhq']),
 //			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
 //			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
 			));
@@ -133,7 +133,8 @@ namespace {
 
   function adminlte_theme_admin_enable() {
     register_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
-    Route::register('view/theme/adminlte/mod/Mod_adminlte_tour.php', 'adminlte_tour');
+    Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');
+    Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'test');
 
     $defaults = [
         'schema'              => '---',
@@ -155,7 +156,8 @@ namespace {
 
   function adminlte_theme_admin_disable() {
     unregister_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
-    Route::unregister('view/theme/adminlte/mod/Mod_adminlte_tour.php', 'adminlte_tour');
+    Route::unregister('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');
+    Route::unregister('view/theme/adminlte/mod/Mod_adminlte.php', 'test');
   }
 
   function adminlte_get_schemas() {
