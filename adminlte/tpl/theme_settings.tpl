@@ -12,7 +12,7 @@
   {{include file="field_select.tpl" field=$sidebar_mode}}
 
   {{include file="field_checkbox.tpl" field=$dark_mode}}
-  {{include file="field_checkbox.tpl" field=$tour}}
+  {{include file="field_checkbox.tpl" field=$tourhq}}
 
 <!--{{if $expert}}-->
 <!--	<hr>-->
