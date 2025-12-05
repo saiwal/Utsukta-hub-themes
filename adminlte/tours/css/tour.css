@@ -1,0 +1,84 @@
+
+/* General Shepherd tour styling */
+.shepherd-theme-default {
+    background-color: rgba(255, 255, 255, 0.95); /* slightly translucent white */
+    color: #333333;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    max-width: 320px;
+    padding: 15px;
+    line-height: 1.4;
+}
+
+/* Step title */
+.shepherd-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #222222;
+}
+
+/* Step text */
+.shepherd-text {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+}
+
+/* Buttons container */
+.shepherd-button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Primary buttons */
+.shepherd-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.shepherd-button:hover {
+    background-color: #0056b3;
+}
+
+/* Secondary buttons (like Close) */
+.shepherd-button-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.shepherd-button-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Tooltip arrow */
+.shepherd-arrow {
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+/* Full-page semi-transparent overlay behind the tooltip */
+#tour-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.25); /* Adjust opacity to fade page */
+    z-index: 9998; /* below tooltip */
+    display: none; /* initially hidden */
+}
+
+/* Tooltip should be above overlay */
+.shepherd-theme-default {
+    z-index: 9999; /* above overlay */
+}

@@ -92,27 +92,20 @@ class AdminlteConfig {
 			$expert = true;
 		}
 
-		$istour = false;
-   # dirty way to check if adminlte_tour addon is installed 
-    if (file_exists(__DIR__ . '/../../../../../addon/adminlte_tour/adminlte_tour.php')) {
-        $istour = true;
-    } 
-
 	  	$o = replace_macros(get_markup_template('theme_settings.tpl'), array(
 			'$submit' => t('Submit'),
 			'$baseurl' => z_root(),
 			'$theme' => \App::$channel['channel_theme'],
       '$expert' => $expert,
-      '$istour' => $istour,
 			'$title' => t("Theme settings"),
 			'$dark' => t('Dark style'),
 			'$light' => t('Light style'),
 			'$common' => t('Common settings'),
-			'$primary_color' => array('adminlte_primary_color', t('Primary theme color'), $arr['primary_color'], '<i class="bi bi-circle-fill text-primary"></i> ' . t('Current color, leave empty for default')),
-			'$success_color' => array('adminlte_success_color', t('Success theme color'), $arr['success_color'], '<i class="bi bi-circle-fill text-success"></i> ' . t('Current color, leave empty for default')),
-			'$info_color' => array('adminlte_info_color', t('Info theme color'), $arr['info_color'], '<i class="bi bi-circle-fill text-info"></i> ' . t('Current color, leave empty for default')),
-			'$warning_color' => array('adminlte_warning_color', t('Warning theme color'), $arr['warning_color'], '<i class="bi bi-circle-fill text-warning"></i> ' . t('Current color, leave empty for default')),
-			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
+//			'$primary_color' => array('adminlte_primary_color', t('Primary theme color'), $arr['primary_color'], '<i class="bi bi-circle-fill text-primary"></i> ' . t('Current color, leave empty for default')),
+//			'$success_color' => array('adminlte_success_color', t('Success theme color'), $arr['success_color'], '<i class="bi bi-circle-fill text-success"></i> ' . t('Current color, leave empty for default')),
+//			'$info_color' => array('adminlte_info_color', t('Info theme color'), $arr['info_color'], '<i class="bi bi-circle-fill text-info"></i> ' . t('Current color, leave empty for default')),
+//			'$warning_color' => array('adminlte_warning_color', t('Warning theme color'), $arr['warning_color'], '<i class="bi bi-circle-fill text-warning"></i> ' . t('Current color, leave empty for default')),
+//			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
 			'$dark_mode' => array('adminlte_dark_mode',t('Default to dark mode'),$arr['dark_mode'], '', array(t('No'),t('Yes'))),
 			'$sidebar_mode' => array('adminlte_sidebar_mode',t('Choose sidebar mode'),$arr['sidebar_mode'], '', array(t('Expanded'),t('Collapsed'))),
 			'$bg_mode' => array('adminlte_bg_mode',t('Set background image tile mode'),$arr['bg_mode'], '', array(t('Tiled'),t('Cover'))),
@@ -121,8 +114,8 @@ class AdminlteConfig {
 			'$background_image' => array('adminlte_background_image', t('Set the background image(url link, blank for none)'), $arr['background_image']),
 			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image(url link, blank for none)'), $arr['background_image_dark']),
 			'$tour' => array('adminlte_tour', t('Welcome tour completed'), $arr['tour']),
-			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
-			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
+//			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
+//			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
 			));
 
 		return $o;
@@ -136,11 +129,12 @@ class AdminlteConfig {
 namespace { 
 
   use Zotlabs\Lib\Config;
+  use Zotlabs\Extend\Route;
 
   function adminlte_theme_admin_enable() {
-    // This function is called once when the theme is being enabled by the admin
-    // It can be used to register hooks etc.
-  
+    register_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
+    Route::register('view/theme/adminlte/mod/Mod_adminlte_tour.php', 'adminlte_tour');
+
     $defaults = [
         'schema'              => '---',
         'dark_mode'           => 0,
@@ -160,8 +154,8 @@ namespace {
   }
 
   function adminlte_theme_admin_disable() {
-    // This function is called once when the theme is being disabled by the admin
-    // It can be used to unregister hooks etc.
+    unregister_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
+    Route::unregister('view/theme/adminlte/mod/Mod_adminlte_tour.php', 'adminlte_tour');
   }
 
   function adminlte_get_schemas() {
@@ -178,8 +172,8 @@ namespace {
 
       return $scheme_choices;
   }
+
   function theme_admin() {
-      
       $schema   = Config::Get('theme_adminlte', 'schema', '---');
       $schemas  = adminlte_get_schemas();
       // Load system-level (admin) theme config
@@ -268,7 +262,6 @@ namespace {
   }
 
   function theme_admin_post() {
-
       check_form_security_token_redirectOnErr('/admin/themes/adminlte', 'admin_themes');
 
       // Save all system admin settings
