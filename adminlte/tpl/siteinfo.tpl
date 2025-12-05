@@ -26,6 +26,21 @@
           </div>
       </li>
       {{/if}}
+
+      {{if $themes.1}}
+      <li class="list-group-item">
+        <div class="d-flex py-2 px-1">
+          <div class="col-2">
+            {{$themes.0}}
+          </div>
+          <div class="col-10">
+            {{foreach $themes.1 as $theme}}
+              <span class="badge text-bg-primary">{{$theme}}</span>
+            {{/foreach}}
+          </div>
+      </li>
+      {{/if}}
+
       {{if $blocked_sites.1}}
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
