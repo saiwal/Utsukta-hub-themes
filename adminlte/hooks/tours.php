@@ -7,7 +7,7 @@ function adminlte_tours(&$b) {
     logger('hook registered', LOGGER_DEBUG);
     // Only run when the active theme is adminlte
     $current_theme = App::$channel['channel_theme'];
-    if ($current_theme !== 'adminlte') {
+    if (! str_starts_with($current_theme, 'adminlte')) {
         return;
     }
 
