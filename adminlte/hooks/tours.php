@@ -12,7 +12,9 @@ function adminlte_tours(&$b) {
 
     $current_page = App::$module; // e.g., 'hq', 'network', 'connections'
     $done = get_pconfig($uid, 'adminlte', 'tour_'. $current_page);
-    if ($done) return;
+    if ($done === '1') {
+      return;  // tour already done
+    }
 
     head_add_css('/view/theme/adminlte/tours/css/shepherd.min.css');
     head_add_css('/view/theme/adminlte/tours/css/tour.css');
@@ -23,5 +25,3 @@ function adminlte_tours(&$b) {
     head_add_js('/view/theme/adminlte/tours/js/shepherd.js');
     head_add_js('/view/theme/adminlte/tours/js/tour.js');
 }
-
-
