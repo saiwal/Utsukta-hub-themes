@@ -4,6 +4,7 @@ function adminlte_tours(&$b) {
     $uid = local_channel();
     if (!$uid) return;
 
+    logger('hook registered', LOGGER_DEBUG);
     // Only run when the active theme is adminlte
     $current_theme = App::$channel['channel_theme'];
     if ($current_theme !== 'adminlte') {

@@ -132,6 +132,7 @@ namespace {
   use Zotlabs\Extend\Route;
 
   function adminlte_theme_admin_enable() {
+    logger('hook init', LOGGER_DEBUG);
     register_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
     Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');
     Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'test');
