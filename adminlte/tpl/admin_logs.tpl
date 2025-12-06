@@ -2,7 +2,8 @@
   <div class="section-title-wrapper app-content-header">
     <h3 class="border-0">{{$title}} - {{$page}}</h3>
   </div>
-  <div class="card card-body" <form action="{{$baseurl}}/admin/logs" method="post">
+  <div class="card card-body">
+    <form action="{{$baseurl}}/admin/logs" method="post">
     <input type='hidden' name='form_security_token' value='{{$form_security_token}}' />
 
     {{include file="field_checkbox.tpl" field=$debugging}}
