@@ -19,7 +19,7 @@
     <nav class="mt-2">
       <!--begin::Sidebar Menu-->
       <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-        <li class="nav-item pb-2 pt-1">
+        <li class="pb-2 pt-1">
           <span class="nav-link">
             <p class="d-flex justify-content-center">
           <span id="bd-theme" class="btn-group" role="group" aria-label="Basic radio toggle button group">
