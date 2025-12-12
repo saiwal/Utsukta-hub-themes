@@ -1,7 +1,8 @@
-<nav class="app-header navbar navbar-expand  bg-body-tertiary border-0 sticky-top"> <!--begin::Container-->
+<nav class="app-header navbar navbar-expand  bg-body-tertiary border-0 sticky-top shadow"> 
+  <!--begin::Container-->
   <div class="container-fluid"> <!--begin::Start Navbar Links-->
     <ul class="navbar-nav">
-      <li class="nav-item">
+      <li class="nav-item" id="toggle-sidebar">
         <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button"><i class="bi bi-layout-sidebar"></i></a>
       </li>
     </ul>
@@ -34,11 +35,25 @@
       {{/if}}
       {{/if}}
       {{/if}}
+
+      <!-- Navbar Search -->
 <!-- Search Button in Navbar -->
 <li class="nav-item" id="nav-search-btn">
     <a class="nav-link" href="#" title="{{$nav.search.3}}" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="bi bi-search generic-icons"></i></a>
 </li>
 
+ 			{{if $localuser || $nav.pubs}}
+      <!--Notification icon-->
+      <li class="nav-item dropdown">
+        <a id="notifications-btn-1" class="nav-link notifications-btn" data-bs-toggle="dropdown" href="#" aria-expanded="true">
+          <i id="notifications-btn-icon-1" class="bi bi-bell notifications-btn-icon"></i>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end " data-bs-popper="static">
+      {{include "notifications_widget_topnav.tpl"}}
+        </div>
+      </li>
+
+			{{/if}}
       <!-- user dowpdown menu-->
       {{if $userinfo}}
       <!--begin::User Menu Dropdown-->
@@ -125,5 +140,4 @@
 </nav>
 
 {{include "sidebar.tpl"}}
-
 
