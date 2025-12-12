@@ -43,9 +43,8 @@
 
 
     <div id="page" class="s-pagewrap">
-	    <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
   
-      <header id="masthead" class="s-header">
+      <header id="masthead" class="s-header"><?php if (x($page, 'header')) echo $page['header']; ?>
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
@@ -72,7 +71,7 @@
         <footer id="colophon" class="s-footer">
           <div class="row s-footer__main">
               <?php if (x($page, 'footer')) echo $page['footer']; ?>
-            <div class="column lg-4" id="sidebar-column">
+            <div class="column lg-4">
               <div id="region_3">
                 <div id="left_aside_wrapper">
                   <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
