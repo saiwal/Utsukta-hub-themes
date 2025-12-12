@@ -134,6 +134,7 @@ namespace {
   function adminlte_theme_admin_enable() {
     logger('hook init', LOGGER_DEBUG);
     register_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
+    register_hook('nav', 'view/theme/adminlte/hooks/layout.php', 'notification_nav');
     Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');
     Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'test');
 
@@ -157,6 +158,7 @@ namespace {
 
   function adminlte_theme_admin_disable() {
     unregister_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
+    unregister_hook('nav', 'view/theme/adminlte/hooks/layout.php', 'notification_nav');
     Route::unregister('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');
     Route::unregister('view/theme/adminlte/mod/Mod_adminlte.php', 'test');
   }
