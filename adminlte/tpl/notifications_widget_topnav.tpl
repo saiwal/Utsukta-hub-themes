@@ -5,7 +5,7 @@
 	var sse_partial_result = false;
 	var sse_rmids = [];
 	var sse_fallback_interval;
-	var sse_sys_only = {{$sys_only}};
+	var sse_sys_only = {{$nav.ntd.sys_only}};
 
 	document.addEventListener("DOMContentLoaded", function() {
 		let notificationsWrapper = document.getElementById('notifications_wrapper');
@@ -190,7 +190,7 @@
 			});
 		});
 
-		{{foreach $notifications as $notification}}
+		{{foreach $nav.ntd.notifications as $notification}}
 		{{if $notification.filter}}
 
 		document.querySelectorAll('#tt-{{$notification.type}}-only').forEach(function (element) {
@@ -465,10 +465,10 @@
 			if (count) {
 				if (buttonElement) buttonElement.style.display = 'block';  // Fade-in effect replaced by display block
 				if (replace || followup) {
-					updateElement.textContent = count >= {{$count_limit}} ? '{{$count_limit - 1}}+' : count;
+					updateElement.textContent = count >= {{$nav.ntd.count_limit}} ? '{{$nav.ntd.count_limit - 1}}+' : count;
 				} else {
 					count = count + Number(updateElement.textContent.replace(/\++$/, ''));
-					updateElement.textContent = count >= {{$count_limit}} ? '{{$count_limit - 1}}+' : count;
+					updateElement.textContent = count >= {{$nav.ntd.count_limit}} ? '{{$nav.ntd.count_limit - 1}}+' : count;
 				}
 			} else {
 				if (updateElement) updateElement.textContent = '0';
@@ -507,7 +507,7 @@
 			return;
 		}
 
-		{{if $invert_notifications_order}}
+		{{if $nav.ntd.invert_notifications_order}}
 		if (!replace && !followup && notify_menu.querySelectorAll('.notification:not(.tt-filter-active):not(.cn-filter-active)').length >= 30) {
 			return;
 		}
@@ -554,7 +554,7 @@
 				let dateA = new Date(a.dataset.when).getTime();
 				let dateB = new Date(b.dataset.when).getTime();
 
-				{{if $invert_notifications_order}}
+				{{if $nav.ntd.invert_notifications_order}}
 				return dateA - dateB; // Sort in ascending order
 				{{else}}
 				return dateB - dateA; // Sort in descending order
@@ -691,10 +691,10 @@
 
 </script>
 
-{{if !$sys_only}}
+{{if !$nav.ntd.sys_only}}
 <div id="notifications_wrapper" class="mb-0" style="min-width:18em;">
 	<div id="no_notifications" class="p-2">
-		{{$no_notifications}}
+		{{$nav.ntd.no_notifications}}
   </div>
 	<div id="nav-notifications-template" rel="template" class="d-none">
 		<a class="list-group-item list-group-item-action notification {6}" href="{0}" title="{13}" data-b64mid="{7}" data-notify_id="{8}" data-thread_top="{9}" data-contact_name="{2}" data-contact_addr="{3}" data-when="{5}">
@@ -711,7 +711,7 @@
 		</a>
 	</div>
 	<div id="notifications" class="border border-0 rounded navbar-nav collapse m-0">
-		{{foreach $notifications as $notification}}
+		{{foreach $nav.ntd.notifications as $notification}}
 		<div class="border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
 			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
 				<div>
@@ -748,7 +748,7 @@
 			{{/if}}
 			<div id="nav-{{$notification.type}}-menu" class="list-group list-group-flush"></div>
 			<div id="nav-{{$notification.type}}-loading" class="list-group-item" style="display: none;">
-				{{$loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
+				{{$nav.ntd.loading}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 			</div>
 		</div>
 		{{/foreach}}

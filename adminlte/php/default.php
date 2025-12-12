@@ -29,7 +29,7 @@
 
     <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
     
-    <?php echo x($page, 'topnav') ? $page['topnav'] : (x($page, 'nav') ? $page['nav'] : ''); ?>
+	  <?php if(!empty($page['nav'])) echo $page['nav']; ?>
 
     <!-- Content Wrapper. Contains page content -->
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
