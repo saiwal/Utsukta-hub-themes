@@ -31,16 +31,7 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 and you will see the various theme settings that can be set fo your hub.
 
 ![settings ui](README/%20settings.png)
-**Notification Dropdown:** It may happen that the notification dropdown does not display by default. This is because AdminLTE uses a custom navbar that needs to be specified in the `pdl` file if you have previously used the pdleditor and customised your layouts. To do this simply go to the pdleditor and `reset` the layout, or to preserve your previous edits, add the following to the `source`:
 
-```
-[region=topnav]
-[widget=mynavbar][/widget]
-[/region]
-```
-
-
-![Notification dropdown menu](README/%20notification-dropdown.png)
 
 **Personalization options:** AdminLTE offers some ways to further customize the look and feel of your theme by specifying color and background image for your pages. This can be specified by going to `Settings`->`Display Settings`-> `Custom Theme Settings`. 
 
