@@ -11,7 +11,7 @@
   </div>
   <!-- /.card-header -->
   {{if $options}}
-  <div class="card-body">
+  <div class="card-body p-0">
     <div class="accordion" id="accordion_{{$title|replace:' ':'_'}}">
     {{assign var=prev_title value=''}}
     {{foreach $options as $key => $value}}
@@ -27,7 +27,7 @@
       </div>
       <div id="collapse_{{$uid}}" class="accordion-collapse collapse" aria-labelledby="heading_{{$uid}}"
         data-bs-parent="#accordion_{{$title|replace:' ':'_'}}">
-        <div class="accordion-body">
+        <div class="accordion-body p-0">
           <ul class="list-group list-group-flush m-0">
             {{foreach $value as $subkey => $subval}}
             <li class="list-group-item list-group-item-action">
