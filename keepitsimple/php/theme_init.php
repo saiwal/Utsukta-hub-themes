@@ -20,7 +20,7 @@ head_add_js('autocomplete.js');
 
 head_add_js('/library/readmore.js/readmore.js');
 
-head_add_js('/library/sodium-plus/dist/sodium-plus.min.js');
+/* head_add_js('/library/sodium-plus/dist/sodium-plus.min.js'); */
 
 head_add_js('acl.js');
 head_add_js('webtoolkit.base64.js');
