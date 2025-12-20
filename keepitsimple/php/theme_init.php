@@ -22,6 +22,7 @@ head_add_js('/library/readmore.js/readmore.js');
 
 /* head_add_js('/library/sodium-plus/dist/sodium-plus.min.js'); */
 
+head_add_js('/library/libsodium/browsers/sodium.js');
 head_add_js('acl.js');
 head_add_js('webtoolkit.base64.js');
 /* head_add_js('/view/theme/keepitsimple/js/main.js'); */
@@ -54,6 +55,7 @@ head_add_css('/library/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.
 head_add_css('/view/theme/keepitsimple/css/bootstrap.css');
 head_add_css('/view/theme/keepitsimple/css/base.css');
 head_add_css('/view/theme/keepitsimple/css/main.css');
+head_add_css('/view/theme/keepitsimple/css/style.css');
 
 head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootstrap-tagsinput/bootstrap-tagsinput.js');

@@ -21,7 +21,7 @@ head_add_js('/view/theme/adminlte/js/autocomplete.js');
 
 head_add_js('/library/readmore.js/readmore.js');
 
-head_add_js('/library/sodium-plus/dist/sodium-plus.min.js');
+head_add_js('/library/libsodium/browsers/sodium.js');
 
 head_add_js('acl.js');
 head_add_js('webtoolkit.base64.js');
