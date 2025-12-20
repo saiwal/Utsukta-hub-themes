@@ -1,7 +1,7 @@
 <div id="side-bar-photos-albums" class="card mb-3">
 	<div class="card-header">{{$title}}</div>
   <div class="card-body">
-    <ul class="list-group list-group-flushed" style="list-style: none;">
+    <ul class="list-group list-group-flush" style="list-style: none;">
       <a class="list-group-item" href="{{$baseurl}}/photos/{{$nick}}" title="{{$title}}" >{{$recent}}</a>
       {{if $albums}}
       {{foreach $albums as $al}}
