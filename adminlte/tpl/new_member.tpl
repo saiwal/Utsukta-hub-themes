@@ -27,8 +27,8 @@
       </div>
       <div id="collapse_{{$uid}}" class="accordion-collapse collapse" aria-labelledby="heading_{{$uid}}"
         data-bs-parent="#accordion_{{$title|replace:' ':'_'}}">
-        <div class="accordion-body p-0">
-          <ul class="list-group list-group-flush m-0">
+        <div class="accordion-body p-3">
+          <ul class="list-group list-group-flush">
             {{foreach $value as $subkey => $subval}}
             <li class="list-group-item list-group-item-action">
               <a href="{{$subkey}}">{{$subval}}</a>
