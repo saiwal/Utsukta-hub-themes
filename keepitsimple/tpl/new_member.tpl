@@ -2,7 +2,7 @@
   <h3 class="h6">{{$title}}</h3>
   <!-- /.card-header -->
   {{if $options}}
-  <div class="card-body" style="display: none; box-sizing: border-box;">
+  <div class="card-body">
     <ul class="list-group list-group-flush">
     {{foreach $options as $x}}
     {{if is_array($x) }}

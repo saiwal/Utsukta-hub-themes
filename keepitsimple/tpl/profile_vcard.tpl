@@ -5,7 +5,7 @@
       title="{{$profile.online}}"></i>{{/if}}
   </div>
   <div class="h5 mt-0 text-muted">{{$profile.reddress}}</div>
-  <p class="lead">
+  <p>
     <a href="#"><img width="80" height="80" class="u-pull-left" alt="sample-image" src="{{$profile.thumb}}"></a>
     {{if $profile.pdesc}}
     {{$profile.pdesc}}
