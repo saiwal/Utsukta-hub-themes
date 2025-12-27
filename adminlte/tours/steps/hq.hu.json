@@ -1,0 +1,121 @@
+[
+    {
+      "title": "Üdvözöljük a HQ-ban!",
+      "text": "Ez az alapértelmezett nyitóoldal.",
+      "buttons": [
+        { "text": "Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Az oldalsáv",
+      "text": "Az oldalsávon néhány gyors hozzáférési link található az alkalmazásokhoz.",
+      "attachTo": { "element": ".app-sidebar", "on": "right" },      
+      "onShow": "expandSidebar",
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Világos/sötét mód váltás",
+      "text": "Ezekkel a gombokkal válthat a világos/sötét mód között. Próbálja ki a világos/sötét módok közötti váltást a gombokra kattintva.",
+      "attachTo": { "element": "#bd-theme", "on": "right" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Rögzített alkalmazások",
+      "text": "A rögzített alkalmazások ebben a menüben jelennek meg.",
+      "attachTo": { "element": "#pinned-apps", "on": "right" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Kiemelt alkalmazások",
+      "text": "Az Ön kiemelt alkalmazásai itt jelennek meg.",
+      "attachTo": { "element": "#featured-apps", "on": "right" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Alkalmazások kezelése",
+      "text": "További alkalmazásokat telepíthetsz, rögzíthetsz, és az oldalsávon megjelenítheted őket ezzel a linkkel.",
+      "attachTo": { "element": "#manage-apps", "on": "right" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "A fejléc",
+      "text": "A fejléc tartalmaz gombokat az oldalsáv láthatóságának be- és kikapcsolásához, az aktuális helyhez és egyéb gyors linkekhez.",
+      "attachTo": { "element": ".app-header", "on": "bottom" },     
+      "onShow": "collapseSidebar",
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+
+    },
+    {
+      "title": "Oldalsáv váltása",
+      "text": "Az oldalsáv kibontott/mini változat között váltható, kisebb képernyőn az oldalsáv el van rejtve, és ezzel a gombbal érhető el.",
+      "attachTo": { "element": "#toggle-sidebar", "on": "bottom" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Keresés gomb",
+      "text": "Gyorsan kereshet névjegyeket, hashtageket, fórumokat és súgó fájlokat.",
+      "attachTo": { "element": "#nav-search-btn", "on": "bottom" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Értesítések",
+      "text": "Az értesítések ehhez a legördülő menü segítségével érhetők el.",
+      "attachTo": { "element": "#notifications-btn-1", "on": "bottom" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Felhasználói menü",
+      "text": "Itt megtekintheti/szerkesztheti profiljait, átválthat más csatornákra, megtekintheti a beállításokat vagy kijelentkezhet.",
+      "attachTo": { "element": ".user-menu", "on": "bottom" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Tevékenységek áttekintése",
+      "text": "A legutóbb feltöltött fotóid, bejegyzéseid, weboldalaid, wiki oldalaid stb. itt jelennek meg.",
+      "attachTo": { "element": "#channel-activities", "on": "right" },     
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Következő", "action": "next" }
+      ]
+    },
+    {
+      "title": "Üzenetek widget",
+      "text": "Ez a widget megmutatja a hálózatod legújabb bejegyzéseit, közvetlen üzeneteidet, megjelölt bejegyzéseidet (ha engedélyezve van), mentett mappáidat (ha engedélyezve van) és értesítéseidet.",
+      "attachTo": { "element": "#messages-widget", "on": "left" },     
+      "onShow": "toggleOffcanvas",
+      "buttons": [
+        {"text":"Vissza", "action": "back" },
+        {"text":"Befejezni a túrát", "action": "cancel" }
+      ]
+    }
+ ]
