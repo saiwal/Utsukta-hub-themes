@@ -1,121 +1,121 @@
 [
     {
-      "title": "Welcome to DE HQ!",
-      "text": "This is your default landing page.",
+      "title": "Willkommen im Hauptquartier (HQ)!",
+      "text": "Dies ist Ihre Standard-Startseite.",
       "buttons": [
-        { "text": "Next", "action": "next" }
+        { "text": "Weiter", "action": "next" }
       ]
     },
     {
-      "title": "The sidebar",
-      "text": "The sidebar shows your some quick access links for your apps.",
+      "title": "Die Seitenleiste",
+      "text": "Die Seitenleiste zeigt Ihnen einige Schnellzugriffslinks für Ihre Apps.",
       "attachTo": { "element": ".app-sidebar", "on": "right" },      
       "onShow": "expandSidebar",
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Light/Dark mode toggle",
-      "text": "You can toggle light/dark mode using these buttons. Try toggling between light/dark modes by clicking on them.",
+      "title": "Hell-/Dunkelmodus umschalten",
+      "text": "Mit diesen Schaltflächen können Sie zwischen Hell- und Dunkelmodus wechseln. Probieren Sie es aus, indem Sie auf die Schaltflächen klicken.",
       "attachTo": { "element": "#bd-theme", "on": "right" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Pinned Apps",
-      "text": "Your pinned apps are shown under this menu",
+      "title": "Angeheftete Apps",
+      "text": "Ihre angehefteten Apps werden in diesem Menü angezeigt.",
       "attachTo": { "element": "#pinned-apps", "on": "right" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Featured Apps",
-      "text": "Your featured apps are shown here.",
+      "title": "Ausgewählte Apps",
+      "text": "Ihre ausgewählten Apps werden hier angezeigt.",
       "attachTo": { "element": "#featured-apps", "on": "right" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Manage apps",
-      "text": "You can install more apps, pin them, feature them on the sidebar using this link.",
+      "title": "Apps verwalten",
+      "text": "Über diesen Link können Sie weitere Apps installieren, sie anheften und in der Seitenleiste anzeigen lassen.",
       "attachTo": { "element": "#manage-apps", "on": "right" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "The Header",
-      "text": "The header contains buttons for toggling the sidebar visibility, your current location, and other quick links.",
+      "title": "Die Kopfzeile",
+      "text": "Die Kopfzeile enthält Schaltflächen zum Ein- und Ausblenden der Seitenleiste, Ihren aktuellen Ort und andere Schnelllinks.",
       "attachTo": { "element": ".app-header", "on": "bottom" },     
       "onShow": "collapseSidebar",
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
 
     },
     {
-      "title": "Toggle Sidebar",
-      "text": "The sidebar can be toggled between expanded/mini version and on smaller screen the sidebar is hidden and can be accessed using this button.",
+      "title": "Seitenleiste umschalten",
+      "text": "Die Seitenleiste kann zwischen der erweiterten und der verkleinerten Version umgeschaltet werden. Auf kleineren Bildschirmen ist die Seitenleiste ausgeblendet und kann über diese Schaltfläche aufgerufen werden.",
       "attachTo": { "element": "#toggle-sidebar", "on": "bottom" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Search button",
-      "text": "You can quickly search contacts, hashtags, forums and help files.",
+      "title": "Suchschaltfläche",
+      "text": "Sie können Kontakte, Hashtags, Foren und Hilfedateien schnell durchsuchen.",
       "attachTo": { "element": "#nav-search-btn", "on": "bottom" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Notifications",
-      "text": "Your notifications can be accessed using this dropdown.",
+      "title": "Benachrichtigungen",
+      "text": "Über dieses Dropdown-Menü können Sie auf Ihre Benachrichtigungen zugreifen.",
       "attachTo": { "element": "#notifications-btn-1", "on": "bottom" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "User Menu",
-      "text": "You can view/edit your profile(s), switch to other channels, view settings or logout from here",
+      "title": "Benutzermenü",
+      "text": "Hier können Sie ihr(e) Profil(e) anzeigen/bearbeiten, zu anderen Kanälen wechseln, Einstellungen anzeigen oder sich abmelden.",
       "attachTo": { "element": ".user-menu", "on": "bottom" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Activity Overview",
-      "text": "Your recently uploaded photos, posts, webpages, wiki pages, etc are shown here.",
+      "title": "Aktivitätenübersicht",
+      "text": "Ihre kürzlich hochgeladenen Fotos, Beiträge, Webseiten, Wiki-Seiten usw. werden hier angezeigt.",
       "attachTo": { "element": "#channel-activities", "on": "right" },     
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Next", "action": "next" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Weiter", "action": "next" }
       ]
     },
     {
-      "title": "Messages Widget",
-      "text": "This widget shows you recent posts from your network, direct messages, starred posts(if enabled), saved folders(if enabled) and notification.",
+      "title": "Nachrichten-Widget",
+      "text": "Dieses Widget zeigt Ihnen die neuesten Beiträge aus Ihrem Netzwerk, Direktnachrichten, mit Stern markierte Beiträge (falls aktiviert), gespeicherte Ordner (falls aktiviert) und Benachrichtigungen an.",
       "attachTo": { "element": "#messages-widget", "on": "left" },     
       "onShow": "toggleOffcanvas",
       "buttons": [
-        {"text":"Back", "action": "back" },
-        {"text":"Close", "action": "cancel" }
+        {"text":"Zurück", "action": "back" },
+        {"text":"Tour beenden", "action": "cancel" }
       ]
     }
  ]
