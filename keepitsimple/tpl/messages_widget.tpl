@@ -1,4 +1,4 @@
-<ul class="nav nav-underline stats-tabs d-flex justify-content-center mb-0 pt-3 shadow">
+<ul class="nav nav-underline d-flex justify-content-around mb-0 pt-3 shadow h5">
   <li class="nav-item">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
@@ -59,14 +59,14 @@
 
     <div id="messages-author-container" class="list-group-item notifications-textinput">
       <!-- <div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div> -->
-      <input id="messages-author" type="text" class="u-fullwidth" placeholder="{{$strings.filter}}">
+      <input id="messages-author" type="text" class="h-full-width" placeholder="{{$strings.filter}}">
       <div id="messages-author-input-clear" class="text-muted notifications-textinput-clear d-none"><i
           class="bi bi-x-lg"></i></div>
     </div>
     {{if $feature_file}}
     <div id="messages-file-container" class="list-group-item notifications-textinput d-none">
       <div class="ss-custom-select">
-        <select id="messages-file" class="u-fullwidth">
+        <select id="messages-file" class="h-full-width">
           <option value="">{{$strings.file_filter}}</option>
           {{foreach $file_tags as $opt=>$val}}
           <option value="{{$val}}">{{$val}}</option>

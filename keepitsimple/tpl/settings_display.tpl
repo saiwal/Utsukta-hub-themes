@@ -9,11 +9,11 @@
 			{{if $theme}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="theme-settings-title">
-					<h2 class="accordion-header mt-0">
+					<h5 class="accordion-header mt-0">
 						<button class="accordion-button m-0" type="button" data-bs-toggle="collapse" data-bs-target="#theme-settings-content" aria-expanded="true" aria-controls="theme-settings-content">
 							{{$d_tset}}
 						</button>
-					</h2>
+					</h5>
 				</div>
 				<div id="theme-settings-content" class="accordion-collapse collapse show" data-bs-parent="#settings" >
 					<div class="section-content-tools-wrapper accordion-body">
@@ -33,11 +33,11 @@
 			{{if $theme_config}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="custom-settings-title">
-					<h2 class="accordion-header mt-0">
+					<h5 class="accordion-header mt-0">
 						<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#custom-settings-content"  aria-controls="custom-settings-content">
 							{{$d_ctset}}
 						</button>
-					</h2>
+					</h5>
 				</div>
 				<div id="custom-settings-content" class="accordion-collapse collapse{{if !$theme}} in{{/if}}" data-bs-parent="#settings" >
 					<div class="section-content-tools-wrapper accordion-body">
@@ -48,11 +48,11 @@
 			{{/if}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="content-settings-title">
-					<h2 class="accordion-header mt-0">
+					<h5 class="accordion-header mt-0">
 						<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#content-settings-content" aria-controls="content-settings-content">
 							{{$d_cset}}
 						</button>
-					</h2>
+					</h5>
 				</div>
 				<div id="content-settings-content" class="accordion-collapse collapse{{if !$theme && !$theme_config}} in{{/if}}" data-bs-parent="#settings">
           <div class="section-content-wrapper accordion-body">

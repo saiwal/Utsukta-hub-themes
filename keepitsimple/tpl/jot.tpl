@@ -4,7 +4,7 @@
 
 <input id="invisible-wall-file-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
 <input id="invisible-comment-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
-<form id="profile-jot-form" action="{{$action}}" method="post" class="acl-form mb-3" data-form_id="profile-jot-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}' data-bang='{{$bang}}'>
+<form id="profile-jot-form" action="{{$action}}" method="post" class="acl-form mb-3 mt-5" data-form_id="profile-jot-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}' data-bang='{{$bang}}'>
 	{{$mimeselect}}
 	{{$layoutselect}}
 	{{if $id_select}}

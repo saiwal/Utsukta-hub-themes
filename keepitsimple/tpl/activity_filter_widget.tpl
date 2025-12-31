@@ -1,4 +1,4 @@
-  <div class="h5">
+  <div class="h6">
     <span class="d-flex justify-content-between align-items-center">
       {{$title}}
       {{if $reset}}

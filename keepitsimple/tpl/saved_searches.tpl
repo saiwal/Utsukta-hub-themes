@@ -1,5 +1,5 @@
 <div class="clearfix mb-3">
-    <h5 id="search">{{$title}}</h5>
+    <h6 id="search">{{$title}}</h6>
   <p>
 	{{$searchbox}}
 	<ul id="saved-search-list" class="nav nav-pills flex-column">

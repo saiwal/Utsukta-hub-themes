@@ -1,6 +1,6 @@
 <div class="{{if $class}} {{$class}}{{/if}} mb-3">
   {{if $title}}
-  <div class="h5">
+  <div class="h6">
     {{$title}}
   </div>
   {{/if}}

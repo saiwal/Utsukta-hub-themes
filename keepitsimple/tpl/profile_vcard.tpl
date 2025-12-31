@@ -1,12 +1,12 @@
 <div class="mb-3">
 
-  <div class="h4 m-2">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
+  <div class="h5">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
       title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
       title="{{$profile.online}}"></i>{{/if}}
   </div>
-  <div class="h5 mt-0 text-muted">{{$profile.reddress}}</div>
+  <div class="h6 small mt-0 text-muted">{{$profile.reddress}}</div>
   <p>
-    <a href="#"><img width="80" height="80" class="u-pull-left" alt="sample-image" src="{{$profile.thumb}}"></a>
+    <a href="#"><img width="80" height="80" class="h-pull-left" alt="sample-image" src="{{$profile.thumb}}"></a>
     {{if $profile.pdesc}}
     {{$profile.pdesc}}
     {{else}}

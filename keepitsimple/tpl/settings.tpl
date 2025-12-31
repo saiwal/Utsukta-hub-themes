@@ -10,11 +10,11 @@
 		<div class="accordion" id="settings" role="tablist" aria-multiselectable="true">
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="basic-settings">
-					<h2 class="accordion-header mt-0">
+					<h5 class="accordion-header mt-0">
 							<button class="accordion-button m-0" type="button" data-bs-toggle="collapse" data-bs-target="#basic-settings-collapse" aria-expanded="true" aria-controls="basic-settings-collapse">
 							{{$h_basic}}
 						</button>
-					</h2>
+					</h5>
 				</div>
 				<div id="basic-settings-collapse" class="accordion-collapse collapse show" data-bs-parent="#settings">
 					<div class="section-content-tools-wrapper accordion-body">
@@ -41,11 +41,11 @@
 			</div>
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="notification-settings">
-					<h2 class="accordion-header mt-0">
+					<h5 class="accordion-header mt-0">
 							<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#notification-settings-collapse" aria-controls="notification-settings-collapse">
 							{{$h_not}}
 						</a>
-					</h2>
+					</h5>
 				</div>
 				<div id="notification-settings-collapse" class="accordion-collapse collapse" data-bs-parent="#settings">
 					<div class="section-content-tools-wrapper accordion-body">
@@ -58,14 +58,14 @@
 
 							{{include file="field_input.tpl" field=$mailhost}}
 
-							<h3>{{$activity_options}}</h3>
+							<h5>{{$activity_options}}</h5>
 							<div class="group">
 								{{*not yet implemented *}}
 								{{*include file="field_checkbox.tpl" field=$post_joingroup*}}
 								{{include file="field_checkbox.tpl" field=$post_newfriend}}
 								{{include file="field_checkbox.tpl" field=$post_profilechange}}
 							</div>
-							<h3>{{$lbl_not}}</h3>
+							<h5>{{$lbl_not}}</h5>
 							<div class="group">
 								{{include file="field_intcheckbox.tpl" field=$notify1}}
 								{{include file="field_intcheckbox.tpl" field=$notify2}}
@@ -77,7 +77,7 @@
 								{{include file="field_intcheckbox.tpl" field=$notify7}}
 								{{include file="field_intcheckbox.tpl" field=$notify8}}
 							</div>
-							<h3>{{$lbl_vnot}}</h3>
+							<h5>{{$lbl_vnot}}</h5>
 							<div class="group">
 								{{include file="field_intcheckbox.tpl" field=$vnotify1}}
 								{{include file="field_intcheckbox.tpl" field=$vnotify2}}

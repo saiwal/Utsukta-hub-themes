@@ -4,3 +4,21 @@
 .page-content h3 {
   margin-top: 0;
 }
+
+#profile-jot-text, #jot-title-wrap input {
+padding: 1.3rem 23px 1.5rem;
+}
+.bootstrap-tagsinput {
+  background-color: #fff;
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  display: inline-block;
+  padding: 0px;
+  margin-bottom: 10px;
+  color: #555;
+  vertical-align: middle;
+  border-radius: 4px;
+  max-width: 100%;
+  line-height: 22px;
+  cursor: text;
+}
