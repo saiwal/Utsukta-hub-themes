@@ -70,8 +70,7 @@
             <div class="row">
                 <div class="column large-full footer__content">
                     <div class="footer__copyright">
-                        <span>© Copyright Typerite 2021</span> 
-                        <span>Design by <a href="https://www.styleshout.com/">StyleShout</a></span>
+                        <span>Design by <a href="https://www.styleshout.com/">StyleShout</a> Adapted for Hubzilla</span>
                     </div>
                 </div>
             </div>

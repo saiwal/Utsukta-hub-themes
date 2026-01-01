@@ -109,8 +109,7 @@
             <?php if (x($page, 'footer')) echo $page['footer']; ?>
            
             <div class="ss-copyright">
-                <span>© Copyright Keep It Simple 2019</span> 
-                <span>Design by <a href="https://www.styleshout.com/">StyleShout</a></span>
+                <span>Design by <a href="https://www.styleshout.com/">StyleShout</a> Adapted for Hubzilla</span>
             </div>
 
         </div> <!-- end footer__bottom -->

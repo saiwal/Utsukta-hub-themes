@@ -93,7 +93,6 @@
 
                 <div class="column lg-12 tab-12">
                     <div class="ss-copyright">
-                        <span>© Copyright Spurgeon 2021</span> 
                         <span>Design by <a href="https://www.styleshout.com/">StyleShout</a>, Adapted for Hubzilla</span>
                     </div>
                 </div>

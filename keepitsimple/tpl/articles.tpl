@@ -1,4 +1,4 @@
-<div id="live-articles" class="h3"></div>
+<div id="live-articles"></div>
 {{$editor}}
 {{$content}}
 {{$pager}}
