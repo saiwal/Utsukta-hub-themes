@@ -1,4 +1,4 @@
-<div class="event-item-title h3">
+<div class="event-item-title h1">
 	<i class="bi bi-calendar3"></i>&nbsp;{{$title}}
 </div>
 <div class="entry__meta">
