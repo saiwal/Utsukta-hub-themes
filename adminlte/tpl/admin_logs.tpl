@@ -17,8 +17,8 @@
     </form>
 
     <h4>{{$logname}}</h4>
-    <div style="width:100%; height:400px; overflow: auto; ">
-      <pre>{{$data}}</pre>
+    <div class="border border-1 border-info">
+      <pre style="width:100%; height:400px; overflow: auto;">{{$data}}</pre>
     </div>
   </div>
 </div>
