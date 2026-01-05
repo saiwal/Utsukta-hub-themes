@@ -1,11 +1,9 @@
-<div class="card card-outline card-success mb-3">
-  <div class="card-header">
+  <div class="h6">
     {{$title}}
       </div>
   <!-- /.card-header -->
   {{if $options}}
-  <div class="card-body p-0">
-    <div class="accordion" id="accordion_{{$title|replace:' ':'_'}}">
+    <div class="accordion accordion-flush" id="accordion_{{$title|replace:' ':'_'}}">
     {{assign var=prev_title value=''}}
     {{foreach $options as $key => $value}}
     {{if is_array($value)}}
@@ -37,6 +35,4 @@
     {{/if}}
     {{/foreach}}
   </div>
-  </div>
   {{/if}}
-</div>

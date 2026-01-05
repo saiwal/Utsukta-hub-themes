@@ -1,6 +1,5 @@
-<div class="generic-content-wrapper card">
-  <div class="card-header">{{$ptitle}}</div>
-  <div class="card-body">
+<div class="generic-content-wrapper">
+  <div class="h3">{{$ptitle}}</div>
     {{$nickname_block}}
     <form action="settings/privacy" id="settings-form" method="post" autocomplete="off">
       <input type='hidden' name='form_security_token' value='{{$form_security_token}}' />
@@ -58,5 +57,4 @@
         </div>
       </div>
     </form>
-  </div>
 </div>
