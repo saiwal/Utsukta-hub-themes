@@ -2,14 +2,14 @@
   <div class="section-title-wrapper app-content-header">
     <h3 class="border-0">{{$title}}</h3>
   </div>
-  <div class="accordion" id="accordionExample">
+  <div class="accordion accordion-flush" id="accordionExample">
     <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+      <h6 class="accordion-header m-0">
+        <button class="accordion-button m-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
           aria-expanded="true" aria-controls="collapseOne">
           {{$page}}
         </button>
-      </h2>
+      </h6>
       <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
         <div class="accordion-body">
           <form action="{{$baseurl}}/admin/site" method="post">
@@ -42,12 +42,12 @@
       </div>
     </div>
     <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo"
+      <h6 class="accordion-header m-0">
+        <button class="accordion-button m-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo"
           aria-expanded="false" aria-controls="collapseTwo">
           {{$registration}}
         </button>
-      </h2>
+      </h6>
       <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
         <div class="accordion-body">
           {{include file="field_input.tpl" field=$register_text}}
@@ -76,12 +76,12 @@
       </div>
     </div>
     <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+      <h6 class="accordion-header m-0">
+        <button class="accordion-button m-0 collapsed" type="button" data-bs-toggle="collapse"
           data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
           {{$corporate}}
         </button>
-      </h2>
+      </h6>
       <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
         <div class="accordion-body">
           {{include file="field_checkbox.tpl" field=$feed_contacts}}
@@ -102,12 +102,12 @@
       </div>
     </div>
     <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+      <h6 class="accordion-header m-0">
+        <button class="accordion-button m-0 collapsed" type="button" data-bs-toggle="collapse"
           data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
           {{$advanced}}
         </button>
-      </h2>
+      </h6>
       <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
         <div class="accordion-body">
           {{include file="field_checkbox.tpl" field=$sse_enabled}}

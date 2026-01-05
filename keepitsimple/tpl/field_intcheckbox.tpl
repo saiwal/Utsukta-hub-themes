@@ -1,4 +1,4 @@
-<label for="id_{{$field.0}}" class="u-add-bottom">{{$field.1}}
+<label for="id_{{$field.0}}" class="h-add-bottom">{{$field.1}}
   <input type="checkbox" class="float-end" name="{{$field.0}}" id="id_{{$field.0}}" value="{{$field.3}}" {{if $field.2}}checked="checked"
     {{/if}}>
   <label class="switchlabel" for="id_{{$field.0}}">

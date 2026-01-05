@@ -3,7 +3,6 @@
     <h3 id="title">{{$title}} - {{$page}}</h3>
   </div>
 
-  <div class="card">
     <div class="card-header">
       <!-- Static A–Z index -->
       <nav id="azIndex" class="small mt-2 user-select-none" aria-label="Alphabetical index">
@@ -70,7 +69,6 @@
         {{/foreach}}
       </div>
     </div>
-  </div>
 
   <style>
     #azIndex a.disabled {

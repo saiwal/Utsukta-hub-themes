@@ -2,7 +2,6 @@
   <div class="section-title-wrapper app-content-header">
     <h3 class="border-0">{{$title}} - {{$page}}</h3>
   </div>
-  <div class="card card-body">
   <p>{{if ! $info.disabled}}<i
       class='toggleplugin bi {{if $status==on}}bi-check-square{{else}}bi-square{{/if}} admin-icons'></i>{{else}}<i
       class='bi fa-stop admin-icons'></i>{{/if}} {{$info.name}} - {{$info.version}}{{if ! $info.disabled}} : <a
@@ -60,5 +59,4 @@
     {{$readme}}
   </div>
   {{/if}}
-</div>
 </div>

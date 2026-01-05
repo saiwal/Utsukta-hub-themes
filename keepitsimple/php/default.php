@@ -69,13 +69,6 @@
 
 
            <div id="sidebar" class="s-content__sidebar large-4 column">
-             <div class="widget widget--search">
-                  <h3 class="h6">Search</h3> 
-                  <form action="#">
-                     <input type="search" value="" onblur="if(this.value == '') { this.value = 'Search here...'; }" onfocus="if (this.value == 'Search here...') { this.value = ''; }" class="text-search" id="nav-search-text">
-                     <input type="submit" value="Search" class="submit-search">
-                  </form>
-               </div>
               <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
               <?php if (x($page, 'aside')) echo $page['aside']; ?>
               
