@@ -1,3 +1,3 @@
 {{foreach $tabs as $tab}}
-<button onclick="playSoundAndRedirect('audio2', '{{$tab.url}}')">{{$tab.label}}</button>
+<button class="{{if $tab.sel}}blink-fast{{/if}}" onclick="playSoundAndRedirect('audio2', '{{$tab.url}}')">{{$tab.label}}</button>
 {{/foreach}}

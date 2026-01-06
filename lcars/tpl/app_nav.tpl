@@ -1,2 +1,1 @@
-<!-- other apps in main sidebar menu -->
-<button onclick="playSoundAndRedirect('audio2', '{{$app.url}}')">{{$app.name}}</button>
+<button class="{{if $app.active}}blink{{/if}}" onclick="playSoundAndRedirect('audio2', '{{$app.url}}')">{{$app.name}}</button>
