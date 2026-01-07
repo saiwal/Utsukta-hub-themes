@@ -36,7 +36,7 @@
 					<!-- Start your content here. -->
 					<?php if(!empty($page['banner'])) echo $page['banner']; ?>
 					<section id="content" class="s-content s-content--page">
-						<div class="container-xl">
+						<div class="container-fluid">
 							<div class="row">
 								<div class="col-lg-8 col-md-12">
 									<div id="region_2">
@@ -60,14 +60,15 @@
 
 				</main>
 				<footer>
+						<div class="lcars-text-bar the-end">
+							<span>Live Long and Prosper</span>
+						</div>
+
 					<!-- Your copyright information is only a suggestion and you can choose to delete it. -->
 					Content &copy; 2025<br>
 
 					<!-- The following attribution must not be removed: -->
 					LCARS Inspired Website Template by <a href="https://www.thelcars.com">www.TheLCARS.com</a> adapted for Hubzilla.				 		 
-						<div class="lcars-text-bar the-end">
-							<span>Live Long and Prosper</span>
-						</div>
 				</footer> 
 			</div>
 		</div>

@@ -1,0 +1,136 @@
+
+/* ===== LCARS THEME ===== */
+.slider-container.theme-lcars {
+    padding: 18px 0;
+    font-family: "Arial Narrow", "Helvetica Neue", sans-serif;
+}
+
+/* Track background */
+.slider-container.theme-lcars .back-bar {
+    height: 14px;
+    background: #2c2c2c;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+/* Active range */
+.slider-container.theme-lcars .selected-bar {
+    background: linear-gradient(
+        90deg,
+        #ff9f1c 0%,
+        #ffbf69 50%,
+        #ff9f1c 100%
+    );
+    border-radius: 14px;
+}
+
+/* End caps for LCARS look */
+.slider-container.theme-lcars .back-bar::before,
+.slider-container.theme-lcars .back-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 18px;
+    height: 14px;
+    background: #ff9f1c;
+}
+
+.slider-container.theme-lcars .back-bar::before {
+    left: -18px;
+    border-radius: 14px 0 0 14px;
+}
+
+.slider-container.theme-lcars .back-bar::after {
+    right: -18px;
+    border-radius: 0 14px 14px 0;
+}
+
+/* Handles */
+.slider-container.theme-lcars .pointer {
+    width: 26px;
+    height: 18px;
+    top: -2px;
+    background: #c77dff;
+    border-radius: 10px 2px 10px 2px;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+/* Left handle */
+.slider-container.theme-lcars .pointer.low {
+    background: #5dade2;
+}
+
+/* Right handle */
+.slider-container.theme-lcars .pointer.high {
+    background: #ff6f61;
+}
+
+/* Hover effect */
+.slider-container.theme-lcars .pointer:hover {
+    filter: brightness(1.1);
+}
+
+/* Active drag */
+.slider-container.theme-lcars .pointer:active {
+    filter: brightness(1.25);
+}
+
+/* Scale labels */
+.slider-container.theme-lcars .scale ins {
+    font-size: 10px;
+    color: #ffbf69;
+    letter-spacing: 1px;
+    top: 22px;
+}
+
+/* Selected scale label */
+.slider-container.theme-lcars .scale ins.selected {
+    color: #ffffff;
+}
+
+/* Optional smooth movement */
+.slider-container.theme-lcars .selected-bar,
+.slider-container.theme-lcars .pointer {
+    transition: left 0.15s linear, width 0.15s linear;
+}
+a {
+  text-decoration: none;
+}
+.generic-icons-nav {
+	padding-right: 1rem;
+}
+
+.pill:nth-child(6n + 1),
+.pillbox a:nth-child(6n + 1) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-1-color);
+}
+
+.pill:nth-child(6n + 2),
+.pillbox a:nth-child(6n + 2) {
+    background-color: var(--pill-2-color);
+}
+
+.pill:nth-child(6n + 3),
+.pillbox a:nth-child(6n + 3) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-3-color);
+}
+
+.pill:nth-child(6n + 4),
+.pillbox a:nth-child(6n + 4) {
+    background-color: var(--pill-4-color);
+}
+
+.pill:nth-child(6n + 5),
+.pillbox a:nth-child(6n + 5) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-5-color);
+}
+
+.pill:nth-child(6n),
+.pillbox a:nth-child(6n) {
+    background-color: var(--pill-6-color);
+}

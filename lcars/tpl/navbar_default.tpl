@@ -40,7 +40,9 @@
 			<span class="go-big">{{$sitelocation}}</span>
 			{{else}}
 			<a href="{{$url}}"> • {{$sel.name}}</a>
+			{{if $settings_url}}
 			<a href="{{$settings_url}}/?f=&rpath={{$url}}" class="go-big"><i class="bi bi-gear"></i></a>
+			{{/if}}
 			{{/if}}
 			{{/if}}
 			{{/if}}
@@ -356,7 +358,7 @@
 </div>
 <div class="wrap" id="gap">
 	<div class="left-frame">
-		<button onclick="topFunction(); playSoundAndRedirect('audio4', '#')" id="topBtn"><span class="hop">screen</span>
+		<button onclick="topFunction(); playSound('audio4')" id="topBtn"><span class="hop">screen</span>
 			top</button>
 		<div>
 			{{if $userinfo}}
@@ -421,9 +423,6 @@
 				title="{{$nav.register.3}}">{{$nav.register.1}}</button>
 			{{/if}}
 			{{/if}}
-			<div class="panel-6">06<span class="hop">-071984</span></div>
-			<div class="panel-7">07<span class="hop">-081940</span></div>
-			<div class="panel-8">08<span class="hop">-47148</span></div>
 		</div>
 		<div>
 			<button onclick="playSoundAndRedirect('audio3','/siteinfo')" class="panel-button panel-10"><span
