@@ -1,9 +1,9 @@
-  <div class="h5">
-    {{$title}}
-  </div>
+<div class="lcars-text-bar">
+	<span>{{$title}}</span>
+</div>
   <!-- /.card-header -->
   {{if $options}}
-  <div class="accordion" id="accordion_{{$title|replace:' ':'_'}}">
+    <div class="accordion accordion-flush" id="accordion_{{$title|replace:' ':'_'}}">
     {{assign var=prev_title value=''}}
     {{foreach $options as $key => $value}}
     {{if is_array($value)}}
@@ -18,8 +18,8 @@
       </div>
       <div id="collapse_{{$uid}}" class="accordion-collapse collapse" aria-labelledby="heading_{{$uid}}"
         data-bs-parent="#accordion_{{$title|replace:' ':'_'}}">
-        <div class="accordion-body">
-          <ul class="list-group list-group-flush m-0">
+        <div class="accordion-body p-3">
+          <ul class="list-group list-group-flush">
             {{foreach $value as $subkey => $subval}}
             <li class="list-group-item list-group-item-action">
               <a href="{{$subkey}}">{{$subval}}</a>

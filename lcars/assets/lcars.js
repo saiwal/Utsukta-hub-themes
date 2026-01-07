@@ -20,6 +20,10 @@ function playSoundAndRedirect(audioId, url) {
         window.location.href = url;
     };
 }
+function playSound(audioId) {
+    var audio = document.getElementById(audioId);
+    audio.play();
+}
 function goToAnchor(anchorId) {
   window.location.hash = anchorId;
 }
