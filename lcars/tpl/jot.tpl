@@ -2,6 +2,10 @@
 <div id="jot-popup" style="display:none">
 {{/if}}
 
+  <div class="lcars-text-bar">
+		<span>What's on your mind?</span>
+  </div>
+
 <input id="invisible-wall-file-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
 <input id="invisible-comment-upload" type="file" name="files" style="visibility:hidden;position:absolute;top:-50;left:-50;width:0;height:0;" multiple>
 <form id="profile-jot-form" action="{{$action}}" method="post" class="acl-form mb-3" data-form_id="profile-jot-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}' data-bang='{{$bang}}'>
@@ -35,19 +39,19 @@
 
 
 		<div id="jot-title-wrap" class="jothidden border-0">
-			<input class="w-100" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
+			<input class="w-100 mb-1 form-control" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
 		</div>
 		<div id="jot-summary-wrap" class="jothidden border-0">
-            <textarea class="w-100" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
+            <textarea class="w-100 mb-1 form-control" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
 		</div>
 		{{if $catsenabled}}
 		<div id="jot-category-wrap" class="jothidden border-0">
-			<input class="w-100" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
+			<input class="w-100 mb-1 form-control" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
 		</div>
 		{{/if}}
 		{{if $webpage}}
 		<div id="jot-pagetitle-wrap" class="jothidden border-0">
-			<input class="w-100 " name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
+			<input class="w-100 mb-1 form-control" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
 		</div>
 		{{/if}}
 		{{if $customjotheaders}}
@@ -56,17 +60,17 @@
 		</div>
 		{{/if}}
 		<div id="jot-text-wrap" class="border-0">
-			<div id="profile-jot-tools" class="btn-group p-2 d-none">
+			<div id="profile-jot-tools" class="btn-group input-group-text p-0 d-none">
 				{{if $is_owner}}
-				<a id="profile-jot-settings" class="pe-3" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
+				<a id="profile-jot-settings" class="btn btn-link btn-sm" href="/settings/editor/?f=&rpath=/{{$return_path}}" tabindex="4"><i class="bi bi-gear"></i></a>
 				{{/if}}
 				{{if $reset}}
-				<a type="button" id="profile-jot-reset" class="pe-3" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
+				<button type="button" id="profile-jot-reset" class="btn btn-link btn-sm" title="{{$reset}}" tabindex="-1" onclick="itemCancel(); return false;">
 					<i class="bi bi-x-lg"></i>
-				</a>
+				</button>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 " id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3" type="text">{{$content}}</textarea>
+			<textarea class="profile-jot-text border-1 form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">
@@ -76,23 +80,23 @@
 		<div id="jot-poll-wrap" class="pt-3 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 " name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 " name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
 			<div id="jot-poll-tools" class="clearfix">
 				<div id="poll-tools-left" class="float-start">
-					<a id="jot-add-option" class="pe-3" type="button">
+					<button id="jot-add-option" class="btn btn-link btn-sm" type="button">
 						<i class="bi bi-plus-lg"></i> {{$poll_add_option_label}}
-					</a>
+					</button>
 				</div>
 				<div id="poll-tools-right" class="float-end">
 					<div class="input-group">
-						<input type="text" name="poll_expire_value" class="" value="10" size="3">
-						<select class="" id="duration-select" name="poll_expire_unit">
+						<input type="text" name="poll_expire_value" class="form-control" value="10" size="3">
+						<select class="form-control" id="duration-select" name="poll_expire_unit">
 							<option value="Minutes">{{$poll_expire_unit_label.0}}</option>
 							<option value="Hours">{{$poll_expire_unit_label.1}}</option>
 							<option value="Days" selected="selected">{{$poll_expire_unit_label.2}}</option>
@@ -101,84 +105,84 @@
 				</div>
 			</div>
 		</div>
-		<div id="profile-jot-submit-wrapper" class="clearfix pt-2 jothidden border-0 justify-items-between">
-			<div id="profile-jot-submit-left" class="float-start d-flex">
+		<div id="profile-jot-submit-wrapper" class="clearfix pt-2 jothidden border-0">
+			<div id="profile-jot-submit-left" class="btn-toolbar float-start">
 				{{if $bbcode}}
 				<div class="btn-group me-2">
-					<a type="button" id="main-editor-bold" class="pe-3 border-0" title="{{$bold}}" onclick="inserteditortag('b', 'profile-jot-text'); return false;">
+					<button type="button" id="main-editor-bold" class="btn btn-link  btn-sm border-0" title="{{$bold}}" onclick="inserteditortag('b', 'profile-jot-text'); return false;">
 						<i class="bi bi-type-bold jot-icons"></i>
-					</a>
-					<a type="button" id="main-editor-italic" class="pe-3 border-0" title="{{$italic}}" onclick="inserteditortag('i', 'profile-jot-text'); return false;">
+					</button>
+					<button type="button" id="main-editor-italic" class="btn btn-link btn-sm border-0" title="{{$italic}}" onclick="inserteditortag('i', 'profile-jot-text'); return false;">
 						<i class="bi bi-type-italic jot-icons"></i>
-					</a>
-					<a type="button" id="main-editor-underline" class="pe-3 border-0" title="{{$underline}}" onclick="inserteditortag('u', 'profile-jot-text'); return false;">
+					</button>
+					<button type="button" id="main-editor-underline" class="btn btn-link btn-sm border-0" title="{{$underline}}" onclick="inserteditortag('u', 'profile-jot-text'); return false;">
 						<i class="bi bi-type-underline jot-icons"></i>
-					</a>
-					<a type="button" id="main-editor-quote" class="pe-3 border-0" title="{{$quote}}" onclick="inserteditortag('quote', 'profile-jot-text'); return false;">
+					</button>
+					<button type="button" id="main-editor-quote" class="btn btn-link btn-sm border-0" title="{{$quote}}" onclick="inserteditortag('quote', 'profile-jot-text'); return false;">
 						<i class="bi bi-quote jot-icons"></i>
-					</a>
-					<a type="button" id="main-editor-code" class="pe-3 border-0" title="{{$code}}" onclick="inserteditortag('code', 'profile-jot-text'); return false;">
+					</button>
+					<button type="button" id="main-editor-code" class="btn btn-link btn-sm border-0" title="{{$code}}" onclick="inserteditortag('code', 'profile-jot-text'); return false;">
 						<i class="bi bi-code jot-icons"></i>
-					</a>
-					<a type="button" id="main-editor-bold" class="pe-3 border-0" title="{{$highlighter}}" onclick="inserteditortag('mark', 'profile-jot-text'); return false;">
+					</button>
+					<button type="button" id="main-editor-bold" class="btn btn-link btn-sm border-0" title="{{$highlighter}}" onclick="inserteditortag('mark', 'profile-jot-text'); return false;">
 						<i class="bi bi-highlighter jot-icons"></i>
-					</a>
+					</button>
 				</div>
 				{{/if}}
 				{{if $visitor}}
 				<div class="btn-group me-2 d-none d-lg-flex">
 					{{if $writefiles}}
-					<a type="button" id="wall-file-upload" class="pe-3 border-0" title="{{$attach}}" >
+					<button type="button" id="wall-file-upload" class="btn btn-link btn-sm border-0" title="{{$attach}}" >
 						<i id="wall-file-upload-icon" class="bi bi-paperclip jot-icons"></i>
-					</a>
+					</button>
 					{{/if}}
 					{{if $embedPhotos}}
-					<a type="button" id="embed-photo-wrapper" class="pe-3 border-0" title="{{$embedPhotos}}" onclick="initializeEmbedPhotoDialog();return false;">
+					<button type="button" id="embed-photo-wrapper" class="btn btn-link btn-sm border-0" title="{{$embedPhotos}}" onclick="initializeEmbedPhotoDialog();return false;">
 						<i id="embed-photo" class="bi bi-file-image jot-icons"></i>
-					</a>
+					</button>
 					{{/if}}
 					{{if $weblink}}
-					<a type="button" id="profile-link-wrapper" class="pe-3 border-0" title="{{$weblink}}" ondragenter="linkdropper(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);"  onclick="jotGetLink(); return false;">
+					<button type="button" id="profile-link-wrapper" class="btn btn-link btn-sm border-0" title="{{$weblink}}" ondragenter="linkdropper(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);"  onclick="jotGetLink(); return false;">
 						<i id="profile-link" class="bi bi-link-45deg jot-icons"></i>
-					</a>
+					</button>
 					{{/if}}
 				</div>
 				<div class="btn-group me-2 d-none d-lg-flex">
 					{{if $setloc}}
-					<a type="button" id="profile-location-wrapper" class="pe-3 border-0" title="{{$setloc}}" onclick="jotGetLocation();return false;">
+					<button type="button" id="profile-location-wrapper" class="btn btn-link btn-sm border-0" title="{{$setloc}}" onclick="jotGetLocation();return false;">
 						<i id="profile-location" class="bi bi-geo-alt-fill jot-icons"></i>
-					</a>
+					</button>
 					{{/if}}
 					{{if $clearloc}}
-					<a type="button" id="profile-nolocation-wrapper" class="pe-3 border-0" title="{{$clearloc}}" onclick="jotClearLocation();return false;" disabled="disabled">
+					<button type="button" id="profile-nolocation-wrapper" class="btn btn-link btn-sm border-0" title="{{$clearloc}}" onclick="jotClearLocation();return false;" disabled="disabled">
 						<i id="profile-nolocation" class="bi bi-geo-alt jot-icons"></i>
-					</a>
+					</button>
 					{{/if}}
 				{{else}}
 				<div class="btn-group d-none d-lg-flex">
 				{{/if}}
 				{{if $feature_expire}}
-					<a type="button" id="profile-expire-wrapper" class="pe-3 border-0" title="{{$expires}}" onclick="jotGetExpiry();return false;">
+					<button type="button" id="profile-expire-wrapper" class="btn btn-link btn-sm border-0" title="{{$expires}}" onclick="jotGetExpiry();return false;">
 						<i id="profile-expires" class="bi bi-eraser jot-icons"></i>
-					</a>
+					</button>
 				{{/if}}
 				{{if $feature_future}}
-					<a type="button" id="profile-future-wrapper" class="pe-3 border-0" title="{{$future_txt}}" onclick="jotGetPubDate();return false;">
+					<button type="button" id="profile-future-wrapper" class="btn btn-link btn-sm border-0" title="{{$future_txt}}" onclick="jotGetPubDate();return false;">
 						<i id="profile-future" class="bi bi-clock jot-icons"></i>
-					</a>
+					</button>
 				{{/if}}
 				{{if $feature_encrypt}}
-					<a type="button" id="profile-encrypt-wrapper" class="pe-3 border-0" title="{{$encrypt}}" onclick="sodium_encrypt('#profile-jot-text'); return false;">
+					<button type="button" id="profile-encrypt-wrapper" class="btn btn-link btn-sm border-0" title="{{$encrypt}}" onclick="sodium_encrypt('#profile-jot-text'); return false;">
 						<i id="profile-encrypt" class="bi bi-key jot-icons"></i>
-					</a>
+					</button>
 				{{/if}}
-					<a type="button" id="profile-poll-wrapper" class="pe-3 border-0" title="{{$poll}}" onclick="initPoll();">
+					<button type="button" id="profile-poll-wrapper" class="btn btn-link btn-sm border-0" title="{{$poll}}" onclick="initPoll();">
 						<i id="profile-poll" class="bi bi-bar-chart jot-icons"></i>
-					</a>
+					</button>
 				{{if $feature_nocomment}}
-					<a type="button" id="profile-nocomment-wrapper" class="pe-3 border-0" title="{{$nocommenttitle}}" onclick="toggleNoComment();return false;">
+					<button type="button" id="profile-nocomment-wrapper" class="btn btn-link btn-sm border-0" title="{{$nocommenttitle}}" onclick="toggleNoComment();return false;">
 						<i id="profile-nocomment" class="bi{{if $nocomment}} bi-chat{{else}} bi-chat-dots{{/if}} jot-icons"></i>
-					</a>
+					</button>
 				{{/if}}
 				{{if $custommoretoolsbuttons}}
 					{{$custommoretoolsbuttons}}
@@ -186,9 +190,9 @@
 				</div>
 				{{if $writefiles || $weblink || $setloc || $clearloc || $feature_expire || $feature_encrypt || $custommoretoolsdropdown}}
 				<div class="btn-group d-lg-none">
-					<a type="button" id="more-tools" class="pe-3 border-0 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+					<button type="button" id="more-tools" class="btn btn-link btn-sm border-0 dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
 						<i id="more-tools-icon" class="bi bi-gear jot-icons"></i>
-					</a>
+					</button>
 					<div class="dropdown-menu">
 						{{if $visitor}}
 						{{if $writefiles}}
@@ -231,28 +235,28 @@
 					</div>
 				</div>
 			</div>
-			<div id="profile-jot-submit-right" class="float-end">
+			<div id="profile-jot-submit-right" class="btn-group float-end">
 				{{foreach $customsubmitright as $csr}}
-				<a type="button" class="pe-3" {{$csr.buttonparams}} title="{{$csr.preview}}">
+				<button type="button" class="btn btn-link btn-sm" {{$csr.buttonparams}} title="{{$csr.preview}}">
 					{{$csr.buttoncontent}}
-				</a>
+				</button>
 				{{/foreach}}
 				{{if $preview}}
-				<a type="button" class="pe-3" onclick="preview_post();return false;" title="{{$preview}}">
+				<button type="button" class="btn btn-link btn-sm" onclick="preview_post();return false;" title="{{$preview}}">
 					<i class="bi bi-eye jot-icons" ></i>
-				</a>
+				</button>
 				{{/if}}
 				{{if $jotnets}}
-				<a type="button" id="dbtn-jotnets" class="pe-3" data-bs-toggle="modal" data-bs-target="#jotnetsModal" type="button" title="{{$jotnets_label}}" style="{{if $lockstate == 'lock'}}display: none;{{/if}}">
+				<button type="button" id="dbtn-jotnets" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#jotnetsModal" type="button" title="{{$jotnets_label}}" style="{{if $lockstate == 'lock'}}display: none;{{/if}}">
 					<i class="bi bi-share jot-icons"></i>
-				</a>
+				</button>
 				{{/if}}
 				{{if $showacl}}
-				<a type="button" id="dbtn-acl" class="pe-3" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button" data-form_id="profile-jot-form">
+				<button type="button" id="dbtn-acl" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button" data-form_id="profile-jot-form">
 					<i id="jot-perms-icon" class="bi bi-{{$lockstate}} jot-icons{{if $bang}} jot-lock-warn{{/if}}"></i>
-				</a>
+				</button>
 				{{/if}}
-				<button id="dbtn-submit" class="btn btn--primary btn-sm" type="submit" tabindex="3" name="button-submit">{{$share}}</button>
+				<button id="dbtn-submit" class="btn btn-primary btn-sm" type="submit" tabindex="3" name="button-submit">{{$share}}</button>
 			</div>
 			<div class="clear"></div>
 			{{if $jotplugins}}
@@ -266,13 +270,13 @@
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title" id="expiryModalLabel">{{$jotnets_label}}</h5>
-							<a type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></a>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 						</div>
 						<div class="modal-body">
 							{{$jotnets}}
 						</div>
 						<div class="modal-footer">
-							<a type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</a>
+							<button type="button" class="btn btn-link" data-bs-dismiss="modal">Close</button>
 						</div>
 					</div><!-- /.modal-content -->
 				</div><!-- /.modal-dialog -->
@@ -297,11 +301,11 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title" id="expiryModalLabel">{{$expires}}</h5>
-				<a type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></a>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="form-control" />
 				</div>
 				<script>
 					$(function () {
@@ -310,8 +314,8 @@
 				</script>
 			</div>
 			<div class="modal-footer">
-				<a type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$expiryModalCANCEL}}</a>
-				<a id="expiry-modal-OKButton" type="button" class="btn btn-primary">{{$expiryModalOK}}</a>
+				<button type="button" class="btn btn-link" data-bs-dismiss="modal">{{$expiryModalCANCEL}}</button>
+				<button id="expiry-modal-OKButton" type="button" class="btn btn-primary">{{$expiryModalOK}}</button>
 			</div>
 		</div><!-- /.modal-content -->
 	</div><!-- /.modal-dialog -->
@@ -324,11 +328,11 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title" id="createdModalLabel">{{$future_txt}}</h5>
-				<a type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></a>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" class="form-control" />
 				</div>
 				<script>
 					$(function () {
@@ -337,8 +341,8 @@
 				</script>
 			</div>
 			<div class="modal-footer">
-				<a type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{$expiryModalCANCEL}}</a>
-				<a id="created-modal-OKButton" type="button" class="btn btn-primary">{{$expiryModalOK}}</a>
+				<button type="button" class="btn btn-link" data-bs-dismiss="modal">{{$expiryModalCANCEL}}</button>
+				<button id="created-modal-OKButton" type="button" class="btn btn-primary">{{$expiryModalOK}}</button>
 			</div>
 		</div><!-- /.modal-content -->
 	</div><!-- /.modal-dialog -->
@@ -351,7 +355,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title" id="embedPhotoModalLabel">{{$embedPhotosModalTitle}}</h5>
-				<a type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></a>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-body" id="embedPhotoModalBody" >
 				<div id="embedPhotoModalBodyAlbumListDialog" class="d-none">

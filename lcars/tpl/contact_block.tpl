@@ -1,5 +1,7 @@
-  <div class="h5">
+  <div class="lcars-text-bar">
+		<span>
     {{$contacts}}
+		</span>
   </div>
   {{if $micropro}}
   <!-- /.card-header -->

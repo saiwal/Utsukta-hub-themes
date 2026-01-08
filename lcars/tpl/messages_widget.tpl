@@ -1,4 +1,4 @@
-<ul class="nav nav-underline stats-tabs d-flex justify-content-center mb-0 pt-3 shadow">
+<ul class="nav nav-underline d-flex justify-content-around mb-0 pt-3 shadow h5">
   <li class="nav-item">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
@@ -57,31 +57,16 @@
   </div>
   <div id="messages-container" class="list-group list-group-flush" data-offset="10">
 
-    <div id="messages-filter-toolbar" class="list-group-item border-0 d-flex justify-content-center align-items-center">
-      <div class="" role="group" aria-label="Message filter">
-        <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-all" value="" autocomplete="off"
-          checked>
-        <label class="btn btn-outline-secondary" for="filter-all"><i class="bi bi-inbox"></i></label>
-
-        <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-new" value="new"
-          autocomplete="off">
-        <label class="btn btn-outline-secondary" for="filter-new"><i class="bi bi-envelope"></i></label>
-
-        <input type="radio" class="btn-check" name="messages-unseen-filter" id="filter-active" value="active"
-          autocomplete="off">
-        <label class="btn btn-outline-secondary" for="filter-active"><i class="bi bi-envelope-exclamation"></i></label>
-      </div>
-    </div>
     <div id="messages-author-container" class="list-group-item notifications-textinput">
       <!-- <div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div> -->
-      <input id="messages-author" type="text" class="u-fullwidth" placeholder="{{$strings.filter}}">
+      <input id="messages-author" type="text" class="form-control" placeholder="{{$strings.filter}}">
       <div id="messages-author-input-clear" class="text-muted notifications-textinput-clear d-none"><i
           class="bi bi-x-lg"></i></div>
     </div>
     {{if $feature_file}}
     <div id="messages-file-container" class="list-group-item notifications-textinput d-none">
       <div class="ss-custom-select">
-        <select id="messages-file" class="u-fullwidth">
+        <select id="messages-file" class="form-control">
           <option value="">{{$strings.file_filter}}</option>
           {{foreach $file_tags as $opt=>$val}}
           <option value="{{$val}}">{{$val}}</option>

@@ -22,7 +22,8 @@
   <div class="clearfix"></div>
 
   {{if $details && ($location || $hometown || $gender || $marital || $homepage)}}
-  <ul class="lcars-list">
+	<div class="lcars-list-2">
+  <ul>
     {{if $location}}
     <li>
       {{$location}} {{if $profile.address}}{{$profile.address}},{{/if}}
@@ -62,6 +63,7 @@
         {{$profile.homepage}}
 		</li>
   </ul>
+	</div>
   {{/if}}
   {{/if}}
 </div>
