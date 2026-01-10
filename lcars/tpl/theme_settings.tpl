@@ -19,6 +19,6 @@
 <!--{{/if}}-->
 <!---->
 
-<div class="settings-submit-wrapper" >
+<div class="settings-submit-wrapper buttons the-end" >
 	<button type="submit" name="adminlte-settings-submit" class="btn btn-primary">{{$submit}}</button>
 </div>

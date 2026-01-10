@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
-		<div class="h3 mt-0">{{$title}}</div>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
   <div class="mb-3">
     	<div id="group_tools" class="clearfix section-content-tools-wrapper">
@@ -11,10 +11,12 @@
           {{include file="field_checkbox.tpl" field=$is_default_acl}}
           {{include file="field_checkbox.tpl" field=$is_default_group}}
           {{$pgrp_extras}}
-          <a href="group/drop/{{$gid}}?t={{$form_security_token_drop}}" onclick="return confirmDelete();" class="btn btn-sm btn-outline-danger">
+					<div class="buttons the-end">
+						<a href="group/drop/{{$gid}}?t={{$form_security_token_drop}}" onclick="return confirmDelete();" class="bg-danger">
             {{$delete}}
-          </a>
+						</a>
           <button type="submit" name="submit" class="btn btn-sm btn-primary float-end">{{$submit}}</button>
+					</div>
         </form>
     	</div>
       <div class="h6">

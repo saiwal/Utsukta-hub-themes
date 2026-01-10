@@ -1,7 +1,10 @@
 <div class="generic-content-wrapper">
-  <div class="section-title-wrapper app-content-header"><a title="{{$new}}" class="btn btn-primary btn-sm float-end"
-      href="admin/profs/new"><i class="bi bi-plus-lg"></i>&nbsp;{{$new}}</a>
-    <h3>{{$title}}</h3>
+  <div class="section-title-wrapper app-content-header">
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
+		<div class="buttons the-end">
+			<a title="{{$new}}" class="flush" href="admin/profs/new"><i class="bi bi-plus-lg"></i>&nbsp;{{$new}}</a>
+			</a>
+		</div>
   </div>
 
   <div class="section-content-tools-wrapper">
@@ -12,7 +15,7 @@
       <form action="admin/profs" method="post">
         {{include file="field_textarea.tpl" field=$basic}}
         {{include file="field_textarea.tpl" field=$advanced}}
-        <input type="submit" name="submit" class="btn btn-primary float-end" value="{{$submit}}" />
+				<div class="buttons the-end"><button type="submit" name="submit" class="btn btn-primary float-end" value="{{$submit}}"/>{{$submit}}</button></div>
       </form>
     </div>
     {{if $cust_fields}}

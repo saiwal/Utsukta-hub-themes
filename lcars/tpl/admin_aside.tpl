@@ -11,39 +11,39 @@
   });
 </script>
 <div class="mb-3">
-  <div class="h5">{{$admtxt}}</div>
-  <ul style="list-style: none;">
+	<div class="lcars-text-bar"><span>{{$admtxt}}</span></div>
+  <div class="pillbox">
     {{foreach $admin as $link}}
-    <li class="mt-0"><a href='{{$link.0}}'>{{$link.1}}{{if $link.3}}<span id='{{$link.3}}'
-          title='{{$link.4}}'></span>{{/if}}</a></li>
+    <button class="pill" onclick="playSoundAndRedirect('audio2', '{{$link.0}}')">{{$link.1}}{{if $link.3}}<span id='{{$link.3}}'
+          title='{{$link.4}}'></span>{{/if}}</button>
     {{/foreach}}
-  </ul>
+  </div>
 </div>
 
 {{if $admin.update}}
 <div class="mb-3">
-  <ul style="list-style: none;">
-    <li class="mt-0"><a class="nav-link" href='{{$admin.update.0}}'>{{$admin.update.1}}</a></li>
-    <li class="mt-0"><a class="nav-link" href=''>Important Changes</a></li>
-  </ul>
+  <div class="pillbox">
+    <button class="pill" onclick="playSoundAndRedirect('audio2','{{$admin.update.0}}')">{{$admin.update.1}}</button>
+    <button class="pill" href=''>Important Changes</button>
+  </div>
 </div>
 {{/if}}
 
 
 {{if $plugins}}
 <div class="mb-3">
-  <div class="h5">{{$plugadmtxt}}</div>
-  <ul style="list-style: none;">
+	<div class="lcars-text-bar"><span>{{$plugadmtxt}}</span></div>
+  <div class="pillbox">
     {{foreach $plugins as $l}}
-    <li class="mt-0"><a href='{{$l.0}}'>{{$l.1}}</a></li>
+		<button class="pill" onclick="playSoundAndRedirect('audio2','{{$l.0}}')">{{$l.1}}</button>
     {{/foreach}}
-  </ul>
+  </div>
 </div>
 {{/if}}
 
 <div class="mb-3">
-  <div class="h5">{{$logtxt}}</div>
-  <ul style="list-style: none;">
-    <li class="h6 mt-0"><a href='{{$logs.0}}'>{{$logs.1}}</a></li>
-  </ul>
+	<div class="lcars-text-bar"><span>{{$logtxt}}</span></div>
+  <div class="pillbox">
+    <button class="pill" onclick="playSoundAndRedirect('audio2','{{$logs.0}}')">{{$logs.1}}</button>
+  </div>
 </div>

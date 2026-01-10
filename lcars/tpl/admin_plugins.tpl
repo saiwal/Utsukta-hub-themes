@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
   <div class="section-title-wrapper app-content-header">
-    <h3 id="title">{{$title}} - {{$page}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}} -{{$page}}</span></div>
   </div>
 
   <div class="card">

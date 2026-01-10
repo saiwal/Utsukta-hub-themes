@@ -1,7 +1,9 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
-		<a title="{{$removeaccount}}" class="btn btn-danger btn-sm float-end" href="removeaccount"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
-		<h3>{{$title}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
+		<div class="buttons the-end flush">
+		<a title="{{$removeaccount}}" class="" href="removeaccount"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
+		</div>
 		<div class="clear"></div>
 	</div>
 	<form action="settings/account" id="settings-account-form" method="post" autocomplete="off" >
@@ -15,7 +17,7 @@
 			{{include file="field_password.tpl" field=$password1}}
 			{{include file="field_password.tpl" field=$password2}}
 
-			<div class="settings-submit-wrapper" >
+			<div class="settings-submit-wrapper buttons the-end" >
 				<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 				<a href="/settings/multifactor" class="btn btn-success">{{$mfa}}</a>
 			</div>

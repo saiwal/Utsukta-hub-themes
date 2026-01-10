@@ -12,7 +12,7 @@
 </script>
 <div class="generic-content-wrapper-styled table-responsive" id='adminpage'>
 	<div class="section-title-wrapper app-content-header">
-	<h3 class="border-0">{{$title}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
   <div class="mb-4">
     <div class="h4">

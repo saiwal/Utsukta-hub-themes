@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper-styled" id='adminpage'>
   <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$title}} - {{$page}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}} -{{$page}}</span></div>
   </div>
   <form action="{{$baseurl}}/admin/logs" method="post">
     <input type='hidden' name='form_security_token' value='{{$form_security_token}}' />

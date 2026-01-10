@@ -1,11 +1,11 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
-		<h3>{{$ptitle}}</h3>
+	<div class="lcars-text-bar"><span>{{$ptitle}}</span></div>
 	</div>
 	<form action="settings/display" id="settings-form" method="post" autocomplete="off" >
 		<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 
-		<div class="accordion" id="settings" role="tablist" aria-multiselectable="true">
+		<div class="accordion accordion-flush" id="settings" role="tablist" aria-multiselectable="true">
 			{{if $theme}}
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="theme-settings-title">
@@ -23,7 +23,7 @@
 						{{if $schema}}
 							{{include file="field_select.tpl" field=$schema}}
 						{{/if}}
-						<div class="settings-submit-wrapper" >
+						<div class="settings-submit-wrapper buttons the-end" >
 							<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 						</div>
 					</div>
@@ -63,7 +63,7 @@
 						{{include file="field_checkbox.tpl" field=$user_scalable}}
 						{{include file="field_checkbox.tpl" field=$start_menu}}
 						{{include file="field_checkbox.tpl" field=$thread_allow}}
-						<div class="settings-submit-wrapper" >
+						<div class="settings-submit-wrapper buttons the-end" >
 							<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 						</div>
 					</div>

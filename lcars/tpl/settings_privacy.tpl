@@ -1,6 +1,5 @@
-<div class="generic-content-wrapper card">
-  <div class="card-header">{{$ptitle}}</div>
-  <div class="card-body">
+<div class="generic-content-wrapper">
+	<div class="lcars-text-bar"><span>{{$ptitle}}</span></div>
     {{$nickname_block}}
     <form action="settings/privacy" id="settings-form" method="post" autocomplete="off">
       <input type='hidden' name='form_security_token' value='{{$form_security_token}}' />
@@ -53,10 +52,9 @@
             data-bs-target="#apsModal">{{$permission_limits_label}}</button>
         </div>
         {{/if}}
-        <div class="settings-submit-wrapper">
+        <div class="settings-submit-wrapper buttons the-end">
           <button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
         </div>
       </div>
     </form>
-  </div>
 </div>

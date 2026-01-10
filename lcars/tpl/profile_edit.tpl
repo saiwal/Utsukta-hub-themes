@@ -1,7 +1,9 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
+		<div class="lcars-text-bar"><span>{{$banner}}{{if $multi_profiles}}: {{$profile_name.2}}{{/if}}</span></div>
 		<div class="dropdown float-end" id="profile-edit-links">
-			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			<div class="buttons">
+			<button type="button" class="dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
 			</button>
 			<div class="dropdown-menu dropdown-menu-end">
@@ -28,9 +30,9 @@
 				<div class="dropdown-divider"></div>
 				<a class="dropdown-item" href="{{$profile_drop_link}}" id="profile-edit-drop-link" title="{{$del_prof}}" onclick="return confirmDelete();"><i class="bi bi-trash"></i>&nbsp;{{$del_prof}}</a>
 				{{/if}}
-			</div>
+			</div></div>
+
 		</div>
-		<h3>{{$banner}}{{if $multi_profiles}}: {{$profile_name.2}}{{/if}}</h3>
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" id="profile-upload-form">
@@ -45,7 +47,7 @@
 			<div class="section-content-info-wrapper callout callout-info mb-2">{{$default}}</div>
 			{{/if}}
 
-			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
+			<div class="accordion accordion-flush" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="personal">
 						<h2 class="accordion-header">
@@ -96,8 +98,8 @@
 							{{include file="field_checkbox.tpl" field=$hide_friends}}
 							{{/if}}
 
-							<div class="mb-3" >
-							<button type="submit" name="submit" class="btn btn-primary" value="{{$submit}}">{{$submit}}</button>
+							<div class="buttons the-end flush" >
+							<button type="submit" name="submit" value="{{$submit}}">{{$submit}}</button>
 							</div>
 							<div class="clear"></div>
 						</div>
@@ -218,8 +220,8 @@
 						</div>
 					</div>
 
-					<div class="settings-submit-wrapper" >
-						<button type="submit" name="done" value="{{$submit}}" class="btn btn-primary">{{$submit}}</button>
+					<div class="settings-submit-wrapper buttons the-end" >
+						<button type="submit" name="done" value="{{$submit}}" >{{$submit}}</button>
 					</div>
 				</div>
 				{{/if}}
@@ -260,8 +262,8 @@
 							{{include file="field_input.tpl" field=$hometown}}
 							{{/if}}
 
-							<div class="mb-3" >
-							<button type="submit" name="submit" class="btn btn-primary" value="{{$submit}}">{{$submit}}</button>
+							<div class="buttons the-end" >
+							<button type="submit" name="submit" value="{{$submit}}">{{$submit}}</button>
 							</div>
 							<div class="clear"></div>
 						</div>
@@ -313,7 +315,7 @@
 							<div class="clear"></div>
 							{{/if}}
 
-							<div class="mb-3" >
+							<div class="buttons the-end" >
 							<button type="submit" name="submit" class="btn btn-primary" value="{{$submit}}">{{$submit}}</button>
 							</div>
 							<div class="clear"></div>
@@ -405,7 +407,7 @@
 							{{include file="field_input.tpl" field=$field}}
 							{{/foreach}}
 							{{/if}}
-							<div class="mb-3" >
+							<div class="buttons the-end" >
 							<button type="submit" name="submit" class="btn btn-primary" value="{{$submit}}">{{$submit}}</button>
 							</div>
 							<div class="clear"></div>

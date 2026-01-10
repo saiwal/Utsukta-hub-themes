@@ -695,6 +695,9 @@
 
 {{if !$sys_only}}
 <div id="notifications_wrapper" class="mb-4">
+	<div class="lcars-text-bar">
+		<span>Notifications</span>
+	</div>
 	<div id="no_notifications" class="d-xl-none">
 		{{$no_notifications}}<span class="jumping-dots"><span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span></span>
 	</div>
@@ -712,19 +715,18 @@
 			</div>
 		</a>
 	</div>
-	<div id="notifications" class="collapse">
-		<div class="">
+	<div id="notifications" class="border-0 border-top-0 rounded navbar-nav collapse">
 		{{foreach $notifications as $notification}}
-		<div class="{{$notification.type}}-button">
-			<a id="notification-link-{{$notification.type}}" class="lcars-text-bar collapsed notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
-				<span>
-					<i class="bi bi-{{$notification.icon}} pe-1 ps-4"></i>
+		<div class="rounded-top rounded-bottom border-0 border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
+			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
+				<div>
+					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
 					{{$notification.label}}
-				</span>
-				<span class="blink text-{{$notification.severity}} the-end {{$notification.type}}-update"></span>
+				</div>
+				<span class="blink badge bg-{{$notification.severity}} {{$notification.type}}-update"></span>
 			</a>
 		</div>
-		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
+		<div id="nav-{{$notification.type}}-sub" class="rounded-bottom border-0 border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse notification-content" data-bs-parent="#notifications" data-sse_type="{{$notification.type}}">
 			{{if $notification.viewall}}
 			<a class="list-group-item list-group-item-action text-decoration-none" id="nav-{{$notification.type}}-see-all" href="{{$notification.viewall.url}}">
 				<i class="bi bi-box-arrow-up-right generic-icons-nav"></i> {{$notification.viewall.label}}
@@ -756,6 +758,5 @@
 		</div>
 		{{/foreach}}
 	</div>
-		</div>
 </div>
 {{/if}}

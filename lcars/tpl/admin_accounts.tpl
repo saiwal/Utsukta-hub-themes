@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper-styled table-responsive" id="adminpage">
 	<div class="section-title-wrapper app-content-header clearfix">
-	<h3 class="border-0 mt-0">{{$title}} - {{$page}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
 
 	<form action="{{$baseurl}}/admin/accounts" method="post">

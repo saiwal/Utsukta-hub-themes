@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper-styled">
   <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$banner}}
+		<div class="lcars-text-bar"><span>{{$banner}}</span></div>
   </div>
   {{if $hasentries}}
   <div class="mb-3">

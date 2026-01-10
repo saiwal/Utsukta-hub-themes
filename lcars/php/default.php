@@ -35,7 +35,6 @@
 
 					<!-- Start your content here. -->
 					<?php if(!empty($page['banner'])) echo $page['banner']; ?>
-					<section id="content" class="s-content s-content--page">
 						<div class="container-fluid">
 							<div class="row">
 								<div class="col-lg-8 col-md-12">
@@ -44,7 +43,7 @@
 									</div>
 								</div>
 								<div class="col-lg-4" id="sidebar-column">
-									<div id="region_3">
+									<div id="region_3" class="sticky-top">
 										<div id="left_aside_wrapper">
 											<?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
 										</div>
@@ -55,7 +54,6 @@
 								</div>
 							</div>
 						</div>
-					</section>
 					<!-- End content area. -->
 
 				</main>

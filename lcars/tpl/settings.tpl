@@ -1,13 +1,15 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
+		<div class="lcars-text-bar"><span>{{$ptitle}}</span></div>
+		<div class="buttons the-end flush">
 		<a title="{{$removechannel}}" class="btn btn-danger btn-sm float-end" href="removeme"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
-		<h3>{{$ptitle}}</h3>
+		</div>
 		<div class="clear"></div>
 	</div>
 	{{$nickname_block}}
 	<form action="settings" id="settings-form" method="post" autocomplete="off" class="acl-form" data-form_id="settings-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 		<input type='hidden' name='form_security_token' value='{{$form_security_token}}' />
-		<div class="accordion" id="settings" role="tablist" aria-multiselectable="true">
+		<div class="accordion accordion-flush" id="settings" role="tablist" aria-multiselectable="true">
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="basic-settings">
 					<h2 class="accordion-header mt-0">
@@ -33,7 +35,7 @@
 						{{if $basic_addon}}
 						{{$basic_addon}}
 						{{/if}}
-						<div class="settings-submit-wrapper" >
+						<div class="settings-submit-wrapper buttons the-end" >
 							<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 						</div>
 					</div>
@@ -106,7 +108,7 @@
 						{{if $notify_addon}}
 						{{$notify_addon}}
 						{{/if}}
-						<div class="settings-submit-wrapper" >
+						<div class="settings-submit-wrapper buttons the-end " >
 							<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
 						</div>
 					</div>

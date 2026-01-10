@@ -134,3 +134,10 @@ a {
 .pillbox a:nth-child(6n) {
     background-color: var(--pill-6-color);
 }
+/* Style for the sidebar */
+.sticky-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 20px; /* Adjust this value to set the distance from the top of the viewport */
+  padding: 15px;
+}

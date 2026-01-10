@@ -1,6 +1,6 @@
 
 	<div class="section-title-wrapper app-content-header">
-<h3>{{$title}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
 
 <h3>{{$account.account_email}}</h3>

@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
 	<div class="clearfix section-title-wrapper app-content-header">
-		<div class="h3">{{$title}}</div>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
   <div class="mb-3">
       <div id="group_tools" class="clearfix section-content-tools-wrapper">
@@ -11,7 +11,9 @@
           {{include file="field_checkbox.tpl" field=$is_default_acl}}
           {{include file="field_checkbox.tpl" field=$is_default_group}}
           {{$pgrp_extras}}
-          <button type="submit" name="submit" class="btn btn-sm btn-primary float-end">{{$submit}}</button>
+					<div class="buttons the-end">
+						<button type="submit" name="submit" class="">{{$submit}}</button>
+					</div>
         </form>
       </div>
   </div>

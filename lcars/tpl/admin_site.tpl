@@ -1,8 +1,8 @@
 <div id="adminpage" class="generic-content-wrapper-styled">
   <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$title}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
   </div>
-  <div class="accordion" id="accordionExample">
+  <div class="accordion accordion-flush" id="accordionExample">
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
@@ -34,8 +34,8 @@
             {{include file="field_select.tpl" field=$directory_server}}
             {{/if}}
 
-            <div class="submit">
-              <input type="submit" name="page_site" class="btn btn-primary" value="{{$submit}}" />
+            <div class="submit buttons the-end">
+							<button type="submit" name="page_site" class="flush" value="{{$submit}}" />{{$submit}}</button>
             </div>
 
         </div>
@@ -68,8 +68,8 @@
           {{** include file="field_input.tpl" field=$sellpage **}}
           {{include file="field_input.tpl" field=$first_page}}
 
-          <div class="submit">
-            <input type="submit" name="page_site" class="btn btn-primary" value="{{$submit}}" />
+          <div class="submit buttons the-end">
+						<button type="submit" name="page_site" class="flush" value="{{$submit}}" />{{$submit}}</button>
           </div>
 
         </div>
@@ -93,8 +93,8 @@
           {{include file="field_textarea.tpl" field=$excl}}
           {{include file="field_input.tpl" field=$abandon_days}}
 
-          <div class="submit">
-            <input type="submit" name="page_site" class="btn btn-primary" value="{{$submit}}" />
+          <div class="submit buttons the-end">
+						<button type="submit" name="page_site" class="flush" value="{{$submit}}" />{{$submit}}</button>
           </div>
 
 
@@ -123,9 +123,8 @@
           {{include file="field_input.tpl" field=$default_expire_days}}
           {{include file="field_input.tpl" field=$active_expire_days}}
 
-
-          <div class="submit">
-            <input type="submit" name="page_site" class="btn btn-primary" value="{{$submit}}" />
+         <div class="submit buttons the-end">
+						<button type="submit" name="page_site" class="flush" value="{{$submit}}" />{{$submit}}</button>
           </div>
 
         </div>

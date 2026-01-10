@@ -1,15 +1,17 @@
 <div class="{{if $class}} {{$class}}{{/if}} mb-3">
   {{if $title}}
-  <div class="h5">
+  <div class="lcars-text-bar">
+		<span>
     {{$title}}
+		</span>
   </div>
   {{/if}}
     {{if $desc}}<div class="desc">{{$desc}}</div>{{/if}}
 
-    <ul style="list-style: none;">
+    <div class="pillbox">
       {{foreach $items as $item}}
-      <li class="nav-item"><a href="{{$item.url}}"
-          class="nav-link{{if $item.selected}} active{{/if}}">{{$item.label}}</a></li>
-      {{/foreach}}
-    </ul>
+      <button onclick="playSoundAndRedirect('audio2','{{$item.url}}')"
+          class="pill{{if $item.selected}} blink{{/if}}">{{$item.label}}</button>
+				{{/foreach}}
+    </div>
 </div>

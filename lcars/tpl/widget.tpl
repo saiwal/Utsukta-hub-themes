@@ -6,7 +6,7 @@
   *}}
 <div class="widget">
 	{{if $widget->title()}}
-  <div class="h5 mt-0">{{$widget->title()}}</div>
+  <div class="lcars-text-bar">{{$widget->title()}}</div>
 	{{/if}}
 	{{$widget->contents()}}
 </div>

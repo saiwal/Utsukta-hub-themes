@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
-		<h3>{{$title}}</h3>
+		<div class="lcars-text-bar"><span>{{$title}}</span></div>
 	</div>
 	<form action="admin/features" method="post" autocomplete="off">
 	<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
@@ -20,8 +20,8 @@
 						{{include file="field_checkbox.tpl" field=$fcat.0}}
 						{{include file="field_checkbox.tpl" field=$fcat.1}}
 					{{/foreach}}
-					<div class="settings-submit-wrapper d-flex justify-content-end" >
-						<button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
+					<div class="settings-submit-wrapper buttons the-end" >
+						<button type="submit" name="submit" class="flush">{{$submit}}</button>
 					</div>
 				</div>
 			</div>
