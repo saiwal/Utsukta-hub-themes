@@ -23,7 +23,7 @@
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
 </head>
-<body  data-bs-theme="light">
+<body  data-bs-theme="dark">
 	<audio id="audio1" src="/view/theme/lcars/assets/beep1.mp3" preload="auto"></audio>
 	<audio id="audio2" src="/view/theme/lcars/assets/beep2.mp3" preload="auto"></audio>
 	<audio id="audio3" src="/view/theme/lcars/assets/beep3.mp3" preload="auto"></audio>
