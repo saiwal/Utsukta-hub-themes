@@ -60,9 +60,6 @@
 
 				</main>
 				<footer>
-					<!-- Your copyright information is only a suggestion and you can choose to delete it. -->
-					Content &copy; 2025<br>
-
 					<!-- The following attribution must not be removed: -->
 					LCARS Inspired Website Template by <a href="https://www.thelcars.com">www.TheLCARS.com</a> adapted for Hubzilla.				 		 
 						<div class="lcars-text-bar the-end">

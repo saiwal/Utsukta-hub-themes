@@ -141,3 +141,29 @@ a {
   top: 20px; /* Adjust this value to set the distance from the top of the viewport */
   padding: 15px;
 }
+/* Styles for post image icons/emojis to be inline */
+.wall-item-content img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+}
+.wall-item-content .fakelink img {
+  display: inline;
+  border: none; 
+  box-shadow: 0 0 ;
+}
+img[alt*="#^"] {
+  display: inline;
+  border: none; 
+  box-shadow: 0 0 ;
+}
+
+.wall-item-content img.emoji {
+  display: inline;
+  height: 1.3rem;
+  vertical-align: baseline;
+  margin-bottom: -.2rem;
+  border: none;
+  box-shadow: 0 0;
+}
