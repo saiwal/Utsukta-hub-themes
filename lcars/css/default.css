@@ -134,13 +134,6 @@ a {
 .pillbox a:nth-child(6n) {
     background-color: var(--pill-6-color);
 }
-/* Style for the sidebar */
-.sticky-top {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 20px; /* Adjust this value to set the distance from the top of the viewport */
-  padding: 15px;
-}
 /* Styles for post image icons/emojis to be inline */
 .wall-item-content img {
   display: block;
@@ -166,4 +159,16 @@ img[alt*="#^"] {
   margin-bottom: -.2rem;
   border: none;
   box-shadow: 0 0;
+}
+.wrap {
+	overflow: visible;
+}
+
+#sidebar-column{
+  position: sticky;
+  top: 0px;
+  overflow-y: auto;
+  height: 100vh;
+  min-height: 100vh;
+  scrollbar-width: none;  
 }

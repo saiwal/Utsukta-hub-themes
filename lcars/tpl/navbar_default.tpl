@@ -361,11 +361,10 @@
 		<button onclick="topFunction(); playSound('audio4')" id="topBtn"><span class="hop">screen</span>
 			top</button>
 		<div>
+			<div class="panel-3 d-lg-none"><a class="nav-link " type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive" aria-controls="offcanvasResponsive"><span class="hop">SIDEBAR</span><i class="bi bi-layout-text-sidebar ps-1"></i></a></div>
 			{{if $userinfo}}
 			{{if $is_owner}}
-			<div onclick="playSound('audio1')" class="panel-3" role="button" data-bs-toggle="collapse" data-bs-target="#userMenuCollapse"
-				aria-expanded="false" aria-controls="userMenuCollapse">
-				{{$userinfo.name}}
+			<div onclick="playSound('audio1')" class="panel-3" role="button" data-bs-toggle="collapse" data-bs-target="#userMenuCollapse" aria-expanded="false" aria-controls="userMenuCollapse"><span class="hop">{{$userinfo.name}}</span><i class="bi bi-person-fill-gear ps-1"></i>
 			</div>
 			<div class="collapse" id="userMenuCollapse">
 				{{if $is_owner}}

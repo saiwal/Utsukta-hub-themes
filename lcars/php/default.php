@@ -42,15 +42,27 @@
 										<?php if (x($page, 'content')) echo $page['content']; ?>
 									</div>
 								</div>
-								<div class="col-lg-4" id="sidebar-column">
-									<div id="region_3" class="sticky-top">
-										<div id="left_aside_wrapper">
-											<?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
-										</div>
-										<div id="right_aside_wrapper">
-											<?php if (x($page, 'aside')) echo $page['aside']; ?>
-										</div>
-									</div>
+								<div class="col-lg-4 z-2" id="sidebar-column">
+					<div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
+						<div class="offcanvas-header bg-black the-end">
+							<div class="buttons mt-0 mb-0">
+								<button type="button" class="" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close">Close</button>
+							</div>
+            </div>
+            <div class="offcanvas-body flush bg-black px-0">
+              <div class="container row pe-0">
+                <div id="region_1" class="pe-0">
+                <div id="left_aside_wrapper">
+                <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+                </div>
+                </div>
+                <div id="region_3" class="pe-0">
+                <div id="right_aside_wrapper">
+                <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
+              </div>
+            </div>
+          </div>
 								</div>
 							</div>
 						</div>
