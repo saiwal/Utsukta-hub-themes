@@ -135,24 +135,22 @@
 
    /* masonry
     * ---------------------------------------------------- */ 
-    var ssMasonryFolio = function () {
-        
-        var containerBricks = $('.masonry');
+var ssMasonryFolio = function () {
 
-        containerBricks.masonry({
-            itemSelector: '.masonry__brick',
-            columnWidth: '.grid-sizer',
-            percentPosition: true,
-            resize: true
-        });
+    var containerBricks = $('.masonry');
 
-        // layout Masonry after each image loads
-        containerBricks.imagesLoaded().progress( function() {
-            containerBricks.masonry('layout');
-        });
+    containerBricks.masonry({
+        itemSelector: '.masonry__brick',
+        columnWidth: '.grid-sizer',
+        percentPosition: true,
+        resize: true
+    });
 
-    };
+    imagesLoaded(containerBricks[0], function () {
+        containerBricks.masonry('layout');
+    });
 
+};
    /* animate bricks
     * ------------------------------------------------------ */
     var ssBricksAnimate = function() {

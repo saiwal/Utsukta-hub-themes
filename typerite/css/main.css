@@ -3614,3 +3614,52 @@ body.search-is-visible {
     opacity    : 1;
     visibility : visible;
 }
+/* ------------------------------------------------------------------- 
+ * ## offcanvas
+ * ------------------------------------------------------------------- */
+.ss-offcanvas {
+    z-index           : 1;
+    opacity           : 1;
+    position          : fixed;
+    bottom            : 4rem;
+    right             : 8.8rem;
+}
+
+.ss-offcanvas a,
+.ss-offcanvas a:visited {
+    text-decoration     : none;
+    border              : none;
+    display             : block;
+    height              : 6rem;
+    width               : 6rem;
+    line-height         : 6rem;
+    text-align          : center;
+    text-transform      : uppercase;
+    color               : rgba(255, 255, 255, 0.5);
+    transition          : all .3s;
+    background-color    : #000000;
+    background-repeat   : no-repeat;
+    background-position : center center;
+    background-size     : 7px 14px;
+}
+
+.ss-offcanvas.link-is-visible {
+    opacity           : 1;
+    visibility        : visible;
+    -webkit-transform : translate3d(0, 0, 0);
+    transform         : translate3d(0, 0, 0);
+}
+
+/* ------------------------------------------------------------------- 
+ * responsive:
+ * site content & footer
+ * ------------------------------------------------------------------- */
+
+@media screen and (max-width: 1100px) {
+    .ss-offcanvas {
+        bottom : 0;
+        right  : 6rem;
+    }
+}
+
+
