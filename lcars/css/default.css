@@ -164,11 +164,4 @@ img[alt*="#^"] {
 	overflow: visible;
 }
 
-#sidebar-column{
-  position: sticky;
-  top: 0px;
-  overflow-y: auto;
-  height: 100vh;
-  min-height: 100vh;
-  scrollbar-width: none;  
-}
+
