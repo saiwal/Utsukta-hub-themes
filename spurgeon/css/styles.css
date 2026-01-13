@@ -4674,7 +4674,7 @@ body.search-is-visible .s-header__search-inner {
     transform  : translate(0, 200%);
     transition : all 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
     position   : fixed;
-    bottom     : 12rem;
+    bottom     : 6rem;
     right      : 4rem;
 }
 
@@ -4724,13 +4724,12 @@ body.search-is-visible .s-header__search-inner {
 @media screen and (max-width: 1500px) {
     .ss-go-top {
         right : 2.4rem;
-        bottom: 12rem;
     }
 }
 
 @media screen and (max-width: 1400px) {
     .ss-go-top {
-        bottom : 12rem;
+        bottom : 4.8rem;
     }
 
     .ss-go-top a {
@@ -4738,7 +4737,6 @@ body.search-is-visible .s-header__search-inner {
         width  : 5.2rem;
     }
 }
-
 @media screen and (max-width: 1200px) {
     .s-footer {
         padding-bottom : var(--vspace-2);
@@ -5462,60 +5460,81 @@ body.search-is-visible .s-header__search-inner {
     transform: translateX(0);
   }
 
-/* Sidebar toggle styled like ss-go-top, using <a> */
-.sidebar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: fixed;
-  bottom: 4.8rem;
-  right: 8.4rem;
-  width: 5.2rem;
-  height: 5.2rem;
-  border-radius: 50%;
-  background-color: var(--color-gray-7);
-  color: black;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  z-index: 1100;
-  text-decoration: none; /* remove underline */
-}
-
-.sidebar-toggle svg {
-  width: 22px;
-  height: 22px;
-}
-
-.sidebar-toggle:hover,
-.sidebar-toggle:focus {
-  background-color: black;
-  color: white;
-  outline: none;
-}
-  /* Disable scroll when sidebar open */
-  body.no-scroll {
-    overflow: hidden;
-  }
-}
-@media screen and (max-width: 600px) {
-    .sidebar-toggle {
-        height : 4.8rem;
-        width  : 4.8rem;
-    }
-
-}
-@media screen and (max-width: 400px) {
-  .sidebar-toggle {
-        height : 4rem;
-        width  : 4rem;
-        right : 6.8rem;
-  }  
-}
-
 #region_2 h2 {
   margin-top: 0px;
 }
 #region_2 h3,.h3 {
   margin-top: 0px;
   margin-bottom: 0px;
+}
+
+/* ------------------------------------------------------------------- 
+ * ## go top
+ * ------------------------------------------------------------------- */
+.ss-offcanvas {
+    z-index    : 2;
+    opacity    : 1;
+    position   : fixed;
+    bottom     : 6rem;
+    left      : 4rem;
+}
+
+.ss-offcanvas a {
+    display          : flex;
+    align-items      : center;
+    justify-content  : center;
+    text-decoration  : none;
+    border           : none;
+    height           : 6rem;
+    width            : 6rem;
+    border-radius    : 50%;
+    background-color : var(--color-gray-7);
+    transition       : all .3s;
+    position         : relative;
+}
+
+.ss-offcanvas a:focus,
+.ss-offcanvas a:hover {
+    background-color : black;
+}
+
+.ss-offcanvas a:focus svg path,
+.ss-offcanvas a:hover svg path {
+    stroke : white;
+}
+
+.ss-offcanvas svg {
+    height : 1.8rem;
+    width  : 1.8rem;
+}
+
+.ss-offcanvas svg path {
+    stroke : black;
+}
+
+.ss-offcanvas.link-is-visible {
+    opacity    : 1;
+    visibility : visible;
+    transform  : translate(0, 0);
+}
+
+/* ------------------------------------------------------------------- 
+ * responsive:
+ * footer
+ * ------------------------------------------------------------------- */
+@media screen and (max-width: 1500px) {
+    .ss-offcanvas {
+        left : 2.4rem;
+    }
+}
+
+@media screen and (max-width: 1400px) {
+    .ss-offcanvas {
+        bottom : 4.8rem;
+    }
+
+    .ss-offcanvas a {
+        height : 5.2rem;
+        width  : 5.2rem;
+    }
 }
