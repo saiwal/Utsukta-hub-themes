@@ -22,3 +22,73 @@ padding: 1.3rem 23px 1.5rem;
   line-height: 22px;
   cursor: text;
 }
+
+code {
+	overflow: auto;
+}
+
+/* ------------------------------------------------------------------- 
+ * ## mobile off canvas button
+ * ------------------------------------------------------------------- */
+
+.ss-offcanvas {
+    z-index: 2;
+    opacity: 1;
+    position: fixed;
+    bottom: 4.4rem;
+    left: 4rem;
+}
+
+.ss-offcanvas a {
+    text-decoration: none;
+    border: 0 none;
+    display: block;
+    height: 5.6rem;
+    width: 5.6rem;
+    border-radius: 50%;
+    background-color: #84be5b;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    position: relative;
+}
+
+.ss-offcanvas a:hover, .ss-offcanvas a:focus {
+    background-color: #000000;
+}
+
+.ss-offcanvas svg {
+    height: 2rem;
+    width: 2rem;
+    position: absolute;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+    left: 50%;
+    top: 50%;
+}
+
+.ss-offcanvas svg path {
+    fill: #ffffff;
+}
+
+
+@media screen and (max-width:800px) {
+    .ss-offcanvas {
+        left: 3.2rem;
+    }
+    .ss-offcanvas a {
+        height: 4.8rem;
+        width: 4.8rem;
+    }
+}
+
+@media screen and (max-width:400px) {
+    .ss-offcanvas {
+        left: 0rem;
+        bottom: 0rem;
+    }
+    .ss-offcanvas a {
+        border-radius: 4px 0 0 0;
+    }
+}
+
+
