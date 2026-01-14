@@ -1,5 +1,5 @@
 <div class="h6">
-  <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none" href="{{$url}}">{{$label}}</a>
+  <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none link-dark " href="{{$url}}">{{$label}}</a>
 </div>
 <div class="table-responsive">
   <table>

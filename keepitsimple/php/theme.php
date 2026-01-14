@@ -3,11 +3,11 @@
 /**
  *   * Name: KeepItSimple
  *   * Description: KeepItSimple theme by Styleshout adapted for Hubzilla
- *   * Version: 1.0-alpha
+ *   * Version: 1.0-beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 11.0
- *   * Author: Saiwal sk@hub.utsukta.org
- *   * Maintainer: Saiwal sk@hub.utsukta.org
+ *   * Author: Saiwal sk@utsukta.org
+ *   * Maintainer: Saiwal sk@utsukta.org
  *   * Compat: Hubzilla [*]
  *
  */
