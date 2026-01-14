@@ -77,3 +77,9 @@
 	{{/if}}
 	<div class="clear"></div>
 </div>
+
+<script>
+$(document).ready(function () {
+updateRelativeTime('.autotime-narrow');
+});
+</script>
