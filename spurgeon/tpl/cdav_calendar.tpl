@@ -611,7 +611,7 @@
         </div>
       </div>
     </div>
-    <div class="h3" id="title"></div>
+    <div class="h3 mt-0" id="title"></div>
     <div class="clear"></div>
   </div>
   <div class="section-content-tools-wrapper" style="display: none">

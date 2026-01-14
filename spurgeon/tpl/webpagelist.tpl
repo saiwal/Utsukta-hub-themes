@@ -5,7 +5,7 @@
 			<button id="webpage-create-btn" class="btn btn-sm btn-success acl-form-trigger" onclick="openClose('webpage-editor');" data-form_id="profile-jot-form"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$create}}</button>
 		</div>
 		{{/if}}
-		<div class="h3">{{$listtitle}}</div>
+		<div class="h3 mt-0">{{$listtitle}}</div>
 	</div>
 	{{if $editor}}
 	<div id="webpage-editor" class="section-content-tools-wrapper">
@@ -63,10 +63,10 @@
 					{{/if}}
 				</td>
 				<td class="d-none d-md-table-cell">
-					{{$item.created}}
+					<small class="autotime-narrow opacity-75" title="{{$item.created}}"></small>
 				</td>
 				<td class="d-none d-md-table-cell">
-					{{$item.edited}}
+					<small class="autotime-narrow opacity-75" title="{{$item.edited}}"></small>
 				</td>
 			</tr>
 			{{/foreach}}

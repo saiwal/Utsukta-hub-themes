@@ -1,135 +1,260 @@
-{{if $item.toplevel}}
-<article id="thread-wrapper-{{$item.id}}" class="brick entry thread-wrapper {{$item.toplevel}}"
-	data-b64mids='{{$item.mids}}' data-animate-el>
-	<a name="item_{{$item.id}}"></a>
-	<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
-		id="wall-item-outside-wrapper-{{$item.id}}">
-		<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}"
-			id="wall-item-content-wrapper-{{$item.id}}">
-			<div class="entry__header mb-3">
+{{if !$item.threaded && $item.comment_firstcollapsed}}
+<div id="hide-comments-outer-{{$item.parent}}" class="hide-comments-outer fakelink small" onclick="showHideComments({{$item.id}});">
+	<i id="hide-comments-icon-{{$item.id}}" class="bi bi-chevron-down align-middle hide-comments-icon"></i> <span id="hide-comments-label-{{$item.id}}" class="hide-comments-label align-middle" data-expanded="{{$item.collapse_comments}}" data-collapsed="{{$item.expand_comments}}">{{$item.expand_comments}}</span>{{if !$item.threaded}}&nbsp;<span id="hide-comments-total-{{$item.id}}" class="hide-comments-label align-middle">{{$item.num_comments}}</span>{{/if}}
+</div>
+<div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
+{{/if}}
+	<div id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} generic-content-wrapper h-entry{{else}} u-comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
+		<a name="item_{{$item.id}}" ></a>
+		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
+			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
 				{{if $item.photo}}
 				<div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
 					{{$item.photo}}
 				</div>
 				{{/if}}
 				{{if $item.event}}
-				<div class="wall-event-item border-bottom-0 entry__title" id="wall-event-item-{{$item.id}}">
+				<div class="wall-event-item" id="wall-event-item-{{$item.id}}">
 					{{$item.event}}
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<h2 class="wall-item-title entry__title h1" id="wall-item-title-{{$item.id}}">
-					{{if $item.title_tosource}}
-					{{if $item.plink}}
-					<a href="{{$item.plink.href}}" class="text-decoration-none" title="{{$item.title}} ({{$item.plink.title}})"
-						rel="nofollow">
+				<div class="p-2{{if $item.is_new}} bg-primary text-white{{/if}} wall-item-title h3{{if !$item.photo}} rounded-top{{/if}}" id="wall-item-title-{{$item.id}}">
+					{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}" title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if $item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}
+				</div>
+				{{if ! $item.is_new}}
+				<hr class="m-0">
+				{{/if}}
+				{{/if}}
+				<div class="p-2 wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
+					<div class="lh-sm text-end float-end">
+						<div class="wall-item-ago text-body-secondary" id="wall-item-ago-{{$item.id}}">
+							{{if $item.location}}
+							{{$item.location}}
+							{{/if}}
+							{{if $item.editedtime}}
+							<i class="bi bi-pencil" title="{{$item.editedtime}}"></i>
+							{{/if}}
+							{{if $item.verified}}
+							<i class="bi bi-shield-check" title="{{$item.verified}}"></i>
+							{{elseif $item.forged}}
+							<i class="bi bi-shield-exclamation text-danger" title="{{$item.forged}}"></i>
+							{{/if}}
+							{{if $item.no_comment}}
+								<i class="bi bi-ban" title="{{$item.no_comment}}"></i>
+							{{/if}}
+							{{if $item.delayed}}
+							<i class="bi bi-clock" title="{{$item.delayed}}"></i>
+							{{/if}}
+							{{if $item.expiretime}}
+							<i class="bi bi-clock-history" title="{{$item.expiretime}}"></i>
+							{{/if}}
+							<small class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</small>
+						</div>
+						{{if !$item.threaded && $item.thr_parent_uuid}}
+						<a href="javascript:doscroll('{{$item.thr_parent_uuid}}',{{$item.parent}});" class="ms-3" title="{{$item.top_hint}}"><i class="bi bi-chevron-double-up"></i></a>
 						{{/if}}
+						{{if $item.pinned}}
+						<div class="wall-item-pinned" title="{{$item.pinned}}" id="wall-item-pinned-{{$item.id}}"><i class="bi bi-pin-fill"></i></div>
 						{{/if}}
-						{{$item.title}}
-						{{if $item.title_tosource}}
-						{{if $item.plink}}
-					</a>
-					{{/if}}
-					{{/if}}
-					</h3>
-					{{/if}}
-					<div class="wall-item-head{{if !$item.title && !$item.event && !$item.photo}} rounded-top{{/if}} clearfix">
-						<div class="entry__meta">
-							<ul>
-								<li>{{if $item.author_is_group_actor}}<svg width="24px" height="24px" viewBox="-3 -4 26 26" id="forum-16px" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
-  <path id="Path_101" data-name="Path 101" d="M-7.5,16a.48.48,0,0,1-.158-.026L-10,15.193A5.971,5.971,0,0,1-13,16a6.006,6.006,0,0,1-6-6,6.006,6.006,0,0,1,6-6,6.006,6.006,0,0,1,6,6,5.976,5.976,0,0,1-.807,3l.782,2.345a.5.5,0,0,1-.121.512A.5.5,0,0,1-7.5,16ZM-13,5a5.006,5.006,0,0,0-5,5,5.006,5.006,0,0,0,5,5,4.984,4.984,0,0,0,2.668-.777.5.5,0,0,1,.426-.052l1.616.538-.539-1.615a.5.5,0,0,1,.052-.426A4.982,4.982,0,0,0-8,10,5.006,5.006,0,0,0-13,5Zm-9.342,7.974,3-1a.5.5,0,0,0,.317-.632.5.5,0,0,0-.633-.316l-2.051.683L-20.94,9.4a.5.5,0,0,0-.073-.454,4.96,4.96,0,0,1,.478-6.485A4.966,4.966,0,0,1-17,1a4.966,4.966,0,0,1,3.535,1.464.5.5,0,0,0,.707,0,.5.5,0,0,0,0-.707A5.959,5.959,0,0,0-17,0a5.959,5.959,0,0,0-4.242,1.757,5.948,5.948,0,0,0-.727,7.569l-1.006,3.016a.5.5,0,0,0,.121.512A.5.5,0,0,0-22.5,13,.48.48,0,0,0-22.342,12.974Z" transform="translate(23)"/>
-</svg>
-									{{/if}}
-
-									<a href="{{$item.profile_url}}" title="{{$item.author_id}}"
-										data-bs-toggle="dropdown">{{$item.name}}</a>
-									{{if $item.thread_author_menu}}
-									<i class="bi bi-caret-down-fill wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
-									<div class="dropdown-menu">
-										{{foreach $item.thread_author_menu as $mitem}}
-										<a class="dropdown-item{{if $mitem.class}} {{$mitem.class}}{{/if}}" {{if
-											$mitem.href}}href="{{$mitem.href}}" {{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"
-											{{/if}}{{if $mitem.title}}title="{{$mitem.title}}" {{/if}}{{if
-											$mitem.data}}{{$mitem.data}}{{/if}}>{{$mitem.title}}</a>
-										{{/foreach}}
-									</div>
-									{{/if}}
-								</li>
-								<li> <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-										<circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.5"></circle>
-										<path stroke="currentColor" stroke-width="1.5" d="M12 8V12L14 14"></path>
-									</svg>
-									<span class="autotime" title="{{$item.isotime}}"><time class="dt-published"
-											datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if
-										$item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span>
-								</li>
-								{{if $item.has_tags}}<li>
-									{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}
-								</li>
-								{{/if}}
-							</ul>
-
+					</div>
+					<div class="float-start wall-item-info pe-2" id="wall-item-info-{{$item.id}}" >
+						<div class="wall-item-photo-wrapper{{if $item.owner_url}} wwfrom{{/if}} h-card p-author" id="wall-item-photo-wrapper-{{$item.id}}">
+							{{if $item.contact_id}}
+							<div class="spinner-wrapper contact-edit-rotator contact-edit-rotator-{{$item.contact_id}}"><div class="spinner s"></div></div>
+							{{/if}}
+							<img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown" />
+							{{if $item.author_is_group_actor}}
+							<i class="bi bi-chat-quote-fill wall-item-photo-group-actor" title="{{$item.author_is_group_actor}}"></i>
+							{{/if}}
+							{{if $item.thread_author_menu}}
+							<i class="bi bi-caret-down-fill wall-item-photo-caret cursor-pointer" data-bs-toggle="dropdown"></i>
+							<div class="dropdown-menu">
+								{{foreach $item.thread_author_menu as $mitem}}
+								<a class="dropdown-item{{if $mitem.class}} {{$mitem.class}}{{/if}}" {{if $mitem.href}}href="{{$mitem.href}}"{{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"{{/if}} {{if $mitem.title}}title="{{$mitem.title}}"{{/if}}{{if $mitem.data}} {{$mitem.data}}{{/if}}>{{$mitem.title}}</a>
+								{{/foreach}}
+							</div>
+							{{/if}}
 						</div>
 					</div>
-			</div>
-
-			{{if $item.divider}}
-			<hr class="wall-item-divider">
-			{{/if}}
-			{{if $item.body}}
-			<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
-				<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
-					{{$item.body}}
+					<div class="wall-item-author">
+						{{if $item.lock}}
+						<div class="float-start dropdown wall-item-lock">
+							<i class="bi {{if $item.locktype == 2}}bi-envelope{{else if $item.locktype == 1}}bi-lock{{else}}bi-unlock{{/if}} lockview{{if $item.privacy_warning}} text-danger{{/if}}" data-bs-toggle="dropdown" title="{{$item.lock}}" onclick="lockview('item',{{$item.id}});" ></i>&nbsp;
+							<div id="panel-{{$item.id}}" class="dropdown-menu"></div>
+						</div>
+						{{/if}}
+						<div class="text-truncate">
+							<a href="{{$item.profile_url}}" class="lh-sm wall-item-name-link u-url"{{if $item.app}} title="{{$item.str_app}}"{{/if}}><span class="wall-item-name{{$item.sparkle}}" id="wall-item-name-{{$item.id}}" ><bdi>{{$item.name}}</bdi></span></a>{{if $item.owner_url}}&nbsp;{{$item.via}}&nbsp;<a href="{{$item.owner_url}}" title="{{$item.owner_addr}}" class="wall-item-name-link"><span class="wall-item-name{{$item.osparkle}}" id="wall-item-ownername-{{$item.id}}"><bdi>{{$item.owner_name}}</bdi></span></a>{{/if}}
+						</div>
+						<small class="lh-sm text-truncate d-block wall-item-addr text-body-secondary">{{$item.author_id}}</small>
+					</div>
+				</div>
+				{{if $item.divider}}
+				<hr class="wall-item-divider">
+				{{/if}}
+				{{if $item.body}}
+				<div class="p-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
+						{{$item.body}}
+					</div>
+				</div>
+				{{/if}}
+				{{if $item.has_tags}}
+				<div class="p-2 wall-item-tools clearfix">
+					<div class="body-tags">
+						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
+					</div>
+				</div>
+				{{/if}}
+				<div class="p-2 wall-item-tools d-flex justify-content-between">
+					<div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
+						{{foreach $item.responses as $verb=>$response}}
+						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
+						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
+						<a href="{{$item.viewthread}}" target="_thread" title="{{$response.count}} {{$response.button.label}}" class="btn btn-sm btn-link{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}">
+							<i class="bi bi-chat generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
+						</a>
+						{{else}}
+						<button type="button" title="{{$response.count}} {{$response.button.label}}" class="btn btn-sm btn-link{{if !$item.observer_activity.$verb}} link-secondary{{/if}} wall-item-reaction wall-item-{{$response.button.class}}" id="wall-item-{{$verb}}-{{$item.id}}" data-item-id="{{$item.id}}" data-item-mid="{{$item.rawmid}}" data-item-verb="{{$verb}}" data-item-parent="{{$item.parent}}" data-item-uuid="{{$item.mid}}" data-item-reaction-count="{{$response.count}}">
+							<i class="bi bi-{{$response.button.icon}} generic-icons"></i>{{if $response.count}}<span style="display: inline-block; margin-top: -.25rem;" class="align-top">{{$response.count}}</span>{{/if}}
+						</button>
+						{{/if}}
+						{{/if}}
+						{{/foreach}}
+						{{if $item.toplevel && $item.emojis && $item.reactions}}
+						<div class="">
+							<button type="button" class="btn btn-sm btn-link link-secondary" data-bs-toggle="dropdown" id="wall-item-react-{{$item.id}}">
+								<i class="bi bi-emoji-smile generic-icons"></i>
+							</button>
+							<div class="dropdown-menu dropdown-menu-start container text-center w-25">
+								<div class="row g-0">
+									{{foreach $item.reactions as $react}}
+									<div class="col-3 p-2">
+										<a class="" href="#" onclick="jotReact({{$item.id}},'{{$react}}'); return false;"><img class="menu-img-1" src="/images/emoji/emojitwo/{{$react}}.png" alt="{{$react}}" /></a>
+									</div>
+									{{/foreach}}
+								</div>
+							</div>
+						</div>
+						{{/if}}
+						<div class="">
+							<div id="like-rotator-{{$item.id}}" class="spinner-wrapper">
+								<div class="spinner s"></div>
+							</div>
+						</div>
+					</div>
+					<div class="wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
+						{{if $item.moderate}}
+						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
+						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
+						{{else}}
+						{{if $item.star && $item.star.isstarred}}
+						<div class="" id="star-button-{{$item.id}}">
+							<button type="button" class="btn btn-sm btn-link link-secondary wall-item-star" onclick="dostar({{$item.id}});"><i class="bi bi-star generic-icons"></i></button>
+						</div>
+						{{/if}}
+						{{if $item.attachments}}
+						<div class="">
+							<button type="button" class="btn btn-sm btn-link link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></button>
+							<div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
+						</div>
+						{{/if}}
+						{{if $item.reply_to}}
+						<button type="button" title="{{$item.reply_to.0}}" class="btn btn-sm btn-link link-secondary" onclick="doreply({{$item.parent}}, {{$item.id}}, '{{$item.author_id}}', '{{$item.reply_to.2}}: {{$item.name|escape:javascript}}');">
+							<i class="bi bi-arrow-90deg-left generic-icons" ></i>
+						</button>
+						{{/if}}
+						<div class="">
+							<button type="button" class="btn btn-sm btn-link link-secondary" data-bs-toggle="dropdown" id="wall-item-menu-{{$item.id}}">
+								<i class="bi bi-three-dots-vertical generic-icons"></i>
+							</button>
+							<div class="dropdown-menu dropdown-menu-end" role="menu" aria-labelledby="wall-item-menu-{{$item.id}}">
+								{{if $item.embed}}
+								<a class="dropdown-item" href="#" onclick="jotEmbed({{$item.id}},{{$item.item_type}}); return false"><i class="generic-icons-nav bi bi-arrow-90deg-right" title="{{$item.embed.0}}"></i>{{$item.embed.0}}</a>
+								{{/if}}
+								{{if $item.plink}}
+								<a class="dropdown-item" href="{{$item.plink.href}}" title="{{$item.plink.title}}" class="u-url"><i class="generic-icons-nav bi bi-box-arrow-up-right"></i>{{$item.plink.title}}</a>
+								{{/if}}
+								{{if $item.edpost}}
+								<a class="dropdown-item" href="{{$item.edpost.0}}" title="{{$item.edpost.1}}"><i class="generic-icons-nav bi bi-pencil"></i>{{$item.edpost.1}}</a>
+								{{/if}}
+								{{if $item.tagger}}
+								<a class="dropdown-item" href="#"  onclick="itemTag({{$item.id}}); return false;"><i id="tagger-{{$item.id}}" class="generic-icons-nav bi bi-tag" title="{{$item.tagger.tagit}}"></i>{{$item.tagger.tagit}}</a>
+								{{/if}}
+								{{if $item.filer}}
+								<a class="dropdown-item" href="#" onclick="itemFiler({{$item.id}}); return false;"><i id="filer-{{$item.id}}" class="generic-icons-nav bi bi-folder-plus" title="{{$item.filer}}"></i>{{$item.filer}}</a>
+								{{/if}}
+								{{if $item.pinnable}}
+								<a class="dropdown-item dropdown-item-pinnable" href="#" onclick="dopin({{$item.id}}); return false;" id="item-pinnable-{{$item.id}}"><i class="generic-icons-nav bi bi-pin"></i>{{$item.pinme}}</a>
+								{{/if}}
+								{{if $item.bookmark}}
+								<a class="dropdown-item" href="#" onclick="itemBookmark({{$item.id}}); return false;"><i id="bookmarker-{{$item.id}}" class="generic-icons-nav bi bi-bookmark" title="{{$item.bookmark}}"></i>{{$item.bookmark}}</a>
+								{{/if}}
+								{{if $item.addtocal}}
+								<a class="dropdown-item" href="#" onclick="itemAddToCal({{$item.id}}); return false;"><i id="addtocal-{{$item.id}}" class="generic-icons-nav bi bi-calendar-plus" title="{{$item.addtocal}}"></i>{{$item.addtocal}}</a>
+								{{/if}}
+								{{if $item.star}}
+								<a class="dropdown-item" href="#" onclick="dostar({{$item.id}}); return false;"><i id="starred-{{$item.id}}" class="generic-icons-nav bi{{if $item.star.isstarred}} starred bi-star-fill{{else}} unstarred bi-star{{/if}}" title="{{$item.star.toggle}}"></i>{{$item.star.toggle}}</a>
+								{{/if}}
+								{{if $item.expand}}
+								<a class="dropdown-item dropdown-item-expand" href="#" data-item-id="{{$item.id}}" data-item-uuid="{{$item.mid}}"><i id="expand-{{$item.id}}" class="generic-icons-nav bi bi-arrows-angle-expand" title="{{$item.expand}}"></i>{{$item.expand}}</a>
+								{{/if}}
+								{{if $item.thread_action_menu}}
+								{{foreach $item.thread_action_menu as $mitem}}
+								<a class="dropdown-item" {{if $mitem.href}}href="{{$mitem.href}}"{{/if}} {{if $mitem.action}}onclick="{{$mitem.action}}"{{/if}} {{if $mitem.title}}title="{{$mitem.title}}"{{/if}} ><i class="generic-icons-nav bi bi-{{$mitem.icon}}"></i>{{$mitem.title}}</a>
+								{{/foreach}}
+								{{/if}}
+								{{if $item.drop.dropping}}
+								<a class="dropdown-item" href="#" onclick="dropItem('item/drop/{{$item.id}}', '#thread-wrapper-{{$item.id}}', '{{$item.mid}}'); return false;" title="{{$item.drop.delete}}" ><i class="generic-icons-nav bi bi-trash"></i>{{$item.drop.delete}}</a>
+								{{/if}}
+								{{if $item.dropdown_extras}}
+								<div class="dropdown-divider"></div>
+								{{$item.dropdown_extras}}
+								{{/if}}
+								{{if $item.edpost && $item.dreport}}
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item" href="dreport/{{$item.dreport_link}}">{{$item.dreport}}</a>
+								{{/if}}
+								{{if $item.settings}}
+								<div class="dropdown-divider"></div>
+								<a class="dropdown-item conversation-settings-link" href="#" data-bs-toggle="modal" data-bs-target="#conversation_settings">{{$item.settings}}</a>
+								{{/if}}
+							</div>
+						</div>
+						{{/if}}
+					</div>
 				</div>
 			</div>
-			{{/if}}
 		</div>
-	</div>
-	{{if $item.thread_level == 1}}
-	{{if $item.toplevel && $item.load_more && $item.threaded}}
-	<div id="load-more-progress-wrapper-{{$item.id}}" class="progress{{if $item.blog_mode}} d-none{{/if}}"
-		role="progressbar" aria-valuenow="{{$item.comments_total_percent}}" aria-valuemin="0" aria-valuemax="100"
-		style="height: 1px">
-		<div id="load-more-progress-{{$item.id}}" class="progress-bar bg-info"
-			style="width: {{$item.comments_total_percent}}%; margin-left: auto; margin-right: auto;"
-			data-comments-total="{{$item.comments_total}}">
+		{{if $item.thread_level == 1}}
+		{{if $item.toplevel && $item.load_more && $item.threaded}}
+		<div id="load-more-progress-wrapper-{{$item.id}}" class="progress{{if $item.blog_mode}} d-none{{/if}}" role="progressbar" aria-valuenow="{{$item.comments_total_percent}}" aria-valuemin="0" aria-valuemax="100" style="height: 1px">
+			<div id="load-more-progress-{{$item.id}}" class="progress-bar bg-info" style="width: {{$item.comments_total_percent}}%; margin-left: auto; margin-right: auto;" data-comments-total="{{$item.comments_total}}"></div>
 		</div>
-	</div>
-	<div id="load-more-{{$item.id}}"
-		class="load-more text-center text-secondary cursor-pointer{{if $item.blog_mode}} d-none{{/if}}"
-		title="{{$item.load_more_title}}"
-		onclick="request(0, '{{$item.rawmid}}', 'load', {{$item.parent}}, ''); return false;">
-		<span id="load-more-dots-{{$item.id}}" class="load-more-dots rounded">
-			<span class="dot-1">-</span>
-			<span class="dot-2">-</span>
-			<span class="dot-3">-</span>
-		</span>
-	</div>
-	{{/if}}
-	<div id="comments">
-		<ol class="commentlist mt-3" id="wall-item-sub-thread-wrapper-{{$item.id}}">
-			{{foreach $item.children as $child}}
+		<div id="load-more-{{$item.id}}" class="load-more text-center text-secondary cursor-pointer{{if $item.blog_mode}} d-none{{/if}}" title="{{$item.load_more_title}}" onclick="request(0, '{{$item.rawmid}}', 'load', {{$item.parent}}, ''); return false;">
+			<span id="load-more-dots-{{$item.id}}" class="load-more-dots rounded"><span class="dot-1">-</span> <span class="dot-2">-</span> <span class="dot-3">-</span></span>
+		</div>
+		{{/if}}
+		<div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
+		{{foreach $item.children as $child}}
 			{{include file="{{$child.template}}" item=$child}}
-			{{/foreach}}
-		</ol>
-	</div>
-	{{if $item.comment}}
-	<div id="wall-item-comment-wrapper-{{$item.id}}"
-		class="p-2 rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
-		{{$item.comment}}
-	</div>
-	{{/if}}
+		{{/foreach}}
+		</div>
+		{{if $item.comment}}
+		<div id="wall-item-comment-wrapper-{{$item.id}}" class="p-2 rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
+			{{$item.comment}}
+		</div>
+		{{/if}}
 
-	{{else}}
-	<div class="wall-item-sub-thread-wrapper">
-		<ol class="commentlist" id="wall-item-sub-thread-wrapper-{{$item.id}}">
-			{{foreach $item.children as $child}}
+		{{else}}
+		<div id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper">
+		{{foreach $item.children as $child}}
 			{{include file="{{$child.template}}" item=$child}}
-			{{/foreach}}
-		</ol>
+		{{/foreach}}
+		</div>
+		{{/if}}
 	</div>
-	{{/if}}
-</article>
-{{else}}
-
+{{if !$item.threaded && $item.comment_lastcollapsed}}
+</div>
 {{/if}}

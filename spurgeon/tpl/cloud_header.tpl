@@ -1,4 +1,5 @@
 <div class="section-title-wrapper app-content-header clearfix">
+	<div class="h3 mt-0">{{$header}}</div>
 	<div class="float-end">
 		<a href="cloud_tiles/{{$cpath}}" class="btn btn-sm btn-outline-secondary"><i class="bi {{if $tiles}}bi-list{{else}}bi-grid{{/if}}"></i></a>
 		{{if $actionspanel}}
@@ -10,7 +11,6 @@
 		{{/if}}
 	</div>
 
-	<div class="h3">{{$header}}</div>
 </div>
 {{if $actionspanel}}
 	{{$actionspanel}}
