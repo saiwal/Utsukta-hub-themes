@@ -66,7 +66,7 @@
 				</a>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 " id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3" type="text">{{$content}}</textarea>
+			<textarea class="profile-jot-text border-1 mb-0" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3" type="text">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">
@@ -84,7 +84,7 @@
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
 			<div id="jot-poll-tools" class="clearfix">
-				<div id="poll-tools-left" class="float-start">
+				<div id="poll-tools-left" class="d-flex">
 					<a id="jot-add-option" class="pe-3" type="button">
 						<i class="bi bi-plus-lg"></i> {{$poll_add_option_label}}
 					</a>
@@ -101,8 +101,8 @@
 				</div>
 			</div>
 		</div>
-		<div id="profile-jot-submit-wrapper" class="clearfix pt-2 jothidden border-0 justify-items-between">
-			<div id="profile-jot-submit-left" class="float-start d-flex">
+		<div id="profile-jot-submit-wrapper" class="clearfix pt-2 jothidden border-0">
+			<div id="profile-jot-submit-left" class="d-flex justify-content-center mb-3">
 				{{if $bbcode}}
 				<div class="btn-group me-2">
 					<a type="button" id="main-editor-bold" class="pe-3 border-0" title="{{$bold}}" onclick="inserteditortag('b', 'profile-jot-text'); return false;">
@@ -231,24 +231,24 @@
 					</div>
 				</div>
 			</div>
-			<div id="profile-jot-submit-right" class="float-end">
+			<div id="profile-jot-submit-right" class="btn-group float-end">
 				{{foreach $customsubmitright as $csr}}
 				<a type="button" class="pe-3" {{$csr.buttonparams}} title="{{$csr.preview}}">
 					{{$csr.buttoncontent}}
 				</a>
 				{{/foreach}}
 				{{if $preview}}
-				<a type="button" class="pe-3" onclick="preview_post();return false;" title="{{$preview}}">
+				<a type="button" class="btn m-0" onclick="preview_post();return false;" title="{{$preview}}">
 					<i class="bi bi-eye jot-icons" ></i>
 				</a>
 				{{/if}}
 				{{if $jotnets}}
-				<a type="button" id="dbtn-jotnets" class="pe-3" data-bs-toggle="modal" data-bs-target="#jotnetsModal" type="button" title="{{$jotnets_label}}" style="{{if $lockstate == 'lock'}}display: none;{{/if}}">
+				<a type="button" id="dbtn-jotnets" class="btn m-0" data-bs-toggle="modal" data-bs-target="#jotnetsModal" type="button" title="{{$jotnets_label}}" style="{{if $lockstate == 'lock'}}display: none;{{/if}}">
 					<i class="bi bi-share jot-icons"></i>
 				</a>
 				{{/if}}
 				{{if $showacl}}
-				<a type="button" id="dbtn-acl" class="pe-3" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button" data-form_id="profile-jot-form">
+				<a type="button" id="dbtn-acl" class="btn m-0" data-bs-toggle="modal" data-bs-target="#aclModal" title="{{$permset}}" type="button" data-form_id="profile-jot-form">
 					<i id="jot-perms-icon" class="bi bi-{{$lockstate}} jot-icons{{if $bang}} jot-lock-warn{{/if}}"></i>
 				</a>
 				{{/if}}
