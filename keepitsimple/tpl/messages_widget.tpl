@@ -1,4 +1,4 @@
-<ul class="nav nav-underline d-flex justify-content-around m-0 pt-3 shadow h5">
+<ul class="nav nav-underline d-flex justify-content-evenly m-0 pt-3 h5">
   <li class="nav-item">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
@@ -30,7 +30,7 @@
     </a>
   </li>
 </ul>
-<div id="messages-widget" class="overflow-auto clearfix card border-0 mb-3 shadow" style="height: 70vh;">
+<div id="messages-widget" class="overflow-auto clearfix card border-0 mb-5 " style="height: 70vh;">
   <div id="messages-template" rel="template" class="d-none">
     <a href="{6}" class="list-group-item list-group-item-action message" data-b64mid="{0}">
       <div class="mb-2 align-middle">
@@ -59,7 +59,7 @@
 
     <div id="messages-author-container" class="list-group-item notifications-textinput">
       <!-- <div class="text-muted notifications-textinput-filter"><i class="bi bi-filter"></i></div> -->
-      <input id="messages-author" type="text" class="h-full-width" placeholder="{{$strings.filter}}">
+      <input id="messages-author" type="text" class="h-full-width mb-2" placeholder="{{$strings.filter}}">
       <div id="messages-author-input-clear" class="text-muted notifications-textinput-clear d-none"><i
           class="bi bi-x-lg"></i></div>
     </div>
