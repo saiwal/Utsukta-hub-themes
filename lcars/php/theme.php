@@ -5,7 +5,7 @@
  *   * Description: LCARS theme adapted for Hubzilla
  *   * Version: 1.0-alpha
  *   * MinVersion: 7.2
- *   * MaxVersion: 11.0
+ *   * MaxVersion: 12.0
  *   * Author: Saiwal sk@utsukta.org
  *   * Maintainer: Saiwal sk@utsukta.org
  *   * Compat: Hubzilla [*]
