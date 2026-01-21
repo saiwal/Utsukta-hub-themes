@@ -30,8 +30,7 @@
         </h2>
 				{{/if}}
 				<div class="entry__meta">
-						<ul class="mb-2">
-							<li><img src="{{$item.thumb}}" alt=""></li>
+						<ul>
 							<li>
 								{{if $item.lock}}
 								<span class="float-start dropdown wall-item-lock">
@@ -70,21 +69,21 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="p-2 wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
 				</div>
 				{{/if}}
 				{{if $item.has_tags}}
-				<div class="p-2 wall-item-tools clearfix">
+				<div class="wall-item-tools clearfix">
 					<div class="body-tags">
 						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
 					</div>
 				</div>
 				{{/if}}
 
-				<div class="p-2 wall-item-tools d-flex justify-content-between">
+				<div class="wall-item-tools d-flex justify-content-between">
 					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
@@ -107,7 +106,7 @@
 							<div class="dropdown-menu dropdown-menu-start container text-center w-25">
 								<div class="row g-0">
 									{{foreach $item.reactions as $react}}
-									<div class="col-3 p-2">
+									<div class="col-3">
 										<a class="" href="#" onclick="jotReact({{$item.id}},'{{$react}}'); return false;"><img class="menu-img-1" src="/images/emoji/emojitwo/{{$react}}.png" alt="{{$react}}" /></a>
 									</div>
 									{{/foreach}}
@@ -133,7 +132,7 @@
 						{{/if}}
 						{{if $item.attachments}}
 						<div class="">
-							<a type="button" class="p-2 link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
+							<a type="button" class="link-secondary wall-item-attach" data-bs-toggle="dropdown" id="attachment-menu-{{$item.id}}"><i class="bi bi-paperclip generic-icons"></i></a>
 							<div class="dropdown-menu dropdown-menu-end">{{$item.attachments}}</div>
 						</div>
 						{{/if}}
@@ -219,7 +218,7 @@
 		{{/foreach}}
 		</div>
 		{{if $item.comment}}
-		<div id="wall-item-comment-wrapper-{{$item.id}}" class="p-2 rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
+		<div id="wall-item-comment-wrapper-{{$item.id}}" class="rounded wall-item-comment-wrapper{{if $item.children}} wall-item-comment-wrapper-wc{{/if}}{{if $item.comment_hidden}} d-none{{/if}}">
 			{{$item.comment}}
 		</div>
 		{{/if}}
