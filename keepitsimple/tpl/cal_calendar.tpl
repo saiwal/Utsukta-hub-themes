@@ -111,7 +111,7 @@ function updateSize() {
 				<button id="next-btn" class="btn btn-secondary btn-sm" title="{{$next}}"><i class="bi bi-chevron-right"></i></button>
 			</div>
 		</div>
-		<div id="title" class="h3"></div>
+		<div id="title" class="h3 mt-0"></div>
 		<div class="clear"></div>
 	</div>
 	<div class="section-content-wrapper-np">

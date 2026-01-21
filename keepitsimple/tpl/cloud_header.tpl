@@ -10,7 +10,7 @@
 		{{/if}}
 	</div>
 
-	<div class="h3">{{$header}}</div>
+	<div class="h3 mt-0">{{$header}}</div>
 </div>
 {{if $actionspanel}}
 	{{$actionspanel}}

@@ -13,7 +13,7 @@
 				{{/if}}
 			</div>
 		</div>
-		<h3>{{$album}}</h3>
+		<div class="h3 mt-0">{{$album}}</div>
 		<div class="clear"></div>
 	</div>
 	{{$upload_form}}

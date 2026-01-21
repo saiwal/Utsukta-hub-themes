@@ -101,60 +101,60 @@
 
 		</div> <!-- end content-wrap -->
 
-
-		<!-- Footer
+	</div>
+	<!-- Footer
     ================================================== -->
-		<footer class="s-footer">
+	<footer class="s-footer">
 
-			<div class="row s-footer__top">
-				<div class="column">
-					<ul class="s-footer__social">
-						<li><a href="#0"><i class="fab fa-facebook-f" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-youtube" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-vimeo-v" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-instagram" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-linkedin" aria-hidden="true"></i></a></li>
-						<li><a href="#0"><i class="fab fa-skype" aria-hidden="true"></i></a></li>
-					</ul>
-				</div>
-			</div> <!-- end footer__top -->
+		<div class="row s-footer__top">
+			<div class="column">
+				<ul class="s-footer__social">
+					<li><a href="#0"><i class="fab fa-facebook-f" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-twitter" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-youtube" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-vimeo-v" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-instagram" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-linkedin" aria-hidden="true"></i></a></li>
+					<li><a href="#0"><i class="fab fa-skype" aria-hidden="true"></i></a></li>
+				</ul>
+			</div>
+		</div> <!-- end footer__top -->
 
-			<div class="row s-footer__bottom">
+		<div class="row s-footer__bottom">
 
-				<?php if (x($page, 'footer')) echo $page['footer']; ?>
+			<?php if (x($page, 'footer')) echo $page['footer']; ?>
 
-				<div class="ss-copyright">
-					<span>Design by <a href="https://www.styleshout.com/">StyleShout</a> Adapted for Hubzilla</span>
-				</div>
-
-			</div> <!-- end footer__bottom -->
-
-			<div class="ss-offcanvas">
-				<a class="nav-link d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
-					aria-controls="offcanvasResponsive">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path
-							d="M2 7.81125V16.1913C2 17.6813 2.36 18.9212 3.05 19.8713C3.34 20.2913 3.71 20.6612 4.13 20.9513C4.95 21.5513 5.99 21.9012 7.22 21.9812V2.03125C3.94 2.24125 2 4.37125 2 7.81125Z"
-							fill="#292D32" />
-						<path
-							d="M20.9507 4.13C20.6607 3.71 20.2907 3.34 19.8707 3.05C18.9207 2.36 17.6807 2 16.1907 2H8.7207V22H16.1907C19.8307 22 22.0007 19.83 22.0007 16.19V7.81C22.0007 6.32 21.6407 5.08 20.9507 4.13ZM15.5007 14.03C15.7907 14.32 15.7907 14.8 15.5007 15.09C15.3507 15.24 15.1607 15.31 14.9707 15.31C14.7807 15.31 14.5907 15.24 14.4407 15.09L11.8807 12.53C11.5907 12.24 11.5907 11.76 11.8807 11.47L14.4407 8.91C14.7307 8.62 15.2107 8.62 15.5007 8.91C15.7907 9.2 15.7907 9.68 15.5007 9.97L13.4807 12L15.5007 14.03Z"
-							fill="#292D32" />
-					</svg>
-				</a>
+			<div class="ss-copyright">
+				<span>Design by <a href="https://www.styleshout.com/">StyleShout</a> Adapted for Hubzilla</span>
 			</div>
 
-			<div class="ss-go-top">
-				<a class="smoothscroll" title="Back to Top" href="#top">
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-						<path d="M12 0l8 9h-6v15h-4v-15h-6z" />
-					</svg>
-				</a>
-			</div> <!-- end ss-go-top -->
+		</div> <!-- end footer__bottom -->
 
-		</footer> <!-- end Footer-->
+		<div class="ss-offcanvas">
+			<a class="nav-link d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasResponsive"
+				aria-controls="offcanvasResponsive">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path
+						d="M2 7.81125V16.1913C2 17.6813 2.36 18.9212 3.05 19.8713C3.34 20.2913 3.71 20.6612 4.13 20.9513C4.95 21.5513 5.99 21.9012 7.22 21.9812V2.03125C3.94 2.24125 2 4.37125 2 7.81125Z"
+						fill="#292D32" />
+					<path
+						d="M20.9507 4.13C20.6607 3.71 20.2907 3.34 19.8707 3.05C18.9207 2.36 17.6807 2 16.1907 2H8.7207V22H16.1907C19.8307 22 22.0007 19.83 22.0007 16.19V7.81C22.0007 6.32 21.6407 5.08 20.9507 4.13ZM15.5007 14.03C15.7907 14.32 15.7907 14.8 15.5007 15.09C15.3507 15.24 15.1607 15.31 14.9707 15.31C14.7807 15.31 14.5907 15.24 14.4407 15.09L11.8807 12.53C11.5907 12.24 11.5907 11.76 11.8807 11.47L14.4407 8.91C14.7307 8.62 15.2107 8.62 15.5007 8.91C15.7907 9.2 15.7907 9.68 15.5007 9.97L13.4807 12L15.5007 14.03Z"
+						fill="#292D32" />
+				</svg>
+			</a>
+		</div>
 
-		<script src="/view/theme/keepitsimple/js/maintr.js"></script>
+		<div class="ss-go-top">
+			<a class="smoothscroll" title="Back to Top" href="#top">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+					<path d="M12 0l8 9h-6v15h-4v-15h-6z" />
+				</svg>
+			</a>
+		</div> <!-- end ss-go-top -->
+
+	</footer> <!-- end Footer-->
+
+	<script src="/view/theme/keepitsimple/js/maintr.js"></script>
 </body>
 
 </html>

@@ -6,6 +6,21 @@
 			</a>
 		</h1>
 		<p class="s-header__tagline">
+      {{if $userinfo}}
+      {{if $sel.name}}
+      {{if $sitelocation}}
+        <span class="h6">{{$sel.name}} •</span>
+        <span>{{$sitelocation}}</span>
+      {{else}}
+        <a class="h6" aria-current="page" href="{{$url}}">{{$sel.name}}</a>
+      {{/if}}
+
+      {{if $settings_url}}
+        <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="h6"><i class="bi bi-gear"></i></a>
+      {{/if}}
+      {{/if}}
+      {{/if}}
+
 		</p>
 	</div>
 	<div class="widget widget--search position-absolute top-0 end-0 w-50" id="search-autocomplete-results">

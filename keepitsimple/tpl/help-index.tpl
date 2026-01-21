@@ -1,8 +1,9 @@
-<div class="accordion" id="accordion-helpindex">
+<div class="h5">Index</div>
+<div class="accordion accordion-flush" id="accordion-helpindex">
   {{if $sections}}
     {{foreach $sections as $section => $links}}
   <div class="accordion-item">
-    <h2 class="accordion-header mt-0">
+    <h2 class="accordion-header m-0 h6">
       <button class="accordion-button collapsed mb-0" type="button" data-bs-toggle="collapse" data-bs-target="#{{$section}}"
         aria-expanded="false" aria-controls="{{$section}}">
         {{$section}}

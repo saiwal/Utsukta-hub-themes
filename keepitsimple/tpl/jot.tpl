@@ -66,7 +66,7 @@
 				</a>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 mb-0" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3" type="text">{{$content}}</textarea>
+			<textarea class="profile-jot-text mb-0" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3" type="text">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">

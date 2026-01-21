@@ -49,11 +49,11 @@
   aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="conversation_settings_label">{{$conversation_tools}}</h5>
+      <div class="modal-header p-4">
+        <h5 class="modal-title mt-0" id="conversation_settings_label">{{$conversation_tools}}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
       </div>
-      <div class="modal-body" id="conversation_settings_body">
+      <div class="modal-body p-5" id="conversation_settings_body">
         {{$wait}}
       </div>
     </div><!-- /.modal-content -->
