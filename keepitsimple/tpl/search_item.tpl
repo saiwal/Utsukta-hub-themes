@@ -37,7 +37,7 @@
 			<hr class="wall-item-divider">
 			{{/if}}
 			{{if $item.body}}
-			<div class="p-2 ps-3 clearfix w-100 {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}"
+			<div class="clearfix w-100 {{if $item.is_photo}} wall-photo-item{{else}} wall-item-content{{/if}}"
 				id="wall-item-content-{{$item.id}}">
 				<div class="wall-item-body" id="wall-item-body-{{$item.id}}" {{if $item.rtl}} dir="rtl" {{/if}}>
 					{{$item.body}}
@@ -72,7 +72,7 @@
 			</div>
 			<div class="wall-item-tools-right hstack gap-1" id="wall-item-tools-right-{{$item.id}}">
 				{{if $item.conv}}
-			<div class="p-2 wall-item-conv" id="wall-item-conv-{{$item.id}}">
+			<div class="wall-item-conv" id="wall-item-conv-{{$item.id}}">
 				<a href='{{$item.conv.href}}' id='context-{{$item.id}}' title='{{$item.conv.title}}'>{{$item.conv.title}}</a>
 			</div>
 			{{/if}}
