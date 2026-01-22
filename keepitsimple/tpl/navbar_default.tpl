@@ -68,6 +68,7 @@
 				</ul>
 			</li>
 			{{/if}}
+      {{if $userinfo}}
 			<li class="has-children"><a href="#" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
 				<ul class="sub-menu"> <!--begin::User Image-->
 					{{if $is_owner}}
@@ -114,6 +115,7 @@
 				</ul>
 			</li>
 
+			{{/if}}
 		</ul> <!-- end #nav -->
 
 	</div>
