@@ -1,3 +1,15 @@
+.s-header__content {
+    background-color: #ffffff;
+    background-image: url($banner_image);
+    background-size: 361px 256px;
+    background-repeat: no-repeat;
+    background-position: right top;
+    min-height: 30rem;
+    padding-top: 12rem;
+    padding-bottom: 8rem;
+    border-bottom: 1px dashed #efefef;
+    position: relative;
+}
 .page-content h2 {
   margin-top: 0;
 }
