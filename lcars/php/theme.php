@@ -3,7 +3,7 @@
 /**
  *   * Name: LCARS
  *   * Description: LCARS theme adapted for Hubzilla
- *   * Version: 1.0-alpha
+ *   * Version: 1.0-beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 12.0
  *   * Author: Saiwal sk@utsukta.org

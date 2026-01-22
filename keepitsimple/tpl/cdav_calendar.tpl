@@ -21,7 +21,6 @@
     calendar = new FullCalendar.Calendar(calendarEl, {
 
       eventSources: [{{$sources}} ],
-
       timeZone: '{{$timezone}}',
 
       locale: '{{$lang}}',

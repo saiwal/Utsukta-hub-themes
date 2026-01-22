@@ -3,7 +3,7 @@
 /**
  *   * Name: Typerite
  *   * Description: Typerite theme by Styleshout adapted for Hubzilla
- *   * Version: 1.0-alpha
+ *   * Version: 1.0-beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 12.0
  *   * Author: Saiwal sk@hub.utsukta.org

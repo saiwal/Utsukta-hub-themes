@@ -6,10 +6,10 @@
   {{/if}}
     {{if $desc}}<div class="desc">{{$desc}}</div>{{/if}}
 
-    <ul style="list-style: none;">
+    <ul>
       {{foreach $items as $item}}
-      <li class="nav-item"><a href="{{$item.url}}"
-          class="nav-link{{if $item.selected}} active{{/if}}">{{$item.label}}</a></li>
+      <li><a href="{{$item.url}}"
+          class="{{if $item.selected}}text-secondary active{{/if}}">{{$item.label}}</a></li>
       {{/foreach}}
     </ul>
 </div>
