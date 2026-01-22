@@ -81,7 +81,6 @@ namespace {
 		// This function is called once when the theme is being enabled by the admin
 		// It can be used to register hooks etc.
 			$defaults = [
-					'schema'              => '---',
 					'banner_image'    => '',
 			];
 

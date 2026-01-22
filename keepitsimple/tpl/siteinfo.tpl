@@ -1,17 +1,12 @@
 
 <div class="app-content">
 
-  <div class="card  mb-3">
-    <div class="card-header">
+    <div class="h3 mt-0">
       {{$title}}
     </div>
-    <div class="card-body">
       <h4>{{$sitename}}</h4>
       <p class="card-text">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
-    </div>
-    <div class="card-body">
       <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
-    </div>
     <ul class="list-group list-group-flush">
       {{if $addons.1}}
       <li class="list-group-item">
@@ -26,6 +21,21 @@
           </div>
       </li>
       {{/if}}
+
+      {{if $themes.1}}
+      <li class="list-group-item">
+        <div class="d-flex py-2 px-1">
+          <div class="col-2">
+            {{$themes.0}}
+          </div>
+          <div class="col-10">
+            {{foreach $themes.1 as $theme}}
+              <span class="badge text-bg-primary">{{$theme}}</span>
+            {{/foreach}}
+          </div>
+      </li>
+      {{/if}}
+
       {{if $blocked_sites.1}}
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
@@ -40,21 +50,17 @@
       </li>
       {{/if}}
     </ul>    
-    <div class="card-footer text-muted">
+    <div class="text-muted">
       {{if $admin_about}}{{$admin_about}}{{else}}--{{/if}}
     </div>    
-  </div>
 
-  <div class="card  mb-3">
-    <div class="card-header">
+    <div class="h3">
       {{$prj_header}}
     </div>
-    <div class="card-body">
       <p class="card-text">{{$prj_name}} ({{$z_server_role}})
       {{if $prj_version}}
       {{$prj_version}}</p>
       {{/if}}
-    </div>
     <ul class="list-group list-group-flush">    
       <li class="list-group-item">
         <div class="d-flex py-2 px-1">
@@ -77,7 +83,6 @@
         <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
       </li>
     </ul>
-  </div>
 
 </div>    
 
