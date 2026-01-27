@@ -23,14 +23,6 @@
 
 		</p>
 	</div>
-	<div class="widget widget--search position-absolute top-0 end-0 w-50" id="search-autocomplete-results">
-		<h3 class="h6">Search</h3>
-		<form action="{{$nav.search.4}}" method="get" role="search">
-			<input type="text" value="{{$nav.search.3}}" onblur="if(this.value == '') { this.value = '{{$nav.search.3}}'; }"
-												 onfocus="if (this.value == '{{$nav.search.3}}') { this.value = ''; }" class="text-search" id="nav-search-text" name="search">
-			<input type="submit" class="submit-search">
-		</form>
-	</div>
 
 </div> <!-- end row -->
 <nav class="s-header__nav-wrap">
@@ -68,6 +60,10 @@
 				</ul>
 			</li>
 			{{/if}}
+			{{if $nav.manage}}
+			<li><a href="/apps"><i class="bi bi-plus-lg nav-icon"></i>{{$addapps}}</a></li>
+      {{/if}}
+
       {{if $userinfo}}
 			<li class="has-children"><a href="#" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
 				<ul class="sub-menu"> <!--begin::User Image-->

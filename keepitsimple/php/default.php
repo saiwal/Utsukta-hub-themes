@@ -84,6 +84,14 @@
 						<div class="container">
 							<div id="region_1" class="pe-0 w-100">
 								<div id="left_aside_wrapper">
+									<!-- Search needs to be implemented as a widget to support language translations -->
+									<div class="widget widget--search" id="search-autocomplete-results">
+										<form action="search" method="get" role="search">
+											<input type="text" value="Search site @name, !forum, #tag, ?docs, content" onblur="if(this.value == '') { this.value = 'Search site @name, !forum, #tag, ?docs, content'; }"
+											 onfocus="if (this.value == 'Search site @name, !forum, #tag, ?docs, content') { this.value = ''; }" class="text-search" id="nav-search-text" name="search">
+											<input type="submit" class="submit-search">
+										</form>
+									</div>
 									<?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
 								</div>
 							</div>

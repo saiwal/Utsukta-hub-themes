@@ -1444,7 +1444,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 
 /* nav-wrap */
 .s-header__nav-wrap {
-    z-index: 1;
+    z-index: 10;
     width: 100%;
     font-family: "Open Sans", sans-serif;
     font-weight: 700;

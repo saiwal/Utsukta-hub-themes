@@ -1,7 +1,7 @@
 {{if !$aj}}
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper">
-		<h3>{{$title}}</h3>
+		<div class="h3 mt-0">{{$title}}</div>
 	</div>
 	<div class="section-content-wrapper-np">
     <div class="mb-3">

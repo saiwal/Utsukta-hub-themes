@@ -124,7 +124,6 @@
             $('html, body').stop().animate({
                 'scrollTop': $target.offset().top
             }, cfg.scrollDuration, 'swing').promise().done(function () {
-                window.location.hash = target;
             });
         });
 
