@@ -13,7 +13,7 @@
 	{{/if}}
 	{{foreach $items as $mitem }}
 	<li class="nav-item" id="pmenu-item-{{$mitem.mitem_id}}">
-		<a href="#" class="nav-link" {{if $mitem.newwin}}target="_blank" {{/if}}>
+		<a href="{{if $mitem.submenu}}#{{else}}{{$mitem.mitem_link}}{{/if}}" class="nav-link" {{if $mitem.newwin}}target="_blank" {{/if}}>
 			<i class="nav-icon bi bi-circle"></i>
 			<p>
 			{{$mitem.mitem_desc}}
