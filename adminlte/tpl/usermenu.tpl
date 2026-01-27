@@ -9,7 +9,7 @@
 	{{if $wrap}}
 	<ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation" data-accordion="false" id="navigation">
 	{{else}}
-	<ul class="border-start border-4 nav nav-treeview ms-4" role="navigation" aria-label="Navigation 15" style="box-sizing: border-box; display: none;">
+	<ul class="border-start border-4 nav nav-treeview ms-4" role="navigation" aria-label="Navigation sub menu" style="box-sizing: border-box; display: none;">
 	{{/if}}
 	{{foreach $items as $mitem }}
 	<li class="nav-item" id="pmenu-item-{{$mitem.mitem_id}}">
