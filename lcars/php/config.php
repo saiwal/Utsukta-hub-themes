@@ -190,77 +190,11 @@ namespace {
       $bg_image     = Config::Get('theme_lcars', 'background_image', '');
       $logo     = Config::Get('theme_lcars', 'logo', '/view/theme/lcars/img/hz.png');
       $bg_image_dark = Config::Get('theme_lcars', 'background_image_dark', '');
+      $tpl = get_markup_template('theme_settings_admin.tpl');
 
-      $t = get_markup_template('lcars_admin.tpl');
-
-      return replace_macros($t, [
+      return replace_macros($tpl, [
 
           '$title' => t('lcars Theme Settings (System Defaults)'),
-          '$schema' => [
-              'schema',
-              t('Default scheme'),
-              $schema,
-              '',
-              $schemas
-          ],
-          '$dark_mode' => [
-              'dark_mode',
-              t('Default color mode'),
-              $dark_mode,
-              '',
-              [0 => t('Light'), 1 => t('Dark')]
-          ],
-
-          '$sidebar_mode' => [
-              'sidebar_mode',
-              t('Default sidebar mode'),
-              $sidebar,
-              '',
-              [0 => t('Expanded'), 1 => t('Collapsed')]
-          ],
-
-          '$bg_mode' => [
-              'bg_mode',
-              t('Background image mode'),
-              $bg_mode,
-              '',
-              [0 => t('Tile'), 1 => t('Cover')]
-          ],
-
-          '$background_color' => [
-              'background_color',
-              t('Background color (light mode)'),
-              $bgcolor,
-              t('Leave empty for default')
-          ],
-
-          '$background_color_dark' => [
-              'background_color_dark',
-              t('Background color (dark mode)'),
-              $bgcolor_dark,
-              t('Leave empty for default')
-          ],
-          '$logo' => [
-              'logo',
-              t('Logo image URL'),
-              $logo,
-              t('Leave empty for none')
-          ],
-
-          '$background_image' => [
-              'background_image',
-              t('Background image URL (light mode)'),
-              $bg_image,
-              t('Leave empty for none')
-          ],
-
-          '$background_image_dark' => [
-              'background_image_dark',
-              t('Background image URL (dark mode)'),
-              $bg_image_dark,
-              t('Leave empty for none')
-          ],
-
           '$submit' => t('Submit'),
           '$form_security_token' => get_form_security_token('admin_themes'),
       ]);

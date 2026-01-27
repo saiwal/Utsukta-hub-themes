@@ -101,7 +101,7 @@ namespace {
       // Load system-level (admin) theme config
       $banner_image     = Config::Get('theme_keepitsimple', 'banner_image', '');
 
-      $t = get_markup_template('keepitsimple_admin.tpl');
+			$t = file_get_contents(__DIR__ . '/../tpl/theme_settings_admin.tpl');
 
       return replace_macros($t, [
 
