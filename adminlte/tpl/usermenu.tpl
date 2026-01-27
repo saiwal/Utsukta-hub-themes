@@ -4,6 +4,7 @@
 	<div class="card-header">{{$menu.menu_desc}}
 	</div>
 	{{/if}}
+	<div class="card-body">
 {{/if}}
 {{if $items}}
 	{{if $wrap}}
@@ -25,5 +26,6 @@
 	</ul>
 {{/if}}
 {{if $wrap}}
+	</div>
 </div>
 {{/if}}
