@@ -145,7 +145,7 @@ namespace {
       return $scheme_choices;
   }
 
-  function theme_admin() {
+  function theme_admin(&$a) {
       $schema   = Config::Get('theme_adminlte', 'schema', '---');
       $schemas  = adminlte_get_schemas();
       // Load system-level (admin) theme config
@@ -158,7 +158,8 @@ namespace {
       $logo     = Config::Get('theme_adminlte', 'logo', '/view/theme/adminlte/img/hz.png');
       $bg_image_dark = Config::Get('theme_adminlte', 'background_image_dark', '');
 
-      $t = get_markup_template('adminlte_admin.tpl');
+      /* $t = get_markup_template('adminlte_admin.tpl'); */
+			$t = file_get_contents(__DIR__ . '/../tpl/theme_settings_admin.tpl');
 
       return replace_macros($t, [
 
