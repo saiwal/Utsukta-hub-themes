@@ -2466,10 +2466,18 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     padding: 2rem 0 0 0;
     padding-left: 14%;
 }
+.commentlist>ul>.comment {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 2rem 0 0 0;
+    padding-left: 14%;
+}
+
 
 .comment__avatar {
     position: absolute;
-    left: -20px;
+    left: 0px;
     display: block;
 }
 
