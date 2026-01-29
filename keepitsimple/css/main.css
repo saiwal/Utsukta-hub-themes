@@ -2450,7 +2450,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     border-top: 1px solid #efefef;
 }
 
-#comments ol, #comments ul {
+#comments ol, #comments ul, .commentlist ul {
     list-style: none;
 }
 
@@ -2469,13 +2469,13 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 
 .comment__avatar {
     position: absolute;
-    left: 0;
+    left: -20px;
     display: block;
 }
 
 .comment__avatar img {
-    height: 6rem;
-    width: 6rem;
+    height: 48px;
+    width: 48px;
     border-radius: 100%;
     vertical-align: bottom;
 }

@@ -3,9 +3,9 @@
 </div>
 <div class="entry__meta">
 {{if $oneday && $allday}}
-<span class="dtstart small entry__meta-date">{{$dtstart_dt}}</span>
+<span class="dtstart entry__meta-date">{{$dtstart_dt}}</span>
 {{else if $allday}}
-<span class="dtstart small entry__meta-date">{{$dtstart_dt}}</span> &mdash; <span class="dtend">{{$dtend_dt}}</span>
+<span class="dtstart entry__meta-date">{{$dtstart_dt}}</span> &mdash; <span class="dtend">{{$dtend_dt}}</span>
 {{else}}
 <div class="event-item-start entry__meta-date">
 	<span class="event-item-label">{{$dtstart_label}}</span>&nbsp;<span class="dtstart" title="{{$dtstart_title}}">{{$dtstart_dt}}</span>
