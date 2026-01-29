@@ -1,4 +1,4 @@
-<div class="event-item-title lcars-text-bar">
+<div class="event-item-title h3">
 	<span><i class="bi bi-calendar3"></i>&nbsp;{{$title}}</span>
 </div>
 <div class="entry__meta">
