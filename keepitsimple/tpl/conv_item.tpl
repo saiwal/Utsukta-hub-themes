@@ -404,8 +404,7 @@
 					<span id="load-more-dots-{{$item.id}}" class="load-more-dots rounded"><span class="dot-1">-</span> <span class="dot-2">-</span> <span class="dot-3">-</span></span>
 				</div>
 			{{/if}}
-				
-			<ul id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper {{if $item.toplevel}}commentlist{{else}}children{{/if}}">
+			<ul id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper children">
 			{{foreach $item.children as $child}}
 				{{include file="{{$child.template}}" item=$child}}
 			{{/foreach}}
