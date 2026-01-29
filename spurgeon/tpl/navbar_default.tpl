@@ -31,6 +31,9 @@
           {{/foreach}}
         </ul>
       </li>
+			<li><a href="/apps"><i class="bi bi-plus-lg"></i>{{$addapps}}</a>
+			</li>
+
       {{else}}
       <!-- System apps   -->
       <li class="has-children"><a class="">{{$sysapps}}</a>
