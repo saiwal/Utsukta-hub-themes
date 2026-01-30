@@ -32,40 +32,35 @@
         </h2>
 				{{/if}}
 				<div class="entry__meta">
-						<ul>
-							<li>
-								{{if $item.lock}}
-								<span class="float-start dropdown wall-item-lock">
-									<i class="bi {{if $item.locktype == 2}}bi-envelope{{else if $item.locktype == 1}}bi-lock{{else}}bi-unlock{{/if}} lockview{{if $item.privacy_warning}} text-danger{{/if}}" data-bs-toggle="dropdown" title="{{$item.lock}}" onclick="lockview('item',{{$item.id}});" ></i>&nbsp;
-									<div id="panel-{{$item.id}}" class="dropdown-menu"></div>
-								</span>
+						<div class="entry__meta-author">
+							{{if $item.author_is_group_actor}}
+							<i class="bi bi-chat-quote-fill pe-2" title="{{$item.author_is_group_actor}}"></i>
+							{{else}}
+								<svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+										<circle cx="12" cy="8" r="3.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></circle>
+										<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.8475 19.25H17.1525C18.2944 19.25 19.174 18.2681 18.6408 17.2584C17.8563 15.7731 16.068 14 12 14C7.93201 14 6.14367 15.7731 5.35924 17.2584C4.82597 18.2681 5.70558 19.25 6.8475 19.25Z"></path>
+								</svg>
 								{{/if}}
 								<span class="text-truncate">
-									<a href="{{$item.profile_url}}" class="lh-sm wall-item-name-link u-url"{{if $item.app}} title="{{$item.str_app}}"{{/if}}><span class="wall-item-name{{$item.sparkle}}" id="wall-item-name-{{$item.id}}" ><bdi>{{$item.name}}</bdi></span></a>{{if $item.owner_url}}&nbsp;{{$item.via}}&nbsp;<a href="{{$item.owner_url}}" title="{{$item.owner_addr}}" class="wall-item-name-link"><span class="wall-item-name{{$item.osparkle}}" id="wall-item-ownername-{{$item.id}}"><bdi>{{$item.owner_name}}</bdi></span></a>{{/if}}
+									<a href="{{$item.profile_url}}" class="lh-sm u-url"{{if $item.app}} title="{{$item.str_app}}"{{/if}}><span class="wall-item-name{{$item.sparkle}}" id="wall-item-name-{{$item.id}}" >{{$item.name}}</span></a>{{if $item.owner_url}}&nbsp;{{$item.via}}&nbsp;<a href="{{$item.owner_url}}" title="{{$item.owner_addr}}" class=""><span id="wall-item-ownername-{{$item.id}}"><em>{{$item.owner_name}}</em></span></a>{{/if}}
 								</span>
-							</li>
-							{{if $item.location}}
-							{{$item.location}}
+						</div>
+						<div class="entry__meta-date">
+								<svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+										<circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.5"></circle>
+										<path stroke="currentColor" stroke-width="1.5" d="M12 8V12L14 14"></path>
+								</svg>
+							<span class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span>
+						</div>
+						<div class="entry__meta-cat">
+							{{if $item.has_tags}}
+							<div class="wall-item-tools clearfix">
+								<div class="body-tags">
+									<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
+								</div>
+							</div>
 							{{/if}}
-							{{if $item.editedtime}}
-							<li><i class="bi bi-pencil" title="{{$item.editedtime}}"></i></li>
-							{{/if}}
-							{{if $item.verified}}
-							<li><i class="bi bi-shield-check" title="{{$item.verified}}"></i></li>
-							{{elseif $item.forged}}
-							<li><i class="bi bi-shield-exclamation text-danger" title="{{$item.forged}}"></i></li>
-							{{/if}}
-							{{if $item.no_comment}}
-							<li><i class="bi bi-ban" title="{{$item.no_comment}}"></i></li>
-							{{/if}}
-							{{if $item.delayed}}
-							<li><i class="bi bi-clock" title="{{$item.delayed}}"></i></li>
-							{{/if}}
-							{{if $item.expiretime}}
-							<li><i class="bi bi-clock-history" title="{{$item.expiretime}}"></i></li>
-							{{/if}}
-							<li><span class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span></li>
-						</ul>
+						</div>
 				</div>
 				{{if $item.divider}}
 				<hr class="wall-item-divider">
@@ -74,13 +69,6 @@
 				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
-					</div>
-				</div>
-				{{/if}}
-				{{if $item.has_tags}}
-				<div class="wall-item-tools clearfix">
-					<div class="body-tags">
-						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
 					</div>
 				</div>
 				{{/if}}

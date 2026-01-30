@@ -125,16 +125,16 @@ $(document).ready(function() {
 			doRequest = !subThreadWrapper.children.length;
 
 			// Set visual styles using UUID
-			// subThreadWrapper.style.setProperty('--hz-item-indent', stringToHslColor(uuid));
-			// threadWrapper.style.setProperty('--hz-item-highlight', stringToHslColor(uuid));
-			// threadWrapper.style.setProperty('--hz-wall-item-expanded-before-content', '"' + aStr.dblclick_to_exit_zoom + '"');
-			//
+			subThreadWrapper.style.setProperty('--hz-item-indent', stringToHslColor(uuid));
+			threadWrapper.style.setProperty('--hz-item-highlight', stringToHslColor(uuid));
+			threadWrapper.style.setProperty('--hz-wall-item-expanded-before-content', '"' + aStr.dblclick_to_exit_zoom + '"');
+
 			// Clear previous highlights
-			// parentSubThreadWrapper.querySelectorAll('.thread-wrapper.item-highlight').forEach(el => el.classList.remove('item-highlight'));
+			parentSubThreadWrapper.querySelectorAll('.thread-wrapper.item-highlight').forEach(el => el.classList.remove('item-highlight'));
 
 			if (isUserClick && parentIndentedThreads.length === 0 && !subThreadWrapper.children.length) {
 				// Handle first-time expansion and highlighting but not for toplevels (blog mode)
-				// threadWrapper.classList.add('item-highlight');
+				threadWrapper.classList.add('item-highlight');
 			} else {
 				// Handle indentation and zooming
 				let ancestor = subThreadWrapper.parentElement;
@@ -872,21 +872,21 @@ function updateConvItems(mode, data) {
 					localStorage.removeItem("comment_body-" + convId);
 				}
 			}
+		}
 
-			if ((mode === 'append' || mode === 'replace') && loadingPage) {
-				loadingPage = false;
-			}
+		if ((mode === 'append' || mode === 'replace') && loadingPage) {
+			loadingPage = false;
+		}
 
-			// if single thread view and the item has a title, display it in the title bar
-			if (mode === 'replace') {
-				if (window.location.search.includes("mid=") || window.location.pathname.includes("display")) {
-					let titleElem = document.querySelector(".wall-item-title");
-					if (titleElem) {
-						let title = titleElem.textContent.trim();
-						if (title) {
-							savedTitle = title + ' ' + savedTitle;
-							document.title = title;
-						}
+		// if single thread view and the item has a title, display it in the title bar
+		if (mode === 'replace') {
+			if (window.location.search.includes("mid=") || window.location.pathname.includes("display")) {
+				let titleElem = document.querySelector(".wall-item-title");
+				if (titleElem) {
+					let title = titleElem.textContent.trim();
+					if (title) {
+						savedTitle = title + ' ' + savedTitle;
+						document.title = title;
 					}
 				}
 			}
@@ -1149,7 +1149,7 @@ function scrollToItem() {
 
 			let id = thread.id.replace('thread-wrapper-', '');
 			let content = document.getElementById('wall-item-content-wrapper-' + id);
-			// content.classList.add('item-highlight-fade');
+			content.classList.add('item-highlight-fade');
 		}
 	});
 }
@@ -1184,12 +1184,11 @@ function collapseHeight() {
 			if(! $(this).hasClass('divmore') && $(this).has('div.no-collapse').length == 0) {
 				$(this).readmore({
 					speed: 0,
-					startOpen: false,
+					startOpen: open,
 					heightMargin: 50,
 					collapsedHeight: divmore_height,
-          embedCSS: true,
-					moreLink: '<div class="d-flex justify-content-center border-info" style="position: relative; margin-top:-24px; bottom: 0; left: 0; width: 100%;  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a></div>',
-					lessLink: '<div class="d-flex justify-content-center"><a href="#" class="divgrow-showmore fakelink badge text-bg-info"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a></div>',
+					moreLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-down align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowmore + '</span></a>',
+					lessLink: '<a href="#" class="divgrow-showmore fakelink"><i class="bi bi-chevron-up align-middle divgrow-showmore-icon"></i>&nbsp;<span class="divgrow-showmore-label align-middle">' + aStr.divgrowless + '</span></a>',
 					beforeToggle: function(trigger, element, expanded) {
 						if(expanded) {
 							if((($(element).offset().top + divmore_height) - $(window).scrollTop()) < 65 ) {
@@ -1328,9 +1327,11 @@ function liveUpdate(notify_id) {
 			liveRecurse ++;
 			if(liveRecurse < 10) {
 				liveUpdate(notify_id);
+				return;
 			}
 			else {
 				console.log('Incomplete data. Too many attempts. Giving up.');
+				return;
 			}
 		}
 
@@ -1381,9 +1382,11 @@ function cache_next_page() {
 			liveRecurse++;
 			if(liveRecurse < 10) {
 				liveUpdate();
+				return;
 			}
 			else {
 				console.log('Incomplete data. Too many attempts. Giving up.');
+				return;
 			}
 		}
 
@@ -1561,7 +1564,7 @@ function request(id, mid, verb, parent, uuid, userClick) {
 				if (e.item_blocked === 4) {
 					mod = '<span onclick="moderate_approve(' + e.id + '); return false;" class="text-success pe-4 d-inline-block"><i class="bi bi-check-lg" ></i></span><span onclick="moderate_drop(' + e.id + '); return false;" class="text-danger pe-4 d-inline-block"><i class="bi bi-trash" ></i></span>';
 				}
-				modal_content.innerHTML += '<a href="' + e.url + '" class="col text-center">' + mod + '<img src="' + e.photo + '" class="img-size-64 img-thumbnail shadow" loading="lazy" title="' + e.name + '"><span class="d-block text-truncate"> ' + e.name + '</span></a>';
+				modal_content.innerHTML += '<a href="' + e.url + '" class="list-group-item list-group-item-action border-0">' + mod + '<img src="' + e.photo + '" class="menu-img-1" loading="lazy">&nbsp;' + e.name + '</a>';
 
 			});
 
@@ -1788,7 +1791,7 @@ function doreply(parent, ident, owner, hint) {
 	modal_title.innerHTML = hint;
 
 	const preview = document.getElementById('comment-edit-preview-' + parent.toString());
-  	if (preview) preview.innerHTML = '';
+	if (preview) preview.innerHTML = '';
 
 	const form_container = document.getElementById('comment-edit-wrapper-' + parent.toString());
 
@@ -1836,12 +1839,11 @@ function doreply(parent, ident, owner, hint) {
 
 	modal.show();
 
-  modal_container.addEventListener('hide.bs.modal', event => {
+	modal_container.addEventListener('hide.bs.modal', event => {
 		// move form back to where it was
 		form_container.append(form);
 		form_container.append(preview);
 	});
-
 
 	// Set the textarea value
 	const textarea = form.querySelector('textarea');
@@ -1852,7 +1854,7 @@ function doreply(parent, ident, owner, hint) {
 			textarea.value = commentBody;
 		}
 		else {
-      		textarea.value = '@{' + owner + '} ';
+			textarea.value = '@{' + owner + '} ';
 
 			if (quote && isInSel) {
 				textarea.value += "\n[quote]" + quote + "[/quote]\n";
@@ -2083,7 +2085,8 @@ function post_comment(id) {
 				$("#comment-edit-text-" + id).val('').blur().attr('placeholder', aStr.comment);
 				$('#wall-item-sub-thread-wrapper-' + data.thr_parent_id).append(data.html);
 
-				const comment = document.getElementById('thread-wrapper-' + data.id);
+				const comment = document.getElementById('wall-item-content-wrapper-' + data.id);
+				comment.classList.add('item-highlight-fade');
 				comment.scrollIntoView({
 					behavior: 'smooth',
 					block: 'center'

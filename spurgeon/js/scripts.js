@@ -153,7 +153,7 @@
 
     }; // end ssSearch
 
-    let msnry; // <-- make masonry global
+
     /* masonry
     * ------------------------------------------------------ */
     const ssMasonry = function() {
@@ -163,7 +163,7 @@
 
         imagesLoaded(containerBricks, function() {
 
-            msnry = new Masonry(containerBricks, {
+            const msnry = new Masonry(containerBricks, {
                 itemSelector: '.entry',
                 columnWidth: '.grid-sizer',
                 percentPosition: true,
@@ -174,13 +174,6 @@
 
     }; // end ssMasonry
 
-function animateBlock(block) {
-    const els = block.querySelectorAll('[data-animate-el]');
-    els.forEach((el, index) => {
-        el.style.setProperty('--transition-delay', (index * 200) + 'ms');
-    });
-    block.classList.add('ss-animated');
-}
 
    /* animate masonry elements if in viewport
     * ------------------------------------------------------ */
@@ -243,17 +236,6 @@ function animateBlock(block) {
 
     }; // end ssAnimateOnScroll
 
-    function animateNewBrick(node) {
-
-    const els = node.querySelectorAll('[data-animate-el]');
-
-    els.forEach((el, index, array) => {
-        const delay = index * 200;
-        el.style.setProperty('--transition-delay', delay + 'ms');
-    });
-
-    node.classList.add('ss-animated');
-    }
 
    /* swiper
     * ------------------------------------------------------ */ 
@@ -365,74 +347,8 @@ function animateBlock(block) {
 
     }; // end ssMoveTo
 
-    const observeNewPosts = function() {
 
-        const container = document.querySelector('.bricks-wrapper');
-        if (!container) return;
-
-        let layoutTimer = null;
-
-        const observer = new MutationObserver(mutations => {
-
-            let newEntries = [];
-
-            mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => {
-
-                    if (node.nodeType === 1) {
-
-                        // If node IS an entry
-                        if (node.classList.contains('entry')) {
-                            newEntries.push(node);
-                        }
-
-                        // If node CONTAINS entries (Hubzilla sometimes wraps)
-                        const childEntries = node.querySelectorAll?.('.entry');
-                        if (childEntries && childEntries.length > 0) {
-                            newEntries.push(...childEntries);
-                        }
-                    }
-
-                });
-            });
-
-            // If nothing new — skip work
-            if (newEntries.length === 0) return;
-
-            // Process all new entries together
-            newEntries.forEach(entry => {
-                imagesLoaded(entry, () => {
-                    msnry.appended(entry);
-                    animateNewBrick(entry);
-                });
-            });
-
-            // Debounce layout so it only fires once per batch
-            if (layoutTimer) clearTimeout(layoutTimer);
-            layoutTimer = setTimeout(() => {
-                msnry.reloadItems();
-                msnry.layout();
-
-                const block = document.querySelector('.bricks-wrapper');
-                if (block && !block.classList.contains('ss-animated')) {
-                    animateBlock(block);
-                }
-            }, 50);
-        });
-
-        observer.observe(container, {
-            childList: true,
-            subtree: true     // important for wrapped entries
-        });
-
-        // Force a full layout after ALL pending updates finish rendering
-        setTimeout(() => {
-            msnry.reloadItems();
-            msnry.layout();
-        }, 500);
-    };
-
-  /* Initialize
+   /* Initialize
     * ------------------------------------------------------ */
     (function ssInit() {
 
@@ -444,9 +360,8 @@ function animateBlock(block) {
         ssSwiper();
         ssAlertBoxes();
         ssBackToTop();
-        ssMoveTo();    
-        observeNewPosts();
-    })();
+        ssMoveTo();
 
+    })();
 
 })(document.documentElement);

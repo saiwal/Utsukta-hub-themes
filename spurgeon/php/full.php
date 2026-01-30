@@ -48,20 +48,12 @@
         <?php if (x($page, 'nav')) echo $page['nav']; ?>
       </header>
 
-      <a href="#" id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round"
-             stroke-linejoin="round" viewBox="0 0 24 24">
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </a>
+			<?php if(!empty($page['banner'])) echo $page['banner']; ?>
       <section id="content" class="s-content">
-        <main class="bricks">
+        <main id="bricks" class="bricks">
           <div class="masonry">
-              <div id="region_2" class="bricks-wrapper" data-animate-block>
-                <?php if (x($page, 'content')) echo $page['content']; ?>
+							<div id="region_2" class="bricks-wrapper ss-animated" data-animate-block>
+								<?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
           </div>
         </main>
@@ -71,16 +63,14 @@
         <footer id="colophon" class="s-footer">
           <div class="row s-footer__main">
               <?php if (x($page, 'footer')) echo $page['footer']; ?>
-            <div class="column lg-4">
               <div id="region_3">
                 <div id="left_aside_wrapper">
                   <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
-                <div id="right_aside_wrapper">
+                <div id="right_aside_wrapper" class="d-flex">
                   <?php if (x($page, 'aside')) echo $page['aside']; ?>
                 </div>
               </div>
-            </div>
 
           </div> <!-- end s-footer__main -->
 
@@ -106,7 +96,7 @@
 
         </footer><!-- end s-footer -->
     </div>
-<script src="/view/theme/spurgeon/js/plugins.js"></script>
+		<script src="/view/theme/spurgeon/js/plugins.js"></script>
     <script src="/view/theme/spurgeon/js/scripts.js"></script>
     <script>
 document.addEventListener("DOMContentLoaded", function () {
