@@ -3665,3 +3665,17 @@ body.search-is-visible {
 code {
 	  display: inline;
 }
+
+.commentlist > .children > .comment{
+	position: relative;
+}
+
+.children > .comment,.comment ul.children li  {
+  list-style: none;
+  /* margin: 0; */
+  padding: 2rem 0 0 0;
+    padding-left: 0px;
+  padding-left: 14%;
+}
+
+
