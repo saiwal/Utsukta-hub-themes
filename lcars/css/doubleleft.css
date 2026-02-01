@@ -1,0 +1,32 @@
+.pill:nth-child(6n + 1),
+.pillbox a:nth-child(6n + 1) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-1-color);
+}
+
+.pill:nth-child(6n + 2),
+.pillbox a:nth-child(6n + 2) {
+    background-color: var(--pill-2-color);
+}
+
+.pill:nth-child(6n + 3),
+.pillbox a:nth-child(6n + 3) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-3-color);
+}
+
+.pill:nth-child(6n + 4),
+.pillbox a:nth-child(6n + 4) {
+    background-color: var(--pill-4-color);
+}
+
+.pill:nth-child(6n + 5),
+.pillbox a:nth-child(6n + 5) {
+	border-radius: 100vmax 0 0 100vmax;
+    background-color: var(--pill-5-color);
+}
+
+.pill:nth-child(6n),
+.pillbox a:nth-child(6n) {
+    background-color: var(--pill-6-color);
+}

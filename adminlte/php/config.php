@@ -30,29 +30,14 @@ class AdminlteConfig {
 		if(! local_channel()) {
 			return;
 		}
-
-		$arr['primary_color'] = get_pconfig(local_channel(),'adminlte', 'primary_color');
-		$arr['success_color'] = get_pconfig(local_channel(),'adminlte', 'success_color');
-		$arr['info_color'] = get_pconfig(local_channel(),'adminlte', 'info_color');
-		$arr['warning_color'] = get_pconfig(local_channel(),'adminlte', 'warning_color');
-		$arr['danger_color'] = get_pconfig(local_channel(),'adminlte', 'danger_color');
 		$arr['bg_mode'] = get_pconfig(local_channel(),'adminlte', 'bg_mode');
 		$arr['dark_mode'] = get_pconfig(local_channel(),'adminlte', 'dark_mode');
 		$arr['sidebar_mode'] = get_pconfig(local_channel(),'adminlte', 'sidebar_mode');
-		/*$arr['narrow_navbar'] = get_pconfig(local_channel(),'adminlte', 'narrow_navbar' );*/
-		/*$arr['nav_bg'] = get_pconfig(local_channel(),'adminlte', 'nav_bg' );*/
-		/*$arr['nav_bg_dark'] = get_pconfig(local_channel(),'adminlte', 'nav_bg_dark' );*/
 		$arr['bgcolor'] = get_pconfig(local_channel(),'adminlte', 'background_color' );
 		$arr['bgcolor_dark'] = get_pconfig(local_channel(),'adminlte', 'background_color_dark' );
 		$arr['background_image'] = get_pconfig(local_channel(),'adminlte', 'background_image' );
 		$arr['background_image_dark'] = get_pconfig(local_channel(),'adminlte', 'background_image_dark' );
 		$arr['tourhq'] = get_pconfig(local_channel(),'adminlte', 'tour_hq' );
-		/*$arr['font_size'] = get_pconfig(local_channel(),'adminlte', 'font_size' );*/
-		/*$arr['radius'] = get_pconfig(local_channel(),'adminlte', 'radius' );*/
-		/*$arr['converse_width']=get_pconfig(local_channel(),"adminlte","converse_width");*/
-		/*$arr['top_photo']=get_pconfig(local_channel(),"adminlte","top_photo");*/
-		/*$arr['reply_photo']=get_pconfig(local_channel(),"adminlte","reply_photo");*/
-		$arr['advanced_theming'] = get_pconfig(local_channel(), 'adminlte', 'advanced_theming');
 		return $this->form($arr);
 	}
 
@@ -65,11 +50,6 @@ class AdminlteConfig {
 		set_pconfig(local_channel(), 'system', 'style_update', time());
 		if (isset($_POST['adminlte-settings-submit'])) {
 	
-			set_pconfig(local_channel(), 'adminlte', 'primary_color', $_POST['adminlte_primary_color']);
-			set_pconfig(local_channel(), 'adminlte', 'success_color', $_POST['adminlte_success_color']);
-			set_pconfig(local_channel(), 'adminlte', 'info_color', $_POST['adminlte_info_color']);
-			set_pconfig(local_channel(), 'adminlte', 'warning_color', $_POST['adminlte_warning_color']);
-			set_pconfig(local_channel(), 'adminlte', 'danger_color', $_POST['adminlte_danger_color']);
 			set_pconfig(local_channel(), 'adminlte', 'dark_mode', $_POST['adminlte_dark_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'sidebar_mode', $_POST['adminlte_sidebar_mode']);
 			set_pconfig(local_channel(), 'adminlte', 'bg_mode', $_POST['adminlte_bg_mode']);
@@ -78,7 +58,6 @@ class AdminlteConfig {
 			set_pconfig(local_channel(), 'adminlte', 'background_image', $_POST['adminlte_background_image']);
 			set_pconfig(local_channel(), 'adminlte', 'background_image_dark', $_POST['adminlte_background_image_dark']);
 			set_pconfig(local_channel(), 'adminlte', 'tour_hq', $_POST['adminlte_tourhq']);
-			set_pconfig(local_channel(), 'adminlte', 'advanced_theming', $_POST['adminlte_advanced_theming']);
 		
 			// This is used to refresh the cache
 			set_pconfig(local_channel(), 'system', 'style_update', time());
@@ -87,25 +66,15 @@ class AdminlteConfig {
 
 	function form($arr) {
 
-		$expert = false;
-		if(get_pconfig(local_channel(), 'adminlte', 'advanced_theming')) {
-			$expert = true;
-		}
 
 	  	$o = replace_macros(get_markup_template('theme_settings.tpl'), array(
 			'$submit' => t('Submit'),
 			'$baseurl' => z_root(),
 			'$theme' => \App::$channel['channel_theme'],
-      '$expert' => $expert,
 			'$title' => t("Theme settings"),
 			'$dark' => t('Dark style'),
 			'$light' => t('Light style'),
 			'$common' => t('Common settings'),
-//			'$primary_color' => array('adminlte_primary_color', t('Primary theme color'), $arr['primary_color'], '<i class="bi bi-circle-fill text-primary"></i> ' . t('Current color, leave empty for default')),
-//			'$success_color' => array('adminlte_success_color', t('Success theme color'), $arr['success_color'], '<i class="bi bi-circle-fill text-success"></i> ' . t('Current color, leave empty for default')),
-//			'$info_color' => array('adminlte_info_color', t('Info theme color'), $arr['info_color'], '<i class="bi bi-circle-fill text-info"></i> ' . t('Current color, leave empty for default')),
-//			'$warning_color' => array('adminlte_warning_color', t('Warning theme color'), $arr['warning_color'], '<i class="bi bi-circle-fill text-warning"></i> ' . t('Current color, leave empty for default')),
-//			'$danger_color' => array('adminlte_danger_color', t('Danger theme color'), $arr['danger_color'], '<i class="bi bi-circle-fill text-danger"></i> ' . t('Current color, leave empty for default')),
 			'$dark_mode' => array('adminlte_dark_mode',t('Default to dark mode'),$arr['dark_mode'], '', array(t('No'),t('Yes'))),
 			'$sidebar_mode' => array('adminlte_sidebar_mode',t('Choose sidebar mode'),$arr['sidebar_mode'], '', array(t('Expanded'),t('Collapsed'))),
 			'$bg_mode' => array('adminlte_bg_mode',t('Set background image tile mode'),$arr['bg_mode'], '', array(t('Tiled'),t('Cover'))),
@@ -114,8 +83,6 @@ class AdminlteConfig {
 			'$background_image' => array('adminlte_background_image', t('Set the background image(url link, blank for none)'), $arr['background_image']),
 			'$background_image_dark' => array('adminlte_background_image_dark', t('Set the dark background image(url link, blank for none)'), $arr['background_image_dark']),
 			'$tourhq' => array('adminlte_tourhq', t('HQ tour completed'), $arr['tourhq']),
-//			'$converse_width' => array('adminlte_converse_width',t('Set maximum width of content region in rem'),$arr['converse_width'], t('Leave empty for default width')),
-//			'$advanced_theming' => ['adminlte_advanced_theming', t('Show advanced settings'), $arr['advanced_theming'], '', [t('No'), t('Yes')]]
 			));
 
 		return $o;
@@ -132,6 +99,7 @@ namespace {
   use Zotlabs\Extend\Route;
 
   function adminlte_theme_admin_enable() {
+    logger('hook init', LOGGER_DEBUG);
     register_hook('page_end', 'view/theme/adminlte/hooks/tours.php', 'adminlte_tours');
     register_hook('nav', 'view/theme/adminlte/hooks/layout.php', 'notification_nav');
     Route::register('view/theme/adminlte/mod/Mod_adminlte.php', 'adminlte');

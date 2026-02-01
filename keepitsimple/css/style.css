@@ -1,0 +1,174 @@
+.s-header__content {
+    background-color: #ffffff;
+    background-image: url($banner_image);
+    background-size: 361px 256px;
+    background-repeat: no-repeat;
+    background-position: right top;
+    min-height: 30rem;
+    padding-top: 12rem;
+    padding-bottom: 8rem;
+    border-bottom: 1px dashed #efefef;
+    position: relative;
+}
+.page-content h2 {
+  margin-top: 0;
+}
+.page-content h3 {
+  margin-top: 0;
+}
+
+#profile-jot-text, #jot-title-wrap input {
+padding: 1.3rem 23px 1.5rem;
+}
+.bootstrap-tagsinput {
+  background-color: #fff;
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  display: inline-block;
+  padding: 0px;
+  margin-bottom: 10px;
+  color: #555;
+  vertical-align: middle;
+  border-radius: 4px;
+  max-width: 100%;
+  line-height: 22px;
+  cursor: text;
+}
+
+code {
+	overflow: auto;
+}
+
+/* ------------------------------------------------------------------- 
+ * ## mobile off canvas button
+ * ------------------------------------------------------------------- */
+
+.ss-offcanvas {
+    z-index: 2;
+    opacity: 1;
+    position: fixed;
+    bottom: 4.4rem;
+    left: 4rem;
+}
+
+.ss-offcanvas a {
+    text-decoration: none;
+    border: 0 none;
+    display: block;
+    height: 5.6rem;
+    width: 5.6rem;
+    border-radius: 50%;
+    background-color: #84be5b;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    position: relative;
+}
+
+.ss-offcanvas a:hover, .ss-offcanvas a:focus {
+    background-color: #000000;
+}
+
+.ss-offcanvas svg {
+    height: 2rem;
+    width: 2rem;
+    position: absolute;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+    left: 50%;
+    top: 50%;
+}
+
+.ss-offcanvas svg path {
+    fill: #ffffff;
+}
+
+
+@media screen and (max-width:800px) {
+    .ss-offcanvas {
+        left: 3.2rem;
+    }
+    .ss-offcanvas a {
+        height: 4.8rem;
+        width: 4.8rem;
+    }
+}
+
+@media screen and (max-width:400px) {
+    .ss-offcanvas {
+        left: 0rem;
+        bottom: 0rem;
+    }
+    .ss-offcanvas a {
+        border-radius: 0 4px 0 0;
+    }
+}
+
+/* ------------------------------------------------------------------- 
+ * ## hq_controls_fixed_bottom_center
+ * ------------------------------------------------------------------- */
+
+.hq_controls_fixed_bottom_center {
+  position: fixed;
+  bottom: 4.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+    z-index: 2;
+}
+
+.hq_controls_fixed_bottom_center button {
+    text-decoration: none;
+    border: 0 none;
+    display: block;
+    height: 6rem;
+    width: 5.6rem;
+    border-radius: 50%;
+    background-color: #84be5b;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    position: relative;
+}
+
+.hq_controls_fixed_bottom_center a:hover, .hq_controls_fixed_bottom_center a:focus {
+    background-color: #000000;
+}
+
+.hq_controls_fixed_bottom_center button i {
+    height: 5.5rem;
+    width: 1.8rem;
+    position: absolute;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
+    left: 50%;
+    top: 50%;
+		font-size: medium;
+}
+
+
+@media screen and (max-width:800px) {
+    .hq_controls_fixed_bottom_center {
+        left: 50%;
+    }
+    .hq_controls_fixed_bottom_center button {
+        height: 6rem;
+        width: 4.8rem;
+    }
+}
+
+@media screen and (max-width:400px) {
+    .hq_controls_fixed_bottom_center {
+        left: 50%;
+        bottom: 0rem;
+    }
+    .hq_controls_fixed_bottom_center button {
+        border-radius: 4px 4px 0 0;
+    }
+}
+
+.generic-icons-nav {
+	padding-left: 2px;
+	padding-right: 4px;
+}
+
+#cboxContent {
+	padding: 2rem;
+}

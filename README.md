@@ -16,4 +16,20 @@ or manually extract the release in `view/themes`
 
 ### 1. [AdminLTE4](./adminlte/README.md)
 
+![adminlte](./adminlte/img/screenshot.jpg)
 
+### 2. [KeepItSimple](./keepitsimple/README.md)
+
+![keepitsimple](./keepitsimple/img/screenshot.png)
+
+### 3. [LCARS](./lcars/README.md)
+
+![lcars](./lcars/img/screenshot.png)
+
+### 4. [Spurgeon](./spurgeon/README.md)
+
+![spurgeon](./spurgeon/img/screenshot.png)
+
+### 5. [Typerite](./typerite/README.md)
+
+![typerite](./typerite/img/screenshot.png)

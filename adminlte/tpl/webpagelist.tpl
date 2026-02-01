@@ -66,10 +66,10 @@
 					{{/if}}
 				</td>
 				<td class="d-none d-md-table-cell">
-					{{$item.created}}
+					<small class="autotime-narrow opacity-75" title="{{$item.created}}"></small>
 				</td>
 				<td class="d-none d-md-table-cell">
-					{{$item.edited}}
+					<small class="autotime-narrow opacity-75" title="{{$item.edited}}"></small>
 				</td>
 			</tr>
 			{{/foreach}}
@@ -82,3 +82,8 @@
 	{{/if}}
 	<div class="clear"></div>
 </div>
+<script>
+$(document).ready(function () {
+updateRelativeTime('.autotime-narrow');
+});
+</script>
