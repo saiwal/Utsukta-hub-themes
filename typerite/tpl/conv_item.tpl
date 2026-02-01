@@ -32,7 +32,8 @@
         </h2>
 				{{/if}}
 				<ul class="entry__header-meta">
-						<li class="author">
+						<li class="author ms-0">
+							<img src="{{$item.thumb}}" class="fakelink wall-item-photo{{$item.sparkle}} u-photo p-name rounded-circle shadow me-4" id="wall-item-photo-{{$item.id}}" alt="{{$item.name}}" loading="lazy" data-bs-toggle="dropdown" />
 							{{if $item.author_is_group_actor}}
 							<i class="bi bi-chat-quote-fill pe-2" title="{{$item.author_is_group_actor}}"></i>
 							{{else}}

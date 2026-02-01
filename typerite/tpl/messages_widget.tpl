@@ -1,29 +1,29 @@
 <ul class="nav nav-underline stats-tabs d-flex justify-content-center mb-0 pt-3 ">
-  <li class="nav-item">
+  <li class="nav-item mb-2">
     <a class="nav-link active messages-type" href="#" title="{{$strings.messages_title}}" data-messages_type="">
       <i class="bi bi-chat generic-icons"></i>
     </a>
   </li>
-  <li class="nav-item">
+  <li class="nav-item mb-2">
     <a class="nav-link messages-type" href="#" title="{{$strings.direct_messages_title}}" data-messages_type="direct">
       <i class="bi bi-envelope generic-icons"></i>
     </a>
   </li>
   {{if $feature_star}}
-  <li class="nav-item">
+  <li class="nav-item mb-2">
     <a class="nav-link messages-type" href="#" title="{{$strings.starred_messages_title}}" data-messages_type="starred">
       <i class="bi bi-star generic-icons"></i>
     </a>
   </li>
   {{/if}}
   {{if $feature_file}}
-  <li class="nav-item">
+  <li class="nav-item mb-2">
     <a class="nav-link messages-type" href="#" title="{{$strings.filed_messages_title}}" data-messages_type="filed">
       <i class="bi bi-folder generic-icons"></i>
     </a>
   </li>
   {{/if}}
-  <li class="nav-item">
+  <li class="nav-item mb-2">
     <a class="nav-link messages-type" href="#" title="{{$strings.notice_messages_title}}"
       data-messages_type="notification">
       <i class="bi bi-exclamation-circle generic-icons"></i>
@@ -65,8 +65,8 @@
     </div>
     {{if $feature_file}}
     <div id="messages-file-container" class="list-group-item notifications-textinput d-none">
-      <div class="ss-custom-select">
-        <select id="messages-file" class="full-width">
+      <div class="ss-custom-select mb-1">
+        <select id="messages-file" class="full-width mb-1">
           <option value="">{{$strings.file_filter}}</option>
           {{foreach $file_tags as $opt=>$val}}
           <option value="{{$val}}">{{$val}}</option>
@@ -81,7 +81,7 @@
     {{foreach $entries as $e}}
     <a href="{{$e.href}}" class="list-group-item list-group-item-action message" data-b64mid="{{$e.b64mid}}">
       <div class="mb-2 align-middle">
-        <img src="{{$e.author_img}}" loading="lazy" class="rounded float-start me-2 menu-img-2 shadow">
+        <img src="{{$e.author_img}}" loading="lazy" class="rounded float-start me-2 rounded-circle shadow me-4">
         <div class="text-nowrap">
           <div class="d-flex justify-content-between align-items-center lh-sm">
             <div class="text-truncate pe-1">
