@@ -1,5 +1,5 @@
 <div class="tagblock mb-3">
-  <div class="h5">{{$title}} </div>
+  <div class="h3">{{$title}} </div>
   <span class="entry__tag-list">
     {{foreach $tags as $tag}}
     <a href="{{$baseurl}}{{$tag.0}}">#{{$tag.0}}</a>

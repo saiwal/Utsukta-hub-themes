@@ -118,11 +118,7 @@
 
 			<div class="go-top">
 				<a class="smoothscroll" title="Back to Top" href="#top">
-					<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-						x="0px" y="0px" width="16px" height="32px" viewBox="0 0 32 32" enable-background="new 4 -4 16 32"
-						xml:space="preserve">
-						<path fill="#FFFFFF" d="M12-4l8,9h-6v23h-4V5H4L12-4z" />
-					</svg></a>
+					</a>
 			</div>
 		</footer>
 

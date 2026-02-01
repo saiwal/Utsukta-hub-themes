@@ -1,6 +1,6 @@
 <div id="website-portation-tools">
   <div class="mb-3">
-    <div class="h5">
+    <div class="h3">
       {{$import_label}}
     </div>
     <div class="nav nav-pills flex-column card-body">
@@ -30,7 +30,7 @@
   </div>
   
   <div class="mb-3">
-    <div class="h5">
+    <div class="h3">
       {{$export_label}}
     </div>
   	<div class="nav nav-pills flex-column card-body">

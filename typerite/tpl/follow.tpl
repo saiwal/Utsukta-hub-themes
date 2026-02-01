@@ -1,5 +1,5 @@
 <div id="follow-sidebar" class="mb-3">
-  <div class="h5 mt-0">{{$connect}}</div>
+  <div class="h3 mt-0">{{$connect}}</div>
 	<form action="follow" method="post" />
 		<div class="input-group">
 			<input class="form-control" type="text" name="url" title="{{$hint}}" placeholder="{{$desc}}" />

@@ -5,7 +5,7 @@
 	<div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
 
-	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} generic-content-wrapper h-entry{{else}} comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
+	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} add-bottom generic-content-wrapper h-entry{{else}} comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
 		<!-- <a name="item_{{$item.id}}" ></a> -->
 		{{if $item.toplevel}}
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
@@ -31,8 +31,8 @@
 					{{/if}}{{/if}}
         </h2>
 				{{/if}}
-				<div class="entry__meta">
-						<div class="entry__meta-author">
+				<ul class="entry__header-meta">
+						<li class="author">
 							{{if $item.author_is_group_actor}}
 							<i class="bi bi-chat-quote-fill pe-2" title="{{$item.author_is_group_actor}}"></i>
 							{{else}}
@@ -44,15 +44,15 @@
 								<span class="text-truncate">
 									<a href="{{$item.profile_url}}" class="lh-sm u-url"{{if $item.app}} title="{{$item.str_app}}"{{/if}}><span class="wall-item-name{{$item.sparkle}}" id="wall-item-name-{{$item.id}}" >{{$item.name}}</span></a>{{if $item.owner_url}}&nbsp;{{$item.via}}&nbsp;<a href="{{$item.owner_url}}" title="{{$item.owner_addr}}" class=""><span id="wall-item-ownername-{{$item.id}}"><em>{{$item.owner_name}}</em></span></a>{{/if}}
 								</span>
-						</div>
-						<div class="entry__meta-date">
+						</li>
+						<li class="date">
 								<svg width="24" height="24" fill="none" viewBox="0 0 24 24">
 										<circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.5"></circle>
 										<path stroke="currentColor" stroke-width="1.5" d="M12 8V12L14 14"></path>
 								</svg>
 							<span class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span>
-						</div>
-						<div class="entry__meta-cat">
+						</li>
+						<li class="cat-links">
 							{{if $item.has_tags}}
 							<div class="wall-item-tools clearfix">
 								<div class="body-tags">
@@ -60,13 +60,13 @@
 								</div>
 							</div>
 							{{/if}}
-						</div>
-				</div>
+						</li>
+				</ul>
 				{{if $item.divider}}
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content clearfix add-bottom" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
@@ -74,7 +74,7 @@
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -110,7 +110,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
@@ -262,7 +262,7 @@
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -298,7 +298,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
@@ -419,7 +419,7 @@
 		{{if $item.toplevel && $item.load_more && $item.threaded}}
 		</ol>
 		{{/if}}
-	</{{if $item.toplevel}}article{{else}}li{{/if}}>
+		{{if $item.toplevel}}</article><hr>{{else}}</li>{{/if}}
 {{if !$item.threaded && $item.comment_lastcollapsed}}
 </div>
 {{/if}}

@@ -1,4 +1,4 @@
-<div class="h5">
+<div class="h3">
 	Index
 </div>
 <div class="accordion" id="accordion-helpindex">

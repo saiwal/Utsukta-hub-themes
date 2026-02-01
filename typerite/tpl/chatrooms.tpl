@@ -3,7 +3,7 @@
 		{{if $is_owner}}
 		<button type="button" class="btn btn-success btn-sm float-end acl-form-trigger" onclick="openClose('chatroom-new');" data-form_id="chatroom-new-form"><i class="bi bi-plus-lg"></i>&nbsp;{{$newroom}}</button>
 		{{/if}}
-		<h3>{{$header}}</h3>
+		<div class="h3 mt-0">{{$header}}</div>
 	</div>
 	{{if $is_owner}}
 	{{$chatroom_new}}

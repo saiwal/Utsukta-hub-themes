@@ -1,4 +1,4 @@
-  <div class="h5">
+  <div class="h3">
     {{$contacts}}
   </div>
   {{if $micropro}}

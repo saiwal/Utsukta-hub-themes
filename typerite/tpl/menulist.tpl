@@ -3,7 +3,7 @@
 		<div class="float-end">
 			<button id="webpage-create-btn" class="btn btn-sm btn-success" onclick="openClose('menu-creator');"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$hintnew}}</button>
 		</div>
-		<h5>{{$title}}</h5>
+		<h3>{{$title}}</h3>
 		<div class="clear"></div>
 	</div>
 

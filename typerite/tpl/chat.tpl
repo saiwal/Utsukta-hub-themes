@@ -1,6 +1,6 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper">
-		<h3>{{$room_name}}</h3>
+		<div class="h3 mt-0">{{$room_name}}</div>
 		<div class="clear"></div>
 	</div>
 	<div id="chatContainer" class="section-content-wrapper p-2 card">

@@ -1,5 +1,5 @@
 <div id="design-tools" class="mb-3">
-  <div class="h5">
+  <div class="h3">
     {{$title}}
   </div>
 	<ul style="disc">

@@ -1,4 +1,4 @@
-  <div class="h5">
+  <div class="h3">
     <span class="d-flex justify-content-between align-items-center">
       {{$title}}
       {{if $reset}}
@@ -13,7 +13,7 @@
   <div id="cid-filter-wrapper" class="notifications-textinput">
     <form method="get" action="{{$name.url}}" role="search">
       <input id="cid" type="hidden" value="" name="cid" />
-      <input id="cid-filter" class="form-control form-control-sm{{if $name.sel}} {{$name.sel}}{{/if}}" type="text"
+      <input id="cid-filter" class="full-width {{if $name.sel}} {{$name.sel}}{{/if}}" type="text"
         value="" placeholder="{{$name.label}}" name="name" title="" />
     </form>
   </div>

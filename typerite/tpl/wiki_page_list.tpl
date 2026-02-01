@@ -1,7 +1,7 @@
 {{if ! $refresh}}
 <div id="wiki_page_list" class="mb-3" >
 {{/if}}
-	<div class="h5">{{$header}}</div>
+	<div class="h3">{{$header}}</div>
 	<ul class="disc flex-column" style="disc">
 		{{if $pages}}
 		{{foreach $pages as $page}}

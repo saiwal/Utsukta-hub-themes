@@ -8,7 +8,7 @@
 			{{if $p.sub}}<i class="bi bi-caret-down hover-fx-hide"></i>{{/if}}
 		</a>
 		{{if $p.sub}}
-		<ul class="flex-column ml-4" id="{{$p.id}}_sub"{{if !$p.sel}} style="display: none;"{{/if}}>
+		<ul class="flex-column ml-4 list-unstyled" id="{{$p.id}}_sub" style="{{if !$p.sel}} display: none; {{/if}}">
 			{{foreach $p.sub as $ps}}
 			<li class=""{{if $ps.id}} id="{{$ps.id}}"{{/if}}>
 				<a class="{{if $ps.sel}} link-secondary {{$ps.sel}}{{/if}}" href="{{$ps.url}}"{{if $ps.title}} title="{{$ps.title}}"{{/if}}>

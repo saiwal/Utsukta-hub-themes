@@ -6,7 +6,7 @@
 		<a href="{{$menu_edit_link}}" title="{{$hintedit}}" class="btn btn-sm btn-success"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$editcontents}}</a>
 	</div>
 	{{/if}}
-	<h5>{{$header}}</h5>
+	<h3>{{$header}}</h3>
 	<div class="clear"></div>
 </div>
 {{/if}}

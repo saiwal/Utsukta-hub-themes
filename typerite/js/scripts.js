@@ -222,7 +222,7 @@ var ssMasonryFolio = function () {
                     $('.header-menu-toggle').trigger('click');
                 }
 
-                window.location.hash = target;
+                // window.location.hash = target;
             });
         });
 

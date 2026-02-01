@@ -13,7 +13,7 @@
 								<button id="toggle-select-all" class="btn btn-sm btn-primary" onclick="checkedAll(window.isChecked); return false;"><i class="bi bi-check-lg"></i>&nbsp;Toggle Select All</button>
 						</div>
 						<div class="clear"></div>
-						<h5>Scanned Pages</h5>
+						<h3>Scanned Pages</h3>
 						<div>
 						<table class="table-striped table-responsive table-hover" style="width: 100%;">
 							<tr><td>Import?</td><td>Page</td><!--<td>Existing Page</td>--></tr>
@@ -84,7 +84,7 @@
 						</table>
 						</div>
 
-						<h5>Scanned Blocks</h5>
+						<h3>Scanned Blocks</h3>
 						<div>
 						<table class="table-striped table-responsive table-hover" style="width: 100%;">
 								<tr><td>Import?</td><td>Block</td><!--<td>Existing Block</td>--></tr>
