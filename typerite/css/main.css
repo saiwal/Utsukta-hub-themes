@@ -2462,6 +2462,15 @@ input::-moz-focus-inner {
     position  : absolute;
 }
 
+.header__social .ss-link i {
+		width: 36px;
+  display: block;
+  height: 36px;
+  padding-left: 8px;
+  padding-top: 1px;
+	color: white;
+}
+
 .header__social .ss-facebook a::after {
     background-image : url(../images/icons/social/icon-facebook.svg);
 }
