@@ -624,7 +624,7 @@
 	}
 
 	function jotAddOption() {
-		var option = '<div class="jot-poll-option mb-3"><input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="Option"><div class="poll-option-close input-group-text"><i class="bi bi-x-lg"></i></div></div>';
+		var option = '<div class="jot-poll-option mb-3"><input class="full-width" name="poll_answers[]" type="text" value="" placeholder="Option"><div class="poll-option-close input-group-text"><i class="bi bi-x-lg"></i></div></div>';
 		$('#jot-poll-options').append(option);
 	}
 

@@ -10,7 +10,7 @@
 			<input type="hidden" name="verify" value="{{$hash}}" />
 			<div class="mb-3" id="rename-channel-pass-wrapper">
 				<label id="rename-channel-pass-label" for="rename-channel-pass">{{$passwd}}</label>
-				<input class="form-control" type="password" id="rename-channel-pass" autocomplete="off" name="qxz_password" value=" " />
+				<input class="full-width" type="password" id="rename-channel-pass" autocomplete="off" name="qxz_password" value=" " />
 			</div>
 			{{include file="field_input.tpl" field=$newname}}
 			<button type="submit" name="submit" class="btn btn-danger">{{$submit}}</button>
