@@ -105,12 +105,6 @@
 			</li>
 			{{if $userinfo}}
       {{if $sel.name}}
-			<li class="ss-rss">
-				<a href="/feed/{{$userinfo.name}}?f=&top=1">
-					<span class="screen-reader-text">Behance</span>
-				</a>
-			</li>
-
       {{if $settings_url}}
       <li class="ss-link">
         <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="nav-link"><i class="bi bi-gear"></i></a>
