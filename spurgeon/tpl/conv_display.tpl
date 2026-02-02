@@ -21,7 +21,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<h2 class="entry__title h1">
+				<h2 class="h2">
 					{{if $item.title_tosource}}{{if $item.plink}}
 					<a href="{{$item.plink.href}}" title="{{$item.title}} {{$item.plink.title}}">
 					{{/if}}{{/if}}
