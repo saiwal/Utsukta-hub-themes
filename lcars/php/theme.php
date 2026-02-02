@@ -2,7 +2,7 @@
 
 /**
  *   * Name: LCARS
- *   * Description: LCARS theme adapted for Hubzilla
+ *   * Description: LCARS theme bt TheLCARS.com adapted for Hubzilla
  *   * Version: 1.0-beta
  *   * MinVersion: 7.2
  *   * MaxVersion: 12.0
