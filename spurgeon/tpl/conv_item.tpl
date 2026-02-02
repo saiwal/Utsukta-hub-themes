@@ -5,7 +5,7 @@
 	<div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
 
-	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} generic-content-wrapper h-entry{{else}} comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
+	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} generic-content-wrapper h-entry mb-5 pb-5{{else}} comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
 		<!-- <a name="item_{{$item.id}}" ></a> -->
 		{{if $item.toplevel}}
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
@@ -21,7 +21,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<h2 class="entry__title h1">
+				<h2 class="h2">
 					{{if $item.title_tosource}}{{if $item.plink}}
 					<a href="{{$item.plink.href}}" title="{{$item.title}} {{$item.plink.title}}">
 					{{/if}}{{/if}}
@@ -31,8 +31,8 @@
 					{{/if}}{{/if}}
         </h2>
 				{{/if}}
-				<div class="entry__meta">
-						<div class="entry__meta-author">
+				<div class="entry__meta justify-content-start mt-4 mb-4">
+						<div class="entry__meta-author m-0">
 							{{if $item.author_is_group_actor}}
 							<i class="bi bi-chat-quote-fill pe-2" title="{{$item.author_is_group_actor}}"></i>
 							{{else}}
@@ -74,7 +74,7 @@
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -110,7 +110,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
@@ -193,7 +193,7 @@
 				</div>
 			</div>
 		</div>
-		<ol class="commentlist">
+		<ol class="commentlist m-0">
 		{{else}}
 			<div class="comment__avatar">
 				<div id="wall-item-photo-wrapper-{{$item.id}}">
@@ -262,7 +262,7 @@
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -298,7 +298,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>

@@ -1,4 +1,4 @@
-<ul class="flex-column" style="disc">
+<ul class="list-unstyled">
 	{{foreach $pills as $p}}
 	<li class="p-2"{{if $p.id}} id="{{$p.id}}"{{/if}}>
 		<a class="nav-link{{if $p.sel}} {{$p.sel}}{{/if}}" href="{{$p.url}}"{{if $p.title}} title="{{$p.title}}"{{/if}}{{if $p.sub}} onclick="{{if $p.sel}}closeOpen('{{$p.id}}_sub');{{else}}openClose('{{$p.id}}_sub');{{/if}} return false;"{{/if}}>

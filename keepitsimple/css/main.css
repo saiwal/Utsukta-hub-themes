@@ -2474,7 +2474,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     padding-left: 14%;
 }
 .commentlist ul .comment {
-    padding-left: 5%;
+    padding-left: 10%;
     margin-top: calc(3.2rem + 2rem);
     border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
@@ -2539,7 +2539,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 }
 
 .comment ul.children li {
-    padding-left: 5%;
+    padding-left: 10%;
     margin-top: calc(3.2rem + 2rem);
     border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
