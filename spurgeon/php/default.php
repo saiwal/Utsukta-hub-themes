@@ -103,6 +103,7 @@
 
 				<div class="column lg-12 tab-12">
 					<div class="ss-copyright">
+						<span><a href="/siteinfo">Siteinfo</a></span>
 						<span>Design by <a href="https://www.styleshout.com/">StyleShout</a>, Adapted for Hubzilla</span>
 					</div>
 				</div>
