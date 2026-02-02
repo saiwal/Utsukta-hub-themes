@@ -110,8 +110,27 @@
 					{{/if}}
 				</ul>
 			</li>
-
 			{{/if}}
+
+					{{if $nav.login && !$userinfo}}
+					{{if $nav.loginmenu.1.4}}
+					<li>
+						<a href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal"
+							data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
+					</li>
+					{{else}}
+					<li>
+						<a href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
+					</li>
+					{{/if}}
+					{{if $nav.register}}
+					<li>
+						<a href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
+					</li>
+					{{/if}}
+					{{/if}}
+
+
 		</ul> <!-- end #nav -->
 
 	</div>

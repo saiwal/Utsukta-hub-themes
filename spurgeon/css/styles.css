@@ -5543,12 +5543,19 @@ body.search-is-visible .s-header__search-inner {
 .commentlist > .children > .comment{
 	position: relative;
 }
-.children > .comment,.comment ul.children li  {
+.children > .comment  {
   list-style: none;
   /* margin: 0; */
   padding: 2rem 0 0 0;
     padding-left: 0px;
-  padding-left: 14%;
+  padding-left: 10%;
 }
 
+.comment ul.children li  {
+  list-style: none;
+  /* margin: 0; */
+  padding: 2rem 0 0 0;
+    padding-left: 0px;
+  padding-left: 5%;
+}
 

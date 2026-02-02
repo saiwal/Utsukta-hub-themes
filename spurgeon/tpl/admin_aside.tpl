@@ -22,7 +22,6 @@
 
 {{if $admin.update}}
 <div class="mb-3">
-  <ul style="disc">
   <ul class="list-unstyled">
     <li class="mt-0"><a class="nav-link" href='{{$admin.update.0}}'>{{$admin.update.1}}</a></li>
     <li class="mt-0"><a class="nav-link" href=''>Important Changes</a></li>
@@ -34,7 +33,6 @@
 {{if $plugins}}
 <div class="mb-3">
   <div class="h5">{{$plugadmtxt}}</div>
-  <ul style="disc">
   <ul class="list-unstyled">
     {{foreach $plugins as $l}}
     <li class="mt-0"><a href='{{$l.0}}'>{{$l.1}}</a></li>
@@ -45,7 +43,6 @@
 
 <div class="mb-3">
   <div class="h5">{{$logtxt}}</div>
-  <ul style="disc">
   <ul class="list-unstyled">
     <li class="mt-0"><a href='{{$logs.0}}'>{{$logs.1}}</a></li>
   </ul>

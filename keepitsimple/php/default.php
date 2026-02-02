@@ -1,7 +1,7 @@
 <?php
 
 /**
- * * Name: default
+ *   * Name: default
  *   * Description: keepitsimples default layout
  *   * Version: 1.0
  *   * Author: Saiwal
@@ -133,6 +133,7 @@
 			<?php if (x($page, 'footer')) echo $page['footer']; ?>
 
 			<div class="ss-copyright">
+<span><a href="/siteinfo">Siteinfo</a></span> 
 				<span>Design by <a href="https://www.styleshout.com/">StyleShout</a> Adapted for Hubzilla</span>
 			</div>
 

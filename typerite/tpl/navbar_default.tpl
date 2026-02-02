@@ -49,6 +49,7 @@
 				</ul>
 			</li>
 			{{/if}}
+      {{if $userinfo}}
 			<li class="has-children"><a href="" class="" id="user-toggle"><i class="bi bi-person-lines-fill"></i></a>
 				<ul class="sub-menu"> <!--begin::User Image-->
 					{{if $is_owner}}
@@ -94,6 +95,25 @@
 					{{/if}}
 				</ul>
 			</li>
+			{{/if}}
+
+					{{if $nav.login && !$userinfo}}
+					{{if $nav.loginmenu.1.4}}
+					<li>
+						<a href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal"
+							data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
+					</li>
+					{{else}}
+					<li>
+						<a href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
+					</li>
+					{{/if}}
+					{{if $nav.register}}
+					<li>
+						<a href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
+					</li>
+					{{/if}}
+					{{/if}}
 
 		</ul> <!-- end header__nav -->
 		<ul class="header__social">
