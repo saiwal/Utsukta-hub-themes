@@ -5,11 +5,11 @@
 	<div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 {{/if}}
 
-	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} generic-content-wrapper h-entry{{else}} comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
+	<{{if $item.toplevel}}article{{else}}li{{/if}} id="thread-wrapper-{{$item.id}}" class="thread-wrapper{{if $item.toplevel}} entry {{$item.toplevel}} generic-content-wrapper h-entry{{else}} comment mt-0 h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}" data-b64mids='{{$item.mids}}'>
 		<!-- <a name="item_{{$item.id}}" ></a> -->
 		{{if $item.toplevel}}
-		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
-			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
+		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment mt-0{{/if}}{{if $item.previewing}} preview{{/if}}" id="wall-item-outside-wrapper-{{$item.id}}" >
+			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}}{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
 				{{if $item.photo}}
 				<div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
 					{{$item.photo}}
@@ -65,6 +65,14 @@
 							<li><i class="bi bi-clock-history" title="{{$item.expiretime}}"></i></li>
 							{{/if}}
 							<li><span class="autotime" title="{{$item.isotime}}"><time class="dt-published" datetime="{{$item.isotime}}">{{$item.localtime}}</time>{{if $item.expiretime}}&nbsp;{{$item.expiretime}}{{/if}}</span></li>
+							{{if $item.has_tags}}
+							<li>
+								<div class="body-tags">
+									<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
+								</div>
+							</li>
+				{{/if}}
+
 						</ul>
 				</div>
 				{{if $item.divider}}
@@ -72,21 +80,14 @@
 				{{/if}}
 				{{if $item.body}}
 				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
-					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
+					<div class="wall-item-body e-content mb-4" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
-					</div>
-				</div>
-				{{/if}}
-				{{if $item.has_tags}}
-				<div class="wall-item-tools clearfix">
-					<div class="body-tags">
-						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
 					</div>
 				</div>
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -205,7 +206,7 @@
 				</div>
 			</div>
 		</div>
-		<ol class="commentlist">
+		<ol class="commentlist m-0">
 		{{else}}
 			<div class="comment__avatar">
 				<div id="wall-item-photo-wrapper-{{$item.id}}">
@@ -226,7 +227,7 @@
 					{{/if}}
 				</div>
       </div>
-			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} comment{{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
+			<div class="rounded wall-item-content-wrapper{{if $item.is_comment}} {{/if}}" id="wall-item-content-wrapper-{{$item.id}}">
 				{{if $item.photo}}
 				<div class="wall-photo-item" id="wall-photo-item-{{$item.id}}">
 					{{$item.photo}}
@@ -274,7 +275,7 @@
 				{{/if}}
 
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -310,7 +311,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
