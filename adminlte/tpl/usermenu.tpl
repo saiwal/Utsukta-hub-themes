@@ -8,7 +8,7 @@
 {{/if}}
 {{if $items}}
 	{{if $wrap}}
-	<ul class="nav flex-column" data-lte-toggle="treeview" role="navigation" aria-label="User Menu" data-accordion="false" id="">
+	<ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation" data-accordion="false" id="navigation">
 	{{else}}
 	<ul class="border-start border-4 nav nav-treeview ms-4" role="navigation" aria-label="Navigation sub menu" style="box-sizing: border-box; display: none;">
 	{{/if}}
