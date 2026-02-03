@@ -5460,15 +5460,6 @@ body.search-is-visible .s-header__search-inner {
     transform: translateX(0);
   }
 }
-
-#region_2 h2 {
-  margin-top: 0px;
-}
-#region_2 h3,.h3 {
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-
 /* ------------------------------------------------------------------- 
  * ## go top
  * ------------------------------------------------------------------- */
@@ -5548,12 +5539,12 @@ body.search-is-visible .s-header__search-inner {
   /* margin: 0; */
   padding: 2rem 0 0 0;
     padding-left: 0px;
-  padding-left: 10%;
+  padding-left: 14%;
 }
 
 .comment ul.children li  {
   list-style: none;
-  /* margin: 0; */
+  margin-top: 0; 
   padding: 2rem 0 0 0;
     padding-left: 0px;
   padding-left: 5%;

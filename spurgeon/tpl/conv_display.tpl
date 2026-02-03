@@ -21,7 +21,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<h2 class="h2">
+				<h2 class="h2 mt-0">
 					{{if $item.title_tosource}}{{if $item.plink}}
 					<a href="{{$item.plink.href}}" title="{{$item.title}} {{$item.plink.title}}">
 					{{/if}}{{/if}}
@@ -31,7 +31,7 @@
 					{{/if}}{{/if}}
         </h2>
 				{{/if}}
-				<div class="entry__meta">
+				<div class="entry__meta mb-4">
 						<div class="entry__meta-author">
 							{{if $item.author_is_group_actor}}
 							<i class="bi bi-chat-quote-fill pe-2" title="{{$item.author_is_group_actor}}"></i>
