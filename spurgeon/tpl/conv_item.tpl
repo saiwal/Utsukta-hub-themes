@@ -66,7 +66,7 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content clearfix mb-3" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
@@ -247,7 +247,7 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content clearfix mb-3" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>

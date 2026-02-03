@@ -66,22 +66,14 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content mb-3 clearfix" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
 				</div>
 				{{/if}}
-				{{if $item.has_tags}}
-				<div class="wall-item-tools clearfix">
-					<div class="body-tags">
-						<span class="tag">{{$item.mentions}} {{$item.tags}} {{$item.categories}} {{$item.folders}}</span>
-					</div>
-				</div>
-				{{/if}}
-
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -117,7 +109,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
@@ -254,7 +246,7 @@
 				<hr class="wall-item-divider">
 				{{/if}}
 				{{if $item.body}}
-				<div class="wall-item-content clearfix" id="wall-item-content-{{$item.id}}">
+				<div class="wall-item-content clearfix mb-3" id="wall-item-content-{{$item.id}}">
 					<div class="wall-item-body e-content" id="wall-item-body-{{$item.id}}"{{if $item.rtl}} dir="rtl"{{/if}}>
 						{{$item.body}}
 					</div>
@@ -267,9 +259,8 @@
 					</div>
 				</div>
 				{{/if}}
-
 				<div class="wall-item-tools d-flex justify-content-between">
-					<div class="wall-item-tools-left hstack gap-4" id="wall-item-tools-left-{{$item.id}}">
+					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
 						{{if !$item.threaded && $item.blog_mode && $verb == 'comment'}}
@@ -305,7 +296,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="wall-item-tools-right hstack gap-4" id="wall-item-tools-right-{{$item.id}}">
+					<div class="wall-item-tools-right hstack gap-5" id="wall-item-tools-right-{{$item.id}}">
 						{{if $item.moderate}}
 						<a href="moderate/{{$item.id}}/approve" onclick="moderate_approve({{$item.id}}); return false;" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg" ></i> {{$item.moderate_approve}}</a>
 						<a href="moderate/{{$item.id}}/drop" onclick="moderate_drop({{$item.id}}); return false;" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash" ></i> {{$item.moderate_delete}}</a>
