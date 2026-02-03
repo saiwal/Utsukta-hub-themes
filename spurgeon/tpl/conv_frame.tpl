@@ -60,13 +60,13 @@
 <div class="modal modal-lg" id="reactions" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
 		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="reactions_title"></h5>
+			<div class="modal-header p-4">
+				<h5 class="modal-title m-0" id="reactions_title"></h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 			</div>
 			<div class="modal-header" id="reactions_action">
 			</div>
-			<div class="modal-body row row-cols-2 row-cols-sm-3 row-cols-md-6 g-3" id="reactions_body">
+			<div class="modal-body" id="reactions_body">
 				{{$wait}}
 			</div>
 			<div class="ps-3 pe-3" id="reactions_extra_top"></div>
