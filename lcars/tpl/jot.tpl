@@ -39,19 +39,19 @@
 
 
 		<div id="jot-title-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 code" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
+			<input class="w-100 mb-1 form-control" name="title" id="jot-title" type="text" placeholder="{{$placeholdertitle}}" tabindex="1" value="{{$title}}">
 		</div>
 		<div id="jot-summary-wrap" class="jothidden border-0">
-            <textarea class="w-100 mb-1 code" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
+            <textarea class="w-100 mb-1 form-control" name="summary" id="jot-summary" type="text" placeholder="{{$placeholdersummary}}" tabindex="2" value="{{$summary}}">{{$summary}}</textarea>
 		</div>
 		{{if $catsenabled}}
 		<div id="jot-category-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 code" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
+			<input class="w-100 mb-1 form-control" name="category" id="jot-category" type="text" placeholder="{{$placeholdercategory}}" value="{{$category}}" data-role="cat-tagsinput">
 		</div>
 		{{/if}}
 		{{if $webpage}}
 		<div id="jot-pagetitle-wrap" class="jothidden border-0">
-			<input class="w-100 mb-1 code" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
+			<input class="w-100 mb-1 form-control" name="pagetitle" id="jot-pagetitle" type="text" placeholder="{{$placeholdpagetitle}}" value="{{$pagetitle}}">
 		</div>
 		{{/if}}
 		{{if $customjotheaders}}
@@ -70,7 +70,7 @@
 				</button>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 code" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
+			<textarea class="profile-jot-text border-1 form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">
@@ -80,10 +80,10 @@
 		<div id="jot-poll-wrap" class="pt-3 d-none">
 			<div id="jot-poll-options">
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 code" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 				<div class="jot-poll-option mb-3">
-					<input class="w-100 code" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
+					<input class="w-100 form-control" name="poll_answers[]" type="text" value="" placeholder="{{$poll_option_label}}">
 				</div>
 			</div>
 			{{include file="field_checkbox.tpl" field=$multiple_answers}}
@@ -95,8 +95,8 @@
 				</div>
 				<div id="poll-tools-right" class="float-end">
 					<div class="input-group">
-						<input type="text" name="poll_expire_value" class="code" value="10" size="3">
-						<select class="code" id="duration-select" name="poll_expire_unit">
+						<input type="text" name="poll_expire_value" class="form-control" value="10" size="3">
+						<select class="form-control" id="duration-select" name="poll_expire_unit">
 							<option value="Minutes">{{$poll_expire_unit_label.0}}</option>
 							<option value="Hours">{{$poll_expire_unit_label.1}}</option>
 							<option value="Days" selected="selected">{{$poll_expire_unit_label.2}}</option>
@@ -305,7 +305,7 @@
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="code" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="start_text" id="expiration-date" class="form-control" />
 				</div>
 				<script>
 					$(function () {
@@ -332,7 +332,7 @@
 			</div>
 			<div class="modal-body mb-3" style="width:90%">
 				<div class="date">
-					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" class="code" />
+					<input type="text" placeholder="yyyy-mm-dd HH:MM" name="created_text" id="created-date" class="form-control" />
 				</div>
 				<script>
 					$(function () {

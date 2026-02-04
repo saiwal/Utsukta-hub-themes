@@ -4,7 +4,7 @@
  *   * Name: LCARS
  *   * Description: LCARS theme bt TheLCARS.com adapted for Hubzilla
  *   * Version: 1.0-beta
- *   * MinVersion: 7.2
+ *   * MinVersion: 11.0
  *   * MaxVersion: 12.0
  *   * Author: Saiwal sk@utsukta.org
  *   * Maintainer: Saiwal sk@utsukta.org

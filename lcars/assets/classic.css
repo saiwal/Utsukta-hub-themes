@@ -2064,9 +2064,22 @@ code {
 	color: var(--code-color);
 }
 
-.code {
+.code, textarea {
 	width: 100%;
 	min-height: 5rem;
+	padding-block: .5rem;
+	padding-inline: 1rem;
+	background-color: black;
+	border-color: var(--code-color);
+	tab-size: 4;
+	font-family: monospace;
+	font-size: .85rem;
+	color: var(--code-color);
+}
+
+input {
+	/* width: 100%; */
+	min-height: 3rem;
 	padding-block: .5rem;
 	padding-inline: 1rem;
 	background-color: black;

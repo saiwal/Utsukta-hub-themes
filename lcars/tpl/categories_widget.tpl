@@ -5,9 +5,9 @@
 		</span>
   </div>
   <span class="pillbox">
-    <button class="pill" href="{{$base}}">{{$all}}</button>
+    <button class="pill {{if $term.selected}} blink{{/if}}>{{$term.name}}" onclick="playSoundAndRedirect('audio2','{{$base}}')">{{$all}}</button>
     {{foreach $terms as $term}}{{if $term.name}}
-		<button class="pill" href="{{$base}}/?cat={{$term.name|escape:'url'}}">{{$term.name}}</button>
+		<button class="pill {{if $term.selected}} blink{{/if}}" onclick="playSoundAndRedirect('audio2','{{$base}}/?cat={{$term.name|escape:'url'}}')">{{$term.name}}</button>
     {{/if}}
     {{/foreach}}
   </span>
