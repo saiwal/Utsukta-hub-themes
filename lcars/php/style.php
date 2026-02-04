@@ -46,7 +46,7 @@ $sys = [
 ];
 # set some defaults
 
-$schema = $schema ?: $sys['schema'] ?: 'default';
+$schema = $schema ?: $sys['schema'] ?: 'classic';
 $bgcolor = $bgcolor ?: $sys['background_color'] ?: 'var(--bs-body-bg)';
 $bgcolor_dark = $bgcolor_dark ?: $sys['background_color_dark'] ?: 'var(--bs-body-bg)';
 $background_image = $background_image ?: $sys['background_image'] ?: '';
