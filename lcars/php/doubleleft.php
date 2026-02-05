@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: oubleleft
- *   * Description: LCARS doubleleft layout
+ *   * Name: doubleleft
+ *   * Description: LCARS classic layout
  *   * Version: 0.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
@@ -35,7 +35,6 @@
 
 					<!-- Start your content here. -->
 					<?php if(!empty($page['banner'])) echo $page['banner']; ?>
-					<section id="content" class="s-content s-content--page">
 						<div class="container-fluid">
 							<div class="row">
 								<div class="col-lg-8 col-md-12">
@@ -43,28 +42,40 @@
 										<?php if (x($page, 'content')) echo $page['content']; ?>
 									</div>
 								</div>
-								<div class="col-lg-4" id="sidebar-column">
-									<div id="region_3">
-										<div id="left_aside_wrapper">
-											<?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
-										</div>
-										<div id="right_aside_wrapper">
-											<?php if (x($page, 'aside')) echo $page['aside']; ?>
-										</div>
-									</div>
+								<div class="col-lg-4 z-2" id="sidebar-column">
+					<div class="offcanvas-lg offcanvas-end" tabindex="-1" id="offcanvasResponsive" aria-labelledby="offcanvasResponsiveLabel">
+						<div class="offcanvas-header bg-black the-end">
+							<div class="buttons mt-0 mb-0">
+								<button type="button" class="" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive" aria-label="Close">Close</button>
+							</div>
+            </div>
+            <div class="offcanvas-body flush bg-black px-0">
+              <div class="container row pe-0">
+                <div id="region_1" class="pe-0">
+                <div id="left_aside_wrapper">
+                <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
+                </div>
+                </div>
+                <div id="region_3" class="pe-0">
+                <div id="right_aside_wrapper">
+                <?php if (x($page, 'aside')) echo $page['aside']; ?>
+              </div>
+              </div>
+            </div>
+          </div>
 								</div>
 							</div>
 						</div>
-					</section>
 					<!-- End content area. -->
 
 				</main>
 				<footer>
-					<!-- The following attribution must not be removed: -->
-					LCARS Inspired Website Template by <a href="https://www.thelcars.com">www.TheLCARS.com</a> adapted for Hubzilla.				 		 
 						<div class="lcars-text-bar the-end">
 							<span>Live Long and Prosper</span>
 						</div>
+
+					<!-- The following attribution must not be removed: -->
+					LCARS Inspired Website Template by <a href="https://www.thelcars.com">www.TheLCARS.com</a> adapted for Hubzilla.				 		 
 				</footer> 
 			</div>
 		</div>

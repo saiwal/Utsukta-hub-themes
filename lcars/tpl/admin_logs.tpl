@@ -12,11 +12,10 @@
     <div class="submit">
       <input type="submit" name="page_logs" class="btn btn-primary" value="{{$submit}}" />
     </div>
-
   </form>
 
   <h5>{{$logname}}</h5>
-		<div class="border border-1 border-info">
+		<div class="border border-1 border-info flex">
       <pre style="width:100%; height:400px; overflow: auto;">{{$data}}</pre>
     </div>
 

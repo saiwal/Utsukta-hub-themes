@@ -1,5 +1,5 @@
   <div class="lcars-text-bar">
-    <span class="d-flex justify-content-between align-items-center">
+    <span>
       {{$title}}
       {{if $reset}}
       <a href="{{$reset.url}}" class="text-muted" title="{{$reset.title}}">
