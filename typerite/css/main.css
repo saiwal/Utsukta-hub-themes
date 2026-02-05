@@ -3447,8 +3447,8 @@ body.search-is-visible {
 }
 
 .comment__avatar img {
-    height         : 6.4rem;
-    width          : 6.4rem;
+    height         : 48px;
+    width          : 48px;
     border-radius  : 100%;
     vertical-align : bottom;
 }
@@ -3679,7 +3679,7 @@ code {
 	position: relative;
 }
 
-.children > .comment,.comment ul.children li  {
+.children > .comment {
   list-style: none;
   /* margin: 0; */
   padding: 2rem 0 0 0;
@@ -3687,4 +3687,11 @@ code {
   padding-left: 14%;
 }
 
+.comment ul.children li  {
+  list-style: none;
+  margin: 0;
+  padding: 2rem 0 0 0;
+    padding-left: 0px;
+  padding-left: 5%;
+}
 

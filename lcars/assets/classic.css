@@ -2064,7 +2064,7 @@ code {
 	color: var(--code-color);
 }
 
-.code, textarea {
+.code {
 	width: 100%;
 	min-height: 5rem;
 	padding-block: .5rem;
@@ -2077,19 +2077,25 @@ code {
 	color: var(--code-color);
 }
 
-input {
-	/* width: 100%; */
+.form-control {
+	width: 100%;
 	min-height: 3rem;
 	padding-block: .5rem;
 	padding-inline: 1rem;
-	background-color: black;
-	border-color: var(--code-color);
+	background-color: #151515;
+	/* border-color: var(--code-color); */
+	border-radius: 0;
 	tab-size: 4;
-	font-family: monospace;
 	font-size: .85rem;
 	color: var(--code-color);
 }
-
+.form-control:focus {
+  color: var(--font-color);
+  background-color: #151515;
+  /* border-color: var(--code-color); */
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(42, 159, 214, 0.25);
+}
 ::selection {
 	background-color: var(--orange);
 	color: black;

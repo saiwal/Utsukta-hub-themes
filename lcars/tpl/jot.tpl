@@ -70,7 +70,7 @@
 				</button>
 				{{/if}}
 			</div>
-			<textarea class="profile-jot-text border-1 form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
+			<textarea class="profile-jot-text form-control" id="profile-jot-text" name="body" tabindex="2" placeholder="{{$placeholdtext}}" tabindex="3">{{$content}}</textarea>
 		</div>
 		{{if $attachment}}
 		<div id="jot-attachment-wrap">

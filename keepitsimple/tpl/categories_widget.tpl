@@ -2,7 +2,7 @@
   <h3 class="h6">
     {{$title}}
   </h3>
-    <ul>
+    <ul class="link-list">
       <li><a href="{{$base}}" class="{{if $sel_all}} active{{/if}}">{{$all}}</a></li>
       {{foreach $terms as $term}}{{if $term.name}}
       <li><a href="{{$base}}/?cat={{$term.name|escape:'url'}}"

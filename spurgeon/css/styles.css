@@ -5259,8 +5259,8 @@ body.search-is-visible .s-header__search-inner {
 }
 
 .comment__avatar img {
-    height         : var(--vspace-2);
-    width          : var(--vspace-2);
+    height         : 48px;
+    width          : 48px;
     border-radius  : 100%;
     vertical-align : bottom;
 }

@@ -1,26 +1,55 @@
 {{if $wrap}}
-<div id="pmenu-{{$id}}" class="pmenu{{if !$class}} {{else}} {{$class}}{{/if}} mb-3">
-  {{/if}}
-  {{if $menu.menu_desc}}
-  <div class="h5">
-    {{$menu.menu_desc}}{{if $edit}} <a href="mitem/{{$nick}}/{{$menu.menu_id}}"
-        title="{{$edit}}"><i class="bi bi-pencil fakelink ms-2" title="{{$edit}}"></i></a>{{/if}}
-  </div>
-  {{/if}}
-    {{if $items}}
-    <ul class="pmenu-body{{if $wrap || !$class}} flex-column{{elseif !$wrap || $class}} {{$class}}{{/if}}" style="list-style: none;">
-      {{foreach $items as $mitem }}
-      <li id="pmenu-item-{{$mitem.mitem_id}}" class="nav-item pmenu-item{{if $mitem.submenu}} dropdown{{/if}}">
-        <a href="{{if $mitem.submenu}}#{{else}}{{$mitem.mitem_link}}{{/if}}"
-          class="nav-link {{if $mitem.submenu}} dropdown-toggle{{/if}}" {{if $mitem.submenu}} data-bs-toggle="dropdown"
-          {{/if}}{{if $mitem.newwin}}target="_blank" {{/if}} rel="nofollow noopener">{{$mitem.mitem_desc}}{{if
-          $mitem.submenu}}<span class="caret"></span>{{/if}}</a>
-        {{if $mitem.submenu}}{{$mitem.submenu}}{{/if}}
-      </li>
-      {{/foreach }}
-    </ul>
-    {{/if}}
-    {{if $wrap}}
-    <div class="pmenu-end"></div>
-</div>
+	{{if $menu.menu_desc}}
+	<div class="h3">{{$menu.menu_desc}}</div>
+	{{/if}}
 {{/if}}
+
+{{if $items}}
+
+	{{if $wrap}}
+	<ul class="link-list flex-column sidebar-menu" id="navigation" role="navigation" aria-label="Main navigation">
+	{{else}}
+	<ul class="nav flex-column ms-3 border-start border-dark border-4" role="navigation" aria-label="Navigation sub menu">
+	{{/if}}
+
+	{{foreach $items as $mitem }}
+
+		<li class="nav-item" id="pmenu-item-{{$mitem.mitem_id}}">
+
+			{{if $mitem.submenu}}
+
+				<a class="nav-link link--primary d-flex justify-content-between align-items-center"
+				   data-bs-toggle="collapse"
+				   href="#submenu-{{$mitem.mitem_id}}"
+				   role="button"
+				   aria-expanded="false"
+				   aria-controls="submenu-{{$mitem.mitem_id}}">
+					<span>
+						<i class="nav-icon bi bi-link me-2"></i>
+						{{$mitem.mitem_desc}}
+					</span>
+					<i class="bi bi-chevron-down"></i>
+				</a>
+
+				<div class="collapse" id="submenu-{{$mitem.mitem_id}}">
+					{{$mitem.submenu}}
+				</div>
+
+			{{else}}
+
+				<a href="{{$mitem.mitem_link}}"
+				   class="nav-link link--primary"
+				   {{if $mitem.newwin}}target="_blank"{{/if}}>
+					<i class="nav-icon bi bi-link me-2"></i>
+					{{$mitem.mitem_desc}}
+				</a>
+
+			{{/if}}
+
+		</li>
+
+	{{/foreach}}
+
+	</ul>
+{{/if}}
+

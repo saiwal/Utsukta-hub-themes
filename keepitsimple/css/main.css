@@ -1930,7 +1930,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     color: #3e3e3e;
 }
 
-.s-content__sidebar .link-list li a:hover, .s-content__sidebar .link-list li a:focus {
+.s-content__sidebar .link-list li a:hover, .s-content__sidebar .link-list li a:focus, .s-content__sidebar .link-list li a.active {
     color: #9fcc7f;
 }
 
