@@ -16,56 +16,56 @@
 				{{/if}}
 				<textarea id="comment-edit-text-{{$id}}" class="comment-edit-text form-control" placeholder="{{$comment}}" name="body" ondragenter="linkdropper(event);" ondragleave="linkdropexit(event);" ondragover="linkdropper(event);" ondrop="linkdrop(event);" ></textarea>
 				<div id="comment-tools-{{$id}}" class="pt-2 comment-tools">
-					<div id="comment-edit-bb-{{$id}}" class="btn-toolbar float-start">
-						<div class="btn-group me-2">
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edbold}}" onclick="insertbbcomment('{{$comment}}','b', {{$id}});">
+					<div id="comment-edit-bb-{{$id}}" class="btn-toolbar float-start hstack gap-5">
+						<div class="hstack gap-5">
+							<a type="button" class=" border-0" title="{{$edbold}}" onclick="insertbbcomment('{{$comment}}','b', {{$id}});">
 								<i class="bi bi-type-bold comment-icon"></i>
-							</button>
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$editalic}}" onclick="insertbbcomment('{{$comment}}','i', {{$id}});">
+							</a>
+							<a type="button" class=" border-0" title="{{$editalic}}" onclick="insertbbcomment('{{$comment}}','i', {{$id}});">
 								<i class="bi bi-type-italic comment-icon"></i>
-							</button>
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$eduline}}" onclick="insertbbcomment('{{$comment}}','u', {{$id}});">
+							</a>
+							<a type="button" class=" border-0" title="{{$eduline}}" onclick="insertbbcomment('{{$comment}}','u', {{$id}});">
 								<i class="bi bi-type-underline comment-icon"></i>
-							</button>
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edquote}}" onclick="insertbbcomment('{{$comment}}','quote', {{$id}});">
+							</a>
+							<a type="button" class=" border-0" title="{{$edquote}}" onclick="insertbbcomment('{{$comment}}','quote', {{$id}});">
 								<i class="bi bi-quote comment-icon"></i>
-							</button>
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edcode}}" onclick="insertbbcomment('{{$comment}}','code', {{$id}});">
+							</a>
+							<a type="button" class=" border-0" title="{{$edcode}}" onclick="insertbbcomment('{{$comment}}','code', {{$id}});">
 								<i class="bi bi-code comment-icon"></i>
-							</button>
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edhighlighter}}" onclick="insertbbcomment('{{$comment}}','mark', {{$id}});">
+							</a>
+							<a type="button" class=" border-0" title="{{$edhighlighter}}" onclick="insertbbcomment('{{$comment}}','mark', {{$id}});">
 								<i class="bi bi-highlighter comment-icon"></i>
-							</button>
+							</a>
 						</div>
-						<div class="btn-group me-2">
+						<div class="hstack gap-5">
 							{{if $can_upload}}
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edatt}}" onclick="insertCommentAttach('{{$comment}}', {{$id}});">
+							<a type="button" class=" border-0" title="{{$edatt}}" onclick="insertCommentAttach('{{$comment}}', {{$id}});">
 								<i class="bi bi-paperclip comment-icon"></i>
-							</button>
-							<button type="button" title="{{$edimg}}" class="btn btn-outline-secondary btn-sm border-0" onclick="insertCommentEmbed('{{$comment}}', {{$id}});">
+							</a>
+							<a type="button" title="{{$edimg}}" class=" border-0" onclick="insertCommentEmbed('{{$comment}}', {{$id}});">
 								<i class="bi bi-file-image comment-icon"></i>
-							</button>
+							</a>
 							{{/if}}
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$edurl}}" onclick="insertCommentURL('{{$comment}}',{{$id}});">
+							<a type="button" class=" border-0" title="{{$edurl}}" onclick="insertCommentURL('{{$comment}}',{{$id}});">
 								<i class="bi bi-link-45deg comment-icon"></i>
-							</button>
+							</a>
 						</div>
 						{{if $feature_encrypt}}
-						<div class="btn-group me-2">
-							<button type="button" class="btn btn-outline-secondary btn-sm border-0" title="{{$encrypt}}" onclick="sodium_encrypt('#comment-edit-text-' + '{{$id}}');">
+						<div class="hstack gap-5">
+							<a type="button" class=" border-0" title="{{$encrypt}}" onclick="sodium_encrypt('#comment-edit-text-' + '{{$id}}');">
 								<i class="bi bi-key comment-icon"></i>
-							</button>
+							</a>
 						</div>
 						{{/if}}
 						{{$comment_buttons}}
 					</div>
 					<div class="btn-group float-end" id="comment-edit-submit-wrapper-{{$id}}">
 						{{if $preview}}
-						<button type="button" id="comment-edit-presubmit-{{$id}}" class="btn btn-outline-secondary btn-sm" onclick="preview_comment({{$id}});" title="{{$preview}}">
+						<a type="button" id="comment-edit-presubmit-{{$id}}" class="p-4" onclick="preview_comment({{$id}});" title="{{$preview}}">
 							<i class="bi bi-eye comment-icon" ></i>
-						</button>
+						</a>
 						{{/if}}
-						<button id="comment-edit-submit-{{$id}}" class="btn btn-primary btn-sm" type="submit" name="button-submit" onclick="post_comment({{$id}}); return false;">{{$submit}}</button>
+						<a id="comment-edit-submit-{{$id}}" class="btn btn-primary btn-sm" type="submit" name="button-submit" onclick="post_comment({{$id}}); return false;">{{$submit}}</a>
 					</div>
 				</div>
 				<div class="clear"></div>
