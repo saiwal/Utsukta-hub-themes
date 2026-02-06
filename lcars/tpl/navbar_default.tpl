@@ -39,7 +39,7 @@
 			• {{$sel.name}}<br>
 			<span class="go-big">{{$sitelocation}}</span>
 			{{else}}
-			<a href="{{$url}}"> • {{$sel.name}}</a>
+			• <a href="{{$url}}">{{$sel.name}}</a>
 			{{if $settings_url}}
 			<a href="{{$settings_url}}/?f=&rpath={{$url}}" class="go-big"><i class="bi bi-gear"></i></a>
 			{{/if}}

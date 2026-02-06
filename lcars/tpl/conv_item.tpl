@@ -28,7 +28,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="h3 wall-item-title" id="wall-item-title-{{$item.id}}">
+				<div class="h4 wall-item-title" id="wall-item-title-{{$item.id}}">
 					<span>{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}"
 							title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if
 							$item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</span>
