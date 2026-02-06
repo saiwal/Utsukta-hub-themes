@@ -5,9 +5,9 @@
 		</span>
   </div>
 	<div class=pillbox>
-			<button class="pill" href="blocks/{{$who}}">{{$blocks}}</button>
-      <button class="pill" href="menu/{{$who}}">{{$menus}}</button>
-      <button class="pill" href="layouts/{{$who}}">{{$layout}}</button>
-      <button class="pill" href="webpages/{{$who}}">{{$pages}}</button>
+			<a class="pill" href="/blocks/{{$who}}">{{$blocks}}</a>
+      <a class="pill" href="/menu/{{$who}}">{{$menus}}</a>
+      <a class="pill" href="/layouts/{{$who}}">{{$layout}}</a>
+      <a class="pill" href="/webpages/{{$who}}">{{$pages}}</a>
 	</div>
 </div>
