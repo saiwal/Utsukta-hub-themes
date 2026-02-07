@@ -16,7 +16,10 @@
 
   <h5>{{$logname}}</h5>
 		<div class="border border-1 border-info flex">
-      <pre style="width:100%; height:400px; overflow: auto;">{{$data}}</pre>
+      <pre style="width:100%; height:400px; overflow:auto;
+              white-space:pre-wrap;
+              word-break:break-word;
+              overflow-wrap:anywhere;">{{$data}}</pre>
     </div>
 
 </div>
