@@ -1,9 +1,12 @@
+### AdminLTE 
+
 A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 
 - Based on [AdminLTEv4](https://adminlte.io/).
 - Built completely from the ground up.
 - Mobile friendly and responsive.
 - Multiple variants(schemas) that can be chosen for a unique look.
+- Customize background color and image, dark/light mode, mini sidebar.
 - Report any issues in the [github repo](https://github.com/saiwal/hubzilla-themes).
 - Use [Discussions](https://github.com/saiwal/Utsukta-hub-themes/discussions) to discuss ideas, ask questions and for help.
 
@@ -23,27 +26,9 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 - [Superhero](https://utsukta.org/page/utsukta-themes/adminlte-superhero/)
 - [Vapor](https://utsukta.org/page/utsukta-themes/adminlte-vapor/)
 
-#### Features and Setup
+#### User Guide
 
-**Setting default system options:** You can set default options for the theme(scheme, dark mode, background color, images etc.) for your hub in /admin/site and clicking on `change theme settings`
-![set system pref](README/%20admin-settings.png)
+#### Admin Guide
 
-and you will see the various theme settings that can be set fo your hub.
+#### Development Notes
 
-![settings ui](README/%20settings.png)
-
-
-**Personalization options:** AdminLTE offers some ways to further customize the look and feel of your theme by specifying color and background image for your pages. This can be specified by going to `Settings`->`Display Settings`-> `Custom Theme Settings`. 
-
-**Custom Logo:** To have a customized logo on the top left corner, upload the logo with public access and provide the url in `/admin/site` under `theme settings`
-
-
-![logo](README/%20logo_field.png)
-
-![logo-collapsed](README/%20logo-collapsed.png)
-
-![logo-expand](README/%20logo-expand.png)
-
-**Sortable navigation menu:** The items on the navigation menu can be dragged in the order you wish for them to appear.
-
-**Interface tour(via addon):** Install the addon `adminlte_tour` via the [addon repo](https://github.com/saiwal/utsukta-hub-addons) to give new members a quick tour of the interface.
