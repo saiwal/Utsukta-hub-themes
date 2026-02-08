@@ -15,6 +15,7 @@ A simple, elegant and clean theme based on [AdminLTE](https://adminlte.io/)
 Some [Screenshots](/adminlte/screenshots/screenshots.md)
 
 #### Variants (Schemes)
+This theme comes with 10 variants that can be chosen from `settings -> display settings` in the scheme section.
 
 - [Brite](https://utsukta.org/page/utsukta-themes/adminlte-brite)
 - [Cosmo](https://utsukta.org/page/utsukta-themes/adminlte-cosmo/)
@@ -27,8 +28,12 @@ Some [Screenshots](/adminlte/screenshots/screenshots.md)
 - [Vapor](https://utsukta.org/page/utsukta-themes/adminlte-vapor/)
 
 #### User Guide
+You can choose the theme and a scheme from `settings -> display settings`. The theme offers some more customisation options:
+You may choose a background color and/or a background image. If you choose a background image which is a pattern, choose tiled mode. In case the background image is a picture/photograph choose *cover* mode.
+It is also possible to specify a default sidebar mode from `expanded` and `collapsed`. Also you can choose a dark/light mode as your default.
 
 #### Admin Guide
+
 
 #### Development Notes
 
