@@ -17,11 +17,16 @@
 		{{/if}}
 
 		{{if $is_owner}}
-		<div onclick="playSound('audio2', '#')" class="panel-2" type="button" data-bs-toggle="collapse"
+		<div onclick="playSound('audio2', '#')" class="panel-3" type="button" data-bs-toggle="collapse"
 			data-bs-target="#collapsefeatapps" aria-controls="collapsefeatapps">
 			<span class="hop">
 				{{$featured_apps}}
 			</span><i class="bi bi-star-fill ps-1"></i>
+		</div>
+		<div onclick="playSoundAndRedirect('audio2', '/apps')" class="panel-2" >
+			<span class="hop">
+				{{$addapps}}
+			</span><i class="bi bi-plus-lg ps-1"></i>
 		</div>
 		{{else}}
 		<div onclick="playSound('audio2')" class="panel-2" type="button" data-bs-toggle="collapse"
