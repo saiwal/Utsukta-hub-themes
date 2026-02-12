@@ -18,7 +18,8 @@
 		{{/if}}
 		{{foreach $entries as $item}}
 		<div class="col mb-4">
-				<a href="{{$item.rel_path}}" title="{{$item.name}}" class="text-decoration-none">
+			<div class="card h-100">
+				<a href="{{$item.rel_path}}" title="{{$item.name}}" class="text-decoration-none stretched-link file_link"  data-id="{{$item.attach_id}}" data-type="{{$item.type}}">
 					<div class="d-flex align-items-center justify-content-center m-1" style="height: 4.5rem;">
 						{{if $item.photo_icon}}
 						<img src="{{$item.photo_icon}}" class="rounded" alt="{{$item.photo_icon}}" title="{{$item.size_formatted}}" style="max-height: 4rem; width: auto; max-width: 100%;">
@@ -143,7 +144,7 @@
 				{{/if}}
 			</td>
 			<td><i class="bi {{$item.icon_from_type}} generic-icons" title="{{$item.type}}"></i></td>
-			<td><a href="{{$item.rel_path}}" class="p-2" draggable="false">{{$item.name}}</a></td>
+			<td><a href="{{$item.rel_path}}" class="p-2 file_link" data-id="{{$item.attach_id}}" data-type="{{$item.type}}" draggable="false">{{$item.name}}</a></td>
 			<td>{{$item.terms}}</td>
 			<td class="cloud-index-tool p-2">
 				{{if $item.lockstate == 'lock'}}

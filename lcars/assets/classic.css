@@ -779,6 +779,7 @@ button:active {
 .pill-2:nth-child(3),
 .pillbox-2 a:nth-child(3) {
 	background-color: var(--pill-a3-color);
+	border-radius: 100vmax 0 0 100vmax;
 }
 
 .pill-2:nth-child(4),

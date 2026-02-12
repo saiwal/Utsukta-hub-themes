@@ -9,15 +9,17 @@
     {{include file="field_input.tpl" field=$logfile}}
     {{include file="field_select.tpl" field=$loglevel}}
 
-    <div class="submit">
-      <input type="submit" name="page_logs" class="btn btn-primary" value="{{$submit}}" />
+    <div class="submit buttons">
+			<button type="submit" name="page_logs" class="btn btn-primary">{{$submit}}</button>
     </div>
-
   </form>
 
   <h5>{{$logname}}</h5>
-		<div class="border border-1 border-info">
-      <pre style="width:100%; height:400px; overflow: auto;">{{$data}}</pre>
+		<div class="border border-1 border-info flex">
+      <pre style="width:100%; height:600px; overflow:auto;
+              white-space:pre-wrap;
+              word-break:break-word;
+              overflow-wrap:anywhere;">{{$data}}</pre>
     </div>
 
 </div>

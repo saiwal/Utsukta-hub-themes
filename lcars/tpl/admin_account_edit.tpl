@@ -15,7 +15,8 @@
 {{include file="field_select.tpl" field=$account_language}}
 {{include file="field_input.tpl" field=$service_class}}
 
-
-<input type="submit" name="submit" class="btn btn-primary" value="{{$submit}}" />
+<div class="buttons">
+	<button type="submit" name="submit" class="" value="{{$submit}}">{{$submit}}</button>
+</div>
 
 </form>

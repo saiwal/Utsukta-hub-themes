@@ -10,7 +10,7 @@
 <div id="collapsed-comments-{{$item.id}}" class="collapsed-comments" style="display: none;">
 	{{/if}}
 	<div id="thread-wrapper-{{$item.id}}"
-		class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} mb-4 generic-content-wrapper h-entry{{else}} u-comment h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}"
+		class="thread-wrapper{{if $item.toplevel}} {{$item.toplevel}} mb-4 generic-content-wrapper h-entry{{else}} u-comment border-2 border-start h-cite{{/if}} clearfix{{if $item.is_contained}} is-contained{{/if}}{{if $item.is_new && !$item.event && !$item.photo && !$item.title && !$item.is_comment}} is-new{{/if}}"
 		data-b64mids='{{$item.mids}}'>
 		<a name="item_{{$item.id}}"></a>
 		<div class="wall-item-outside-wrapper{{if $item.is_comment}} comment{{/if}}{{if $item.previewing}} preview{{/if}}"
@@ -28,7 +28,7 @@
 				</div>
 				{{/if}}
 				{{if $item.title && $item.toplevel && !$item.event}}
-				<div class="h3 wall-item-title" id="wall-item-title-{{$item.id}}">
+				<div class="h4 wall-item-title" id="wall-item-title-{{$item.id}}">
 					<span>{{if $item.title_tosource}}{{if $item.plink}}<a href="{{$item.plink.href}}"
 							title="{{$item.title}} ({{$item.plink.title}})" rel="nofollow">{{/if}}{{/if}}{{$item.title}}{{if
 							$item.title_tosource}}{{if $item.plink}}</a>{{/if}}{{/if}}</span>
@@ -132,7 +132,7 @@
 					</div>
 				</div>
 				{{/if}}
-				<div class="p-2 wall-item-tools d-flex justify-content-between">
+				<div class="p-2 wall-item-tools d-flex flex-wrap justify-content-between">
 					<div class="wall-item-tools-left hstack gap-1" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}

@@ -1564,7 +1564,7 @@ function request(id, mid, verb, parent, uuid, userClick) {
 				if (e.item_blocked === 4) {
 					mod = '<span onclick="moderate_approve(' + e.id + '); return false;" class="text-success pe-4 d-inline-block"><i class="bi bi-check-lg" ></i></span><span onclick="moderate_drop(' + e.id + '); return false;" class="text-danger pe-4 d-inline-block"><i class="bi bi-trash" ></i></span>';
 				}
-				modal_content.innerHTML += '<a href="' + e.url + '" class="list-group-item list-group-item-action border-0">' + mod + '<img src="' + e.photo + '" class="menu-img-1" loading="lazy">&nbsp;' + e.name + '</a>';
+				modal_content.innerHTML += '<a href="' + e.url + '" class="border-0">' + mod + '<img src="' + e.photo + '" class="menu-img-1" loading="lazy">&nbsp;' + e.name + '</a>';
 
 			});
 

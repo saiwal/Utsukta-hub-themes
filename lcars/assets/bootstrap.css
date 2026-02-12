@@ -2309,11 +2309,11 @@ textarea.form-control-lg {
   cursor: pointer;
 }
 .form-control-color::-moz-color-swatch {
-  border: 0 !important;
+  border: 0 ;
   border-radius: var(--bs-border-radius);
 }
 .form-control-color::-webkit-color-swatch {
-  border: 0 !important;
+  border: 0 ;
   border-radius: var(--bs-border-radius);
 }
 .form-control-color.form-control-sm {

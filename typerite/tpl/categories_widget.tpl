@@ -1,5 +1,5 @@
 <div id="categories-sidebar" class="mb-3">
-  <div class="h5">
+  <div class="h3">
     {{$title}}
   </div>
   <span class="entry__tags">

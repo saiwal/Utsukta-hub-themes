@@ -49,8 +49,8 @@
 		{{$no_pending}}
 		</div>
 		{{/if}}
-		<div class="float-start">
-			<a class="btn btn-sm btn-link" href="{{$get_all_link}}">{{$get_all}}</a>
+		<div class="buttons">
+			<button class="btn btn-sm btn-link" href="{{$get_all_link}}">{{$get_all}}</button>
 		</div>
       </div>
     </div>
@@ -98,10 +98,10 @@
 		{{*
 			<div class="selectall"><a href="#" onclick="return toggle_selectall('users_ckbx');">{{$select_all}}</a></div>
 		*}}
-			<div class="submit pt-2">
-                <input type="submit" name="page_accounts_block" class="btn btn-primary" value="{{$block}}/{{$unblock}}" />
-                <input type="submit" name="page_accounts_delete" class="btn btn-primary" onclick="return confirm_delete_multi()" value="{{$delete}}" />
-            </div>
+			<div class="submit pt-2 buttons">
+				<button type="submit" name="page_accounts_block" class="btn btn-primary" value="{{$block}}/{{$unblock}}">{{$block}}/{{$unblock}}</button>
+				<button type="submit" name="page_accounts_delete" class="btn btn-primary" onclick="return confirm_delete_multi()" value="{{$delete}}">{{$delete}}</button>
+			</div>
 		{{else}}
 			NO USERS?!?
 		{{/if}}
