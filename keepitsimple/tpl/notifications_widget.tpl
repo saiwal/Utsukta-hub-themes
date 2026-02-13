@@ -740,11 +740,11 @@
 			<span class="badge bg-secondary">{10}</span>
 		</a>
 	</div>
-	<div id="notifications" class="border border-top-0 rounded navbar-nav collapse">
+	<div id="notifications" class="border border-top-0 border-start-0 border-end-0 rounded navbar-nav collapse">
 		{{foreach $notifications as $notification}}
 		<div class="rounded-top rounded-bottom border border-start-0 border-end-0 border-bottom-0 list-group list-group-flush collapse {{$notification.type}}-button">
-			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
-				<div class="h6 mt-2 mb-2">
+			<a id="notification-link-{{$notification.type}}" class="collapsed list-group-item justify-content-between align-items-center d-flex fakelink stretched-link notification-link ps-0" href="#" title="{{$notification.title}}" data-bs-target="#nav-{{$notification.type}}-sub" data-bs-toggle="collapse" data-sse_type="{{$notification.type}}">
+				<div class="mt-2 mb-2">
 					<i class="bi bi-{{$notification.icon}} generic-icons-nav"></i>
 					{{$notification.label}}
 				</div>
