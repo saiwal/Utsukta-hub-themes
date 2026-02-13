@@ -2476,12 +2476,12 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 .commentlist ul .comment {
     padding-left: 10%;
     margin-top: calc(3.2rem + 2rem);
-    border-left: 1px solid rgba(0, 0, 0, 0.15);
+    /* border-left: 1px solid rgba(0, 0, 0, 0.15); */
 }
 
 .comment__avatar {
     position: absolute;
-    left: 0px;
+    left: 4px;
     display: block;
 }
 
@@ -2539,7 +2539,7 @@ button::-moz-focus-inner, input::-moz-focus-inner {
 }
 
 .comment ul.children li {
-    padding-left: 10%;
+    padding-left: 5%;
     margin-top: calc(3.2rem + 2rem);
     border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
@@ -2596,6 +2596,12 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     .comment ul.children li {
         margin-top: calc(3.2rem + 0rem);
     }
+		.commentlist ul .comment {
+				padding-left: 0;
+		    margin-top: 0;
+				/* border-left: 1px solid rgba(0, 0, 0, 0.15); */
+}
+
 }
 
 @media screen and (max-width:400px) {
@@ -2605,4 +2611,10 @@ button::-moz-focus-inner, input::-moz-focus-inner {
     .comment ul.children li {
         border-left: none;
     }
+		.commentlist ul .comment {
+    padding-left: 0;
+    margin-top: 0;
+    /* border-left: 1px solid rgba(0, 0, 0, 0.15); */
+}
+
 }
