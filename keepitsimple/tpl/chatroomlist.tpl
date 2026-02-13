@@ -1,5 +1,5 @@
 <div id="chatroom_list">
-  <div class="h5">{{$header}}</div>
+  <div class="h6">{{$header}}</div>
 	<ul class="link-list">
 		<li><a class="" href="{{$baseurl}}/chat/{{$nickname}}">{{$overview}}</a></li>
 		{{foreach $items as $item}}

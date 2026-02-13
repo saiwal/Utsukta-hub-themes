@@ -1,5 +1,7 @@
-<div class="generic-content-wrapper">
-  <div class="h3">{{$ptitle}}</div>
+<div class="generic-content-wrapper">		<header class="entry__header">
+		<h2 class="entry__title h1">{{$ptitle}}
+			</h2>
+		</header>
     {{$nickname_block}}
     <form action="settings/privacy" id="settings-form" method="post" autocomplete="off">
       <input type='hidden' name='form_security_token' value='{{$form_security_token}}' />

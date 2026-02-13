@@ -1,5 +1,5 @@
-<div id="chatroom_members" class="mb-3">
-  <div class="h5">
+<div id="chatroom_members">
+  <div class="h6">
     {{$header}}
   </div>
     <div id="chatMembers"></div>

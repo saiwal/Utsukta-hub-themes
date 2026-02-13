@@ -1,5 +1,5 @@
 {{if ! $refresh}}
-<div id="wiki_page_list" class="mb-3" >
+<div id="wiki_page_list">
 {{/if}}
 	<div class="h6">{{$header}}</div>
 	<ul class="link-list">

@@ -1,4 +1,3 @@
-<div class="mb-3">
   <div class="h6">{{$title}}</div>
     {{if $entries}}
     <ul class="list-group list-group-flush">
@@ -8,4 +7,3 @@
     </ul>
     {{/if}}
     <a href="directory?f=&suggest=1">{{$more}}</a>
-</div>

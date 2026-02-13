@@ -1,5 +1,10 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper clearfix app-content-header">
+	<header class="entry__header">
+		<h2 class="entry__title h1">
+		{{if $finding}}{{$finding}}{{else}}{{$header}}{{if $total}} ({{$total}}){{/if}}{{/if}}
+		</h2>
+	</header>
 		<div class="dropdown float-end">
 			<button type="button" class="btn btn-success btn-sm" onclick="openClose('contacts-follow-form'); closeMenu('contacts-search-form'); $('#contacts-follow').focus();">
 				<i class="bi bi-plus-lg"></i>&nbsp;Add
@@ -16,7 +21,6 @@
 				{{/foreach}}
 			</div>
 		</div>
-		{{if $finding}}<div class="h3 mt-0">{{$finding}}</div>{{else}}<div class="h3 mt-0">{{$header}}{{if $total}} ({{$total}}){{/if}}</div>{{/if}}
 	</div>
 	<div id="contacts-search-form" class="section-content-tools-wrapper">
 		<form action="{{$cmd}}" method="get" name="contacts-search-form">

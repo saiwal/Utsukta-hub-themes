@@ -1,6 +1,8 @@
 <div class="generic-content-wrapper-styled" id='adminpage'>
-	<div class="section-title-wrapper app-content-header">
-		<h3 class="border-0">{{$title}} - {{$page}}</h3>
+	<div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}} - {{$page}}
+			</h2>
+		</header>
 	</div>
 	<form action="{{$baseurl}}/admin/logs" method="post">
 		<input type='hidden' name='form_security_token' value='{{$form_security_token}}' />

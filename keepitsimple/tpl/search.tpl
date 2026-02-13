@@ -1,13 +1,16 @@
 <div class="generic-content-wrapper-styled">
-
-	<h2>{{$title}}</h2>
+	<header class="entry__header">
+		<h2 class="entry__title h1">
+			{{$title}}
+		</h2>
+	</header>
 
 	{{$searchbox}}
 
 	{{$livesearch}}
 
 	{{if $results_header}}
-		<h2>{{$results_header}}</h2>
+	<h2>{{$results_header}}</h2>
 	{{/if}}
 
 	{{$conversation}}

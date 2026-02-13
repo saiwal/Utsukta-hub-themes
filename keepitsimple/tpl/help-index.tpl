@@ -1,4 +1,4 @@
-<div class="h5">Index</div>
+<div class="h6">Index</div>
 <div class="accordion accordion-flush" id="accordion-helpindex">
   {{if $sections}}
     {{foreach $sections as $section => $links}}

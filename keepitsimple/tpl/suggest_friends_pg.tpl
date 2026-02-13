@@ -1,6 +1,5 @@
 <div class="col">
-<div class="mb-3">
-	<div class="section-subtitle-wrapper clearfix h5 mt-0 border-bottom-0">
+	<div class="section-subtitle-wrapper clearfix h6 border-bottom-0">
 		<div class="float-end">
     	{{if $entry.connlnk}}
       <a type="button" class="btn btn-sm btn-success" title="{{$entry.conntxt}}" href="{{$entry.connlnk}}">{{$entry.conntxt}}</a>
@@ -21,6 +20,5 @@
       </div>
     </div>
 	</div>
-</div>
 </div>
 

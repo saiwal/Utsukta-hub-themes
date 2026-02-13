@@ -1,6 +1,8 @@
 <div class="generic-content-wrapper">
-  <div class="mb-3">
-    <div class="h4 mt-0">{{$title}}</div>
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
       <form action="{{$action_url}}" method="post" autocomplete="off">
         <input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
         {{if $rpath}}
@@ -16,5 +18,4 @@
           <button type="submit" name="submit" class="btn btn-primary">{{$submit}}</button>
         </div>
       </form>
-  </div>
 </div>

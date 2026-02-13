@@ -1,4 +1,4 @@
-<div class="dirtagblock mb-3">
+<div class="dirtagblock">
   <div class="h6">{{$title}}</div>
   <span class="tagcloud group">
     {{foreach $tags as $tag}}
