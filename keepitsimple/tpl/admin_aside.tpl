@@ -11,8 +11,8 @@
   });
 </script>
 <div class="mb-3">
-  <div class="h5">{{$admtxt}}</div>
-  <ul>
+  <div class="h6">{{$admtxt}}</div>
+  <ul class="link-list">
     {{foreach $admin as $link}}
     <li><a href='{{$link.0}}'>{{$link.1}}{{if $link.3}}<span id='{{$link.3}}'
           title='{{$link.4}}'></span>{{/if}}</a></li>
@@ -22,7 +22,7 @@
 
 {{if $admin.update}}
 <div class="mb-3">
-  <ul>
+  <ul class="link-list">
     <li><a class="nav-link" href='{{$admin.update.0}}'>{{$admin.update.1}}</a></li>
     <li><a class="nav-link" href=''>Important Changes</a></li>
   </ul>
@@ -32,8 +32,8 @@
 
 {{if $plugins}}
 <div class="mb-3">
-  <div class="h5">{{$plugadmtxt}}</div>
-  <ul>
+  <div class="h6">{{$plugadmtxt}}</div>
+  <ul class="link-list">
     {{foreach $plugins as $l}}
     <li><a href='{{$l.0}}'>{{$l.1}}</a></li>
     {{/foreach}}
@@ -42,8 +42,8 @@
 {{/if}}
 
 <div class="mb-3">
-  <div class="h5">{{$logtxt}}</div>
-  <ul>
+  <div class="h6">{{$logtxt}}</div>
+  <ul class="link-list">
     <li ><a href='{{$logs.0}}'>{{$logs.1}}</a></li>
   </ul>
 </div>

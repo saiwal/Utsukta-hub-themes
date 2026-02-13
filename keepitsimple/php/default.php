@@ -80,7 +80,7 @@
 						<button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive"
 							aria-label="Close"></button>
 					</div>
-					<div class="offcanvas-body px-0">
+					<div class="offcanvas-body">
 						<div class="container">
 							<div id="region_1" class="pe-0 w-100">
 								<div id="left_aside_wrapper">

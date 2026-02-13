@@ -1,6 +1,6 @@
 {{if $wrap}}
 	{{if $menu.menu_desc}}
-	<div class="h3">{{$menu.menu_desc}}</div>
+	<div class="h6">{{$menu.menu_desc}}</div>
 	{{/if}}
 {{/if}}
 

@@ -1,6 +1,6 @@
 <div id="website-portation-tools">
   <div class="mb-3">
-    <div class="h4">
+    <div class="h6">
       {{$import_label}}
     </div>
     <div class="nav nav-pills flex-column card-body">
@@ -8,7 +8,7 @@
         <div class="sub-menu">
           <form enctype="multipart/form-data" method="post" action="">
             <input type="hidden" name="action" value="scan">
-            <h6 class="descriptive-text mt-0">{{$file_import_text}}</h6>
+            <span class="descriptive-text mt-0">{{$file_import_text}}</span>
             <div class="mb-3">
               <input class="form-control" type="text" name="path" title="{{$hint}}" placeholder="{{$desc}}" />
             </div>
@@ -16,7 +16,7 @@
               <button class="btn btn-primary btn-sm" type="submit" name="cloudsubmit" value="{{$select}}">Submit</button>
             </div>
             <!-- Or upload a zipped file containing the website -->
-            <h6 class="descriptive-text mt-0">{{$file_upload_text}}</h6>
+            <span class="descriptive-text mt-0">{{$file_upload_text}}</span>
             <div class="mb-3">
               <input class="form-control w-100" type="file" name="zip_file" />
             </div>
@@ -30,7 +30,7 @@
   </div>
   
   <div class="mb-3">
-    <div class=" h4 ">
+    <div class=" h6 ">
       {{$export_label}}
     </div>
   	<div class="nav nav-pills flex-column card-body">
@@ -39,7 +39,7 @@
           <form enctype="multipart/form-data" method="post" action="">
             <input type="hidden" name="action" value="exportzipfile">
             <!-- Or download a zipped file containing the website -->
-            <h6 class="descriptive-text mt-0">{{$file_download_text}}</h6>
+            <span class="descriptive-text mt-0">{{$file_download_text}}</span>
             <div class="mb-3">
               <input class="form-control" type="text" name="zipfilename" title="{{$filename_hint}}" placeholder="{{$filename_desc}}" value="" />
             </div>
@@ -54,7 +54,7 @@
 		  		<form enctype="multipart/form-data" method="post" action="">
 			  		<input type="hidden" name="action" value="exportcloud">
 				  	<!-- Or export the website elements to a cloud files folder -->
-  					<h6 style="margin-top: 10px;" class="descriptive-text mt-0">{{$cloud_export_text}}</h6>
+  					<span style="margin-top: 10px;" class="descriptive-text mt-0">{{$cloud_export_text}}</span>
 	  				<div class="mb-3">
 		  				<input class="form-control" type="text" name="exportcloudpath" title="{{$cloud_export_hint}}" placeholder="{{$cloud_export_desc}}" />
 			  		</div>

@@ -1,5 +1,5 @@
 <div class="mb-3">
-  <div class="h5 mt-0">{{$title}}</div>
+  <div class="h6">{{$title}}</div>
     {{if $entries}}
     <ul class="list-group list-group-flush">
       {{foreach $entries as $child}}

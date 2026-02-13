@@ -2,7 +2,7 @@
   <div class="h5">{{$channel_calendars_label}}</div>
 	{{foreach $channel_calendars as $channel_calendar}}
 	<div id="calendar-{{$channel_calendar.calendarid}}">
-		<div class="ml-3{{if !$channel_calendar@last}} mb-3{{/if}} h6 mt-0">
+		<div class="ml-3{{if !$channel_calendar@last}} mb-3{{/if}} mt-0">
 			<i id="calendar-btn-{{$channel_calendar.calendarid}}" class="pe-2 bi {{if $channel_calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$channel_calendar.json_source}}', '{{$channel_calendar.color}}', {{$channel_calendar.editable}})" style="color: {{$channel_calendar.color}};"></i>{{$channel_calendar.displayname}}
 			<div class="float-end">
 				<a class="text-reset" href="#" onclick="exportDate(); return false;"><i id="download-icon" class="bi bi-download cursor-pointer generic-icons-right"></i></a>
@@ -17,7 +17,7 @@
   <div class="h5">{{$my_calendars_label}}</div>
 	{{foreach $my_calendars as $calendar}}
 	<div id="calendar-{{$calendar.calendarid}}">
-		<div class="ml-3{{if !$calendar@last}} mb-3{{/if}} h6 mt-0">
+		<div class="ml-3{{if !$calendar@last}} mb-3{{/if}} mt-0">
 			<i id="calendar-btn-{{$calendar.calendarid}}" class="pe-2 bi {{if $calendar.switch}}bi-calendar-check{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}})" style="color: {{$calendar.color}};"></i>{{$calendar.displayname}}
 			<div class="float-end">
 				<i id="edit-icon" class="pe-2 bi bi-pencil cursor-pointer generic-icons-right" onclick="openClose('edit-calendar-{{$calendar.calendarid}}')"></i>
@@ -79,7 +79,7 @@
 <div class="mb-3">
   <div class="h5">{{$shared_calendars_label}}</div>
 	{{foreach $shared_calendars as $calendar}}
-	<div id="shared-calendar-{{$calendar.calendarid}}" class="ml-3{{if !$calendar@last}} mb-3{{/if}} h6 mt-0">
+	<div id="shared-calendar-{{$calendar.calendarid}}" class="ml-3{{if !$calendar@last}} mb-3{{/if}} mt-0">
 		<i id="calendar-btn-{{$calendar.calendarid}}" class="pe-2 bi {{if $calendar.switch}}{{if $calendar.access == 'read-write'}}bi-calendar-check{{else}}bi-calendar-x{{/if}}{{else}}bi-calendar{{/if}} generic-icons-nav cursor-pointer" onclick="add_remove_json_source('{{$calendar.json_source}}', '{{$calendar.color}}', {{$calendar.editable}}, {{if $calendar.access == 'read-write'}}'bi-calendar-check'{{else}}'bi-calendar-x'{{/if}})"  style="color: {{$calendar.color}};"></i>{{$calendar.displayname}} ({{$calendar.sharer}})
 		<div class="float-end">
 			<a class="text-reset" href="/cdav/calendars/{{$calendar.ownernick}}/{{$calendar.uri}}/?export"><i id="download-icon" class="bi bi-download cursor-pointer generic-icons-right"></i></a>
@@ -94,11 +94,11 @@
 	<div class="h5">{{$tools_label}}</div>
 	<div class="nav nav-pills flex-column">
 		<li class="nav-item">
-			<a class="nav-link text-reset h6 mt-0" href="#" onclick="openClose('create-calendar'); return false;"><i class="bi bi-calendar-plus generic-icons-nav"></i> {{$create_label}}</a>
+			<a class="nav-link text-reset mt-0" href="#" onclick="openClose('create-calendar'); return false;"><i class="bi bi-calendar-plus generic-icons-nav"></i> {{$create_label}}</a>
 		</li>
 		<div id="create-calendar" class="sub-menu-wrapper">
 			<div class="sub-menu">
-				<form method="post" action="" class="colorpicker-component color-edit">
+				<form method="post" action="" class="colorpicker-component color-edit mb-0">
 					<input id="color" name="color" type="hidden" value="#ff8f00" class="color-edit-input">
 					<div id="create-form" class="input-group mb-3">
 						<input id="create" name="{DAV:}displayname" type="text" placeholder="{{$create_placeholder}}" class="form-control mb-0">
@@ -110,7 +110,7 @@
 				</form>
 			</div>
 		</div>
-		<li class="h6 mt-0">
+		<li class="mt-0">
 			<a class="nav-link text-reset" href="#" onclick="openClose('upload-form'); return false;"><i class="bi bi-upload generic-icons-nav"></i> {{$import_label}}</a>
 		</li>
 		<div id="upload-form" class="sub-menu-wrapper">

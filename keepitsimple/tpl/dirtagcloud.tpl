@@ -1,6 +1,6 @@
 <div class="dirtagblock mb-3">
-  <div class="h4">{{$title}}</div>
-  <span class="entry__tag-list">
+  <div class="h6">{{$title}}</div>
+  <span class="tagcloud group">
     {{foreach $tags as $tag}}
     <a href="{{$baseurl}}{{$tag['term']}}">#{{$tag['term']}}</a>
     {{/foreach}}

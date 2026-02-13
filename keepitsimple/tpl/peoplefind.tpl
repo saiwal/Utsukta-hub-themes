@@ -1,8 +1,8 @@
 <div id="peoplefind-sidebar" class="mb-3">
-  <div class="h5">
+  <div class="h6">
 	{{$findpeople}}
   </div>
-  <ul class="flex-column" style="list-style: none;">
+  <ul class="link-list">
 		{{if $similar}}<li><a href="match" >{{$similar}}</a></li>{{/if}}
 		{{if $loggedin}}<li><a href="directory?f=&suggest=1" >{{$suggest}}</a></li>{{/if}}
 		<li class="nav-item"><a href="randprof" >{{$random}}</a></li>
