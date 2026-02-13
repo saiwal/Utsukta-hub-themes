@@ -274,7 +274,7 @@
 				</div>
 				{{/if}}
 
-				<div class="wall-item-tools d-flex justify-content-between">
+				<div class="wall-item-tools d-flex justify-content-between pb-5">
 					<div class="wall-item-tools-left hstack gap-5" id="wall-item-tools-left-{{$item.id}}">
 						{{foreach $item.responses as $verb=>$response}}
 						{{if !($verb == 'comment' && (($item.toplevel && !$item.blog_mode) || $response.count == 0))}}
