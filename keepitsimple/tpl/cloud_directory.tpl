@@ -32,8 +32,8 @@
 					</div>
 				</a>
 		</div>
-		{{/foreach}}
 	</div>
+		{{/foreach}}
 	{{else}}
     <div class="mb-3">
 	<table id="cloud-index" class="table table-hover">
