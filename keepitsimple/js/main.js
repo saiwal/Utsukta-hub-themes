@@ -201,7 +201,7 @@ $(document).ready(function() {
 				}
 
 				// Indent the subthread
-				subThreadWrapper.classList.add('item-indent', 'item-expanded');
+				// subThreadWrapper.classList.add('item-indent', 'item-expanded');
 
 				// Mark as indented after visibility toggle
 				target.classList.add('indented');
