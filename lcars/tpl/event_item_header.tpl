@@ -18,10 +18,10 @@
 	</div>
 	{{/if}}
 	{{/if}}
-	{{if $event_tz.value}}
+	{{if $tz.value}}
 	<div class="event-item-start entry__meta-date">
-		<span class="event-item-label">{{$event_tz.label}}:</span>&nbsp;<span class="timezone"
-			title="{{$event_tz.value}}">{{$event_tz.value}}</span>
+		<span class="event-item-label">{{$tz.label}}:</span>&nbsp;<span class="timezone"
+			title="{{$tz.value}}">{{$tz.value}}</span>
 	</div>
 	{{/if}}
 </div>
