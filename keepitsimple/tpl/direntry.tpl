@@ -20,11 +20,9 @@
 		<div class="contact-photo-wrapper" id="directory-photo-wrapper-{{$entry.hash}}" >
 			<div class="contact-photo" id="directory-photo-{{$entry.hash}}" >
 				<a href="{{$entry.profile_link}}" class="directory-profile-link" id="directory-profile-link-{{$entry.hash}}" >
-					<img class="directory-photo-img" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy"/>
+					<img class="directory-photo-img h-pull-left" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy"/>
 				</a>
-			</div>
-		</div>
-		<div class="contact-info">
+			<div class="contact-info">
 			{{if $entry.common_friends}}
 			<div id="dir-common" class="contact-info-element">
 				<span class="contact-info-label">{{$entry.common_label}}</span> {{$entry.common_count}}
@@ -72,6 +70,9 @@
 				<span class="contact-info-label">{{$entry.about_label}}</span> {{$entry.about}}
 			</div>
 			{{/if}}
+		</div>
+
+			</div>
 		</div>
 	</div>
 </div>
