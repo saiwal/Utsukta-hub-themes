@@ -401,8 +401,8 @@
 				<div id="load-more-progress-wrapper-{{$item.id}}" class="progress{{if $item.blog_mode}} d-none{{/if}}" role="progressbar" aria-valuenow="{{$item.comments_total_percent}}" aria-valuemin="0" aria-valuemax="100">
 					<div id="load-more-progress-{{$item.id}}" class="progress-bar progress-bar-striped" style="width: {{$item.comments_total_percent}}%; margin-left: auto; margin-right: auto;" data-comments-total="{{$item.comments_total}}"></div>
 				</div>
-				<div id="load-more-{{$item.id}}" class="load-more text-center text-secondary cursor-pointer{{if $item.blog_mode}} d-none{{/if}}" title="{{$item.load_more_title}}" onclick="request(0, '{{$item.rawmid}}', 'load', {{$item.parent}}, ''); return false;">
-					<span id="load-more-dots-{{$item.id}}" class="load-more-dots rounded"><span class="dot-1">-</span> <span class="dot-2">-</span> <span class="dot-3">-</span></span>
+				<div id="load-more-{{$item.id}}" class="load-more text-center text-secondary {{if $item.blog_mode}} d-none{{/if}}" title="{{$item.load_more_title}}" onclick="request(0, '{{$item.rawmid}}', 'load', {{$item.parent}}, ''); return false;">
+					<span id="load-more-dots-{{$item.id}}" class="badge rounded-pill text-bg-info">{{$item.load_more_title}}</span>
 				</div>
 			{{/if}}
 			<ul id="wall-item-sub-thread-wrapper-{{$item.id}}" class="wall-item-sub-thread-wrapper children">
