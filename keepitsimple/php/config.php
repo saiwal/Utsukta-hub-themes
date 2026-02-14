@@ -32,6 +32,7 @@ class keepitsimpleConfig {
 		}
 
 		$arr['banner_image'] = get_pconfig(local_channel(),'keepitsimple', 'banner_image' );
+		$arr['subtitle'] = get_pconfig(local_channel(),'keepitsimple', 'subtitle' );
 		return $this->form($arr);
 	}
 
@@ -44,6 +45,7 @@ class keepitsimpleConfig {
 		set_pconfig(local_channel(), 'system', 'style_update', time());
 		if (isset($_POST['keepitsimple-settings-submit'])) {
 			set_pconfig(local_channel(), 'keepitsimple', 'banner_image', $_POST['keepitsimple_banner_image']);
+			set_pconfig(local_channel(), 'keepitsimple', 'subtitle', $_POST['kis_subtitle']);
 			// This is used to refresh the cache
 			set_pconfig(local_channel(), 'system', 'style_update', time());
 		}
@@ -58,7 +60,7 @@ class keepitsimpleConfig {
 			'$theme' => \App::$channel['channel_theme'],
 			'$title' => t("Theme settings"),
 			'$dark' => t('Dark style'),
-			'$light' => t('Light style'),
+			'$subtitle' => array('kis_subtitle', t('Set subtitle for your channel'), $arr['subtitle']),
 			'$banner_image' => array('keepitsimple_banner_image', t('Set the banner image(url link, blank for none)'), $arr['banner_image']),
 			'$common' => t('Common settings'),
 			));
@@ -81,7 +83,8 @@ namespace {
 		// This function is called once when the theme is being enabled by the admin
 		// It can be used to register hooks etc.
 			$defaults = [
-					'banner_image'    => '',
+				'banner_image'    => '',
+				'subtitle'        => '',
 			];
 
 			foreach ($defaults as $k => $v) {
@@ -107,10 +110,13 @@ namespace {
 
           '$banner_image' => [
               'banner_image',
-              t('Banner image URL'),
+              t('banner image url'),
               $banner_image,
-              t('Leave empty for none')
-          ],
+              t('leave empty for none')
+					],
+
+
+
           '$submit' => t('Submit'),
           '$form_security_token' => get_form_security_token('admin_themes'),
       ]);

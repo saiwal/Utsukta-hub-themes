@@ -1,30 +1,3 @@
-<div class="row position-relative">
-	<div class="s-header__content column">
-		<h1 class="s-header__logotext">
-			<a href="/" title="">
-				{{$banner}}
-			</a>
-		</h1>
-		<p class="s-header__tagline">
-      {{if $userinfo}}
-      {{if $sel.name}}
-      {{if $sitelocation}}
-        <span class="h6">{{$sel.name}} •</span>
-        <span>{{$sitelocation}}</span>
-      {{else}}
-        <a class="h6" aria-current="page" href="{{$url}}">{{$sel.name}}</a>
-      {{/if}}
-
-      {{if $settings_url}}
-        <a href="{{$settings_url}}/?f=&rpath={{$url}}" class="h6"><i class="bi bi-gear"></i></a>
-      {{/if}}
-      {{/if}}
-      {{/if}}
-
-		</p>
-	</div>
-
-</div> <!-- end row -->
 <nav class="s-header__nav-wrap">
 
 	<div class="row">
@@ -112,6 +85,11 @@
 			</li>
 			{{/if}}
 
+      {{if $sel.name}}
+      {{if $settings_url}}
+			<li><a href="{{$settings_url}}/?f=&rpath={{$url}}"><i class="bi bi-gear"></i></a></li>
+      {{/if}}
+      {{/if}}
 					{{if $nav.login && !$userinfo}}
 					{{if $nav.loginmenu.1.4}}
 					<li>

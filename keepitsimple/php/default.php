@@ -52,6 +52,19 @@
 	<!-- Header
     ================================================== -->
 	<header class="s-header">
+		<div class="row position-relative">
+			<div class="s-header__content column">
+				<h1 class="s-header__logotext">
+					<a href="/" title="">
+					<?php echo $page['header_text'] ?? $page['banner'] ?>
+					</a>
+				</h1>
+				<p class="s-header__tagline">
+					<?php echo $page['subtitle'] ?>
+				</p>
+			</div>
+
+		</div> <!-- end row -->
 
 		<?php if (x($page, 'nav')) echo $page['nav']; ?>
 
