@@ -586,6 +586,10 @@
 
 <div class="generic-content-wrapper">
   <div class="section-title-wrapper app-content-header clearfix">
+		<header class="entry__header">
+			<h2 class="entry__title h1" id="title">
+			</h2>
+    </header>
     <div class="float-end">
       <div class="dropdown">
         <button id="view_selector" type="button" class="btn btn-secondary btn-sm dropdown-toggle"
@@ -610,7 +614,6 @@
         </div>
       </div>
     </div>
-    <div class="h3 mt-0" id="title"></div>
     <div class="clear"></div>
   </div>
   <div class="section-content-tools-wrapper" style="display: none">

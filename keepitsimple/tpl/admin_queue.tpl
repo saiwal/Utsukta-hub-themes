@@ -1,6 +1,8 @@
 <div class="generic-content-wrapper-styled">
-  <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$banner}}
+  <div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$banner}}
+			</h2>
+		</header>
   </div>
   {{if $hasentries}}
   <div class="mb-3">

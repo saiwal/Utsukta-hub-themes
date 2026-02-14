@@ -1,6 +1,6 @@
-<div id="cart-aside-main" class=" mb-3">
-  <div class="h5">Cart</div>
-  <div id="cart-aside-main-content">
+<div id="cart-aside-main">
+  <div class="h6">Cart</div>
+  <ul id="cart-aside-main-content" class="link-list">
     {{$content}}
-  </div>
+  </ul>
 </div>

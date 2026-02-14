@@ -52,6 +52,19 @@
 	<!-- Header
     ================================================== -->
 	<header class="s-header">
+		<div class="row position-relative">
+			<div class="s-header__content column">
+				<h1 class="s-header__logotext">
+					<a href="/" title="">
+					<?php echo $page['header_text'] ?? $page['banner'] ?>
+					</a>
+				</h1>
+				<p class="s-header__tagline">
+					<?php echo $page['subtitle'] ?>
+				</p>
+			</div>
+
+		</div> <!-- end row -->
 
 		<?php if (x($page, 'nav')) echo $page['nav']; ?>
 
@@ -80,7 +93,7 @@
 						<button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#offcanvasResponsive"
 							aria-label="Close"></button>
 					</div>
-					<div class="offcanvas-body px-0">
+					<div class="offcanvas-body">
 						<div class="container">
 							<div id="region_1" class="pe-0 w-100">
 								<div id="left_aside_wrapper">

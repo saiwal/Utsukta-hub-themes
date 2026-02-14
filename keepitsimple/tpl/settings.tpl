@@ -1,7 +1,10 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header clearfix">
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$ptitle}}
+			</h2>
+		</header>
 		<a title="{{$removechannel}}" class="btn btn-danger btn-sm float-end" href="removeme"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
-		<h3>{{$ptitle}}</h3>
 	</div>
 	<div class="alert alert-info" role="alert">
 {{$nickname_block}}

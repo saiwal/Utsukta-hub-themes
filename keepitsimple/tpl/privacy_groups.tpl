@@ -1,6 +1,9 @@
 <div class="generic-content-wrapper">
 	<div class="clearfix section-title-wrapper app-content-header">
-		<div class="h3">{{$title}}</div>
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+		</h2>
+	</header>
 	</div>
   <div class="mb-3">
       <div id="group_tools" class="clearfix section-content-tools-wrapper">

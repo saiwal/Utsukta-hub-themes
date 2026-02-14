@@ -15,34 +15,34 @@
 			<form id="chat-form" method="post" action="#">
 				<input type="hidden" name="room_id" value="{{$room_id}}" />
 				<div class="mb-3">
-					<textarea id="chatText" name="chat_text" class="u-fullwidth"></textarea>
+					<textarea id="chatText" name="chat_text" class="h-full-width"></textarea>
 				</div>
 				<div id="chat-submit-wrapper" class="d-flex align-items-center justify-content-between">
 					<div id="chat-tools" class="btn-toolbar">
-						<div class="btn-group me-2">
-							<a id="main-editor-bold" class="pe-3 ps-3" title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
+						<div class="btn-group hstack gap-4 me-4">
+							<a id="main-editor-bold"  title="{{$bold}}" onclick="inserteditortag('b', 'chatText'); return false;">
 								<i class="bi bi-type-bold jot-icons"></i>
 							</a>
-							<a id="main-editor-italic" class="pe-3" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
+							<a id="main-editor-italic" title="{{$italic}}" onclick="inserteditortag('i', 'chatText'); return false;">
 								<i class="bi bi-type-italic jot-icons"></i>
 							</a>
-							<a id="main-editor-underline" class="pe-3" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
+							<a id="main-editor-underline" title="{{$underline}}" onclick="inserteditortag('u', 'chatText'); return false;">
 								<i class="bi bi-type-underline jot-icons"></i>
 							</a>
-							<a id="main-editor-quote" class="pe-3" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
+							<a id="main-editor-quote" title="{{$quote}}" onclick="inserteditortag('quote', 'chatText'); return false;">
 								<i class="bi bi-quote jot-icons"></i>
 							</a>
-							<a id="main-editor-code" class="pe-3" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
+							<a id="main-editor-code" title="{{$code}}" onclick="inserteditortag('code', 'chatText'); return false;">
 								<i class="bi bi-code jot-icons"></i>
 							</a>
 						</div>
-						<div class="btn-group me-2 d-none d-md-flex">
+						<div class="btn-group me-4 d-none d-md-flex">
 							<a id="chat-link-wrapper" class="pe-3" onclick="chatJotGetLink(); return false;" >
 								<i id="chat-link" class="bi bi-link-45deg jot-icons" title="{{$insert}}" ></i>
 							</a>
 						</div>
 						{{if $feature_encrypt}}
-						<div class="btn-group me-2 d-none d-md-flex">
+						<div class="btn-group me-4 d-none d-md-flex">
 							<a id="chat-encrypt-wrapper" class="pe-3" onclick="sodium_encrypt('#chatText'); return false;">
 								<i id="chat-encrypt" class="bi bi-key jot-icons" title="{{$encrypt}}" ></i>
 							</a>
