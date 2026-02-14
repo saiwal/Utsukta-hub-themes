@@ -1,17 +1,14 @@
 <div class="entry">
 <div class="large-12 column">
-	<h3 class="half-bottom d-flex justify-content-between">
-		<a	href='{{$entry.profile_link}}'>{{$entry.name}}{{if $entry.public_forum}}<i class="bi p-3 bi-chat-quote" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>{{/if}}{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</a>
-		<span class="text-muted small">{{$entry.address}}</span>
+	<h3 class="half-bottom m-0 d-flex justify-content-between">
+		<a href='{{$entry.profile_link}}'>{{$entry.name}}{{if $entry.public_forum}}<i class="bi p-3 bi-chat-quote" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>{{/if}}{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</a>
 	</h3>
+	<span class="text-muted small">{{$entry.address}}</span>
 </div>
 
 <div class="row directory-collapse">
 	<div class="large-3 tab-5 mob-12 column">
 		<a href="{{$entry.profile_link}}" class="directory-profile-link" id="directory-profile-link-{{$entry.hash}}"><img class="directory-photo-img h-pull-left" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy" /></a>
-		{{if $entry.pdesc}}
-			<p><strong>{{$entry.pdesc_label}}</strong> {{$entry.pdesc}}</p>
-		{{/if}}
 	</div>
 
 	<div class="large-9 tab-7 mob-12 column">
