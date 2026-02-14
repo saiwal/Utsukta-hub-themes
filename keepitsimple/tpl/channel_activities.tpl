@@ -1,20 +1,14 @@
-<div class="h6">
+<div class="h3">
   <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none link-dark " href="{{$url}}">{{$label}}</a>
 </div>
-<div class="table-responsive">
-  <table>
-    <tbody>
       {{foreach $items as $i}}
-      <tr>
+      <dl>
+				<dt class="d-flex justify-content-between">
         {{if $i.title}}
-        <td><a href="{{$i.url}}" class="text-decoration-none">{{$i.title}}</a></td>
-        {{else}}
-        <td></td>
+        <a href="{{$i.url}}" class="text-decoration-none">{{$i.title}}</a>
         {{/if}}
-        <td><a href="{{$i.url}}" class="text-decoration-none">{{$i.summary}}</a></td>
-        <td class="text-muted autotime" title="{{$i.footer}}">{{$i.footer}}</td>
-      </tr>
+				<span class="text-muted autotime" title="{{$i.footer}}">{{$i.footer}}</span>
+				</dt>
+        <dd><a href="{{$i.url}}" class="link-primary text-decoration-none">{{$i.summary}}</a></dd>
+      </dl>
       {{/foreach}}
-    </tbody>
-  </table>
-</div>
