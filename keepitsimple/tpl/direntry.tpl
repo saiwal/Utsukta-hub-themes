@@ -1,78 +1,58 @@
-<div class="directory-item{{if $entry.safe}} safe{{/if}}" id="directory-item-{{$entry.hash}}" >
-	<div class="section-subtitle-wrapper clearfix">
-		<div class="directory-actions float-end">
-			{{if $entry.censor_2}}
-			<a class="directory-censor directory-censor-hide btn btn-outline-danger btn-sm {{$entry.censor_2_class}} border-0" href="{{$entry.censor_2}}"> {{$entry.censor_2_label}}</a>
-			{{/if}}
-			{{if $entry.censor}}
-			<a class="directory-censor directory-censor-unsafe btn btn-outline-warning btn-sm {{$entry.censor_class}} border-0" href="{{$entry.censor}}"> {{$entry.censor_label}}</a>
-			{{/if}}
-			{{if $entry.ignlink}}
-			<a class="directory-ignore btn btn-info btn-sm border-0" href="{{$entry.ignlink}}"> {{$entry.ignore_label}}</a>
-			{{/if}}
-			{{if $entry.connect}}
-			<a class="btn btn-success btn-sm border-0" href="{{$entry.connect}}"><i class="bi bi-plus-lg connect-icon"></i> {{$entry.conn_label}}</a>
-			{{/if}}
-		</div>
-		<h3>{{if $entry.public_forum}}<i class="bi bi-chat-quote" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}' >{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</h3>
+<div class="entry">
+<div class="large-12 column">
+	<h3 class="half-bottom d-flex justify-content-between">
+		<a	href='{{$entry.profile_link}}'>{{$entry.name}}{{if $entry.public_forum}}<i class="bi p-3 bi-chat-quote" title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>{{/if}}{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now" title="{{$entry.online}}"></i>{{/if}}</a>
+		<span class="text-muted small">{{$entry.address}}</span>
+	</h3>
+</div>
+
+<div class="row directory-collapse">
+	<div class="large-3 tab-5 mob-12 column">
+		<a href="{{$entry.profile_link}}" class="directory-profile-link" id="directory-profile-link-{{$entry.hash}}"><img class="directory-photo-img h-pull-left" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy" /></a>
+		{{if $entry.pdesc}}
+			<p><strong>{{$entry.pdesc_label}}</strong> {{$entry.pdesc}}</p>
+		{{/if}}
 	</div>
-	<div class="section-content-tools-wrapper directory-collapse">
-		<div class="contact-photo-wrapper" id="directory-photo-wrapper-{{$entry.hash}}" >
-			<div class="contact-photo" id="directory-photo-{{$entry.hash}}" >
-				<a href="{{$entry.profile_link}}" class="directory-profile-link" id="directory-profile-link-{{$entry.hash}}" >
-					<img class="directory-photo-img h-pull-left" src="{{$entry.photo}}" alt="{{$entry.alttext}}" title="{{$entry.alttext}}" loading="lazy"/>
-				</a>
-			<div class="contact-info">
-			{{if $entry.common_friends}}
-			<div id="dir-common" class="contact-info-element">
-				<span class="contact-info-label">{{$entry.common_label}}</span> {{$entry.common_count}}
-			</div>
-			{{/if}}
 
-			{{if $entry.pdesc}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.pdesc_label}}</span> {{$entry.pdesc}}
-			</div>
-			{{/if}}
-
-			{{if $entry.age}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.age_label}}</span> {{$entry.age}}
-			</div>
-			{{/if}}
-
-			{{if $entry.location}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.location_label}}</span> {{$entry.location}}
-			</div>
-			{{/if}}
-
-			{{if $entry.hometown}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.hometown_label}}</span> {{$entry.hometown}}
-			</div>
-			{{/if}}
-
-			{{if $entry.homepage}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.homepage}}</span> {{$entry.homepageurl}}
-			</div>
-			{{/if}}
-
-			{{if $entry.kw}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.kw}}</span> {{$entry.keywords}}
-			</div>
-			{{/if}}
-
-			{{if $entry.about}}
-			<div class="contact-info-element">
-				<span class="contact-info-label">{{$entry.about_label}}</span> {{$entry.about}}
-			</div>
-			{{/if}}
-		</div>
-
-			</div>
-		</div>
+	<div class="large-9 tab-7 mob-12 column">
+		{{if $entry.common_friends}}
+      <p><strong>{{$entry.common_label}}</strong> {{$entry.common_count}}</p>
+		{{/if}}
+		{{if $entry.pdesc}}
+      <p><strong>{{$entry.pdesc_label}}</strong> {{$entry.pdesc}}</p>
+		{{/if}}
+		{{if $entry.age}}
+      <p><strong>{{$entry.age_label}}</strong> {{$entry.age}}</p>
+		{{/if}}
+		{{if $entry.location}}
+      <p><strong>{{$entry.location_label}}</strong> {{$entry.location}}</p>
+		{{/if}}
+		{{if $entry.hometown}}
+      <p><strong>{{$entry.hometown_label}}</strong> {{$entry.hometown}}</p>
+		{{/if}}
+		{{if $entry.homepage}}
+      <p><strong>{{$entry.homepage}}</strong> {{$entry.homepageurl}}</p>
+		{{/if}}
+		{{if $entry.kw}}
+      <p><strong>{{$entry.kw}}</strong> {{$entry.keywords}}</p>
+{{/if}}
+		{{if $entry.about}}
+      <p><strong>{{$entry.about_label}}</strong> {{$entry.about}}</p>
+		{{/if}}
 	</div>
+  <div class="d-flex gap-2 justify-content-end">
+    {{if $entry.censor_2}}
+			<a class="btn btn-danger btn-sm {{$entry.censor_2_class}}" href="{{$entry.censor_2}}"> {{$entry.censor_2_label}}</a>
+		{{/if}}
+		{{if $entry.censor}}
+			<a class="btn btn-warning btn-sm {{$entry.censor_class}}" href="{{$entry.censor}}"> {{$entry.censor_label}}</a>
+		{{/if}}
+		{{if $entry.ignlink}}
+			<a class="btn btn-info btn-sm" href="{{$entry.ignlink}}"> {{$entry.ignore_label}}</a>
+		{{/if}}
+		{{if $entry.connect}}
+			<a class="btn btn-success btn-sm" href="{{$entry.connect}}"><i class="bi bi-plus connect-icon"></i> {{$entry.conn_label}}</a>
+		{{/if}}
+  </div>
+</div>
 </div>
