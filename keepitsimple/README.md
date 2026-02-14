@@ -6,6 +6,7 @@ A blog focussed theme based on [KeepItSimple](https://styleshout.com/templates/p
 
 #### User Guide
 
+* Set your channel subtitle.
 * Customize Banner: The Banner image displayed on the top of the page can be set by user which overrides the default/admin image. This image setting is theme specific and does not carry over to other themes.
 ![Banner Image](./img/screenshot_banner.png)
 )
