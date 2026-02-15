@@ -1,5 +1,9 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
+			<header class="entry__header">
+			<h2 class="entry__title h1">{{$banner}}{{if $multi_profiles}}: {{$profile_name.2}}{{/if}}
+			</h2>
+		</header>
 		<div class="dropdown float-end" id="profile-edit-links">
 			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
@@ -30,8 +34,6 @@
 				{{/if}}
 			</div>
 		</div>
-		<h3>{{$banner}}{{if $multi_profiles}}: {{$profile_name.2}}{{/if}}</h3>
-		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" id="profile-upload-form">
 		<label id="profile-upload-choose-label" for="profile-upload-choose" >{{$lbl_import}}</label>
@@ -42,14 +44,14 @@
 			<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 
 			{{if $is_default}}
-			<div class="section-content-info-wrapper callout callout-info mb-2">{{$default}}</div>
+			<div class="section-content-info-wrapper alert-box alert-box--info">{{$default}}</div>
 			{{/if}}
 
-			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
+			<div class="accordion accordion-flush" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="personal">
 						<h2 class="accordion-header">
-							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapse" aria-expanded="true" aria-controls="personal-collapse">
+							<button class="accordion-button mb-0" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapse" aria-expanded="true" aria-controls="personal-collapse">
 								{{$basic}}
 							</a>
 						</h2>
@@ -229,7 +231,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="location">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
+							<button class="accordion-button mb-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
 								{{$location}}
 							</a>
 						</h2>
@@ -274,7 +276,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="relation">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
+							<button class="mb-0 accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
 								{{$relation}}
 							</a>
 						</h2>
@@ -325,7 +327,7 @@
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="miscellaneous">
 						<h2 class="accordion-header">
-							<button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
+							<button type="button" class="mb-0 accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
 								{{$miscellaneous}}
 							</button>
 						</h2>

@@ -1,24 +1,26 @@
-<div class="generic-content-wrapper card">
-	<div class="card-header">
-		{{$title}}
-	</div>
-	<div class="section-content-wrapper card-body">
+<div class="generic-content-wrapper">
+	<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
+
+	<div class="section-content-wrapper">
 		<form action="register" method="post" id="register-form">
 			<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 			{{if $now}}
-			<div class="section-content-danger-wrapper callout callout-danger mb-2">
+			<div class="section-content-danger-wrapper alert-box alert-box--danger">
 				<div class="h3">{{$now}}</div>
 			</div>
 			{{/if}}
 			{{if $reg_is || $other_sites || $msg}}
-			<div class="section-content-warning-wrapper callout callout-warning mb-2">
+			<div class="section-content-warning-wrapper alert-box alert-box--warning">
 				<div id="register-desc" class="descriptive-paragraph">{{$msg}}</div>
 				<div id="register-desc" class="descriptive-paragraph">{{$reg_is}}</div>
 				<div id="register-sites" class="descriptive-paragraph">{{$other_sites}}</div>
 			</div>
 			{{/if}}
 			{{if $registertext}}
-			<div class="section-content-info-wrapper callout callout-info mb-2">
+			<div class="section-content-info-wrapper alert-box alert-box--info">
 				<div id="register-text" class="descriptive-paragraph">{{$registertext}}</div>
 			</div>
 			{{/if}}

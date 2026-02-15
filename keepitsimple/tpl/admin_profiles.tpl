@@ -9,7 +9,7 @@
 
   <div class="section-content-tools-wrapper">
     <div class="mb-3">
-      <div class="callout callout-info mb-2">{{$all_desc}}<br><br>
+      <div class="alert-box alert-box--info">{{$all_desc}}<br><br>
         {{$all}}
       </div>
       <form action="admin/profs" method="post">

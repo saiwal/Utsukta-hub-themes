@@ -1,16 +1,19 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$header}}
+			</h2>
+		</header>
 		<a class="btn btn-success btn-sm float-end" href="{{$create.0}}" title="{{$create.1}}"><i class="bi bi-plus-lg"></i>&nbsp;{{$create.2}}</a>
-		<h3>{{$header}}</h3>
 	</div>
 	<div class="section-content-wrapper-np">
 		{{if $channel_usage_message}}
-		<div id="channel-usage-message" class="section-content-warning-wrapper">
+		<div id="channel-usage-message" class="alert-box alert-box--info">
 			{{$channel_usage_message}}
 		</div>
 		{{/if}}
 		{{if $desc}}
-		<div id="channels-desc" class="callout callout-info mb-2">
+		<div id="channels-desc" class="alert-box alert-box--info mb-2">
 			{{$desc}}
 		</div>
 		{{/if}}

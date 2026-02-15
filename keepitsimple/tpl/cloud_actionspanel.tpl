@@ -24,7 +24,7 @@
 </div>
 <div id="files-upload-tools">
 	<div class="section-content-tools-wrapper ">
-		{{if $quota.limit || $quota.used}}<div class="callout {{if $quota.warning}}callout-warning section-content-danger-wrapper{{else}}callout-info section-content-info-wrapper{{/if}} mb-2">{{if $quota.warning}}<strong>{{$quota.warning}} </strong>{{/if}}{{if $quota.desc}}{{$quota.desc}}{{/if}}</div>{{/if}}
+		{{if $quota.limit || $quota.used}}<div class="alert-box  {{if $quota.warning}}alert-box--warning section-content-danger-wrapper{{else}}alert-box--info section-content-info-wrapper{{/if}} mb-2">{{if $quota.warning}}<strong>{{$quota.warning}} </strong>{{/if}}{{if $quota.desc}}{{$quota.desc}}{{/if}}</div>{{/if}}
 		<form id="ajax-upload-files" method="post" action="#" enctype="multipart/form-data" class="acl-form" data-form_id="ajax-upload-files" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>
 			<input id="file-folder"type="hidden" name="folder" value="{{$folder}}" />
 			<input type="hidden" name="channick" value="{{$channick}}" />
