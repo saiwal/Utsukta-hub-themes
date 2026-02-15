@@ -5550,3 +5550,11 @@ body.search-is-visible .s-header__search-inner {
   padding-left: 5%;
 }
 
+ul a.active {
+	border-bottom: 1px solid var(--color-text-dark);
+	padding-bottom: 5px;
+}
+ul.list-unstyled > li > a {
+	font-family: var(--font-2);
+	line-height: 4rem;
+}

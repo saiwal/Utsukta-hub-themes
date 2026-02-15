@@ -142,7 +142,7 @@ var currentChatRoomMembers = null; // initialize chat room member change registe
 function update_inroom(inroom) {
 	var html = document.createElement('ul');
   html.setAttribute('class', 'contacts-list');
-  html.setAttribute('style', 'disc');
+  html.setAttribute('class', 'list-unstyled');
 	var count = inroom.length;
 	$.each( inroom, function(index, item) {
 		var newNode = document.createElement('li');
