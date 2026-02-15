@@ -27,6 +27,7 @@
   <body class="layout-fixed sidebar-expand-lg <?php echo $page['sidebar_mode'] ?> app-loaded sidebar-open">
   <div class="app-wrapper">
 
+		<?php if(!empty($page['banner'])) echo $page['banner']; ?>
     <header><?php if (x($page, 'header')) echo $page['header']; ?></header>
     
 	  <?php if(!empty($page['nav'])) echo $page['nav']; ?>
