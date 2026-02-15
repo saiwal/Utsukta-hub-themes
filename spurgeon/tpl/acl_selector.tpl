@@ -14,7 +14,7 @@
 			<div class="section-content-wrapper modal-body">
 				{{if $aclModalDesc}}
 				<div id="acl-dialog-description" class="section-content-info-wrapper mb-2">
-          <div class="callout callout-info mb-4">
+          <div class="alert-box alert-box--info">
             <p>{{$aclModalDesc}}</p>
           </div>
         </div>

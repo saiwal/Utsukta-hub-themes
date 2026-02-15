@@ -1,8 +1,7 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
 		<a title="{{$removechannel}}" class="btn btn-danger btn-sm float-end" href="removeme"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
 		<div class="h3 mt-0">{{$ptitle}}</div>
-		<div class="clear"></div>
 	</div>
 	{{$nickname_block}}
 	<form action="settings" id="settings-form" method="post" autocomplete="off" class="acl-form" data-form_id="settings-form" data-allow_cid='{{$allow_cid}}' data-allow_gid='{{$allow_gid}}' data-deny_cid='{{$deny_cid}}' data-deny_gid='{{$deny_gid}}'>

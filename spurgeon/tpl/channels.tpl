@@ -10,7 +10,7 @@
 		</div>
 		{{/if}}
 		{{if $desc}}
-		<div id="channels-desc" class="callout callout-info mb-2">
+		<div id="channels-desc" class="alert-box alert-box--info">
 			{{$desc}}
 		</div>
 		{{/if}}
