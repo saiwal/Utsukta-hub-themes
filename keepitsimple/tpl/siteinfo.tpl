@@ -1,89 +1,87 @@
-
 <div class="app-content">
+<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
+	<h4>{{$sitename}}</h4>
+	<p>{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
+	<a href="help/TermsOfService" class="card-link">{{$terms}}</a>
+	<ul class="list-group list-group-flush">
+		{{if $addons.1}}
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div class="col-2">
+					{{$addons.0}}
+				</div>
+				<div class="col-10">
+					{{foreach $addons.1 as $addon}}
+					<span class="badge text-bg-primary">{{$addon}}</span>
+					{{/foreach}}
+				</div>
+		</li>
+		{{/if}}
 
-    <div class="h3 mt-0">
-      {{$title}}
-    </div>
-      <h4>{{$sitename}}</h4>
-      <p class="card-text">{{if $site_about}}{{$site_about}}{{else}}--{{/if}}</p>
-      <a href="help/TermsOfService" class="card-link">{{$terms}}</a>
-    <ul class="list-group list-group-flush">
-      {{if $addons.1}}
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">
-          <div class="col-2">
-            {{$addons.0}}
-          </div>
-          <div class="col-10">
-            {{foreach $addons.1 as $addon}}
-              <span class="badge text-bg-primary">{{$addon}}</span>
-            {{/foreach}}
-          </div>
-      </li>
-      {{/if}}
+		{{if $themes.1}}
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div class="col-2">
+					{{$themes.0}}
+				</div>
+				<div class="col-10">
+					{{foreach $themes.1 as $theme}}
+					<span class="badge text-bg-primary">{{$theme}}</span>
+					{{/foreach}}
+				</div>
+		</li>
+		{{/if}}
 
-      {{if $themes.1}}
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">
-          <div class="col-2">
-            {{$themes.0}}
-          </div>
-          <div class="col-10">
-            {{foreach $themes.1 as $theme}}
-              <span class="badge text-bg-primary">{{$theme}}</span>
-            {{/foreach}}
-          </div>
-      </li>
-      {{/if}}
+		{{if $blocked_sites.1}}
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div class="col-2">
+					{{$blocked_sites.0}}
+				</div>
+				<div class="col-10">
+					{{foreach $blocked_sites.1 as $site}}
+					<span class="badge text-bg-danger">{{$site}}</span>
+					{{/foreach}}
+				</div>
+		</li>
+		{{/if}}
+	</ul>
+	<p>
+		{{if $admin_about}}{{$admin_about}}{{else}}--{{/if}}
+	</p>
 
-      {{if $blocked_sites.1}}
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">
-          <div class="col-2">
-            {{$blocked_sites.0}}
-          </div>
-          <div class="col-10">
-          {{foreach $blocked_sites.1 as $site}}
-            <span class="badge text-bg-danger">{{$site}}</span>
-          {{/foreach}}
-          </div>
-      </li>
-      {{/if}}
-    </ul>    
-    <div class="text-muted">
-      {{if $admin_about}}{{$admin_about}}{{else}}--{{/if}}
-    </div>    
+	<div class="h3">
+		{{$prj_header}}
+	</div>
+	<p>{{$prj_name}} ({{$z_server_role}})
+		{{if $prj_version}}
+		{{$prj_version}}</p>
+	{{/if}}
+	<ul class="list-group list-group-flush">
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div class="col-4">{{$prj_linktxt}}
+				</div>
+				<div class="col-8"> <a href="{{$prj_link}}" class="card-link">{{$prj_link}}</a>
+				</div>
+		</li>
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div class="col-4">{{$prj_srctxt}}
+				</div>
+				<div class="col-8"> <a href="{{$prj_src}}" class="card-link">{{$prj_src}}</a>
+				</div>
+		</li>
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">
+				<div>{{$prj_transport}} {{$transport_link}}</div>
+		</li>
+		<li class="list-group-item">
+			<div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
+		</li>
+	</ul>
 
-    <div class="h3">
-      {{$prj_header}}
-    </div>
-      <p class="card-text">{{$prj_name}} ({{$z_server_role}})
-      {{if $prj_version}}
-      {{$prj_version}}</p>
-      {{/if}}
-    <ul class="list-group list-group-flush">    
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">
-          <div class="col-4">{{$prj_linktxt}}
-          </div>
-          <div class="col-8">    <a href="{{$prj_link}}" class="card-link">{{$prj_link}}</a>
-          </div>
-      </li> 
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">
-          <div class="col-4">{{$prj_srctxt}}
-          </div>
-          <div class="col-8">    <a href="{{$prj_src}}" class="card-link">{{$prj_src}}</a>
-          </div>
-      </li>
-      <li class="list-group-item">
-          <div class="d-flex py-2 px-1"><div>{{$prj_transport}} {{$transport_link}}</div>
-      </li>
-      <li class="list-group-item">
-        <div class="d-flex py-2 px-1">{{$additional_text}} {{$additional_fed}}
-      </li>
-    </ul>
-
-</div>    
-
-
+</div>
