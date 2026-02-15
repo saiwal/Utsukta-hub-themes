@@ -9,11 +9,11 @@
 		<div class="accordion accordion-flush" id="settings" role="tablist" aria-multiselectable="true">
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="basic-settings">
-					<h2 class="accordion-header mt-0">
-							<button class="h6 accordion-button m-0" type="button" data-bs-toggle="collapse" data-bs-target="#basic-settings-collapse" aria-expanded="true" aria-controls="basic-settings-collapse">
+					<div class="accordion-header">
+							<button class="accordion-button mb-0" type="button" data-bs-toggle="collapse" data-bs-target="#basic-settings-collapse" aria-expanded="true" aria-controls="basic-settings-collapse">
 							{{$h_basic}}
 						</button>
-					</h2>
+					</div>
 				</div>
 				<div id="basic-settings-collapse" class="accordion-collapse collapse show" data-bs-parent="#settings">
 					<div class="section-content-tools-wrapper accordion-body">
@@ -40,11 +40,11 @@
 			</div>
 			<div class="accordion-item">
 				<div class="section-subtitle-wrapper" role="tab" id="notification-settings">
-					<h2 class="h6 accordion-header mt-0">
+					<div class="accordion-header">
 							<button class="accordion-button collapsed m-0" type="button" data-bs-toggle="collapse" data-bs-target="#notification-settings-collapse" aria-controls="notification-settings-collapse">
 							{{$h_not}}
 						</a>
-					</h2>
+					</div>
 				</div>
 				<div id="notification-settings-collapse" class="accordion-collapse collapse" data-bs-parent="#settings">
 					<div class="section-content-tools-wrapper accordion-body">

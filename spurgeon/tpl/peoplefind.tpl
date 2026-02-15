@@ -11,7 +11,7 @@
 
 	<form action="directory" method="post" />
 		<div class="input-group d-flex">
-			<input class="u-fullwidth" type="text" name="search" title="{{$hint}}{{if $advanced_search}}{{$advanced_hint}}{{/if}}" placeholder="{{$desc}}" />
+			<input class="u-fullwidth mb-0" type="text" name="search" title="{{$hint}}{{if $advanced_search}}{{$advanced_hint}}{{/if}}" placeholder="{{$desc}}" />
 		</div>
 	</form>
 </div>

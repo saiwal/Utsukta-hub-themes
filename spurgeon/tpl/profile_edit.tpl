@@ -1,5 +1,5 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header clearfix">
 		<div class="dropdown float-end" id="profile-edit-links">
 			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<i class="bi bi-gear"></i>&nbsp;{{$tools_label}}
@@ -31,7 +31,6 @@
 			</div>
 		</div>
 		<div class="h3 mt-0">{{$banner}}{{if $multi_profiles}}: {{$profile_name.2}}{{/if}}</div>
-		<div class="clear"></div>
 	</div>
 	<div class="section-content-tools-wrapper" id="profile-upload-form">
 		<label id="profile-upload-choose-label" for="profile-upload-choose" >{{$lbl_import}}</label>
@@ -45,14 +44,14 @@
 			<div class="section-content-info-wrapper alert-box alert-box--info">{{$default}}</div>
 			{{/if}}
 
-			<div class="accordion" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
+			<div class="accordion accordion-flush" id="profile-edit-wrapper" role="tablist" aria-multiselectable="true">
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="personal">
-						<h2 class="accordion-header">
-							<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapse" aria-expanded="true" aria-controls="personal-collapse">
+						<div class="accordion-header">
+							<button class="mb-0 accordion-button mb-0" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapse" aria-expanded="true" aria-controls="personal-collapse">
 								{{$basic}}
 							</a>
-						</h2>
+						</div>
 					</div>
 					<div id="personal-collapse" class="accordion-collapse collapse show" data-bs-parent="#profile-edit-wrapper">
 						<div class="section-content-tools-wrapper accordion-body">
@@ -228,11 +227,11 @@
 				{{if $fields.address || $fields.locality || $fields.postal_code || $fields.region || $fields.country_name || $fields.hometown}}
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="location">
-						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
+						<div class="accordion-header">
+							<button class="mb-0 accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location-collapse" aria-controls="location-collapse">
 								{{$location}}
 							</a>
-						</h2>
+						</div>
 					</div>
 					<div id="location-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
 						<div class="section-content-tools-wrapper accordion-body">
@@ -273,11 +272,11 @@
 				{{if $fields.marital || $fields.sexual}}
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="relation">
-						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
+						<div class="accordion-header">
+							<button class="mb-0 accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#relation-collapse" aria-controls="relation-collapse">
 								{{$relation}}
 							</a>
-						</h2>
+						</div>
 					</div>
 					<div id="relation-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
 						<div class="section-content-tools-wrapper accordion-body">
@@ -324,11 +323,11 @@
 				{{if $fields.keywords || $fields.politic || $fields.religion || $fields.about || $fields.contact || $fields.homepage || $fields.interest || $fields.likes || $fields.dislikes || $fields.channels || $fields.music || $fields.book || $fields.tv || $fields.film || $fields.romance || $fields.employment || $fields.education || $extra_fields}}
 				<div class="accordion-item">
 					<div class="section-subtitle-wrapper" role="tab" id="miscellaneous">
-						<h2 class="accordion-header">
-							<button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
+						<div class="accordion-header">
+							<button type="button" class="mb-0 accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#miscellaneous-collapse"  aria-controls="miscellaneous-collapse">
 								{{$miscellaneous}}
 							</button>
-						</h2>
+						</div>
 					</div>
 					<div id="miscellaneous-collapse" class="accordion-collapse collapse" data-bs-parent="#profile-edit-wrapper">
 						<div class="section-content-tools-wrapper accordion-body">

@@ -1,21 +1,16 @@
-<div class="row">
-	<!-- Section 1: Profile Image + Name -->
-	<div class="col-12 col-md-5 mb-2 mb-md-0">
-		<div class="d-flex align-items-center mb-2">
-			<a href="{{$entry.profile_link}}" class="flex-shrink-0 me-3"><img src="{{$entry.photo}}" alt="Profile Picture"
-					class="rounded-circle img-size-32 mb-1" style="width: 100px; height: 100px; object-fit: cover;"></a>
-			<div class="flex-column">
-				<h5 class="mb-0 text-wrap">{{if $entry.public_forum}}<i class="bi bi-chat"
+<div class="entry__author-box">
+	<figure class="entry__author-avatar">
+		<img alt="Profile Picture" src="{{$entry.photo}}" class="avatar">
+	</figure>
+	<div class="entry__author-info">
+		<h5 class="entry__author-name">
+			{{if $entry.public_forum}}<i class="bi bi-chat"
 						title="{{$entry.forum_label}} @{{$entry.nickname}}+"></i>&nbsp;{{/if}}<a href='{{$entry.profile_link}}'
 						class="link-body-emphasis">{{$entry.name}}</a>{{if $entry.online}}&nbsp;<i class="bi bi-asterisk online-now"
-						title="{{$entry.online}}"></i>{{/if}}</h5>
-				<p class="text-muted small text-break">{{$entry.address}}</p>
-			</div>
-		</div>
-	</div>
-
-	<!-- Section 2: Other Details -->
-	<div class="col-12 col-md-7 directory-collapse p-2">
+						title="{{$entry.online}}"></i>{{/if}}
+				<p class="mb-0 text-muted small text-break">{{$entry.address}}</p>
+		</h5>
+	<div class="col-12 directory-collapse p-2">
 		{{if $entry.common_friends}}
 		<p><strong>{{$entry.common_label}}</strong> {{$entry.common_count}}</p>
 		{{/if}}
@@ -58,22 +53,22 @@
 		</div>
 
 	</div>
-</div>
+		<div class="d-flex gap-2 justify-content-end">
+			{{if $entry.censor_2}}
+			<a class="btn btn-danger btn-sm {{$entry.censor_2_class}}" href="{{$entry.censor_2}}">
+				{{$entry.censor_2_label}}</a>
+			{{/if}}
+			{{if $entry.censor}}
+			<a class="btn btn-warning btn-sm {{$entry.censor_class}}" href="{{$entry.censor}}"> {{$entry.censor_label}}</a>
+			{{/if}}
+			{{if $entry.ignlink}}
+			<a class="btn btn-info btn-sm" href="{{$entry.ignlink}}"> {{$entry.ignore_label}}</a>
+			{{/if}}
+			{{if $entry.connect}}
+			<a class="btn btn-success btn-sm" href="{{$entry.connect}}"><i class="bi bi-plus connect-icon"></i>
+				{{$entry.conn_label}}</a>
+			{{/if}}
+		</div>
 
-<div class="entry__author-box">
-	<figure class="entry__author-avatar">
-		<img alt="" src="images/avatars/user-06.jpg" class="avatar">
-	</figure>
-	<div class="entry__author-info">
-		<h5 class="entry__author-name">
-			<a href="#0">
-				Naruto Uzumaki
-			</a>
-		</h5>
-		<p>
-			Pellentesque ornare sem lacinia quam venenatis vestibulum. Nulla vitae elit libero,
-			a pharetra augue laboris in sit minim cupidatat ut dolor voluptate enim veniam
-			consequat occaecat.
-		</p>
 	</div>
 </div>

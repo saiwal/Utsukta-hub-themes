@@ -1,19 +1,19 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
-		<h3>{{$title}}</h3>
+		<div class="h3 mt-0">{{$title}}</div>
 	</div>
 	<form action="settings/features" method="post" autocomplete="off">
 	<input type='hidden' name='form_security_token' value='{{$form_security_token}}'>
 
-	<div class="accordion" id="settings" role="tablist" aria-multiselectable="true">
+	<div class="accordion accordion-flush" id="settings" role="tablist" aria-multiselectable="true">
 		{{foreach $features as $g => $f}}
 		<div class="accordion-item">
 			<div class="section-subtitle-wrapper" role="tab" id="{{$g}}-settings-title">
-				<h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button"  data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" aria-controls="{{$g}}-settings-collapse">
+				<div class="accordion-header">
+					<button class="accordion-button mb-0 collapsed" type="button"  data-bs-toggle="collapse" data-bs-target="#{{$g}}-settings-content" aria-controls="{{$g}}-settings-collapse">
 						{{$f.0}}
 					</button>
-				</h2>
+				</div>
 			</div>
 			<div id="{{$g}}-settings-content" class="accordion-collapse collapse{{if $g == 'general'}} show{{/if}}" data-bs-parent="#settings">
 				<div class="section-content-tools-wrapper accordion-body">

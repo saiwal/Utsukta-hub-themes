@@ -16,10 +16,8 @@
 			</div>
 			{{/if}}
 			<button type="button" class="btn btn-outline-secondary btn-sm" title="{{$sharePage}}" onclick="window.location.href='rpost?f=&body={{$shareLink}}';"><i class="bi bi-arrow-90deg-right"></i></button>
-			<button id="fullscreen-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(); adjustFullscreenEditorHeight();"><i class="bi bi-arrows-angle-expand"></i></button>
-			<button id="inline-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="makeFullScreen(false); adjustInlineEditorHeight()"><i class="bi bi-arrows-angle-contract"></i></button>
 		</div>
-		<div class="h3">
+		<div class="h3 mt-0">
 			<span id="wiki-header-name">{{$wikiheaderName}}</span>:
 			<span id="wiki-header-page">{{$wikiheaderPage}}</span>
 		</div>
