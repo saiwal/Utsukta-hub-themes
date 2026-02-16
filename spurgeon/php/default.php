@@ -56,7 +56,7 @@
 
 		<section id="content" class="s-content">
 		<?php if (x($page, 'hero')) echo $page['hero']; ?>
-			<main class="bricks pt-0">
+			<main class="bricks" id="bricks" style="padding-top: var(--vspace-3);">
 				<div class="masonry">
 					<div class="row entry-wrap">
 						<div class="column lg-8 md-12">
