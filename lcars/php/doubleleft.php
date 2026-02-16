@@ -34,7 +34,6 @@
 				<main>
 
 					<!-- Start your content here. -->
-					<?php if(!empty($page['banner'])) echo $page['banner']; ?>
 						<div class="container-fluid">
 							<div class="row">
 								<div class="col-lg-8 col-md-12">

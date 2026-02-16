@@ -10,7 +10,12 @@
 
 function channel_hero(&$arr)
 {
-    logger('CHANNEL HOOK FIRED', LOGGER_DEBUG);
+		$current_theme = App::$channel['channel_theme'];
+
+    if (! str_starts_with($current_theme, 'spurgeon')) {
+        return;
+    }
+
     if ($arr['module'] !== 'channel') {
         return;
     }
