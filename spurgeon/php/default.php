@@ -54,8 +54,8 @@
 			<?php if (x($page, 'nav')) echo $page['nav']; ?>
 		</header>
 
+		<section id="content" class="s-content">
 		<?php if (x($page, 'hero')) echo $page['hero']; ?>
-		<section id="content" class="s-content s-content--page">
 			<main class="bricks pt-0">
 				<div class="masonry">
 					<div class="row entry-wrap">
