@@ -7,91 +7,178 @@
  * @param array $args
  * @return string
  */
-function spurgeon_hero($args)
+
+function channel_hero(&$arr)
 {
-    // Minimal styles if viewing a specific post
-    if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) {
-        return <<<EOT
-            <style>
-            .ss-home .s-header__branding a { color: black; }
-            .ss-home .s-header__nav-wrap { margin-left: 0%; }
-            #load-more-container { display: none;}
-            </style>
-            EOT;
-    }
-    if (!App::$profile['profile_uid']) {
-        return '';
+    logger('CHANNEL HOOK FIRED', LOGGER_DEBUG);
+    if ($arr['module'] !== 'channel') {
+        return;
     }
 
-    if (!perm_is_allowed(App::$profile['profile_uid'], get_observer_hash(), 'view_stream')) {
-        return '';
+    $mid = $_GET['mid'] ?? '';
+
+    // If viewing a single post
+    if (!empty($mid)) {
+        \App::$page['hero'] = <<<EOT
+        <style>
+        .ss-home .s-header__branding a { color: black; }
+        .ss-home .s-header__nav-wrap { margin-left: 0%; }
+        #load-more-container { display: none;}
+        </style>
+        EOT;
+        return;
     }
 
-    $cat = x($_REQUEST, 'cat') ? notags(trim($_REQUEST['cat'])) : '';
-    $tag = x($_REQUEST, 'tag') ? notags(trim($_REQUEST['tag'])) : '';
+    if (!\App::$profile['profile_uid']) {
+        return;
+    }
 
-    // Render category/tag header if present
+    if (!perm_is_allowed(\App::$profile['profile_uid'], get_observer_hash(), 'view_stream')) {
+        return;
+    }
+
+    $cat = isset($_REQUEST['cat']) ? notags(trim($_REQUEST['cat'])) : '';
+    $tag = isset($_REQUEST['tag']) ? notags(trim($_REQUEST['tag'])) : '';
+
+    // Category / Tag Header
     if ($cat || $tag) {
         $label_type = $cat ? t('Category:') : t('Tag:');
-        $label_value = $cat ? htmlspecialchars($cat) : htmlspecialchars($tag);
-        return <<<EOT
-            <div class="s-pageheader">
-              <div class="row">
-                <div class="column large-12">
-                  <h1 class="page-title">
-                    <span class="page-title__small-type">$label_type</span>
-                    $label_value
-                  </h1>
-                </div>
-              </div>
+        $label_value = htmlspecialchars($cat ?: $tag);
+
+        \App::$page['hero'] = <<<EOT
+        <div class="s-pageheader">
+          <div class="row">
+            <div class="column large-12">
+              <h1 class="page-title">
+                <span class="page-title__small-type">$label_type</span>
+                $label_value
+              </h1>
             </div>
-            <style>
-            .s-pageheader {  padding-top: calc(6.5 * var(--space)); }
-            .s-content--page {  padding-top: 0px;}
-            </style>
-            EOT;
+          </div>
+        </div>
+        EOT;
+
+        return;
     }
-    // Default arguments
-    $defaults = [
+		
+		$uid = \App::$profile['profile_uid'];
+
+		$category = get_pconfig($uid, 'spurgeon', 'hero_category', 'featured');
+    // Defaults
+    $args = [
         'count' => 8,
-        'category' => 'featured',  // Default to featured category
+        'category' => $category,
         'hashtags' => '',
         'title' => t('Featured Posts'),
         'show_categories' => true,
         'show_excerpt' => true
     ];
 
-    $args = array_merge($defaults, $args);
-
-    $uid = App::$profile['profile_uid'];
-
-    // Get posts
+    $uid = \App::$profile['profile_uid'];
     $items = widget_hero_get_items($uid, $args);
+
     if (!$items) {
-        return <<<EOT
-            <style>
-            .ss-home .s-header__branding a { color: black; }
-            .ss-home .s-header__nav-wrap { margin-left: 0%; }
-            </style>
-            EOT;
+        return;
     }
 
-    // Prepare template variables
-    $tpl_vars = [
+    $tpl = get_markup_template('hero_widget.tpl');
+
+    $html = replace_macros($tpl, [
         '$items' => $items,
         '$swiper_id' => 'hero-swiper-' . mt_rand(1000, 9999),
         '$title' => $args['title'],
         '$read_more' => t('Read More'),
         '$scroll_text' => t('Scroll')
-    ];
+    ]);
 
-    $tpl = get_markup_template('hero_widget.tpl');
-    return replace_macros($tpl, $tpl_vars);
+    // PREPEND to hero region
+    \App::$page['hero'] = $html . (\App::$page['hero'] ?? '');
 }
-
+/* function channel_hero(&$arr) */
+/* { */
+/*     // Minimal styles if viewing a specific post */
+/*     if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) { */
+/*         return <<<EOT */
+/*             <style> */
+/*             .ss-home .s-header__branding a { color: black; } */
+/*             .ss-home .s-header__nav-wrap { margin-left: 0%; } */
+/*             #load-more-container { display: none;} */
+/*             </style> */
+/*             EOT; */
+/*     } */
+/*     if (!App::$profile['profile_uid']) { */
+/*         return ''; */
+/*     } */
+/**/
+/*     if (!perm_is_allowed(App::$profile['profile_uid'], get_observer_hash(), 'view_stream')) { */
+/*         return ''; */
+/*     } */
+/**/
+/*     $cat = x($_REQUEST, 'cat') ? notags(trim($_REQUEST['cat'])) : ''; */
+/*     $tag = x($_REQUEST, 'tag') ? notags(trim($_REQUEST['tag'])) : ''; */
+/**/
+/*     // Render category/tag header if present */
+/*     if ($cat || $tag) { */
+/*         $label_type = $cat ? t('Category:') : t('Tag:'); */
+/*         $label_value = $cat ? htmlspecialchars($cat) : htmlspecialchars($tag); */
+/*         return <<<EOT */
+/*             <div class="s-pageheader"> */
+/*               <div class="row"> */
+/*                 <div class="column large-12"> */
+/*                   <h1 class="page-title"> */
+/*                     <span class="page-title__small-type">$label_type</span> */
+/*                     $label_value */
+/*                   </h1> */
+/*                 </div> */
+/*               </div> */
+/*             </div> */
+/*             <style> */
+/*             .s-pageheader {  padding-top: calc(6.5 * var(--space)); } */
+/*             .s-content--page {  padding-top: 0px;} */
+/*             </style> */
+/*             EOT; */
+/*     } */
+/*     // Default arguments */
+/*     $defaults = [ */
+/*         'count' => 8, */
+/*         'category' => 'featured',  // Default to featured category */
+/*         'hashtags' => '', */
+/*         'title' => t('Featured Posts'), */
+/*         'show_categories' => true, */
+/*         'show_excerpt' => true */
+/*     ]; */
+/**/
+/*     $args = array_merge($defaults, $args); */
+/**/
+/*     $uid = App::$profile['profile_uid']; */
+/**/
+/*     // Get posts */
+/*     $items = widget_hero_get_items($uid, $args); */
+/*     if (!$items) { */
+/*         return <<<EOT */
+/*             <style> */
+/*             .ss-home .s-header__branding a { color: black; } */
+/*             .ss-home .s-header__nav-wrap { margin-left: 0%; } */
+/*             </style> */
+/*             EOT; */
+/*     } */
+/**/
+/*     // Prepare template variables */
+/*     $tpl_vars = [ */
+/*         '$items' => $items, */
+/*         '$swiper_id' => 'hero-swiper-' . mt_rand(1000, 9999), */
+/*         '$title' => $args['title'], */
+/*         '$read_more' => t('Read More'), */
+/*         '$scroll_text' => t('Scroll') */
+/*     ]; */
+/**/
+/*     $tpl = get_markup_template('hero_widget.tpl'); */
+/* 		\App::$page['hero'] = replace_macros($tpl, $tpl_vars) . (\App::$page['hero'] ?? ''); */
+/* } */
+/**/
 /**
- * Get items for hero widget
- */
+* Get items for hero widget
+*/
 function widget_hero_get_items($uid, $args = [])
 {
     $observer = App::get_observer();
@@ -161,8 +248,8 @@ function widget_hero_get_items($uid, $args = [])
 }
 
 /**
- * Format items for display
- */
+* Format items for display 
+*/ 
 function widget_hero_format_items($items, $args)
 {
     $formatted = [];
@@ -215,8 +302,8 @@ function widget_hero_format_items($items, $args)
 }
 
 /**
- * Create excerpt from post body
- */
+* Create excerpt from post body 
+*/ 
 function widget_hero_create_excerpt($text, $length = 200)
 {
     if (empty($text))
@@ -236,8 +323,8 @@ function widget_hero_create_excerpt($text, $length = 200)
 }
 
 /**
- * Get categories from item
- */
+* Get categories from item
+*/
 function widget_hero_get_categories($item)
 {
     $categories = [];
@@ -257,8 +344,8 @@ function widget_hero_get_categories($item)
 }
 
 /**
- * Get hero image from item
- */
+* Get hero image from item 
+*/ 
 function widget_hero_get_image($item)
 {
     $mid = $item['mid'];

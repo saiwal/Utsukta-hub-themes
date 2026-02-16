@@ -54,7 +54,7 @@
 			<?php if (x($page, 'nav')) echo $page['nav']; ?>
 		</header>
 
-		<?php if(!empty($page['banner'])) echo $page['banner']; ?>
+		<?php if (x($page, 'hero')) echo $page['hero']; ?>
 		<section id="content" class="s-content s-content--page">
 			<main class="bricks pt-0">
 				<div class="masonry">
