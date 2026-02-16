@@ -84,7 +84,6 @@ namespace {
 		// It can be used to register hooks etc.
 			$defaults = [
 				'banner_image'    => '',
-				'subtitle'        => '',
 			];
 
 			foreach ($defaults as $k => $v) {
