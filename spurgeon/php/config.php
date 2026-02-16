@@ -40,7 +40,7 @@ function get() {
 
 	if ($terms) {
 		foreach ($terms as $term) {
-			$options[$term['term']] = $term[0];
+			$options[$term[0]] = $term[0];
 		}
 	}
 
@@ -83,7 +83,6 @@ function form($arr) {
 			'$dark' => t('Dark style'),
 			'$light' => t('Light style'),
 
-			// ✅ Dropdown definition
 			'$hero_category' => [
 				'spurgeon_hero_category',
 				t('Hero category'),
