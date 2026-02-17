@@ -1,5 +1,6 @@
-<div class="text-truncate lh-sm">
-	<img src="{{$photo}}" class="image-rounded menu-img-2">
+<div class="text-truncate hstack">
+	<img src="{{$photo}}" class="me-3 mb-0">
+	<span class= "vstack">
 	<strong>{{$name}}</strong><br>
-	<small class="text-body-secondary">{{$addr}}</small>
+	<small class="text-body-secondary">{{$addr}}</small></span>
 </div>
