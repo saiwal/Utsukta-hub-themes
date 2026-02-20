@@ -1,7 +1,7 @@
 <?php
 
 /**
- * * Name: Default
+ *   * Name: Default
  *   * Description: Spurgeons default layout with left column
  *   * Version: 0.0-beta
  *   * Author: Saiwal
