@@ -646,7 +646,7 @@ $.colorbox.settings.maxWidth = "95%";
 $.colorbox.settings.maxHeight = "95%";
 $.colorbox.settings.scalePhotos = true;
 $(document).bind('cbox_complete', function(){
-    var imgUrl = $('#cboxLoadedContent img').attr('src');
+  var imgUrl = $('#cboxLoadedContent .cboxPhoto').attr('src');
   if (imgUrl) {
     $('#cboxTitle').append(
         '<br><a href="' + imgUrl + '" target="_blank" style="color:var(--bs-body-text);text-decoration:none;">View full size</a>'
