@@ -7,16 +7,26 @@
 		</div> <!-- /.card-tools -->
 	</div>
 	<div class="card-body clearfix">
-		<table>
+		<div class="row">
 			{{foreach $items as $id => $item}}
 			{{if $id != 'ts'}}
-			<tr>
-				<td id="perfstat-{{$id}}-label" class="perfstat-label">{{$labels.$id|escape}}:</td>
-				<td id="perfstat-{{$id}}-value" class="perfstat-value">…</td>
-			</tr>
+			<div class="col-12 col-sm-6 col-md-4">
+				<div class="info-box shadow">
+					<span class="info-box-icon text-bg-success shadow-sm">
+						<i class="bi bi-gear"></i>
+					</span>
+
+					<div class="info-box-content">
+						<span id="perfstat-{{$id}}-label" class="info-box-text">{{$labels.$id|escape}}</span>
+						<span id="perfstat-{{$id}}-value" class="info-box-number">…</span>
+					</div>
+					<!-- /.info-box-content -->
+				</div>
+				<!-- /.info-box -->
+			</div>
 			{{/if}}
 			{{/foreach}}
-		</table>
+		</div>
 	</div>
 </div>
 <script>
