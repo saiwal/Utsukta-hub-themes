@@ -31,44 +31,61 @@
 		last_q: 0,
 
 		updateStatus: function () {
+			if (!this.isVisible()) {
+				return;
+			}
+
 			fetch('/perfstats', {
 				headers: {
 					"Accept": "application/json",
 				},
 				credentials: "include",
 			})
-				.then((response) => response.json())
-				.then((json) => {
-					for (const item in json) {
-						element = document.getElementById(`perfstat-${item}-value`);
-						if (element) {
-							if (item === "loadavg") {
-								element.innerText = json['loadavg']
-									.map((v) => v.toPrecision(3))
-									.join(" / ");
-							} else if (item === "dbqueries") {
-								if (this.last_ts !== 0) {
-									let dt = json['ts'] - this.last_ts;
-									let dq = json['dbqueries'] - this.last_q;
+			.then((response) => response.json())
+			.then((json) => {
+				for (const item in json) {
+					let element = document.getElementById(`perfstat-${item}-value`);
+					if (element) {
+						if (item === "loadavg") {
+							element.innerText = json['loadavg']
+								.map((v) => v.toPrecision(3))
+								.join(" / ");
+						} else if (item === "dbqueries") {
+							if (this.last_ts !== 0) {
+								let dt = json['ts'] - this.last_ts;
+								let dq = json['dbqueries'] - this.last_q;
 
-									element.innerText = dq / dt;
-								}
-
-								this.last_ts = json['ts'];
-								this.last_q = json['dbqueries'];
-							} else if (item !== 'ts') {
-								element.innerText = json[item];
+								element.innerText = dq / dt;
 							}
+
+							this.last_ts = json['ts'];
+							this.last_q = json['dbqueries'];
+						} else if (item !== 'ts') {
+							element.innerText = json[item];
 						}
 					}
-				});
+				}
+			});
 		},
 
-		start: function () {
+		start: function() {
 			this.updateStatus();
 			setInterval(() => this.updateStatus(), 5000);
+		},
+
+		isVisible: function () {
+			const element = document.getElementById('channel-activities');
+
+			if (!element) {
+				return false;
+			}
+
+			const style = window.getComputedStyle(element);
+			return style.display !== 'none';
 		}
 	}
 
-	status_update_monitor.start();
+	document.addEventListener("DOMContentLoaded", function() {
+		status_update_monitor.start();
+	});
 </script>

@@ -21,6 +21,10 @@
 		last_q: 0,
 
 		updateStatus: function () {
+			if (!this.isVisible()) {
+				return;
+			}
+
 			fetch('/perfstats', {
 				headers: {
 					"Accept": "application/json",
@@ -30,7 +34,7 @@
 			.then((response) => response.json())
 			.then((json) => {
 				for (const item in json) {
-					element = document.getElementById(`perfstat-${item}-value`);
+					let element = document.getElementById(`perfstat-${item}-value`);
 					if (element) {
 						if (item === "loadavg") {
 							element.innerText = json['loadavg']
@@ -57,8 +61,21 @@
 		start: function() {
 			this.updateStatus();
 			setInterval(() => this.updateStatus(), 5000);
+		},
+
+		isVisible: function () {
+			const element = document.getElementById('channel-activities');
+
+			if (!element) {
+				return false;
+			}
+
+			const style = window.getComputedStyle(element);
+			return style.display !== 'none';
 		}
 	}
 
-	status_update_monitor.start();
+	document.addEventListener("DOMContentLoaded", function() {
+		status_update_monitor.start();
+	});
 </script>
