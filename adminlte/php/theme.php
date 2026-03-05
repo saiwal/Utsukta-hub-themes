@@ -18,6 +18,5 @@
 
 function adminlte_init() {
 
-    App::$theme_info['extends'] = 'redbasic';
 
 }

@@ -1,4 +1,4 @@
-<div class="clearfix mb-3">
+<div class="clearfix">
     <h6 id="search">{{$title}}</h6>
 	{{$searchbox}}
 	<div id="saved-search-list" class="tagcloud group">

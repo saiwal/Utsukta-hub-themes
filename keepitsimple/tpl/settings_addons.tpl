@@ -1,6 +1,8 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
-		<h3>{{$title}}</h3>
+	<div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
 	</div>
 	<div class="section-content-info-wrapper">{{$descrip}}</div>
 	<form action="settings/featured" method="post" autocomplete="off">

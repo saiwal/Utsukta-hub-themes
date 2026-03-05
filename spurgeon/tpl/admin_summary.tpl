@@ -3,10 +3,10 @@
     <h3 class="border-0">{{$title}}</h3>
   </div>
   {{if $adminalertmsg}}
-  <p class="callout callout-warning" role="alert">{{$adminalertmsg}}</p>
+  <p class="alert-box alert-box--warning" role="alert">{{$adminalertmsg}}</p>
   {{/if}}
   {{if $upgrade}}
-  <p class="callout callout-warning" role="alert">{{$upgrade}}</p>
+  <p class="alert-box alert-box--warning" role="alert">{{$upgrade}}</p>
   {{/if}}
   <div class="mb-3">
     <div class="h4 mt-0">

@@ -1,4 +1,5 @@
-	<h3>Coming soon...</h3>
+<h3>Customization options</h3>
+	{{include file="field_select.tpl" field=$hero_category}}
 <!--{{if $expert}}-->
 <!--	<hr>-->
 <!--	<h3>{{$common}}</h3>-->
@@ -20,5 +21,5 @@
 <!---->
 
 <div class="settings-submit-wrapper" >
-	<button type="submit" name="adminlte-settings-submit" class="btn btn-primary">{{$submit}}</button>
+	<button type="submit" name="spurgeon-settings-submit" class="btn btn-primary">{{$submit}}</button>
 </div>

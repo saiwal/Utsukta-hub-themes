@@ -2,7 +2,7 @@
   <div class="h5">
     {{$title}}
   </div>
-	<ul style="disc">
+	<ul class="list-unstyled">
 		<li class="mt-0">
 		  <a href="blocks/{{$who}}">{{$blocks}}</a>
 		</li>

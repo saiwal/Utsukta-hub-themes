@@ -1,5 +1,9 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper clearfix app-content-header">
+		<header class="entry__header">
+		<h2 class="entry__title h1">{{$dirlbl}}{{if $search}}:&nbsp;{{$safetxt}}{{/if}}
+		</h2>
+	</header>
 		<div class="btn-group float-end">
 			<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="{{$sort}}">
 				<i class="bi bi-arrow-down-up"></i>
@@ -11,7 +15,6 @@
 				<a class="dropdown-item" href="directory?f=&order=reverse{{$suggest}}">{{$reverse}}</a>
 			</div>
 		</div>
-		<h3>{{$dirlbl}}{{if $search}}:&nbsp;{{$safetxt}}{{/if}}</h3>
 	</div>
 	{{foreach $entries as $entry}}
 		{{include file="direntry.tpl"}}

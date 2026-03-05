@@ -2,20 +2,20 @@
 <div id="wiki_page_list" class="mb-3" >
 {{/if}}
 	<div class="h5">{{$header}}</div>
-	<ul class="disc flex-column" style="disc">
+	<ul class="list-unstyled">
 		{{if $pages}}
 		{{foreach $pages as $page}}
-		<li class="mt-0 d-flex justify-content-between" id="{{$page.link_id}}">
-			<a class="nav-link" href="/wiki/{{$channel_address}}/{{$wikiname}}/{{$page.url}}">{{$page.title}}</a>
+		<li class="d-flex justify-content-between" id="{{$page.link_id}}">
+			<a href="/wiki/{{$channel_address}}/{{$wikiname}}/{{$page.url}}">{{$page.title}}</a>
       {{if $page.resource_id && $candel}}
-			<i class="nav-link widget-nav-pills-icons bi bi-trash" onclick="wiki_delete_page('{{$page.title|escape:'javascript'}}', '{{$page.title|escape:'javascript'}}', '{{$page.resource_id}}', '{{$page.link_id}}')"></i>
+			<i class="widget-nav-pills-icons bi bi-trash" onclick="wiki_delete_page('{{$page.title|escape:'javascript'}}', '{{$page.title|escape:'javascript'}}', '{{$page.resource_id}}', '{{$page.link_id}}')"></i>
 			{{/if}}
 
 		</li>
 		{{/foreach}}
 		{{/if}}
 		{{if $canadd}}
-			<li class="mt-0 float-end"><a class="nav-link" href="#" onclick="wiki_show_new_page_form(); return false;"><i class="bi bi-plus-lg"></i>&nbsp;{{$addnew}}</a></li>
+			<li class="float-end"><a href="#" onclick="wiki_show_new_page_form(); return false;"><i class="bi bi-plus-lg"></i>&nbsp;{{$addnew}}</a></li>
 		{{/if}}
 		{{if $canadd}}
 		<div id="new-page-form-wrapper" class="clearfix sub-menu" style="display:none;">

@@ -1,4 +1,3 @@
-<div class="mb-3">
   <div class="h6">
 	{{$title}}
   </div>
@@ -9,4 +8,3 @@
 		<li>
 		{{/foreach}}
 	</ul>
-</div>

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * * Name: Default
+ *   * Name: Default
  *   * Description: Spurgeons default layout with left column
  *   * Version: 0.0-beta
  *   * Author: Saiwal
@@ -54,9 +54,9 @@
 			<?php if (x($page, 'nav')) echo $page['nav']; ?>
 		</header>
 
-		<?php if(!empty($page['banner'])) echo $page['banner']; ?>
-		<section id="content" class="s-content s-content--page">
-			<main class="bricks pt-0">
+		<section id="content" class="s-content">
+		<?php if (x($page, 'hero')) echo $page['hero']; ?>
+			<main class="bricks" id="bricks" style="padding-top: var(--vspace-3);">
 				<div class="masonry">
 					<div class="row entry-wrap">
 						<div class="column lg-8 md-12">

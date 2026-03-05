@@ -1,4 +1,3 @@
-<div class="mb-3">
 
   <div class="h5">{{$profile.fullname}}{{if $profile.online}}<i class="bi bi-wifi text-success ps-2"
       title="{{$profile.online}}"></i>{{else}}<i class="bi bi-wifi-off text-danger ps-2"
@@ -73,7 +72,6 @@
   </ul>
   {{/if}}
   {{/if}}
-</div>
 
 {{if $details}}
 {{$chanmenu}}

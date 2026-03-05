@@ -1,9 +1,12 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper clearfix app-content-header">
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$header}}
+			</h2>
+    </header>
 		{{if $owner}}
 		<button type="button" class="btn btn-success btn-sm float-end acl-form-trigger" onclick="openClose('new-wiki-form-wrapper');" data-form_id="new-wiki-form"><i class="bi bi-plus-lg"></i>&nbsp;{{$create}}</button>
 		{{/if}}
-		<div class="h3">{{$header}}</div>
 	</div>
 	{{if $owner}}
 	<div id="new-wiki-form-wrapper" class="section-content-tools-wrapper">

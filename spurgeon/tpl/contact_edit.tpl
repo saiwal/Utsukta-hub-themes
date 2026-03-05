@@ -1,11 +1,11 @@
 <form id="contact-edit-form" action="contactedit/{{$contact_id}}" method="post" >
-  <div id="contact-edit-tools" class="accordion"  role="tablist" >
+  <div id="contact-edit-tools" class="accordion accordion-flush"  role="tablist" >
 			<div class="accordion-item" role="tab" id="roles-tool">
-				<h2 class="accordion-header">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" aria-expanded="true" aria-controls="roles-tool-collapse">          
+				<div class="accordion-header">
+          <button class="accordion-button mb-0" type="button" data-bs-toggle="collapse" data-bs-target="#roles-tool-collapse" aria-expanded="true" aria-controls="roles-tool-collapse">          
 						{{$roles_label}}
 					</button>
-				</h2>
+				</div>
 			<div id="roles-tool-collapse" class="accordion-collapse collapse {{if $section == 'roles'}} show{{/if}}" role="tabpanel" aria-labelledby="roles-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{include file="field_select.tpl" field=$permcat}}
@@ -51,11 +51,11 @@
 			</div>
 		{{if $groups}}
 			<div class="accordion-item" role="tab" id="group-tool">
-        <h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" aria-expanded="true" aria-controls="group-tool-collapse">
+        <div class="accordion-header">
+					<button class="accordion-button mb-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#group-tool-collapse" aria-expanded="true" aria-controls="group-tool-collapse">
 						{{$pgroups_label}}
 					</button>
-				</h2>
+				</div>
 			<div id="group-tool-collapse" class="accordion-collapse collapse{{if $section == 'group'}} show{{/if}}" role="tabpanel" aria-labelledby="group-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{foreach $groups as $group}}
@@ -70,11 +70,11 @@
 		{{/if}}
 		{{if $multiprofs}}
 			<div class="accordion-item" role="tab" id="profile-tool">
-				<h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" aria-expanded="true" aria-controls="profile-tool-collapse">
+				<div class="accordion-header">
+					<button class="mb-0 accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profile-tool-collapse" aria-expanded="true" aria-controls="profile-tool-collapse">
 						{{$profiles_label}}
 					</button>
-				</h2>
+				</div>
 			<div id="profile-tool-collapse" class="accordion-collapse collapse{{if $section == 'profile'}} show{{/if}}" role="tabpanel" aria-labelledby="profile-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{$profile_select}}
@@ -87,11 +87,11 @@
 		{{/if}}
 		{{if $slide}}
 			<div class="accordion-item" role="tab" id="affinity-tool">
-				<h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" aria-expanded="true" aria-controls="affinity-tool-collapse">
+				<div class="accordion-header">
+					<button class="accordion-button mb-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#affinity-tool-collapse" aria-expanded="true" aria-controls="affinity-tool-collapse">
 						{{$affinity_label}}
 					</button>
-				</h2>
+				</div>
 			<div id="affinity-tool-collapse" class="accordion-collapse collapse{{if $section == 'affinity'}} show{{/if}}" role="tabpanel" aria-labelledby="affinity-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 						<div class="mb-2"><label>{{$lbl_slider}}</label></div>
@@ -103,11 +103,11 @@
 		{{/if}}
 		{{if $connfilter}}
 			<div class="accordion-item" role="tab" id="filter-tool">
-				<h2 class="accordion-header">
-					<button class="accordion-button collapsed" type="button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" aria-expanded="true" aria-controls="filter-tool-collapse">
+				<div class="accordion-header">
+					<button class="mb-0 accordion-button collapsed" type="button"  data-bs-toggle="collapse" data-bs-target="#filter-tool-collapse" aria-expanded="true" aria-controls="filter-tool-collapse">
 						{{$filter_label}}
 					</button>
-				</h2>
+				</div>
 			<div id="filter-tool-collapse" class="accordion-collapse collapse{{if $section == 'filter'}} show{{/if}}" role="tabpanel" aria-labelledby="filter-tool" data-bs-parent="#contact-edit-tools">
 				<div class="section-content-tools-wrapper accordion-body">
 					{{include file="field_textarea.tpl" field=$incl}}

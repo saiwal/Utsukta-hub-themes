@@ -1,4 +1,4 @@
-<div class="h6">
+<div class="h3">
   <i class="bi bi-{{$icon}} generic-icons-nav"></i> <a class="text-decoration-none link-dark" href="{{$url}}">{{$label}}</a>
 </div>
 <div id="photo-album" class="mb-4">

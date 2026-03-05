@@ -1,6 +1,8 @@
 <div class="generic-content-wrapper-styled" id='adminpage'>
-  <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$title}} - {{$page}}</h3>
+  <div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}} - {{$page}}
+			</h2>
+		</header>
   </div>
   <p>{{if ! $info.disabled}}<i
       class='toggleplugin bi {{if $status==on}}bi-check-square{{else}}bi-square{{/if}} admin-icons'></i>{{else}}<i

@@ -1,4 +1,4 @@
-<div id="settings-nick-wrapper" class="section-content-info-wrapper callout callout-info mb-2">
+<div id="settings-nick-wrapper" class="section-content-info-wrapper alert-box alert-box--info">
 <div id="settings-nickname-desc">{{$desc}} <strong>{{$nickname}}</strong></div>
 {{if $davpath}}
 <br>

@@ -1,4 +1,4 @@
-<div id="wiki_list" class="mb-3">
+<div id="wiki_list">
 	<div class="h5">{{$header}}</div>
 	<ul class="nav nav-pills flex-column">
 		{{foreach $wikis as $wiki}}

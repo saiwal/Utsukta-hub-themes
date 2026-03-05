@@ -1,11 +1,14 @@
 <div class="generic-content-wrapper">
 	<div class="section-title-wrapper app-content-header">
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$listtitle}}
+			</h2>
+    </header>
 		{{if $editor}}
 		<div class="float-end">
 			<button id="webpage-create-btn" class="btn btn-sm btn-success acl-form-trigger" onclick="openClose('webpage-editor');" data-form_id="profile-jot-form"><i class="bi bi-pencil-square-o"></i>&nbsp;{{$create}}</button>
 		</div>
 		{{/if}}
-		<div class="h3">{{$listtitle}}</div>
 	</div>
 	{{if $editor}}
 	<div id="webpage-editor" class="section-content-tools-wrapper">

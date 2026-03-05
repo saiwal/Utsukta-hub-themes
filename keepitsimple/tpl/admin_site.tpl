@@ -1,6 +1,9 @@
 <div id="adminpage" class="generic-content-wrapper-styled">
   <div class="section-title-wrapper app-content-header">
-    <h3 class="border-0">{{$title}}</h3>
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
   </div>
   <div class="accordion accordion-flush" id="accordionExample">
     <div class="accordion-item">

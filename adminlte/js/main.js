@@ -646,7 +646,7 @@ $.colorbox.settings.maxWidth = "95%";
 $.colorbox.settings.maxHeight = "95%";
 $.colorbox.settings.scalePhotos = true;
 $(document).bind('cbox_complete', function(){
-    var imgUrl = $('#cboxLoadedContent img').attr('src');
+  var imgUrl = $('#cboxLoadedContent .cboxPhoto').attr('src');
   if (imgUrl) {
     $('#cboxTitle').append(
         '<br><a href="' + imgUrl + '" target="_blank" style="color:var(--bs-body-text);text-decoration:none;">View full size</a>'
@@ -2351,8 +2351,8 @@ function toast(string, severity) {
 	if (!toast) {
 		toast = document.createElement('div');
 		toast.setAttribute('id', id);
-		toast.innerHTML = '<div class="d-flex"><div class="toast-body">' + string + '</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
-		toast.classList.add('toast', 'p-2', 'bg-' + severity + '-subtle', 'text-' + severity + '-emphasis', 'border-' + severity);
+		toast.innerHTML = '<div class="alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>'+ string +'</div>'
+		toast.classList.add('alert', 'alert-' + severity);
 	}
 
 	container.prepend(toast);

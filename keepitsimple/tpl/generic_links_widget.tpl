@@ -1,4 +1,4 @@
-<div class="{{if $class}} {{$class}}{{/if}} mb-3">
+<div class="{{if $class}} {{$class}}{{/if}}">
   {{if $title}}
   <div class="h6">
     {{$title}}

@@ -1,6 +1,6 @@
 <div id="channel-activities" class="d-none overflow-hidden">
 
-	<h2 class="mb-4">
+	<h2 class="mt-0">
 		{{$welcome}} {{$channel_name}}!
 	</h2>
 

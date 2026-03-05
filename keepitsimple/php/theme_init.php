@@ -61,3 +61,16 @@ head_add_js('/vendor/twbs/bootstrap/dist/js/bootstrap.bundle.min.js');
 head_add_js('/library/bootstrap-tagsinput/bootstrap-tagsinput.js');
 head_add_js('/library/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.js');
 
+$kis_subtitle = '';
+
+if (local_channel()) {
+	$kis_subtitle = get_pconfig(local_channel(), 'keepitsimple', 'subtitle');
+}
+
+if (App::$profile_uid) {
+	$kis_subtitle = get_pconfig(App::$profile_uid, 'keepitsimple', 'subtitle');
+}
+
+App::$page['subtitle'] = $kis_subtitle;
+App::$page['header_text'] = channelx_by_n(\App::$profile_uid)['channel_name'];
+App::$page['banner'] = 	$banner = Config::Get('system', 'banner');

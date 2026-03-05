@@ -1,7 +1,9 @@
 <div class="generic-content-wrapper">
-	<div class="section-title-wrapper app-content-header">
+	<div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
 		<a title="{{$removeaccount}}" class="btn btn-danger btn-sm float-end" href="removeaccount"><i class="bi bi-trash"></i>&nbsp;{{$removeme}}</a>
-		<h3>{{$title}}</h3>
 		<div class="clear"></div>
 	</div>
 	<form action="settings/account" id="settings-account-form" method="post" autocomplete="off" >

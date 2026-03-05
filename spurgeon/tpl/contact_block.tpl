@@ -3,7 +3,7 @@
   </div>
   {{if $micropro}}
   <!-- /.card-header -->
-  <div class="p-1 overflow-y-auto" style="max-height: 19rem;">
+  <div class="p-1 overflow-y-auto" style="max-height: 29rem;">
     <div class="d-flex flex-wrap">
       {{foreach $micropro as $m}}
         {{$m}}

@@ -92,6 +92,12 @@
       </li>
       {{/if}}
 
+      {{if $sel.name}}
+      {{if $settings_url}}
+			<li><a href="{{$settings_url}}/?f=&rpath={{$url}}"><i class="bi bi-gear"></i></a></li>
+      {{/if}}
+      {{/if}}
+
 					{{if $nav.login && !$userinfo}}
 					{{if $nav.loginmenu.1.4}}
 					<li>

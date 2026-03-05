@@ -7,7 +7,7 @@
  * @param array $args
  * @return string
  */
-function widget_hero($args)
+function spurgeon_hero($args)
 {
     // Minimal styles if viewing a specific post
     if (argc() >= 2 && argv(0) === 'channel' && isset($_GET['mid']) && $_GET['mid']) {

@@ -23,8 +23,8 @@
 {{if $admin.update}}
 <div class="mb-3">
   <ul class="list-unstyled">
-    <li class="mt-0"><a class="nav-link" href='{{$admin.update.0}}'>{{$admin.update.1}}</a></li>
-    <li class="mt-0"><a class="nav-link" href=''>Important Changes</a></li>
+    <li class="mt-0"><a href='{{$admin.update.0}}'>{{$admin.update.1}}</a></li>
+    <li class="mt-0"><a href=''>Important Changes</a></li>
   </ul>
 </div>
 {{/if}}

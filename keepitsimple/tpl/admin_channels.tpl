@@ -11,8 +11,10 @@
 	}
 </script>
 <div class="generic-content-wrapper-styled table-responsive" id='adminpage'>
-	<div class="section-title-wrapper app-content-header">
-	<h3 class="border-0">{{$title}}</h3>
+	<div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
 	</div>
   <div class="mb-4">
     <div class="h4">

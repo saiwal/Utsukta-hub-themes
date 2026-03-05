@@ -1,6 +1,9 @@
 <div id="invite" class="generic-content-wrapper">
   <div class="section-title-wrapper app-content-header">
-    <h3 class="zai_il">{{$invite}}</h3>
+		<header class="entry__header">
+			<h2 class="entry__title h1">{{$invite}}
+		</h2>
+	</header>
     <h4 class="zai_il">{{$lcclane}}</h4>
   </div>
   <div class="section-content-wrapper">

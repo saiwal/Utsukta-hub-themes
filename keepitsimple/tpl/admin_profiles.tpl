@@ -1,12 +1,15 @@
 <div class="generic-content-wrapper">
-  <div class="section-title-wrapper app-content-header"><a title="{{$new}}" class="btn btn-primary btn-sm float-end"
+  <div class="section-title-wrapper app-content-header">		<header class="entry__header">
+			<h2 class="entry__title h1">{{$title}}
+			</h2>
+		</header>
+		<a title="{{$new}}" class="btn btn-primary btn-sm float-end"
       href="admin/profs/new"><i class="bi bi-plus-lg"></i>&nbsp;{{$new}}</a>
-    <h3>{{$title}}</h3>
   </div>
 
   <div class="section-content-tools-wrapper">
     <div class="mb-3">
-      <div class="callout callout-info mb-2">{{$all_desc}}<br><br>
+      <div class="alert-box alert-box--info">{{$all_desc}}<br><br>
         {{$all}}
       </div>
       <form action="admin/profs" method="post">
