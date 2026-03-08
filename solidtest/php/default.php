@@ -19,7 +19,7 @@
 	<script>
     var baseurl = "<?php echo z_root() ?>";
   </script>
-  <link rel="stylesheet" href="/view/theme/solidtest/assets/index.css">
+  <link rel="stylesheet" href="/view/theme/solidtest/assets/app.css">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
@@ -29,7 +29,7 @@
 
 <div id="root"></div>
 
-<script type="module" src="/view/theme/solidtest/assets/index.js"></script>
+<script type="module" src="/view/theme/solidtest/assets/app.js"></script>
 
 </body>
 </html>
