@@ -1,8 +1,8 @@
 <?php
 
 /**
- *   * Name: SolidTest
- *   * Description: Solidtest theme
+ *   * Name: Solidified
+ *   * Description: SolidJS based theme
  *   * Version: 1.0-beta
  *   * MinVersion: 11.0
  *   * MaxVersion: 12.0
@@ -12,5 +12,5 @@
  *
  */
 
-function solidtest_init() {
+function solidified_init() {
 }
