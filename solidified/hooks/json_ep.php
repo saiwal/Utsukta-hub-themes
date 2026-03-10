@@ -76,9 +76,8 @@ function json_network_content(&$arr) {
 }
 
 function json_settings_get(&$arr) {
-    if (($_GET['format'] ?? '') !== 'json') return;
-
-    $uid = local_channel();
+		if (($_GET['format'] ?? '') !== 'json') return;
+		if ((\App::$argv[1] ?? '') !== 'display') return;
 
     $settings = [
         'theme'          => \App::$channel['channel_theme'] ?? '',
@@ -91,7 +90,7 @@ function json_settings_get(&$arr) {
         'user_scalable'  => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
     ];
 
-    $arr['replace'] = true;
+    $arr['content'] = '';
     json_return_and_die($settings);
 }
 
