@@ -120,10 +120,17 @@
 				{{/if}}
 				<!-- Channel apps; needs fixing -->
 				{{if $channel_apps.0}}
-				<li class="nav-header" aria-disabled="true">{{$channelapps}}</li>
+				<li class="nav-item">
+					<a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
+						<p>{{$channelapps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+					</a>
+					<ul class="nav nav-treeview"
+						style="display: none; box-sizing: border-box;">
 				{{foreach $channel_apps as $channel_app}}
 				{{$channel_app}} <br>
 				{{/foreach}}
+					</ul>
+				</li>
 				{{/if}}
 
 				{{if $is_owner}}
@@ -145,13 +152,19 @@
 					</a>
 				</li>
 				{{else}}
-				<li class="nav-header" aria-disabled="true">{{$sysapps}}</li>
 				<!-- System apps -->
+				<li class="nav-item">
+					<a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
+						<p>{{$sysapps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
+					</a>
+					<ul class="nav nav-treeview"
+						style="display: none; box-sizing: border-box;">
 				{{foreach $nav_apps as $nav_app}}
 				{{$nav_app}}
 				{{/foreach}}
 				{{/if}}
 			</ul>
+				</li>
 			<!--end::Sidebar Menu-->
 		</nav>
 	</div>
