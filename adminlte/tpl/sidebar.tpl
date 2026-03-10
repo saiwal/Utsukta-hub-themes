@@ -121,11 +121,11 @@
 				<!-- Channel apps; needs fixing -->
 				{{if $channel_apps.0}}
 				<li class="nav-item menu-open">
-					<a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
+					<a href="#" class="nav-link"> <i class="nav-icon bi bi-grid"></i>
 						<p>{{$channelapps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
 					</a>
 					<ul class="nav nav-treeview"
-						style="display: none; box-sizing: border-box;">
+						style="display: block; box-sizing: border-box;">
 				{{foreach $channel_apps as $channel_app}}
 				{{$channel_app}} <br>
 				{{/foreach}}
@@ -154,7 +154,7 @@
 				{{else}}
 				<!-- System apps -->
 				<li class="nav-item">
-					<a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
+					<a href="#" class="nav-link"> <i class="nav-icon bi bi-tools"></i>
 						<p>{{$sysapps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
 					</a>
 					<ul class="nav nav-treeview"
