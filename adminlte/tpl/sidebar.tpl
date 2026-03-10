@@ -120,7 +120,7 @@
 				{{/if}}
 				<!-- Channel apps; needs fixing -->
 				{{if $channel_apps.0}}
-				<li class="nav-item">
+				<li class="nav-item menu-open">
 					<a href="#" class="nav-link"> <i class="nav-icon bi bi-star-fill"></i>
 						<p>{{$channelapps}}<i class="nav-arrow bi bi-chevron-right"></i></p>
 					</a>
