@@ -116,7 +116,7 @@ function updateSize() {
 	</div>
 	<div class="section-content-wrapper-np">
     <div class="card mb-3">
-      <div class="card-body ">
+      <div class="card-body z-0">
 		<div id="calendar"></div>
 	</div>
 	</div>
