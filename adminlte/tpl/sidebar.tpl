@@ -19,20 +19,7 @@
 		<nav class="mt-2">
 			<!--begin::Sidebar Menu-->
 			<ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-      {{if $nav.login && !$userinfo}}
-      <li class="nav-item d-flex justify-content-center gap-3">
-      {{if $nav.loginmenu.1.4}}
-        <a class="btn btn-info btn-sm" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal"
-          data-bs-target="#nav-login">{{$nav.loginmenu.1.1}}</a>
-      {{else}}
-        <a class="btn btn-primary btn-sm" href="login" title="{{$nav.loginmenu.1.3}}">{{$nav.loginmenu.1.1}}</a>
-      {{/if}}
-      {{if $nav.register}}
-        <a class="btn btn-success btn-sm" href="{{$nav.register.0}}" title="{{$nav.register.3}}">{{$nav.register.1}}</a>
-      {{/if}}
-      </li>
-      {{/if}}
-
+ 
 				<li class="pb-1 pt-1">
 					<span class="nav-link">
 						<p class="d-flex justify-content-center">
@@ -49,13 +36,30 @@
 						</p>
 					</span></span>
 				</li>
-
+ 
+    {{if $nav.login && !$userinfo}}
+      {{if $nav.loginmenu.1.4}}
+      <li class="nav-item">
+        <a class="nav-link" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal"
+						data-bs-target="#nav-login"><i class="bi bi-box-arrow-in-right"></i><p>{{$nav.loginmenu.1.1}}</a>
+      </li>
+      {{else}}
+      <li class="nav-item">
+					<a class="nav-link" href="login" title="{{$nav.loginmenu.1.3}}"><i class="nav-icon bi bi-box-arrow-in-right"></i><p>{{$nav.loginmenu.1.1}}</p></a>
+      </li>
+      {{/if}}
+      {{if $nav.register}}
+      <li class="nav-item">
+					<a class="nav-link" href="{{$nav.register.0}}" title="{{$nav.register.3}}"><i class="nav-icon bi bi-pencil-square"></i><p>{{$nav.register.1}}</p></a>
+      </li>
+      {{/if}}
+      {{/if}}
 				<!-- user dowpdown menu-->
 				{{if $userinfo}}
 				<!--begin::User Menu Dropdown-->
 				<li class="nav-item">
 					<a href="#"	class="nav-link" data-bs-toggle="dropdown">
-						<img src="{{$userinfo.icon}}" class="nav-icon rounded-circle shadow img-size-32" alt="User Image"><p>{{$userinfo.name}}<i class="nav-arrow bi bi-chevron-right"></i></p></a>
+						<img src="{{$userinfo.icon}}" class="nav-icon rounded-circle shadow img-size-32" alt="User Image"><p class="text-truncate">{{$userinfo.name}}<i class="nav-arrow bi bi-chevron-right"></i></p></a>
 
 					<ul class="nav nav-treeview"> <!--begin::User Image-->
 						{{if $is_owner}}
@@ -63,20 +67,11 @@
 						{{foreach $nav.usermenu as $usermenu}}
 						<li><a href="{{$usermenu.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$usermenu.1}}</p></a></li>
 						{{/foreach}}
-						<li>
-							<hr class="dropdown-divider">
-						</li>
 						{{if $nav.group}}
 						<li><a href="{{$nav.group.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.group.1}}</p></a></li>
-						<li>
-							<hr class="dropdown-divider">
-						</li>
 						{{/if}}
 						{{if $nav.manage}}
-						<li><a href="{{$nav.manage.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.manage.1}}</p></a></li>
-						<li>
-							<hr class="dropdown-divider">
-						</li>
+						<li><a href="{{$nav.manage.0}}" class="nav-link"><i class="nav-icon bi bi-ui-radios-grid"></i><p>{{$nav.manage.1}}</p></a></li>
 						{{/if}}
 						{{if $nav.channels}}
 						{{foreach $nav.channels as $chan}}
@@ -85,32 +80,26 @@
 							</a></li>
 						{{/foreach}}
 						{{/if}}
-						<li>
-							<hr class="dropdown-divider">
-						</li>
 						{{if $nav.settings}}
 						<li><a class="nav-link" href="{{$nav.settings.0}}" title="{{$nav.settings.3}}" role="menuitem"
-								id="{{$nav.settings.4}}"><i class="nav-icon bi bi-circle"></i><p>{{$nav.settings.1}}</p></a></li>
+								id="{{$nav.settings.4}}"><i class="nav-icon bi bi-gear"></i><p>{{$nav.settings.1}}</p></a></li>
 						{{if $nav.admin}}
 						<li><a class="nav-link" href="{{$nav.admin.0}}" title="{{$nav.admin.3}}" role="menuitem"
-								id="{{$nav.admin.4}}"><i class="nav-icon bi bi-circle"></i><p>{{$nav.admin.1}}</p></a></li>
+								id="{{$nav.admin.4}}"><i class="nav-icon bi bi-shield-lock-fill"></i><p>{{$nav.admin.1}}</p></a></li>
 						{{/if}}
-						<li>
-							<hr class="dropdown-divider">
-						</li>
 						{{/if}}
 
 						{{if $nav.profiles}}
-						<li><a href="{{$nav.profiles.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.profiles.1}}</p></a></li>
+						<li><a href="{{$nav.profiles.0}}" class="nav-link"><i class="nav-icon bi bi-person-gear"></i><p>{{$nav.profiles.1}}</p></a></li>
 						{{/if}}
 						{{if $nav.logout}}
-						<li><a href="{{$nav.logout.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.logout.1}}</p></a></li>
+						<li><a href="{{$nav.logout.0}}" class="nav-link"><i class="nav-icon bi bi-box-arrow-in-left"></i><p>{{$nav.logout.1}}</p></a></li>
 						{{/if}}
 						{{/if}}
 						{{if ! $is_owner}}
 						<!--begin::Menu Footer-->
-						<li><a href="{{$nav.rusermenu.0}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.rusermenu.1}}</p></a></li>
-						<li><a href="{{$nav.rusermenu.2}}" class="nav-link"><i class="nav-icon bi bi-circle"></i><p>{{$nav.rusermenu.3}}</p></a></li>
+						<li><a href="{{$nav.rusermenu.0}}" class="nav-link"><i class="nav-icon bi bi-house-up"></i><p>{{$nav.rusermenu.1}}</p></a></li>
+						<li><a href="{{$nav.rusermenu.2}}" class="nav-link"><i class="nav-icon bi bi-box-arrow-in-left"></i><p>{{$nav.rusermenu.3}}</p></a></li>
 						{{/if}}
 					</ul>
 				</li>
