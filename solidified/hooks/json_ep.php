@@ -94,42 +94,39 @@ function json_settings_get(&$arr) {
     json_return_and_die($settings);
 }
 
-function json_settings_post(&$arr) {
-    if (($_SERVER['HTTP_ACCEPT'] ?? '') !== 'application/json' &&
-        ($_GET['format'] ?? '') !== 'json') return;
 
-    $uid = local_channel();
+function json_settings_post(&$arr) {
+    if (($_GET['format'] ?? '') !== 'json') return;
+    if ((\App::$argv[1] ?? '') !== 'display') return;
+
+    $uid  = local_channel();
     $data = json_decode(file_get_contents('php://input'), true);
 
     if (!$data) {
-        http_status(400);
-        json_return_and_die(['error' => 'invalid json body']);
+        http_response_code(400);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'invalid json body']);
+        exit;
     }
 
     if (isset($data['thread_allow']))
         set_pconfig($uid, 'system', 'thread_allow', intval($data['thread_allow']));
-
     if (isset($data['update_interval']))
         set_pconfig($uid, 'system', 'update_interval', intval($data['update_interval']) * 1000);
-
     if (isset($data['itemspage'])) {
-        $itemspage = intval($data['itemspage']);
-        if ($itemspage > 30) $itemspage = 30;
-        if ($itemspage < 1) $itemspage = 1;
+        $itemspage = max(1, min(30, intval($data['itemspage'])));
         set_pconfig($uid, 'system', 'itemspage', $itemspage);
     }
-
     if (isset($data['no_smilies']))
         set_pconfig($uid, 'system', 'no_smilies', intval($data['no_smilies']));
-
     if (isset($data['title_tosource']))
         set_pconfig($uid, 'system', 'title_tosource', intval($data['title_tosource']));
-
     if (isset($data['start_menu']))
         set_pconfig($uid, 'system', 'start_menu', intval($data['start_menu']));
-
     if (isset($data['user_scalable']))
         set_pconfig($uid, 'system', 'user_scalable', intval($data['user_scalable']));
 
-    json_return_and_die(['status' => 'ok']);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'ok']);
+    exit;
 }
