@@ -41,7 +41,7 @@
       {{if $nav.loginmenu.1.4}}
       <li class="nav-item">
         <a class="nav-link" href="#" title="{{$nav.loginmenu.1.3}}" data-bs-toggle="modal"
-						data-bs-target="#nav-login"><i class="bi bi-box-arrow-in-right"></i><p>{{$nav.loginmenu.1.1}}</a>
+						data-bs-target="#nav-login"><i class="nav-icon bi bi-box-arrow-in-right"></i><p>{{$nav.loginmenu.1.1}}</p></a>
       </li>
       {{else}}
       <li class="nav-item">
