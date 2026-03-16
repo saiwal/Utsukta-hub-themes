@@ -79,6 +79,24 @@ function json_settings_get(&$arr) {
 		if (($_GET['format'] ?? '') !== 'json') return;
 		if ((\App::$argv[1] ?? '') !== 'display') return;
 
+
+		$default_theme = \Zotlabs\Lib\Config::Get('system','theme');
+		if(! $default_theme)
+			$default_theme = 'redbasic';
+
+		$themespec = explode(':', \App::$channel['channel_theme']);
+		$existing_theme  = $themespec[0] ?? '';
+		$existing_schema = $themespec[1] ?? '';
+
+		$theme = (($existing_theme) ? $existing_theme : $default_theme);
+		$allowed_themes_str = \Zotlabs\Lib\Config::Get('system','allowed_themes');
+			$allowed_themes_raw = explode(',',$allowed_themes_str);
+			$allowed_themes = array();
+			if(count($allowed_themes_raw))
+				foreach($allowed_themes_raw as $x)
+					if(strlen(trim($x)) && is_dir("view/theme/$x"))
+						$allowed_themes[] = trim($x);
+    $uid  = local_channel();
     $settings = [
         'theme'          => \App::$channel['channel_theme'] ?? '',
         'thread_allow'   => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
@@ -87,7 +105,9 @@ function json_settings_get(&$arr) {
         'no_smilies'     => intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
         'title_tosource' => intval(get_pconfig($uid, 'system', 'title_tosource', 0)),
         'start_menu'     => intval(get_pconfig($uid, 'system', 'start_menu', 0)),
-        'user_scalable'  => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
+				'user_scalable'  => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
+				'theme'  => $themespec[0] ?? '',
+				'themes' => array_values($allowed_themes), // build $allowed_themes the same way Display::get() does
     ];
 
     $arr['content'] = '';
