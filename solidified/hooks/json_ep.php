@@ -296,7 +296,9 @@ function json_settings_get(&$arr)
         return;
     if ((\App::$argv[1] ?? '') !== 'display')
         return;
-
+if (!local_channel()) {
+        json_return_and_die(['error' => 'Permission denied']);
+    }
     $default_theme = \Zotlabs\Lib\Config::Get('system', 'theme');
     if (!$default_theme)
         $default_theme = 'redbasic';
