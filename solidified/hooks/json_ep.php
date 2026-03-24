@@ -425,16 +425,318 @@ function json_cloud_get()
     json_return_and_die($data);
 }
 
-function json_photos_get()
+function json_photos_get(&$arr)
 {
     if (($_GET['format'] ?? '') !== 'json')
         return;
 
-    $data = [
-        'status' => 'ok'
-    ];
+    require_once('include/bbcode.php');
+    require_once('include/security.php');
+    require_once('include/items.php');
+    require_once('include/conversation.php');
 
-    json_return_and_die($data);
+    // /photos with no nick → fall back to the logged-in user's channel,
+    // mirroring what Photos::init() does when argc() < 2.
+    if (!array_key_exists('channel', \App::$data)) {
+        if (!local_channel()) {
+            json_return_and_die(['error' => 'Not logged in']);
+        }
+        \App::$data['channel'] = \App::get_channel();
+        if (!\App::$data['channel']) {
+            json_return_and_die(['error' => 'Channel not found']);
+        }
+    }
+
+    $channel    = \App::$data['channel'];
+    $owner_uid  = intval($channel['channel_id']);
+    $observer   = \App::get_observer();
+    $ob_hash    = $observer ? $observer['xchan_hash'] : '';
+
+    // ── Permission check ──────────────────────────────────────────────────────
+    if (!perm_is_allowed($owner_uid, $ob_hash, 'view_storage')) {
+        json_return_and_die(['error' => 'Permission denied']);
+    }
+
+    $sql_extra  = permissions_sql($owner_uid, $ob_hash, 'photo');
+    $sql_attach = permissions_sql($owner_uid, $ob_hash, 'attach');
+    $sql_item   = item_permissions_sql($owner_uid, $ob_hash);
+    $unsafe     = (array_key_exists('unsafe', $_REQUEST) && $_REQUEST['unsafe']) ? 1 : 0;
+
+    $ph_drv     = photo_factory('');
+    $phototypes = $ph_drv->supportedTypes();
+
+    // ── Dispatch on URL shape ─────────────────────────────────────────────────
+    // /photos/{nick}                  → argc=2, datatype='summary'
+    // /photos/{nick}/album/{hash}     → argc=4, datatype='album'
+    // /photos/{nick}/image/{hash}     → argc=4, datatype='image'
+
+    $datatype = (argc() > 2) ? argv(2) : 'summary';
+    $datum    = (argc() > 3) ? argv(3) : '';
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    $itemspage = 30;
+    $offset    = intval($_GET['start'] ?? 0);
+
+    // =========================================================================
+    // SUMMARY — recent photos
+    // =========================================================================
+    if ($datatype === 'summary') {
+        $r = dbq("SELECT p.resource_id, p.id, p.filename, p.mimetype, p.album,
+                         p.imgscale, p.created, p.display_path
+                  FROM photo p
+                  INNER JOIN (
+                      SELECT resource_id, max(imgscale) imgscale
+                      FROM photo
+                      WHERE photo.uid = $owner_uid
+                        AND photo_usage IN (" . PHOTO_NORMAL . ", " . PHOTO_PROFILE . ")
+                        AND is_nsfw = $unsafe
+                        $sql_extra
+                      GROUP BY resource_id
+                  ) ph ON (p.resource_id = ph.resource_id AND p.imgscale = ph.imgscale)
+                  ORDER BY p.created DESC
+                  LIMIT $itemspage OFFSET $offset");
+
+        $photos = [];
+        foreach (($r ?: []) as $row) {
+            if (!attach_can_view_folder($owner_uid, $ob_hash, $row['resource_id']))
+                continue;
+            $ext      = $phototypes[$row['mimetype']] ?? 'jpg';
+            $photos[] = photos_json_format_photo($row, $ext, $channel['channel_address']);
+        }
+
+        $arr['replace'] = true;
+        json_return_and_die([
+            'type'   => 'summary',
+            'photos' => $photos,
+        ]);
+    }
+
+    // =========================================================================
+    // ALBUM — photos in a single album
+    // =========================================================================
+    if ($datatype === 'album') {
+        if (!$datum) {
+            json_return_and_die(['error' => 'Album not specified']);
+        }
+
+        $album_row = photos_album_exists($owner_uid, $ob_hash, $datum);
+        if (!$album_row) {
+            json_return_and_die(['error' => 'Album not found']);
+        }
+
+        $folder_hash  = $album_row['hash'];
+        $display_path = $album_row['display_path'];
+
+        $order = (isset($_GET['order']) && $_GET['order'] === 'posted') ? 'ASC' : 'DESC';
+
+        $r = dbq("SELECT p.resource_id, p.id, p.filename, p.mimetype,
+                         p.imgscale, p.description, p.created
+                  FROM photo p
+                  INNER JOIN (
+                      SELECT resource_id, max(imgscale) imgscale
+                      FROM photo
+                      LEFT JOIN attach
+                          ON folder = '" . dbesc($folder_hash) . "'
+                         AND photo.resource_id = attach.hash
+                      WHERE attach.uid = $owner_uid
+                        AND imgscale <= 4
+                        AND photo_usage IN (" . PHOTO_NORMAL . ", " . PHOTO_PROFILE . ")
+                        AND is_nsfw = $unsafe
+                        $sql_extra
+                      GROUP BY resource_id
+                  ) ph ON (p.resource_id = ph.resource_id AND p.imgscale = ph.imgscale)
+                  ORDER BY created $order
+                  LIMIT $itemspage OFFSET $offset");
+
+        $photos = [];
+        foreach (($r ?: []) as $row) {
+            $ext      = $phototypes[$row['mimetype']] ?? 'jpg';
+            $photos[] = photos_json_format_photo($row, $ext, $channel['channel_address']);
+        }
+
+        $arr['replace'] = true;
+        json_return_and_die([
+            'type'         => 'album',
+            'album_hash'   => $datum,
+            'album_name'   => $display_path,
+            'photos'       => $photos,
+        ]);
+    }
+
+    // =========================================================================
+    // IMAGE — single photo with comments
+    // =========================================================================
+    if ($datatype === 'image') {
+        if (!$datum) {
+            json_return_and_die(['error' => 'Photo not specified']);
+        }
+
+        // Verify attach visibility
+        $x = dbq("SELECT folder FROM attach
+                  WHERE hash = '" . dbesc($datum) . "'
+                    AND uid = $owner_uid
+                    $sql_attach
+                  LIMIT 1");
+
+        $ph = dbq("SELECT id, aid, uid, xchan, resource_id, created, edited,
+                          title, description, album, filename, mimetype,
+                          height, width, filesize, imgscale, photo_usage,
+                          is_nsfw, allow_cid, allow_gid, deny_cid, deny_gid
+                   FROM photo
+                   WHERE uid = $owner_uid
+                     AND resource_id = '" . dbesc($datum) . "'
+                     $sql_extra
+                   ORDER BY imgscale ASC");
+
+        if (!$ph || !$x) {
+            json_return_and_die(['error' => 'Photo not found or permission denied']);
+        }
+
+        $ext   = $phototypes[$ph[0]['mimetype']] ?? 'jpg';
+        $hires = $ph[0];
+        $lores = isset($ph[1]) ? $ph[1] : $ph[0];
+
+        $is_private = (strlen($ph[0]['allow_cid']) || strlen($ph[0]['allow_gid'])
+                    || strlen($ph[0]['deny_cid'])  || strlen($ph[0]['deny_gid']));
+
+        // ── Linked item (for reactions + comments) ────────────────────────────
+        $linked_items = dbq("SELECT * FROM item
+                             WHERE resource_id = '" . dbesc($datum) . "'
+                               AND resource_type = 'photo'
+                               $sql_item
+                             LIMIT 1");
+
+        $link_item  = null;
+        $comments   = [];
+        $like_count = 0;
+        $dislike_count = 0;
+        $viewer_liked    = false;
+        $viewer_disliked = false;
+
+        if ($linked_items) {
+            xchan_query($linked_items);
+            $linked_items = fetch_post_tags($linked_items, true);
+            $link_item    = $linked_items[0];
+            $item_normal  = item_normal();
+
+            // Reaction counts + viewer state
+            $reactions = dbq("SELECT verb, author_xchan FROM item
+                              WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
+                                AND verb IN ('Like','Dislike')
+                                AND item_deleted = 0
+                                $item_normal
+                                AND uid = $owner_uid");
+
+            foreach (($reactions ?: []) as $react) {
+                if ($react['verb'] === 'Like')    $like_count++;
+                if ($react['verb'] === 'Dislike') $dislike_count++;
+                if ($ob_hash && $react['author_xchan'] === $ob_hash) {
+                    if ($react['verb'] === 'Like')    $viewer_liked    = true;
+                    if ($react['verb'] === 'Dislike') $viewer_disliked = true;
+                }
+            }
+
+            // Comments
+            $comment_rows = dbq("SELECT * FROM item
+                                 WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
+                                   AND verb NOT IN ('Like','Dislike')
+                                   $item_normal
+                                   AND uid = $owner_uid
+                                   $sql_item
+                                 ORDER BY created ASC");
+
+            if ($comment_rows) {
+                xchan_query($comment_rows);
+                $comment_rows = fetch_post_tags($comment_rows, true);
+                foreach ($comment_rows as $c) {
+                    $comments[] = [
+                        'id'          => intval($c['id']),
+                        'mid'         => $c['mid'],
+                        'iid'         => intval($c['id']),
+                        'body'        => $c['body'],
+                        'created'     => $c['created'],
+                        'author'      => [
+                            'name'   => $c['author']['xchan_name']    ?? '',
+                            'url'    => $c['author']['xchan_url']     ?? '',
+                            'photo'  => $c['author']['xchan_photo_m'] ?? '',
+                        ],
+                    ];
+                }
+            }
+        }
+
+        // ── Prev / next within same album ─────────────────────────────────────
+        $prevlink = null;
+        $nextlink = null;
+
+        $order_dir = (isset($_GET['order']) && $_GET['order'] === 'posted') ? 'ASC' : 'DESC';
+        $siblings  = dbq("SELECT hash FROM attach
+                          WHERE folder = '" . dbesc($x[0]['folder']) . "'
+                            AND uid = $owner_uid
+                            AND is_photo = 1
+                            $sql_attach
+                          ORDER BY created $order_dir");
+
+        if ($siblings) {
+            $hashes = array_column($siblings, 'hash');
+            $pos    = array_search($datum, $hashes);
+            if ($pos !== false) {
+                $prv = ($pos - 1 + count($hashes)) % count($hashes);
+                $nxt = ($pos + 1) % count($hashes);
+                $base = z_root() . '/photos/' . $channel['channel_address'] . '/image/';
+                $prevlink = $base . $hashes[$prv];
+                $nextlink = $base . $hashes[$nxt];
+            }
+        }
+
+        $arr['replace'] = true;
+        json_return_and_die([
+            'type'            => 'image',
+            'resource_id'     => $ph[0]['resource_id'],
+            'filename'        => $ph[0]['filename'],
+            'description'     => $ph[0]['description'],
+            'album'           => $ph[0]['album'],
+            'album_link'      => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $x[0]['folder'],
+            'created'         => $ph[0]['created'],
+            'width'           => intval($ph[0]['width']),
+            'height'          => intval($ph[0]['height']),
+            'is_nsfw'         => intval($ph[0]['is_nsfw']),
+            'is_private'      => intval($is_private),
+            'src'             => z_root() . '/photo/' . $lores['resource_id'] . '-' . $lores['imgscale'] . '.' . $ext,
+            'src_full'        => z_root() . '/photo/' . $hires['resource_id'] . '-' . $hires['imgscale'] . '.' . $ext,
+            'prevlink'        => $prevlink,
+            'nextlink'        => $nextlink,
+            'like_count'      => $like_count,
+            'dislike_count'   => $dislike_count,
+            'viewer_liked'    => $viewer_liked,
+            'viewer_disliked' => $viewer_disliked,
+            'item_id'         => $link_item ? intval($link_item['id']) : null,
+            'item_mid'        => $link_item ? $link_item['mid'] : null,
+            'comments'        => $comments,
+        ]);
+    }
+
+    // Unknown datatype
+    json_return_and_die(['error' => 'Unknown datatype: ' . $datatype]);
+}
+
+
+// ─── Shared photo row formatter ───────────────────────────────────────────────
+
+function photos_json_format_photo($row, $ext, $channel_address)
+{
+    return [
+        'id'           => intval($row['id']),
+        'resource_id'  => $row['resource_id'],
+        'filename'     => $row['filename'],
+        'description'  => $row['description'] ?? '',
+        'album'        => $row['album'] ?? '',
+        'mimetype'     => $row['mimetype'],
+        'imgscale'     => intval($row['imgscale']),
+        'created'      => $row['created'],
+        'src'          => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
+        'link'         => z_root() . '/photos/' . $channel_address . '/image/' . $row['resource_id'],
+    ];
 }
 
 function json_channel_get()
