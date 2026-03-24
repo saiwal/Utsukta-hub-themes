@@ -441,12 +441,218 @@ function json_channel_get()
 {
     if (($_GET['format'] ?? '') !== 'json')
         return;
-
-    $data = [
-        'status' => 'ok'
+ 
+    require_once('include/items.php');
+    require_once('include/conversation.php');
+    require_once('include/acl_selectors.php');
+ 
+    // ── Resolve channel from URL (mirrors Channel::init() fallback) ──────────
+    $nick = argv(1);
+    if (!$nick) {
+        if (!local_channel()) {
+            json_return_and_die(['error' => 'Not logged in']);
+        }
+        $c = App::get_channel();
+        $nick = $c['channel_address'] ?? '';
+        if (!$nick) {
+            json_return_and_die(['error' => 'Channel not specified']);
+        }
+    }
+ 
+    $channel = channelx_by_nick($nick, true);
+    if (!$channel || $channel['channel_removed']) {
+        json_return_and_die(['error' => 'Channel not found']);
+    }
+ 
+    $profile_uid    = intval($channel['channel_id']);
+    $observer       = App::get_observer();
+    $observer_xchan = $observer ? $observer['xchan_hash'] : '';
+ 
+    // ── Permission check ──────────────────────────────────────────────────────
+    $perms = get_all_perms($profile_uid, $observer_xchan);
+    if (!$perms['view_stream']) {
+        json_return_and_die(['error' => 'Permission denied']);
+    }
+ 
+    $permission_sql = item_permissions_sql($profile_uid);
+    $item_normal    = item_normal();
+ 
+    // ── Pagination ────────────────────────────────────────────────────────────
+    $itemspage = get_pconfig(local_channel(), 'system', 'itemspage') ?: 10;
+    $offset    = intval($_GET['start'] ?? 0);
+    $pager_sql = " LIMIT $itemspage OFFSET $offset ";
+ 
+    // ── Ordering ──────────────────────────────────────────────────────────────
+    $order = $_GET['order'] ?? 'post';
+    $ordering = ($order === 'commented') ? 'commented' : 'created';
+ 
+    // ── Optional filters (subset of network — wall posts only) ────────────────
+    $search     = $_GET['search'] ?? '';
+    $hashtags   = $_GET['tag']    ?? '';
+    $category   = $_GET['cat']    ?? '';
+    $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))   ? notags($_GET['dend'])   : '';
+    $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : '';
+ 
+    if ($search && str_starts_with($search, '#')) {
+        $hashtags = substr($search, 1);
+        $search   = '';
+    }
+ 
+    $sql_extra = '';
+ 
+    // ── Single item / thread ──────────────────────────────────────────────────
+    $mid        = $_GET['mid'] ?? '';
+    $identifier = 'uuid';
+    if (str_starts_with($mid, 'b64.')) {
+        $mid        = unpack_link_id($mid);
+        $identifier = 'mid';
+    }
+ 
+    // ── Category / hashtag ────────────────────────────────────────────────────
+    if ($category) $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
+    if ($hashtags) $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
+ 
+    // ── Full-text search ──────────────────────────────────────────────────────
+    if ($search) {
+        $sql_extra .= sprintf(
+            " AND (item.body LIKE '%s' OR item.title LIKE '%s') ",
+            dbesc(protect_sprintf('%' . $search . '%')),
+            dbesc(protect_sprintf('%' . $search . '%'))
+        );
+    }
+ 
+    // ── Date range ────────────────────────────────────────────────────────────
+    if ($datequery)  $sql_extra .= " AND item.created <= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
+    if ($datequery2) $sql_extra .= " AND item.created >= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
+ 
+    // ── Fetch parent ids ──────────────────────────────────────────────────────
+    if ($mid) {
+        // Single thread: find the thread root for this mid
+        $r = dbq("SELECT item.parent AS item_id FROM item
+            WHERE item.$identifier = '" . dbesc($mid) . "'
+            AND item.uid = $profile_uid
+            AND item.item_wall = 1
+            $item_normal
+            $permission_sql
+            LIMIT 1");
+    } else {
+        $r = dbq("SELECT item.parent AS item_id FROM item
+            WHERE item.uid = $profile_uid
+            AND item.id = item.parent
+            AND item.item_wall = 1
+            AND item.item_thread_top = 1
+            $item_normal
+            $permission_sql
+            $sql_extra
+            ORDER BY $ordering DESC
+            $pager_sql");
+    }
+ 
+    $items = [];
+    if ($r) {
+        $ids = ids_to_querystr($r, 'item_id');
+ 
+        $items = dbq("SELECT item.*,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0) AS comment_count,
+            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
+             FROM item r
+             WHERE r.parent = item.parent
+             AND r.thr_parent = item.mid
+             AND r.verb IN ('Like','Dislike','Announce')
+             AND r.item_deleted = 0) AS reaction_verbs
+            FROM item
+            WHERE item.id IN ($ids)
+            OR (item.parent IN ($ids)
+                AND item.verb IN ('Create', 'Update', 'EmojiReact')
+                AND item.obj_type NOT IN ('Answer')
+                AND item.item_thread_top = 0
+                $item_normal)
+            ORDER BY item.created ASC");
+ 
+        xchan_query($items, true);
+        $items = fetch_post_tags($items, true);
+ 
+        usort($items, function ($a, $b) use ($ordering) {
+            if ($a['item_thread_top'] && $b['item_thread_top']) {
+                $key = $ordering === 'commented' ? 'commented' : 'created';
+                return strtotime($b[$key]) - strtotime($a[$key]);
+            }
+            return strtotime($a['created']) - strtotime($b['created']);
+        });
+    }
+ 
+    $out = [];
+    foreach ($items as $item) {
+        $out[] = channel_json_format_item($item, $observer_xchan);
+    }
+ 
+    $arr['replace'] = true;
+    json_return_and_die($out);
+}
+ 
+ 
+/**
+ * Serialise one item row to the same shape as format_item() in network_json.
+ * If you later extract format_item() to a shared include, replace this with
+ * a require + direct call.
+ */
+function channel_json_format_item($item, $observer_xchan = '')
+{
+    $liked = $disliked = $repeated = false;
+    if ($observer_xchan && !empty($item['reaction_verbs'])) {
+        foreach (explode('|', $item['reaction_verbs']) as $rv) {
+            [$verb, $xchan] = explode(':', $rv, 2);
+            if ($xchan !== $observer_xchan) continue;
+            if ($verb === 'Like')     $liked    = true;
+            if ($verb === 'Dislike')  $disliked = true;
+            if ($verb === 'Announce') $repeated = true;
+        }
+    }
+ 
+    return [
+        'uuid'            => $item['uuid'],
+        'mid'             => $item['mid'],
+        'parent_mid'      => $item['parent_mid'],
+        'thr_parent'      => $item['thr_parent'],
+        'message_top'     => intval($item['item_thread_top']) ? $item['mid'] : $item['thr_parent'],
+        'created'         => $item['created'],
+        'edited'          => $item['edited'],
+        'commented'       => $item['commented'],
+        'title'           => $item['title'],
+        'body'            => $item['body'],
+        'verb'            => $item['verb'],
+        'obj_type'        => $item['obj_type'],
+        'like_count'      => intval($item['like_count']     ?? 0),
+        'dislike_count'   => intval($item['dislike_count']  ?? 0),
+        'announce_count'  => intval($item['announce_count'] ?? 0),
+        'comment_count'   => intval($item['comment_count']  ?? 0),
+        'item_private'    => intval($item['item_private']),
+        'item_thread_top' => intval($item['item_thread_top']),
+        'iid'             => intval($item['id']),
+        'profile_uid'     => intval($item['uid']),
+        'flags'           => array_values(array_filter([
+            intval($item['item_thread_top']) ? 'thread_parent' : null,
+            intval($item['item_private'])    ? 'private'       : null,
+            intval($item['item_starred'])    ? 'starred'       : null,
+            intval($item['item_notshown'])   ? 'notshown'      : null,
+        ])),
+        'author'          => [
+            'name'    => $item['author']['xchan_name']           ?? '',
+            'address' => $item['author']['xchan_addr']           ?? '',
+            'url'     => $item['author']['xchan_url']            ?? '',
+            'photo'   => [
+                'src'      => $item['author']['xchan_photo_m']        ?? '',
+                'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
+            ],
+        ],
+        'permalink'       => $item['plink'] ?? '',
+        'viewer_liked'    => $liked,
+        'viewer_disliked' => $disliked,
+        'viewer_repeated' => $repeated,
     ];
-
-    json_return_and_die($data);
 }
 
 function json_help_get()
