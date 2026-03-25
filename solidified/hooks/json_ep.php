@@ -5,78 +5,89 @@ function json_network_content(&$arr)
     if (($_GET['format'] ?? '') !== 'json')
         return;
 
-    require_once('include/items.php');
-    require_once('include/conversation.php');
-    require_once('include/acl_selectors.php');
+    require_once ('include/items.php');
+    require_once ('include/conversation.php');
+    require_once ('include/acl_selectors.php');
 
     if (!local_channel()) {
         json_return_and_die(['error' => 'Permission denied']);
     }
 
-    $item_normal        = item_normal();
-    $abook_uids         = ' and abook.abook_channel = ' . local_channel() . ' ';
-    $uids               = ' and item.uid = ' . local_channel() . ' ';
-    $observer_xchan     = get_observer_hash();
+    $item_normal = item_normal();
+    $abook_uids = ' and abook.abook_channel = ' . local_channel() . ' ';
+    $uids = ' and item.uid = ' . local_channel() . ' ';
+    $observer_xchan = get_observer_hash();
 
     // ── Pagination ──────────────────────────────────────────────────────────
-    $itemspage  = get_pconfig(local_channel(), 'system', 'itemspage') ?: 10;
-    $offset     = intval($_GET['start'] ?? 0);
-    $pager_sql  = " LIMIT $itemspage OFFSET $offset ";
+    $itemspage = get_pconfig(local_channel(), 'system', 'itemspage') ?: 10;
+    $offset = intval($_GET['start'] ?? 0);
+    $pager_sql = " LIMIT $itemspage OFFSET $offset ";
 
     // ── Ordering ─────────────────────────────────────────────────────────────
     $order = get_pconfig(local_channel(), 'mod_network', 'order', 'created');
     $nouveau = false;
     switch ($order) {
-        case 'commented': $ordering = 'commented'; break;
-        case 'unthreaded': $nouveau = true; $ordering = 'created'; break;
-        default: $ordering = 'created';
+        case 'commented':
+            $ordering = 'commented';
+            break;
+        case 'unthreaded':
+            $nouveau = true;
+            $ordering = 'created';
+            break;
+        default:
+            $ordering = 'created';
     }
     // allow override via GET
     if (isset($_GET['order'])) {
-        if ($_GET['order'] === 'commented')   $ordering = 'commented';
-        if ($_GET['order'] === 'created')     $ordering = 'created';
-        if ($_GET['order'] === 'unthreaded')  { $nouveau = true; $ordering = 'created'; }
+        if ($_GET['order'] === 'commented')
+            $ordering = 'commented';
+        if ($_GET['order'] === 'created')
+            $ordering = 'created';
+        if ($_GET['order'] === 'unthreaded') {
+            $nouveau = true;
+            $ordering = 'created';
+        }
     }
 
     // ── Filters ──────────────────────────────────────────────────────────────
-    $star       = intval($_GET['star']   ?? 0);
-    $conv       = intval($_GET['conv']   ?? 0);
-    $dm         = intval($_GET['dm']     ?? 0);
-    $gid        = intval($_GET['gid']    ?? 0);
-    $cid        = intval($_GET['cid']    ?? 0);
-    $xchan      = $_GET['xchan']  ?? '';
-    $net        = $_GET['net']    ?? '';
-    $search     = $_GET['search'] ?? '';
-    $hashtags   = $_GET['tag']    ?? '';
-    $category   = $_GET['cat']    ?? '';
-    $verb       = $_GET['verb']   ?? '';
-    $file       = $_GET['file']   ?? '';
-    $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))   ? notags($_GET['dend'])   : '';
+    $star = intval($_GET['star'] ?? 0);
+    $conv = intval($_GET['conv'] ?? 0);
+    $dm = intval($_GET['dm'] ?? 0);
+    $gid = intval($_GET['gid'] ?? 0);
+    $cid = intval($_GET['cid'] ?? 0);
+    $xchan = $_GET['xchan'] ?? '';
+    $net = $_GET['net'] ?? '';
+    $search = $_GET['search'] ?? '';
+    $hashtags = $_GET['tag'] ?? '';
+    $category = $_GET['cat'] ?? '';
+    $verb = $_GET['verb'] ?? '';
+    $file = $_GET['file'] ?? '';
+    $datequery = (isset($_GET['dend']) && is_a_date_arg($_GET['dend'])) ? notags($_GET['dend']) : '';
     $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : '';
-    $cmin       = array_key_exists('cmin', $_GET) ? intval($_GET['cmin']) : -1;
-    $cmax       = array_key_exists('cmax', $_GET) ? intval($_GET['cmax']) : -1;
+    $cmin = array_key_exists('cmin', $_GET) ? intval($_GET['cmin']) : -1;
+    $cmax = array_key_exists('cmax', $_GET) ? intval($_GET['cmax']) : -1;
 
     // search with # prefix becomes hashtag
     if ($search && str_starts_with($search, '#')) {
         $hashtags = substr($search, 1);
-        $search   = '';
+        $search = '';
     }
 
     if ($search || $file || $cid || $hashtags || $verb || $category || $conv) {
         $nouveau = true;
     }
 
-    $sql_options    = $star  ? ' and item_starred = 1 ' : '';
-    $sql_extra      = '';
+    $sql_options = $star ? ' and item_starred = 1 ' : '';
+    $sql_extra = '';
     $item_thread_top = ' AND item_thread_top = 1 ';
 
     // ── Privacy group ─────────────────────────────────────────────────────────
     if ($gid) {
-        $r = q("SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1",
+        $r = q('SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1',
             intval($gid), intval(local_channel()));
         if ($r) {
             $group_hash = $r[0]['hash'];
-            $contacts   = \Zotlabs\Lib\AccessList::members(local_channel(), $gid);
+            $contacts = \Zotlabs\Lib\AccessList::members(local_channel(), $gid);
             $contact_str = $contacts ? ids_to_querystr($contacts, 'xchan', true) : " '0' ";
             $item_thread_top = '';
             $sql_extra .= " AND item.parent IN (
@@ -91,13 +102,13 @@ function json_network_content(&$arr)
 
     // ── Specific channel ──────────────────────────────────────────────────────
     if ($cid) {
-        $cid_r = q("SELECT abook_xchan FROM abook WHERE abook_id = %d AND abook_channel = %d AND abook_blocked = 0 LIMIT 1",
+        $cid_r = q('SELECT abook_xchan FROM abook WHERE abook_id = %d AND abook_channel = %d AND abook_blocked = 0 LIMIT 1',
             intval($cid), intval(local_channel()));
         if ($cid_r) {
             $item_thread_top = '';
-            $sql_extra .= " AND item.parent IN (
+            $sql_extra .= ' AND item.parent IN (
                 SELECT DISTINCT parent FROM item
-                WHERE uid = " . intval(local_channel()) . "
+                WHERE uid = ' . intval(local_channel()) . "
                 AND (author_xchan = '" . dbesc($cid_r[0]['abook_xchan']) . "'
                      OR owner_xchan = '" . dbesc($cid_r[0]['abook_xchan']) . "')
                 $item_normal
@@ -117,8 +128,10 @@ function json_network_content(&$arr)
     }
 
     // ── Category / hashtag ────────────────────────────────────────────────────
-    if ($category) $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
-    if ($hashtags) $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
+    if ($category)
+        $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
+    if ($hashtags)
+        $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
 
     // ── Full-text search ──────────────────────────────────────────────────────
     if ($search) {
@@ -142,7 +155,8 @@ function json_network_content(&$arr)
     }
 
     // ── File filter ───────────────────────────────────────────────────────────
-    if ($file) $sql_extra .= term_query('item', $file, TERM_FILE);
+    if ($file)
+        $sql_extra .= term_query('item', $file, TERM_FILE);
 
     // ── Direct messages / privacy ─────────────────────────────────────────────
     if ($dm) {
@@ -160,20 +174,24 @@ function json_network_content(&$arr)
 
     // ── Date range ────────────────────────────────────────────────────────────
     $sql_date = '';
-    if ($datequery)  $sql_date .= " AND item.created <= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
-    if ($datequery2) $sql_date .= " AND item.created >= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
+    if ($datequery)
+        $sql_date .= " AND item.created <= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
+    if ($datequery2)
+        $sql_date .= " AND item.created >= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
 
     // ── Affinity ──────────────────────────────────────────────────────────────
     $sql_nets = '';
     if ($cmin !== -1 || $cmax !== -1) {
         $sql_nets .= ' AND ';
-        if ($cmax === 99) $sql_nets .= ' ( ';
+        if ($cmax === 99)
+            $sql_nets .= ' ( ';
         $sql_nets .= "( abook.abook_closeness >= $cmin AND abook.abook_closeness <= $cmax ) ";
-        if ($cmax === 99) $sql_nets .= ' OR abook.abook_closeness IS NULL ) ';
+        if ($cmax === 99)
+            $sql_nets .= ' OR abook.abook_closeness IS NULL ) ';
     }
 
     // ── Network filter ────────────────────────────────────────────────────────
-    $net_query  = $net ? ' left join xchan on xchan_hash = author_xchan ' : '';
+    $net_query = $net ? ' left join xchan on xchan_hash = author_xchan ' : '';
     $net_query2 = $net ? " and xchan_network = '" . protect_sprintf(dbesc($net)) . "' " : '';
 
     // ── Fetch parent ids ──────────────────────────────────────────────────────
@@ -231,6 +249,7 @@ function json_network_content(&$arr)
     $arr['replace'] = true;
     json_return_and_die($out);
 }
+
 function format_item($item, $observer_xchan = '')
 {
     $liked = $disliked = $repeated = false;
@@ -296,7 +315,7 @@ function json_settings_get(&$arr)
         return;
     if ((\App::$argv[1] ?? '') !== 'display')
         return;
-if (!local_channel()) {
+    if (!local_channel()) {
         json_return_and_die(['error' => 'Permission denied']);
     }
     $default_theme = \Zotlabs\Lib\Config::Get('system', 'theme');
@@ -389,40 +408,224 @@ function json_settings_post(&$arr)
     exit;
 }
 
-function json_directory_get()
+function json_channel_get()
 {
     if (($_GET['format'] ?? '') !== 'json')
         return;
 
-    $data = [
-        'status' => 'ok'
-    ];
+    require_once ('include/items.php');
+    require_once ('include/conversation.php');
+    require_once ('include/acl_selectors.php');
 
-    json_return_and_die($data);
+    // ── Resolve channel from URL (mirrors Channel::init() fallback) ──────────
+    $nick = argv(1);
+    if (!$nick) {
+        if (!local_channel()) {
+            json_return_and_die(['error' => 'Not logged in']);
+        }
+        $c = App::get_channel();
+        $nick = $c['channel_address'] ?? '';
+        if (!$nick) {
+            json_return_and_die(['error' => 'Channel not specified']);
+        }
+    }
+
+    $channel = channelx_by_nick($nick, true);
+    if (!$channel || $channel['channel_removed']) {
+        json_return_and_die(['error' => 'Channel not found']);
+    }
+
+    $profile_uid = intval($channel['channel_id']);
+    $observer = App::get_observer();
+    $observer_xchan = $observer ? $observer['xchan_hash'] : '';
+
+    // ── Permission check ──────────────────────────────────────────────────────
+    $perms = get_all_perms($profile_uid, $observer_xchan);
+    if (!$perms['view_stream']) {
+        json_return_and_die(['error' => 'Permission denied']);
+    }
+
+    $permission_sql = item_permissions_sql($profile_uid);
+    $item_normal = item_normal();
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    $itemspage = get_pconfig(local_channel(), 'system', 'itemspage') ?: 10;
+    $offset = intval($_GET['start'] ?? 0);
+    $pager_sql = " LIMIT $itemspage OFFSET $offset ";
+
+    // ── Ordering ──────────────────────────────────────────────────────────────
+    $order = $_GET['order'] ?? 'post';
+    $ordering = ($order === 'commented') ? 'commented' : 'created';
+
+    // ── Optional filters (subset of network — wall posts only) ────────────────
+    $search = $_GET['search'] ?? '';
+    $hashtags = $_GET['tag'] ?? '';
+    $category = $_GET['cat'] ?? '';
+    $datequery = (isset($_GET['dend']) && is_a_date_arg($_GET['dend'])) ? notags($_GET['dend']) : '';
+    $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : '';
+
+    if ($search && str_starts_with($search, '#')) {
+        $hashtags = substr($search, 1);
+        $search = '';
+    }
+
+    $sql_extra = '';
+
+    // ── Single item / thread ──────────────────────────────────────────────────
+    $mid = $_GET['mid'] ?? '';
+    $identifier = 'uuid';
+    if (str_starts_with($mid, 'b64.')) {
+        $mid = unpack_link_id($mid);
+        $identifier = 'mid';
+    }
+
+    // ── Category / hashtag ────────────────────────────────────────────────────
+    if ($category)
+        $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
+    if ($hashtags)
+        $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
+
+    // ── Full-text search ──────────────────────────────────────────────────────
+    if ($search) {
+        $sql_extra .= sprintf(
+            " AND (item.body LIKE '%s' OR item.title LIKE '%s') ",
+            dbesc(protect_sprintf('%' . $search . '%')),
+            dbesc(protect_sprintf('%' . $search . '%'))
+        );
+    }
+
+    // ── Date range ────────────────────────────────────────────────────────────
+    if ($datequery)
+        $sql_extra .= " AND item.created <= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
+    if ($datequery2)
+        $sql_extra .= " AND item.created >= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
+
+    // ── Fetch parent ids ──────────────────────────────────────────────────────
+    if ($mid) {
+        // Single thread: find the thread root for this mid
+        $r = dbq("SELECT item.parent AS item_id FROM item
+            WHERE item.$identifier = '" . dbesc($mid) . "'
+            AND item.uid = $profile_uid
+            AND item.item_wall = 1
+            $item_normal
+            $permission_sql
+            LIMIT 1");
+    } else {
+        $r = dbq("SELECT item.parent AS item_id FROM item
+            WHERE item.uid = $profile_uid
+            AND item.id = item.parent
+            AND item.item_wall = 1
+            AND item.item_thread_top = 1
+            $item_normal
+            $permission_sql
+            $sql_extra
+            ORDER BY $ordering DESC
+            $pager_sql");
+    }
+
+    $items = [];
+    if ($r) {
+        $ids = ids_to_querystr($r, 'item_id');
+
+        $items = dbq("SELECT item.*,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0) AS comment_count,
+            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
+             FROM item r
+             WHERE r.parent = item.parent
+             AND r.thr_parent = item.mid
+             AND r.verb IN ('Like','Dislike','Announce')
+             AND r.item_deleted = 0) AS reaction_verbs
+            FROM item
+            WHERE item.id IN ($ids)
+            OR (item.parent IN ($ids)
+                AND item.verb IN ('Create', 'Update', 'EmojiReact')
+                AND item.obj_type NOT IN ('Answer')
+                AND item.item_thread_top = 0
+                $item_normal)
+            ORDER BY item.created ASC");
+
+        xchan_query($items, true);
+        $items = fetch_post_tags($items, true);
+
+        usort($items, function ($a, $b) use ($ordering) {
+            if ($a['item_thread_top'] && $b['item_thread_top']) {
+                $key = $ordering === 'commented' ? 'commented' : 'created';
+                return strtotime($b[$key]) - strtotime($a[$key]);
+            }
+            return strtotime($a['created']) - strtotime($b['created']);
+        });
+    }
+
+    $out = [];
+    foreach ($items as $item) {
+        $out[] = channel_json_format_item($item, $observer_xchan);
+    }
+
+    $arr['replace'] = true;
+    json_return_and_die($out);
 }
 
-function json_connection_get()
+function channel_json_format_item($item, $observer_xchan = '')
 {
-    if (($_GET['format'] ?? '') !== 'json')
-        return;
+    $liked = $disliked = $repeated = false;
+    if ($observer_xchan && !empty($item['reaction_verbs'])) {
+        foreach (explode('|', $item['reaction_verbs']) as $rv) {
+            [$verb, $xchan] = explode(':', $rv, 2);
+            if ($xchan !== $observer_xchan)
+                continue;
+            if ($verb === 'Like')
+                $liked = true;
+            if ($verb === 'Dislike')
+                $disliked = true;
+            if ($verb === 'Announce')
+                $repeated = true;
+        }
+    }
 
-    $data = [
-        'status' => 'ok'
+    return [
+        'uuid' => $item['uuid'],
+        'mid' => $item['mid'],
+        'parent_mid' => $item['parent_mid'],
+        'thr_parent' => $item['thr_parent'],
+        'message_top' => intval($item['item_thread_top']) ? $item['mid'] : $item['thr_parent'],
+        'created' => $item['created'],
+        'edited' => $item['edited'],
+        'commented' => $item['commented'],
+        'title' => $item['title'],
+        'body' => $item['body'],
+        'verb' => $item['verb'],
+        'obj_type' => $item['obj_type'],
+        'like_count' => intval($item['like_count'] ?? 0),
+        'dislike_count' => intval($item['dislike_count'] ?? 0),
+        'announce_count' => intval($item['announce_count'] ?? 0),
+        'comment_count' => intval($item['comment_count'] ?? 0),
+        'item_private' => intval($item['item_private']),
+        'item_thread_top' => intval($item['item_thread_top']),
+        'iid' => intval($item['id']),
+        'profile_uid' => intval($item['uid']),
+        'flags' => array_values(array_filter([
+            intval($item['item_thread_top']) ? 'thread_parent' : null,
+            intval($item['item_private']) ? 'private' : null,
+            intval($item['item_starred']) ? 'starred' : null,
+            intval($item['item_notshown']) ? 'notshown' : null,
+        ])),
+        'author' => [
+            'name' => $item['author']['xchan_name'] ?? '',
+            'address' => $item['author']['xchan_addr'] ?? '',
+            'url' => $item['author']['xchan_url'] ?? '',
+            'photo' => [
+                'src' => $item['author']['xchan_photo_m'] ?? '',
+                'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
+            ],
+        ],
+        'permalink' => $item['plink'] ?? '',
+        'viewer_liked' => $liked,
+        'viewer_disliked' => $disliked,
+        'viewer_repeated' => $repeated,
     ];
-
-    json_return_and_die($data);
-}
-
-function json_cloud_get()
-{
-    if (($_GET['format'] ?? '') !== 'json')
-        return;
-
-    $data = [
-        'status' => 'ok'
-    ];
-
-    json_return_and_die($data);
 }
 
 function json_photos_get(&$arr)
@@ -430,10 +633,10 @@ function json_photos_get(&$arr)
     if (($_GET['format'] ?? '') !== 'json')
         return;
 
-    require_once('include/bbcode.php');
-    require_once('include/security.php');
-    require_once('include/items.php');
-    require_once('include/conversation.php');
+    require_once ('include/bbcode.php');
+    require_once ('include/security.php');
+    require_once ('include/items.php');
+    require_once ('include/conversation.php');
 
     // /photos with no nick → fall back to the logged-in user's channel,
     // mirroring what Photos::init() does when argc() < 2.
@@ -447,22 +650,22 @@ function json_photos_get(&$arr)
         }
     }
 
-    $channel    = \App::$data['channel'];
-    $owner_uid  = intval($channel['channel_id']);
-    $observer   = \App::get_observer();
-    $ob_hash    = $observer ? $observer['xchan_hash'] : '';
+    $channel = \App::$data['channel'];
+    $owner_uid = intval($channel['channel_id']);
+    $observer = \App::get_observer();
+    $ob_hash = $observer ? $observer['xchan_hash'] : '';
 
     // ── Permission check ──────────────────────────────────────────────────────
     if (!perm_is_allowed($owner_uid, $ob_hash, 'view_storage')) {
         json_return_and_die(['error' => 'Permission denied']);
     }
 
-    $sql_extra  = permissions_sql($owner_uid, $ob_hash, 'photo');
+    $sql_extra = permissions_sql($owner_uid, $ob_hash, 'photo');
     $sql_attach = permissions_sql($owner_uid, $ob_hash, 'attach');
-    $sql_item   = item_permissions_sql($owner_uid, $ob_hash);
-    $unsafe     = (array_key_exists('unsafe', $_REQUEST) && $_REQUEST['unsafe']) ? 1 : 0;
+    $sql_item = item_permissions_sql($owner_uid, $ob_hash);
+    $unsafe = (array_key_exists('unsafe', $_REQUEST) && $_REQUEST['unsafe']) ? 1 : 0;
 
-    $ph_drv     = photo_factory('');
+    $ph_drv = photo_factory('');
     $phototypes = $ph_drv->supportedTypes();
 
     // ── Dispatch on URL shape ─────────────────────────────────────────────────
@@ -471,11 +674,11 @@ function json_photos_get(&$arr)
     // /photos/{nick}/image/{hash}     → argc=4, datatype='image'
 
     $datatype = (argc() > 2) ? argv(2) : 'summary';
-    $datum    = (argc() > 3) ? argv(3) : '';
+    $datum = (argc() > 3) ? argv(3) : '';
 
     // ── Pagination ────────────────────────────────────────────────────────────
     $itemspage = 30;
-    $offset    = intval($_GET['start'] ?? 0);
+    $offset = intval($_GET['start'] ?? 0);
 
     // =========================================================================
     // SUMMARY — recent photos
@@ -488,7 +691,7 @@ function json_photos_get(&$arr)
                       SELECT resource_id, max(imgscale) imgscale
                       FROM photo
                       WHERE photo.uid = $owner_uid
-                        AND photo_usage IN (" . PHOTO_NORMAL . ", " . PHOTO_PROFILE . ")
+                        AND photo_usage IN (" . PHOTO_NORMAL . ', ' . PHOTO_PROFILE . ")
                         AND is_nsfw = $unsafe
                         $sql_extra
                       GROUP BY resource_id
@@ -500,13 +703,13 @@ function json_photos_get(&$arr)
         foreach (($r ?: []) as $row) {
             if (!attach_can_view_folder($owner_uid, $ob_hash, $row['resource_id']))
                 continue;
-            $ext      = $phototypes[$row['mimetype']] ?? 'jpg';
+            $ext = $phototypes[$row['mimetype']] ?? 'jpg';
             $photos[] = photos_json_format_photo($row, $ext, $channel['channel_address']);
         }
 
         $arr['replace'] = true;
         json_return_and_die([
-            'type'   => 'summary',
+            'type' => 'summary',
             'photos' => $photos,
         ]);
     }
@@ -524,7 +727,7 @@ function json_photos_get(&$arr)
             json_return_and_die(['error' => 'Album not found']);
         }
 
-        $folder_hash  = $album_row['hash'];
+        $folder_hash = $album_row['hash'];
         $display_path = $album_row['display_path'];
 
         $order = (isset($_GET['order']) && $_GET['order'] === 'posted') ? 'ASC' : 'DESC';
@@ -540,7 +743,7 @@ function json_photos_get(&$arr)
                          AND photo.resource_id = attach.hash
                       WHERE attach.uid = $owner_uid
                         AND imgscale <= 4
-                        AND photo_usage IN (" . PHOTO_NORMAL . ", " . PHOTO_PROFILE . ")
+                        AND photo_usage IN (" . PHOTO_NORMAL . ', ' . PHOTO_PROFILE . ")
                         AND is_nsfw = $unsafe
                         $sql_extra
                       GROUP BY resource_id
@@ -550,16 +753,16 @@ function json_photos_get(&$arr)
 
         $photos = [];
         foreach (($r ?: []) as $row) {
-            $ext      = $phototypes[$row['mimetype']] ?? 'jpg';
+            $ext = $phototypes[$row['mimetype']] ?? 'jpg';
             $photos[] = photos_json_format_photo($row, $ext, $channel['channel_address']);
         }
 
         $arr['replace'] = true;
         json_return_and_die([
-            'type'         => 'album',
-            'album_hash'   => $datum,
-            'album_name'   => $display_path,
-            'photos'       => $photos,
+            'type' => 'album',
+            'album_hash' => $datum,
+            'album_name' => $display_path,
+            'photos' => $photos,
         ]);
     }
 
@@ -592,12 +795,14 @@ function json_photos_get(&$arr)
             json_return_and_die(['error' => 'Photo not found or permission denied']);
         }
 
-        $ext   = $phototypes[$ph[0]['mimetype']] ?? 'jpg';
+        $ext = $phototypes[$ph[0]['mimetype']] ?? 'jpg';
         $hires = $ph[0];
         $lores = isset($ph[1]) ? $ph[1] : $ph[0];
 
-        $is_private = (strlen($ph[0]['allow_cid']) || strlen($ph[0]['allow_gid'])
-                    || strlen($ph[0]['deny_cid'])  || strlen($ph[0]['deny_gid']));
+        $is_private = (strlen($ph[0]['allow_cid']) ||
+            strlen($ph[0]['allow_gid']) ||
+            strlen($ph[0]['deny_cid']) ||
+            strlen($ph[0]['deny_gid']));
 
         // ── Linked item (for reactions + comments) ────────────────────────────
         $linked_items = dbq("SELECT * FROM item
@@ -606,18 +811,18 @@ function json_photos_get(&$arr)
                                $sql_item
                              LIMIT 1");
 
-        $link_item  = null;
-        $comments   = [];
+        $link_item = null;
+        $comments = [];
         $like_count = 0;
         $dislike_count = 0;
-        $viewer_liked    = false;
+        $viewer_liked = false;
         $viewer_disliked = false;
 
         if ($linked_items) {
             xchan_query($linked_items);
             $linked_items = fetch_post_tags($linked_items, true);
-            $link_item    = $linked_items[0];
-            $item_normal  = item_normal();
+            $link_item = $linked_items[0];
+            $item_normal = item_normal();
 
             // Reaction counts + viewer state
             $reactions = dbq("SELECT verb, author_xchan FROM item
@@ -628,11 +833,15 @@ function json_photos_get(&$arr)
                                 AND uid = $owner_uid");
 
             foreach (($reactions ?: []) as $react) {
-                if ($react['verb'] === 'Like')    $like_count++;
-                if ($react['verb'] === 'Dislike') $dislike_count++;
+                if ($react['verb'] === 'Like')
+                    $like_count++;
+                if ($react['verb'] === 'Dislike')
+                    $dislike_count++;
                 if ($ob_hash && $react['author_xchan'] === $ob_hash) {
-                    if ($react['verb'] === 'Like')    $viewer_liked    = true;
-                    if ($react['verb'] === 'Dislike') $viewer_disliked = true;
+                    if ($react['verb'] === 'Like')
+                        $viewer_liked = true;
+                    if ($react['verb'] === 'Dislike')
+                        $viewer_disliked = true;
                 }
             }
 
@@ -650,15 +859,15 @@ function json_photos_get(&$arr)
                 $comment_rows = fetch_post_tags($comment_rows, true);
                 foreach ($comment_rows as $c) {
                     $comments[] = [
-                        'id'          => intval($c['id']),
-                        'mid'         => $c['mid'],
-                        'iid'         => intval($c['id']),
-                        'body'        => $c['body'],
-                        'created'     => $c['created'],
-                        'author'      => [
-                            'name'   => $c['author']['xchan_name']    ?? '',
-                            'url'    => $c['author']['xchan_url']     ?? '',
-                            'photo'  => $c['author']['xchan_photo_m'] ?? '',
+                        'id' => intval($c['id']),
+                        'mid' => $c['mid'],
+                        'iid' => intval($c['id']),
+                        'body' => $c['body'],
+                        'created' => $c['created'],
+                        'author' => [
+                            'name' => $c['author']['xchan_name'] ?? '',
+                            'url' => $c['author']['xchan_url'] ?? '',
+                            'photo' => $c['author']['xchan_photo_m'] ?? '',
                         ],
                     ];
                 }
@@ -670,7 +879,7 @@ function json_photos_get(&$arr)
         $nextlink = null;
 
         $order_dir = (isset($_GET['order']) && $_GET['order'] === 'posted') ? 'ASC' : 'DESC';
-        $siblings  = dbq("SELECT hash FROM attach
+        $siblings = dbq("SELECT hash FROM attach
                           WHERE folder = '" . dbesc($x[0]['folder']) . "'
                             AND uid = $owner_uid
                             AND is_photo = 1
@@ -679,7 +888,7 @@ function json_photos_get(&$arr)
 
         if ($siblings) {
             $hashes = array_column($siblings, 'hash');
-            $pos    = array_search($datum, $hashes);
+            $pos = array_search($datum, $hashes);
             if ($pos !== false) {
                 $prv = ($pos - 1 + count($hashes)) % count($hashes);
                 $nxt = ($pos + 1) % count($hashes);
@@ -691,28 +900,28 @@ function json_photos_get(&$arr)
 
         $arr['replace'] = true;
         json_return_and_die([
-            'type'            => 'image',
-            'resource_id'     => $ph[0]['resource_id'],
-            'filename'        => $ph[0]['filename'],
-            'description'     => $ph[0]['description'],
-            'album'           => $ph[0]['album'],
-            'album_link'      => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $x[0]['folder'],
-            'created'         => $ph[0]['created'],
-            'width'           => intval($ph[0]['width']),
-            'height'          => intval($ph[0]['height']),
-            'is_nsfw'         => intval($ph[0]['is_nsfw']),
-            'is_private'      => intval($is_private),
-            'src'             => z_root() . '/photo/' . $lores['resource_id'] . '-' . $lores['imgscale'] . '.' . $ext,
-            'src_full'        => z_root() . '/photo/' . $hires['resource_id'] . '-' . $hires['imgscale'] . '.' . $ext,
-            'prevlink'        => $prevlink,
-            'nextlink'        => $nextlink,
-            'like_count'      => $like_count,
-            'dislike_count'   => $dislike_count,
-            'viewer_liked'    => $viewer_liked,
+            'type' => 'image',
+            'resource_id' => $ph[0]['resource_id'],
+            'filename' => $ph[0]['filename'],
+            'description' => $ph[0]['description'],
+            'album' => $ph[0]['album'],
+            'album_link' => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $x[0]['folder'],
+            'created' => $ph[0]['created'],
+            'width' => intval($ph[0]['width']),
+            'height' => intval($ph[0]['height']),
+            'is_nsfw' => intval($ph[0]['is_nsfw']),
+            'is_private' => intval($is_private),
+            'src' => z_root() . '/photo/' . $lores['resource_id'] . '-' . $lores['imgscale'] . '.' . $ext,
+            'src_full' => z_root() . '/photo/' . $hires['resource_id'] . '-' . $hires['imgscale'] . '.' . $ext,
+            'prevlink' => $prevlink,
+            'nextlink' => $nextlink,
+            'like_count' => $like_count,
+            'dislike_count' => $dislike_count,
+            'viewer_liked' => $viewer_liked,
             'viewer_disliked' => $viewer_disliked,
-            'item_id'         => $link_item ? intval($link_item['id']) : null,
-            'item_mid'        => $link_item ? $link_item['mid'] : null,
-            'comments'        => $comments,
+            'item_id' => $link_item ? intval($link_item['id']) : null,
+            'item_mid' => $link_item ? $link_item['mid'] : null,
+            'comments' => $comments,
         ]);
     }
 
@@ -720,251 +929,90 @@ function json_photos_get(&$arr)
     json_return_and_die(['error' => 'Unknown datatype: ' . $datatype]);
 }
 
-
-// ─── Shared photo row formatter ───────────────────────────────────────────────
-
 function photos_json_format_photo($row, $ext, $channel_address)
 {
     return [
-        'id'           => intval($row['id']),
-        'resource_id'  => $row['resource_id'],
-        'filename'     => $row['filename'],
-        'description'  => $row['description'] ?? '',
-        'album'        => $row['album'] ?? '',
-        'mimetype'     => $row['mimetype'],
-        'imgscale'     => intval($row['imgscale']),
-        'created'      => $row['created'],
-        'src'          => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
-        'link'         => z_root() . '/photos/' . $channel_address . '/image/' . $row['resource_id'],
+        'id' => intval($row['id']),
+        'resource_id' => $row['resource_id'],
+        'filename' => $row['filename'],
+        'description' => $row['description'] ?? '',
+        'album' => $row['album'] ?? '',
+        'mimetype' => $row['mimetype'],
+        'imgscale' => intval($row['imgscale']),
+        'created' => $row['created'],
+        'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
+        'link' => z_root() . '/photos/' . $channel_address . '/image/' . $row['resource_id'],
     ];
 }
 
-function json_channel_get()
+function json_pconfig_get(&$data)
 {
-    if (($_GET['format'] ?? '') !== 'json')
+    if (($_GET['format'] ?? '') !== 'json') {
         return;
- 
-    require_once('include/items.php');
-    require_once('include/conversation.php');
-    require_once('include/acl_selectors.php');
- 
-    // ── Resolve channel from URL (mirrors Channel::init() fallback) ──────────
-    $nick = argv(1);
+    }
+
+    $is_local = false;
+    $nick = null;
+    $data = [];
+
+    // Case 1: local logged-in channel
+    if (local_channel()) {
+        $channel = \App::get_channel();
+
+        if ($channel) {
+            $nick = $channel['channel_address'];  // already clean
+            $is_local = true;
+        }
+
+        $r = q('select * from pconfig where uid = ' . local_channel());
+
+        foreach ($r as $rr) {
+            $data[$rr['cat']][$rr['k']] = $rr['v'];
+        }
+    }
+
+    // Case 2: visitor (observer / remote)
     if (!$nick) {
-        if (!local_channel()) {
-            json_return_and_die(['error' => 'Not logged in']);
-        }
-        $c = App::get_channel();
-        $nick = $c['channel_address'] ?? '';
-        if (!$nick) {
-            json_return_and_die(['error' => 'Channel not specified']);
-        }
-    }
- 
-    $channel = channelx_by_nick($nick, true);
-    if (!$channel || $channel['channel_removed']) {
-        json_return_and_die(['error' => 'Channel not found']);
-    }
- 
-    $profile_uid    = intval($channel['channel_id']);
-    $observer       = App::get_observer();
-    $observer_xchan = $observer ? $observer['xchan_hash'] : '';
- 
-    // ── Permission check ──────────────────────────────────────────────────────
-    $perms = get_all_perms($profile_uid, $observer_xchan);
-    if (!$perms['view_stream']) {
-        json_return_and_die(['error' => 'Permission denied']);
-    }
- 
-    $permission_sql = item_permissions_sql($profile_uid);
-    $item_normal    = item_normal();
- 
-    // ── Pagination ────────────────────────────────────────────────────────────
-    $itemspage = get_pconfig(local_channel(), 'system', 'itemspage') ?: 10;
-    $offset    = intval($_GET['start'] ?? 0);
-    $pager_sql = " LIMIT $itemspage OFFSET $offset ";
- 
-    // ── Ordering ──────────────────────────────────────────────────────────────
-    $order = $_GET['order'] ?? 'post';
-    $ordering = ($order === 'commented') ? 'commented' : 'created';
- 
-    // ── Optional filters (subset of network — wall posts only) ────────────────
-    $search     = $_GET['search'] ?? '';
-    $hashtags   = $_GET['tag']    ?? '';
-    $category   = $_GET['cat']    ?? '';
-    $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))   ? notags($_GET['dend'])   : '';
-    $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : '';
- 
-    if ($search && str_starts_with($search, '#')) {
-        $hashtags = substr($search, 1);
-        $search   = '';
-    }
- 
-    $sql_extra = '';
- 
-    // ── Single item / thread ──────────────────────────────────────────────────
-    $mid        = $_GET['mid'] ?? '';
-    $identifier = 'uuid';
-    if (str_starts_with($mid, 'b64.')) {
-        $mid        = unpack_link_id($mid);
-        $identifier = 'mid';
-    }
- 
-    // ── Category / hashtag ────────────────────────────────────────────────────
-    if ($category) $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
-    if ($hashtags) $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
- 
-    // ── Full-text search ──────────────────────────────────────────────────────
-    if ($search) {
-        $sql_extra .= sprintf(
-            " AND (item.body LIKE '%s' OR item.title LIKE '%s') ",
-            dbesc(protect_sprintf('%' . $search . '%')),
-            dbesc(protect_sprintf('%' . $search . '%'))
-        );
-    }
- 
-    // ── Date range ────────────────────────────────────────────────────────────
-    if ($datequery)  $sql_extra .= " AND item.created <= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
-    if ($datequery2) $sql_extra .= " AND item.created >= '" . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
- 
-    // ── Fetch parent ids ──────────────────────────────────────────────────────
-    if ($mid) {
-        // Single thread: find the thread root for this mid
-        $r = dbq("SELECT item.parent AS item_id FROM item
-            WHERE item.$identifier = '" . dbesc($mid) . "'
-            AND item.uid = $profile_uid
-            AND item.item_wall = 1
-            $item_normal
-            $permission_sql
-            LIMIT 1");
-    } else {
-        $r = dbq("SELECT item.parent AS item_id FROM item
-            WHERE item.uid = $profile_uid
-            AND item.id = item.parent
-            AND item.item_wall = 1
-            AND item.item_thread_top = 1
-            $item_normal
-            $permission_sql
-            $sql_extra
-            ORDER BY $ordering DESC
-            $pager_sql");
-    }
- 
-    $items = [];
-    if ($r) {
-        $ids = ids_to_querystr($r, 'item_id');
- 
-        $items = dbq("SELECT item.*,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0) AS comment_count,
-            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-             FROM item r
-             WHERE r.parent = item.parent
-             AND r.thr_parent = item.mid
-             AND r.verb IN ('Like','Dislike','Announce')
-             AND r.item_deleted = 0) AS reaction_verbs
-            FROM item
-            WHERE item.id IN ($ids)
-            OR (item.parent IN ($ids)
-                AND item.verb IN ('Create', 'Update', 'EmojiReact')
-                AND item.obj_type NOT IN ('Answer')
-                AND item.item_thread_top = 0
-                $item_normal)
-            ORDER BY item.created ASC");
- 
-        xchan_query($items, true);
-        $items = fetch_post_tags($items, true);
- 
-        usort($items, function ($a, $b) use ($ordering) {
-            if ($a['item_thread_top'] && $b['item_thread_top']) {
-                $key = $ordering === 'commented' ? 'commented' : 'created';
-                return strtotime($b[$key]) - strtotime($a[$key]);
-            }
-            return strtotime($a['created']) - strtotime($b['created']);
-        });
-    }
- 
-    $out = [];
-    foreach ($items as $item) {
-        $out[] = channel_json_format_item($item, $observer_xchan);
-    }
- 
-    $arr['replace'] = true;
-    json_return_and_die($out);
-}
- 
- 
-/**
- * Serialise one item row to the same shape as format_item() in network_json.
- * If you later extract format_item() to a shared include, replace this with
- * a require + direct call.
- */
-function channel_json_format_item($item, $observer_xchan = '')
-{
-    $liked = $disliked = $repeated = false;
-    if ($observer_xchan && !empty($item['reaction_verbs'])) {
-        foreach (explode('|', $item['reaction_verbs']) as $rv) {
-            [$verb, $xchan] = explode(':', $rv, 2);
-            if ($xchan !== $observer_xchan) continue;
-            if ($verb === 'Like')     $liked    = true;
-            if ($verb === 'Dislike')  $disliked = true;
-            if ($verb === 'Announce') $repeated = true;
-        }
-    }
- 
-    return [
-        'uuid'            => $item['uuid'],
-        'mid'             => $item['mid'],
-        'parent_mid'      => $item['parent_mid'],
-        'thr_parent'      => $item['thr_parent'],
-        'message_top'     => intval($item['item_thread_top']) ? $item['mid'] : $item['thr_parent'],
-        'created'         => $item['created'],
-        'edited'          => $item['edited'],
-        'commented'       => $item['commented'],
-        'title'           => $item['title'],
-        'body'            => $item['body'],
-        'verb'            => $item['verb'],
-        'obj_type'        => $item['obj_type'],
-        'like_count'      => intval($item['like_count']     ?? 0),
-        'dislike_count'   => intval($item['dislike_count']  ?? 0),
-        'announce_count'  => intval($item['announce_count'] ?? 0),
-        'comment_count'   => intval($item['comment_count']  ?? 0),
-        'item_private'    => intval($item['item_private']),
-        'item_thread_top' => intval($item['item_thread_top']),
-        'iid'             => intval($item['id']),
-        'profile_uid'     => intval($item['uid']),
-        'flags'           => array_values(array_filter([
-            intval($item['item_thread_top']) ? 'thread_parent' : null,
-            intval($item['item_private'])    ? 'private'       : null,
-            intval($item['item_starred'])    ? 'starred'       : null,
-            intval($item['item_notshown'])   ? 'notshown'      : null,
-        ])),
-        'author'          => [
-            'name'    => $item['author']['xchan_name']           ?? '',
-            'address' => $item['author']['xchan_addr']           ?? '',
-            'url'     => $item['author']['xchan_url']            ?? '',
-            'photo'   => [
-                'src'      => $item['author']['xchan_photo_m']        ?? '',
-                'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
-            ],
-        ],
-        'permalink'       => $item['plink'] ?? '',
-        'viewer_liked'    => $liked,
-        'viewer_disliked' => $disliked,
-        'viewer_repeated' => $repeated,
-    ];
-}
+        $observer = \App::get_observer();
 
-function json_help_get()
-{
-    if (($_GET['format'] ?? '') !== 'json')
-        return;
+        if ($observer && isset($observer['xchan_addr'])) {
+            // john@hub.com → john
+            $nick = strstr($observer['xchan_addr'], '@', true) ?: $observer['xchan_addr'];
+        }
+    }
 
-    $data = [
-        'status' => 'ok'
-    ];
+    // fallback (optional)
+    if (!$nick) {
+        $nick = '';
+    }
+
+    $data['channel_nick'] = $nick;
+    $data['is_local'] = $is_local;
 
     json_return_and_die($data);
+}
+
+function json_pconfig_post(&$data)
+{
+    // $data contains:
+    // [uid, cat, k, v]
+
+    $uid = $data['uid'];
+    $cat = $data['cat'];
+    $key = $data['k'];
+    $val = $data['v'];
+
+    // Example: log or modify
+    if ($cat === 'photos' && $key === 'some_setting') {
+        // modify value before save
+        $data['v'] = strtoupper($val);
+
+        logger("Modified pconfig before save: $val → " . $data['v']);
+    }
+
+    // Example: block something
+    if ($key === 'forbidden_key') {
+        notice('This key is not allowed.');
+        $data['v'] = '';  // or unset
+    }
 }

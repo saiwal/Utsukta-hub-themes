@@ -6,6 +6,7 @@ namespace {
   use Zotlabs\Extend\Route;
 
 	function solidified_theme_admin_enable() {
+    register_hook('pconfig_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_pconfig_get');
 		/* Network Module Hooks */
     register_hook('network_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_network_content');
 		/* Settings hook */
@@ -26,6 +27,7 @@ namespace {
   }
 
   function solidified_theme_admin_disable() {
+    unregister_hook('pconfig_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_pconfig_get');
 		/* Network Module Hooks */
     unregister_hook('network_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_network_content');
 		/* Settings hook */
