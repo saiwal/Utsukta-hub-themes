@@ -968,7 +968,8 @@ function json_pconfig_get(&$data)
 
         foreach ($r as $rr) {
             $data[$rr['cat']][$rr['k']] = $rr['v'];
-        }
+		}
+		$data['uid'] = local_channel();
     }
 
     // Case 2: visitor (observer / remote)
