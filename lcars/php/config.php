@@ -1,130 +1,140 @@
 <?php
 
-namespace Zotlabs\Theme {
+namespace Zotlabs\Theme
+{
+    use ScssPhp\ScssPhp\Compiler;
+    use ScssPhp\ScssPhp\OutputStyle;
 
-use ScssPhp\ScssPhp\Compiler;
-use ScssPhp\ScssPhp\OutputStyle;
+    class LcarsConfig
+    {
+        function get_schemas()
+        {
+            $files = glob('view/theme/lcars/schema/*.css');
 
-class LcarsConfig {
+            $scheme_choices = [];
 
-	function get_schemas() {
-		$files = glob('view/theme/lcars/schema/*.css');
+            if ($files) {
+                $scheme_choices['---'] = t('default');
 
-		$scheme_choices = [];
+                foreach ($files as $file) {
+                    $f = basename($file, '.css');
+                    $scheme_name = $f;
+                    $scheme_choices[$f] = $scheme_name;
+                }
+            }
 
-		if($files) {
+            return $scheme_choices;
+        }
 
-			$scheme_choices['---'] = t('default');
-      
-      foreach($files as $file) {
-				$f = basename($file, ".css");
-			  $scheme_name = $f;
-				$scheme_choices[$f] = $scheme_name;
-			}
-		}
+        function get()
+        {
+            if (!local_channel()) {
+                return;
+            }
 
-		return $scheme_choices;
-  }
+            return $this->form($arr);
+        }
 
-  function get() {
-		if(! local_channel()) {
-			return;
-		}
+        function post()
+        {
+            if (!local_channel()) {
+                return;
+            }
 
-		return $this->form($arr);
-	}
+            set_pconfig(local_channel(), 'lcars', 'schema', $_POST['schema']);
+            set_pconfig(local_channel(), 'system', 'style_update', time());
+            if (isset($_POST['lcars-settings-submit'])) {
+                // This is used to refresh the cache
+                set_pconfig(local_channel(), 'system', 'style_update', time());
+            }
+        }
 
-	function post() {
-		if(!local_channel()) {
-			return;
-		}
+        function form($arr)
+        {
+            $expert = false;
+            if (get_pconfig(local_channel(), 'lcars', 'advanced_theming')) {
+                $expert = true;
+            }
 
-		set_pconfig(local_channel(), 'lcars', 'schema', $_POST['schema']);
-		set_pconfig(local_channel(), 'system', 'style_update', time());
-		if (isset($_POST['lcars-settings-submit'])) {
-		
-			// This is used to refresh the cache
-			set_pconfig(local_channel(), 'system', 'style_update', time());
-		}
-	}
+            $o = replace_macros(get_markup_template('theme_settings.tpl'), array(
+                '$submit' => t('Submit'),
+                '$baseurl' => z_root(),
+                '$theme' => \App::$channel['channel_theme'],
+            ));
 
-	function form($arr) {
-
-		$expert = false;
-		if(get_pconfig(local_channel(), 'lcars', 'advanced_theming')) {
-			$expert = true;
-		}
-
-	  	$o = replace_macros(get_markup_template('theme_settings.tpl'), array(
-			'$submit' => t('Submit'),
-			'$baseurl' => z_root(),
-			'$theme' => \App::$channel['channel_theme'],
-			));
-
-		return $o;
-	}
-
-}
-}
-//////////////////////////////////////////////
-// THEME ADMIN FUNCTIONS (GLOBAL NAMESPACE)
-//////////////////////////////////////////////
-namespace { 
-
-  use Zotlabs\Lib\Config;
-  use Zotlabs\Extend\Route;
-
-  function lcars_theme_admin_enable() {
-
-    $defaults = [
-        'schema'              => '---',
-    ];
-
-    foreach ($defaults as $k => $v) {
-        if (Config::Get('theme_lcars', $k) === false) {
-            Config::Set('theme_lcars', $k, $v);
+            return $o;
         }
     }
-  }
+}
 
-  function lcars_theme_admin_disable() {
-  }
+// ////////////////////////////////////////////
+// THEME ADMIN FUNCTIONS (GLOBAL NAMESPACE)
+// ////////////////////////////////////////////
+namespace
+{
+    use Zotlabs\Extend\Route;
+    use Zotlabs\Lib\Config;
 
-  function lcars_get_schemas() {
-      $files = glob('view/theme/lcars/schema/*.css');
-      $scheme_choices = [];
+    function lcars_theme_admin_enable()
+    {
+        $defaults = [
+            'schema' => '---',
+        ];
 
-      if($files) {
-          $scheme_choices['---'] = t('default');
-          foreach($files as $file) {
-              $f = basename($file, ".css");
-              $scheme_choices[$f] = $f;
-          }
-      }
+        foreach ($defaults as $k => $v) {
+            if (Config::Get('theme_lcars', $k) === false) {
+                Config::Set('theme_lcars', $k, $v);
+            }
+        }
+    }
 
-      return $scheme_choices;
-  }
+    function lcars_theme_admin_disable() {}
 
-  function theme_admin() {
-      $schema   = Config::Get('theme_lcars', 'schema', '---');
-      $schemas  = lcars_get_schemas();
-      // Load system-level (admin) theme config
-      $tpl = get_markup_template('theme_settings_admin.tpl');
+    function lcars_get_schemas()
+    {
+        $files = glob('view/theme/lcars/schema/*.css');
+        $scheme_choices = [];
 
-      return replace_macros($tpl, [
+        if ($files) {
+            $scheme_choices['---'] = t('default');
+            foreach ($files as $file) {
+                $f = basename($file, '.css');
+                $scheme_choices[$f] = $f;
+            }
+        }
 
-          '$title' => t('lcars Theme Settings (System Defaults)'),
-          '$submit' => t('Submit'),
-          '$form_security_token' => get_form_security_token('admin_themes'),
-      ]);
-  }
+        return $scheme_choices;
+    }
 
-  function theme_admin_post() {
-      check_form_security_token_redirectOnErr('/admin/themes/lcars', 'admin_themes');
+    function theme_admin()
+    {
+        $schema = Config::Get('theme_lcars', 'schema', '---');
+        $schemas = lcars_get_schemas();
+        // Load system-level (admin) theme config
 
-      // Save all system admin settings
+			$t = file_get_contents(__DIR__ . '/../tpl/theme_settings_admin.tpl');
 
-      Config::Set('theme_lcars', 'schema', $_POST['schema']);
-      info(t('Theme settings updated.'));
-  }
+        return replace_macros($t, [
+            '$title' => t('lcars Theme Settings (System Defaults)'),
+            '$schema' => [
+                'schema',
+                t('Default scheme'),
+                $schema,
+                '',
+                $schemas
+            ],
+            '$submit' => t('Submit'),
+            '$form_security_token' => get_form_security_token('admin_themes'),
+        ]);
+    }
+
+    function theme_admin_post()
+    {
+        check_form_security_token_redirectOnErr('/admin/themes/lcars', 'admin_themes');
+
+        // Save all system admin settings
+
+        Config::Set('theme_lcars', 'schema', $_POST['schema']);
+        info(t('Theme settings updated.'));
+    }
 }

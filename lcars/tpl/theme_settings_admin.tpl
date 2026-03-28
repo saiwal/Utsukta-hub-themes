@@ -5,6 +5,7 @@
 
     <div class="section-content-wrapper">
 					
+							{{include file="field_select.tpl" field=$schema}}
           <!-- SUBMIT -->
         <div class="form-group">
             <input type="submit" name="lcars-settings-submit" class="btn btn-primary" value="{{$submit}}" />
