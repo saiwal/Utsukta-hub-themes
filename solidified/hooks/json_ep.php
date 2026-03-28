@@ -968,8 +968,8 @@ function json_pconfig_get(&$data)
 
         foreach ($r as $rr) {
             $data[$rr['cat']][$rr['k']] = $rr['v'];
-		}
-		$data['uid'] = local_channel();
+        }
+        $data['uid'] = local_channel();
     }
 
     // Case 2: visitor (observer / remote)
@@ -1016,4 +1016,138 @@ function json_pconfig_post(&$data)
         notice('This key is not allowed.');
         $data['v'] = '';  // or unset
     }
+}
+
+function json_display_get(&$arr)
+{
+    if (($_GET['format'] ?? '') !== 'json')
+        return;
+
+    require_once ('include/items.php');
+    require_once ('include/conversation.php');
+
+    // argv(1) is the item uuid / b64-encoded mid
+    $item_hash = argv(1);
+    if (!$item_hash) {
+        json_return_and_die(['error' => 'No item specified']);
+    }
+
+    $identifier = 'uuid';
+    if (str_starts_with($item_hash, 'b64.')) {
+        $item_hash = unpack_link_id($item_hash);
+        $identifier = 'mid';
+    }
+
+    if ($item_hash === false) {
+        json_return_and_die(['error' => 'Malformed item id']);
+    }
+
+    // ── Find target item ──────────────────────────────────────────────────────
+    $target = q("SELECT id, uid, mid, parent_mid, thr_parent, verb, item_type,
+                        item_deleted, item_blocked, author_xchan
+                 FROM item WHERE $identifier = '%s' LIMIT 1",
+        dbesc($item_hash));
+
+    if (!$target) {
+        json_return_and_die(['error' => 'Item not found']);
+    }
+
+    $target_item = $target[0];
+
+    if ($target_item['item_deleted']) {
+        json_return_and_die(['error' => 'Item has been deleted']);
+    }
+
+    $observer_hash = get_observer_hash();
+    $item_normal = item_normal();
+
+    // ── Permission: find a copy the observer can actually read ────────────────
+    $r = [];
+
+    if (local_channel()) {
+        $r = q("SELECT item.id AS item_id FROM item
+                WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+            intval(local_channel()),
+            dbesc($target_item['parent_mid']));
+    }
+
+    if (!$r) {
+        require_once ('include/channel.php');
+        $sys = get_sys_channel();
+        $sys_id = perm_is_allowed($sys['channel_id'], $observer_hash, 'view_stream')
+            ? $sys['channel_id']
+            : 0;
+
+        $permission_sql = item_permissions_sql(0, $observer_hash);
+
+        $r = q("SELECT item.id AS item_id FROM item
+                WHERE ((mid = '%s'
+                  AND (((item.allow_cid = '' AND item.allow_gid = '' AND item.deny_cid = ''
+                       AND item.deny_gid = '' AND item_private = 0)
+                       AND uid IN (" . stream_perms_api_uids(
+            $observer_hash ? (PERMS_NETWORK | PERMS_PUBLIC) : PERMS_PUBLIC
+        ) . "))
+                  OR uid = %d))
+                OR (mid = '%s' $permission_sql))
+                $item_normal LIMIT 1",
+            dbesc($target_item['parent_mid']),
+            intval($sys_id),
+            dbesc($target_item['parent_mid']));
+    }
+
+    if (!$r) {
+        json_return_and_die(['error' => 'Permission denied']);
+    }
+
+    // ── Fetch entire thread ───────────────────────────────────────────────────
+    $ids = ids_to_querystr($r, 'item_id');
+
+    $items = dbq("SELECT item.*,
+        (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
+        (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
+        (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+        (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0) AS comment_count,
+        (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
+         FROM item r
+         WHERE r.parent = item.parent
+           AND r.thr_parent = item.mid
+           AND r.verb IN ('Like','Dislike','Announce')
+           AND r.item_deleted = 0) AS reaction_verbs
+        FROM item
+        WHERE item.id IN ($ids)
+        OR (item.parent IN ($ids)
+            AND item.verb IN ('Create', 'Update', 'EmojiReact')
+            AND item.obj_type NOT IN ('Answer')
+            AND item.item_thread_top = 0
+            $item_normal)
+        ORDER BY item.created ASC");
+
+    if (!$items) {
+        json_return_and_die(['error' => 'Thread not found']);
+    }
+
+    xchan_query($items, true);
+    $items = fetch_post_tags($items, true);
+
+    // ── Split root from comments ──────────────────────────────────────────────
+    $root_item = null;
+    $comments = [];
+
+    foreach ($items as $item) {
+        if (intval($item['item_thread_top'])) {
+            $root_item = format_item($item, $observer_hash);
+        } else {
+            $comments[] = format_item($item, $observer_hash);
+        }
+    }
+
+    if (!$root_item) {
+        json_return_and_die(['error' => 'Root item not found']);
+    }
+
+    $arr['replace'] = true;
+    json_return_and_die([
+        'post' => $root_item,
+        'comments' => $comments,
+    ]);
 }

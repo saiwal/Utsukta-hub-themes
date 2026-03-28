@@ -7,6 +7,8 @@ namespace {
 
 	function solidified_theme_admin_enable() {
     register_hook('pconfig_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_pconfig_get');
+		/* Display Hook */
+		register_hook('display_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_display_get');
 		/* Network Module Hooks */
     register_hook('network_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_network_content');
 		/* Settings hook */
@@ -28,6 +30,8 @@ namespace {
 
   function solidified_theme_admin_disable() {
     unregister_hook('pconfig_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_pconfig_get');
+		/* Display Hook */
+		unregister_hook('display_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_display_get');
 		/* Network Module Hooks */
     unregister_hook('network_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_network_content');
 		/* Settings hook */
