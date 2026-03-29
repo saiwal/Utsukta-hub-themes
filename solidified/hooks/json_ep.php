@@ -951,19 +951,15 @@ function json_pconfig_get(&$data)
         return;
     }
 
-    $is_local = false;
     $nick = null;
     $data = [];
 
+    $channel = \App::get_channel();
+    $observer = \App::get_observer();
+    $nick = $channel['channel_address'];  // already clean
+    $observer_nick = $observer['xchan_name'];
     // Case 1: local logged-in channel
     if (local_channel()) {
-        $channel = \App::get_channel();
-
-        if ($channel) {
-            $nick = $channel['channel_address'];  // already clean
-            $is_local = true;
-        }
-
         $r = q('select * from pconfig where uid = ' . local_channel());
 
         foreach ($r as $rr) {
@@ -972,23 +968,13 @@ function json_pconfig_get(&$data)
         $data['uid'] = local_channel();
     }
 
-    // Case 2: visitor (observer / remote)
-    if (!$nick) {
-        $observer = \App::get_observer();
-
-        if ($observer && isset($observer['xchan_addr'])) {
-            // john@hub.com → john
-            $nick = strstr($observer['xchan_addr'], '@', true) ?: $observer['xchan_addr'];
-        }
-    }
-
     // fallback (optional)
     if (!$nick) {
         $nick = '';
     }
 
-    $data['channel_nick'] = $nick;
-    $data['is_local'] = $is_local;
+    $data['channel'] = $nick;
+    $data['observer'] = $observer_nick;
 
     json_return_and_die($data);
 }
@@ -1149,5 +1135,16 @@ function json_display_get(&$arr)
     json_return_and_die([
         'post' => $root_item,
         'comments' => $comments,
+    ]);
+}
+
+function json_articles_get(&$data)
+{
+    if (($_GET['format'] ?? '') !== 'json')
+        return;
+
+    json_return_and_die([
+        'post' => 'hehe',
+        'comments' => 'hoho',
     ]);
 }
