@@ -205,10 +205,17 @@ function json_network_content(&$arr)
         $net_query2
         ORDER BY $ordering DESC $pager_sql");
 
+		$blog_mode = feature_enabled(local_channel(), 'network_list_mode');
     $items = [];
     if ($r) {
+				/**/
+				/* $items = items_by_parent_ids($r, blog_mode: $blog_mode); */
+				/**/
+				/* xchan_query($items, true); */
+				/* $items = fetch_post_tags($items, true); */
+				/* $items = conv_sort($items, $ordering); */
         $ids = ids_to_querystr($r, 'item_id');
-
+        /**/
         $items = dbq("SELECT item.*,
             (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like' AND r.item_deleted = 0) as like_count,
             (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) as dislike_count,
@@ -231,7 +238,7 @@ function json_network_content(&$arr)
 
         xchan_query($items, true);
         $items = fetch_post_tags($items, true);
-
+        /**/
         usort($items, function ($a, $b) use ($ordering) {
             if ($a['item_thread_top'] && $b['item_thread_top']) {
                 $key = $ordering === 'commented' ? 'commented' : 'created';
@@ -975,7 +982,7 @@ function json_pconfig_get(&$data)
 
     $data['channel'] = $nick;
     $data['observer'] = $observer_nick;
-
+		$data['is_admin'] = is_site_admin();
     json_return_and_die($data);
 }
 
