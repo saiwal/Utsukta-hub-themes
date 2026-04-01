@@ -11,13 +11,7 @@
  *   * ContentRegion: content, region_2
  */
 ?>
-<?php 
-$theme_path = dirname(__FILE__);
-$assets_path = $theme_path . '/assets';
 
-$js_mtime  = @filemtime($assets_path . '/app.js')  ?: time();
-$css_mtime = @filemtime($assets_path . '/app.css') ?: time();
-?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,7 +19,7 @@ $css_mtime = @filemtime($assets_path . '/app.css') ?: time();
 	<script>
     var baseurl = "<?php echo z_root() ?>";
   </script>
-  <link rel="stylesheet" href="/view/theme/solidified/assets/app.css?v=<?php echo $css_mtime ?>">
+  <link rel="stylesheet" href="/view/theme/solidified/assets/app.css">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
@@ -35,7 +29,7 @@ $css_mtime = @filemtime($assets_path . '/app.css') ?: time();
 
 <div id="root"></div>
 
-<script type="module" src="/view/theme/solidified/assets/app.js?v=<?php echo $js_mtime ?>"></script>
+<script type="module" src="/view/theme/solidified/assets/app.js"></script>
 
 </body>
 </html>
