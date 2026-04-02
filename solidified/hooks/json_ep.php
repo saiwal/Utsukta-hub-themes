@@ -205,10 +205,17 @@ function json_network_content(&$arr)
         $net_query2
         ORDER BY $ordering DESC $pager_sql");
 
+		$blog_mode = feature_enabled(local_channel(), 'network_list_mode');
     $items = [];
     if ($r) {
+				/**/
+				/* $items = items_by_parent_ids($r, blog_mode: $blog_mode); */
+				/**/
+				/* xchan_query($items, true); */
+				/* $items = fetch_post_tags($items, true); */
+				/* $items = conv_sort($items, $ordering); */
         $ids = ids_to_querystr($r, 'item_id');
-
+        /**/
         $items = dbq("SELECT item.*,
             (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Like' AND r.item_deleted = 0) as like_count,
             (SELECT COUNT(*) FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) as dislike_count,
@@ -231,7 +238,7 @@ function json_network_content(&$arr)
 
         xchan_query($items, true);
         $items = fetch_post_tags($items, true);
-
+        /**/
         usort($items, function ($a, $b) use ($ordering) {
             if ($a['item_thread_top'] && $b['item_thread_top']) {
                 $key = $ordering === 'commented' ? 'commented' : 'created';
@@ -951,19 +958,15 @@ function json_pconfig_get(&$data)
         return;
     }
 
-    $is_local = false;
     $nick = null;
     $data = [];
 
+    $channel = \App::get_channel();
+    $observer = \App::get_observer();
+    $nick = $channel['channel_address'];  // already clean
+    $observer_nick = $observer['xchan_name'];
     // Case 1: local logged-in channel
     if (local_channel()) {
-        $channel = \App::get_channel();
-
-        if ($channel) {
-            $nick = $channel['channel_address'];  // already clean
-            $is_local = true;
-        }
-
         $r = q('select * from pconfig where uid = ' . local_channel());
 
         foreach ($r as $rr) {
@@ -972,24 +975,14 @@ function json_pconfig_get(&$data)
         $data['uid'] = local_channel();
     }
 
-    // Case 2: visitor (observer / remote)
-    if (!$nick) {
-        $observer = \App::get_observer();
-
-        if ($observer && isset($observer['xchan_addr'])) {
-            // john@hub.com → john
-            $nick = strstr($observer['xchan_addr'], '@', true) ?: $observer['xchan_addr'];
-        }
-    }
-
     // fallback (optional)
     if (!$nick) {
         $nick = '';
     }
 
-    $data['channel_nick'] = $nick;
-    $data['is_local'] = $is_local;
-
+    $data['channel'] = $nick;
+    $data['observer'] = $observer_nick;
+		$data['is_admin'] = is_site_admin();
     json_return_and_die($data);
 }
 
@@ -1149,5 +1142,16 @@ function json_display_get(&$arr)
     json_return_and_die([
         'post' => $root_item,
         'comments' => $comments,
+    ]);
+}
+
+function json_articles_get(&$data)
+{
+    if (($_GET['format'] ?? '') !== 'json')
+        return;
+
+    json_return_and_die([
+        'post' => 'hehe',
+        'comments' => 'hoho',
     ]);
 }
