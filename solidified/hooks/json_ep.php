@@ -363,8 +363,6 @@ function json_settings_post(&$arr)
 {
     if (($_GET['format'] ?? '') !== 'json')
         return;
-    if ((\App::$argv[1] ?? '') !== 'display')
-        return;
 
     $uid = local_channel();
     $data = json_decode(file_get_contents('php://input'), true);
