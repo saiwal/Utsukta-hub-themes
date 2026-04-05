@@ -205,15 +205,15 @@ function json_network_content(&$arr)
         $net_query2
         ORDER BY $ordering DESC $pager_sql");
 
-		$blog_mode = feature_enabled(local_channel(), 'network_list_mode');
+    $blog_mode = feature_enabled(local_channel(), 'network_list_mode');
     $items = [];
     if ($r) {
-				/**/
-				/* $items = items_by_parent_ids($r, blog_mode: $blog_mode); */
-				/**/
-				/* xchan_query($items, true); */
-				/* $items = fetch_post_tags($items, true); */
-				/* $items = conv_sort($items, $ordering); */
+        /**/
+        /* $items = items_by_parent_ids($r, blog_mode: $blog_mode); */
+        /**/
+        /* xchan_query($items, true); */
+        /* $items = fetch_post_tags($items, true); */
+        /* $items = conv_sort($items, $ordering); */
         $ids = ids_to_querystr($r, 'item_id');
         /**/
         $items = dbq("SELECT item.*,
@@ -362,8 +362,6 @@ function json_settings_get(&$arr)
 function json_settings_post(&$arr)
 {
     if (($_GET['format'] ?? '') !== 'json')
-        return;
-    if ((\App::$argv[1] ?? '') !== 'display')
         return;
 
     $uid = local_channel();
@@ -957,10 +955,10 @@ function json_pconfig_get(&$data)
     if (($_GET['format'] ?? '') !== 'json') {
         return;
     }
-
     $nick = null;
     $data = [];
 
+    $pinned_list = [];
     $channel = \App::get_channel();
     $observer = \App::get_observer();
     $nick = $channel['channel_address'];  // already clean
@@ -980,9 +978,75 @@ function json_pconfig_get(&$data)
         $nick = '';
     }
 
+    $is_owner = local_channel() && local_channel() > 0;
+    $uid = local_channel();
+
+    $pinned = [];
+    $featured = [];
+    $system = [];
+
+    if ($is_owner) {
+        // Keep system apps up to date (mirrors core nav logic exactly)
+        if (get_pconfig($uid, 'system', 'import_system_apps') !== datetime_convert('UTC', 'UTC', 'now', 'Y-m-d')) {
+            \Zotlabs\Lib\Apps::import_system_apps();
+            set_pconfig($uid, 'system', 'import_system_apps', datetime_convert('UTC', 'UTC', 'now', 'Y-m-d'));
+        }
+        if (get_pconfig($uid, 'system', 'force_import_system_apps') !== STD_VERSION) {
+            \Zotlabs\Lib\Apps::import_system_apps();
+            set_pconfig($uid, 'system', 'force_import_system_apps', STD_VERSION);
+        }
+
+        // Pinned apps
+        $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_pinned_app']);
+        if ($list) {
+            foreach ($list as $li) {
+                $pinned[] = \Zotlabs\Lib\Apps::app_encode($li);
+            }
+        }
+        \Zotlabs\Lib\Apps::translate_system_apps($pinned);
+        usort($pinned, 'Zotlabs\Lib\Apps::app_name_compare');
+        $pinned = \Zotlabs\Lib\Apps::app_order($uid, $pinned, 'nav_pinned_app');
+
+        // Featured apps (owner sees their personalised featured list)
+        $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
+        if ($list) {
+            foreach ($list as $li) {
+                $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
+            }
+        }
+        \Zotlabs\Lib\Apps::translate_system_apps($featured);
+    } else {
+        // Non-owners get the raw system app list for featured
+        $featured = \Zotlabs\Lib\Apps::get_system_apps(true);
+    }
+
+    // Strip owner-only apps for non-owners
+    if (!$is_owner) {
+        $filter = function (array $list) {
+            return array_values(array_filter($list, function ($app) {
+                return !isset($app['requires']) || strpos($app['requires'], 'local_channel') === false;
+            }));
+        };
+        $pinned = $filter($pinned);
+        $featured = $filter($featured);
+        $system = $filter($system);
+    }
+
+    usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
+    $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
+
+    $system = \Zotlabs\Lib\Apps::get_system_apps(true);
+    \Zotlabs\Lib\Apps::translate_system_apps($system);
+	
+		logger('APP SAMPLE: ' . json_encode($system ?? []), LOGGER_DEBUG);
+
+    usort($system, 'Zotlabs\Lib\Apps::app_name_compare');
+    $data['pinned'] = $pinned;
+    $data['featured'] = $featured;
+    $data['system'] = $system;
     $data['channel'] = $nick;
     $data['observer'] = $observer_nick;
-		$data['is_admin'] = is_site_admin();
+    $data['is_admin'] = is_site_admin();
     json_return_and_die($data);
 }
 
