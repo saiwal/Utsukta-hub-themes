@@ -441,7 +441,10 @@ if (($_GET['view'] ?? '') === 'profile') {
 
     // Cover photo via the same function profile_sidebar uses
     $cover = get_cover_photo($channel['channel_id'], 'array', PHOTO_RES_COVER_1200);
-    $cover_url = $cover ? $cover['url'] : '';
+		$default_cover = \Zotlabs\Lib\Config::Get('system', 'default_cover_photo', 'hubzilla');
+		$cover_width = 1200;
+		$coverd = z_root() . '/images/default_cover_photos/' . $default_cover . '/' . $cover_width . '.png';
+    $cover_url = $cover ? $cover['url'] : $coverd;
 
     // Connection count and follow status
     $conn_count = q("SELECT COUNT(*) AS total FROM abook WHERE abook_channel = %d AND abook_self = 0",
