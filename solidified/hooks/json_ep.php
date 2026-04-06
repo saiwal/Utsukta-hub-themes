@@ -416,8 +416,90 @@ function json_settings_post(&$arr)
 function json_channel_get()
 {
     if (($_GET['format'] ?? '') !== 'json')
-        return;
+	return;
+if (($_GET['view'] ?? '') === 'profile') {
+    $nick = argv(1);
+    
+    // Already joins xchan — xchan_photo_l is available directly
+    $channel = channelx_by_nick($nick);
+    if (! $channel) {
+        json_return_and_die(['error' => 'not found']);
+    }
 
+    $ob_hash = get_observer_hash();
+    if (! perm_is_allowed($channel['channel_id'], $ob_hash, 'view_profile')) {
+        json_return_and_die(['error' => 'permission denied']);
+    }
+
+    $r = q("SELECT * FROM profile WHERE uid = %d AND is_default = 1 LIMIT 1",
+        intval($channel['channel_id'])
+    );
+    if (! $r) {
+        json_return_and_die(['error' => 'no profile']);
+    }
+    $p = $r[0];
+
+    // Cover photo via the same function profile_sidebar uses
+    $cover = get_cover_photo($channel['channel_id'], 'array', PHOTO_RES_COVER_1200);
+		$default_cover = \Zotlabs\Lib\Config::Get('system', 'default_cover_photo', 'hubzilla');
+		$cover_width = 1200;
+		$coverd = z_root() . '/images/default_cover_photos/' . $default_cover . '/' . $cover_width . '.png';
+    $cover_url = $cover ? $cover['url'] : $coverd;
+
+    // Connection count and follow status
+    $conn_count = q("SELECT COUNT(*) AS total FROM abook WHERE abook_channel = %d AND abook_self = 0",
+        intval($channel['channel_id'])
+    );
+    $is_connected = false;
+    if (local_channel()) {
+        $existing = q("SELECT abook_id FROM abook WHERE abook_channel = %d AND abook_xchan = '%s' LIMIT 1",
+            intval(local_channel()),
+            dbesc($channel['channel_hash'])
+        );
+        $is_connected = ! empty($existing);
+    }
+
+    $location_parts = array_filter([
+        $p['locality'],
+        $p['region'],
+        $p['country_name'],
+    ]);
+
+    json_return_and_die([
+        'channel_name'    => $channel['channel_name'],
+        'channel_address' => $channel['channel_address'],
+        'channel_photo_l' => $channel['xchan_photo_l'],  // from xchan join
+        'channel_cover'   => $cover_url,                 // from photo table via get_cover_photo()
+        'pdesc'           => $p['pdesc'],
+        'about'           => $p['about'],
+        'location'        => implode(', ', $location_parts),
+        'address'         => $p['address'],
+        'hometown'        => $p['hometown'],
+        'homepage'        => $p['homepage'],
+        'keywords'        => array_values(array_filter(explode(' ', $p['keywords'] ?? ''))),
+        'gender'          => $p['gender'],
+        'marital'         => $p['marital'],
+        'sexual'          => $p['sexual'],
+        'politic'         => $p['politic'],
+        'religion'        => $p['religion'],
+        'dob'             => $p['dob'],
+        'music'           => $p['music'],
+        'book'            => $p['book'],
+        'tv'              => $p['tv'],
+        'film'            => $p['film'],
+        'interest'        => $p['interest'],
+        'romance'         => $p['romance'],
+        'work'            => $p['employment'],
+        'education'       => $p['education'],
+        'likes'           => $p['likes'],
+        'dislikes'        => $p['dislikes'],
+        'contact'         => $p['contact'],
+        'channels'        => $p['channels'],
+        'hide_friends'    => (bool) $p['hide_friends'],
+        'connections'     => intval($conn_count[0]['total'] ?? 0),
+        'is_connected'    => $is_connected,
+    ]);
+}
     require_once ('include/items.php');
     require_once ('include/conversation.php');
     require_once ('include/acl_selectors.php');
@@ -1037,8 +1119,8 @@ function json_pconfig_get(&$data)
 
     $system = \Zotlabs\Lib\Apps::get_system_apps(true);
     \Zotlabs\Lib\Apps::translate_system_apps($system);
-	
-		logger('APP SAMPLE: ' . json_encode($system ?? []), LOGGER_DEBUG);
+
+    logger('APP SAMPLE: ' . json_encode($system ?? []), LOGGER_DEBUG);
 
     usort($system, 'Zotlabs\Lib\Apps::app_name_compare');
     $data['pinned'] = $pinned;
