@@ -57,7 +57,7 @@
 				<!-- user dowpdown menu-->
 				{{if $userinfo}}
 				<!--begin::User Menu Dropdown-->
-				<li class="nav-item">
+				<li class="nav-item user-menu">
 					<a href="#"	class="nav-link" data-bs-toggle="dropdown">
 						<img src="{{$userinfo.icon}}" class="nav-icon rounded-circle shadow img-size-32" alt="User Image"><p class="text-truncate">{{$userinfo.name}}<i class="nav-arrow bi bi-chevron-right"></i></p></a>
 

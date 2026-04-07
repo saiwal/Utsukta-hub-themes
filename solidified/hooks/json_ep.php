@@ -467,7 +467,7 @@ if (($_GET['view'] ?? '') === 'profile') {
 
     json_return_and_die([
         'channel_name'    => $channel['channel_name'],
-        'channel_address' => $channel['channel_address'],
+        'channel_address' => $channel['xchan_addr'],
         'channel_photo_l' => $channel['xchan_photo_l'],  // from xchan join
         'channel_cover'   => $cover_url,                 // from photo table via get_cover_photo()
         'pdesc'           => $p['pdesc'],
