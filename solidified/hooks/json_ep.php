@@ -309,7 +309,7 @@ function json_network_content(&$arr)
             $sql_extra $sql_options $sql_nets $sql_date
             $net_query2
             ORDER BY item.created DESC $pager_sql");
-
+        $rootCount = count($items ?: []);
         if ($items) {
             xchan_query($items, true);
             $items = fetch_post_tags($items, true);
@@ -328,7 +328,7 @@ function json_network_content(&$arr)
             $sql_extra3 $sql_extra $sql_options $sql_nets
             $net_query2
             ORDER BY $ordering DESC $pager_sql");
-
+        $rootCount = count($r ?: []);
         if ($r) {
             $ids = ids_to_querystr($r, 'item_id');
 
@@ -362,7 +362,6 @@ function json_network_content(&$arr)
     foreach (($items ?: []) as $item) {
         $out[] = json_network_format_item($item, $observer_xchan);
     }
-
     $arr['replace'] = true;
     json_return_and_die([
         'meta' => [
@@ -370,6 +369,7 @@ function json_network_content(&$arr)
             'limit' => $itemspage,
             'nouveau' => $nouveau,
             'ordering' => $ordering,
+            'root_count' => $rootCount,
             'count' => count($out),
         ],
         'items' => $out,
