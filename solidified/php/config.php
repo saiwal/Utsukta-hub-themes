@@ -18,6 +18,8 @@ namespace {
 		register_hook('cloud_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_cloud_get');
 		register_hook('photos_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_photos_get');
 		register_hook('help_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_help_get');
+		
+		Route::register('view/theme/solidified/mod/nav_json.php', 'nav_api');
   }
 
   function solidified_theme_admin_disable() {
@@ -33,6 +35,8 @@ namespace {
 		unregister_hook('cloud_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_cloud_get');
 		unregister_hook('photos_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_photos_get');
 		unregister_hook('help_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_help_get');
+
+		Route::unregister('view/theme/solidified/mod/nav_json.php', 'nav_api');
   }
 
   function theme_admin(&$a) {
