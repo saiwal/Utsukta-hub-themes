@@ -1303,7 +1303,6 @@ function json_pconfig_get(&$data)
     $system = \Zotlabs\Lib\Apps::get_system_apps(true);
     \Zotlabs\Lib\Apps::translate_system_apps($system);
 
-    logger('APP SAMPLE: ' . json_encode($system ?? []), LOGGER_DEBUG);
 
     usort($system, 'Zotlabs\Lib\Apps::app_name_compare');
     $data['pinned'] = $pinned;

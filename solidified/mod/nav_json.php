@@ -10,55 +10,66 @@ class Nav_api extends \Zotlabs\Web\Controller
         if (($_GET['format'] ?? '') !== 'json')
             return;
 
-        require_once ('include/security.php');
-        require_once ('include/menu.php');
-        require_once ('include/conversation.php');
+        require_once('include/security.php');
+        require_once('include/conversation.php');
 
-        $is_owner = (local_channel() &&
-            (App::$profile_uid == local_channel() || App::$profile_uid == 0));
+        $observer    = App::get_observer();
+        $ob_hash     = $observer ? $observer['xchan_hash'] : '';
+        $is_local    = (bool) local_channel();
+        $uid         = local_channel() ?: 0;
+        $channel     = $is_local ? App::get_channel() : null;
 
-        $observer = App::get_observer();
-        $channel = local_channel() ? App::get_channel() : null;
-        $uid = local_channel() ?: 0;
+        // A remote viewer has an observer (OWA cookie) but no local channel.
+        $is_remote   = (!$is_local && $ob_hash !== '');
+        $is_anon     = (!$is_local && $ob_hash === '');
 
-        $baseurl = z_root();
-        // ── Viewer identity ───────────────────────────────────────────────────────
+        // ── Viewer identity ───────────────────────────────────────────────────
+
         $viewer = [
-            'is_local' => (bool) local_channel(),
-            'is_owner' => $is_owner,
-            'is_admin' => is_site_admin(),
-            'nick' => $channel['channel_address'] ?? '',
-            'name' => $observer['xchan_name'] ?? '',
-            'avatar' => $observer['xchan_photo_m'] ?? '',
-            'url' => $observer['xchan_url'] ?? '',
-            'uid' => $uid,
-            'baseurl' => z_root(),
+            'is_local'  => $is_local,
+            'is_remote' => $is_remote,
+            'is_admin'  => $is_local && is_site_admin(),
+            'nick'      => $channel['channel_address'] ?? '',
+            'name'      => $observer['xchan_name']     ?? '',
+            'avatar'    => $observer['xchan_photo_m']  ?? '',
+            'url'       => $observer['xchan_url']      ?? '',
+            'uid'       => $uid,
+            'baseurl'   => z_root(),
         ];
 
-        // ── Standard action links ─────────────────────────────────────────────────
+        // ── Action links ──────────────────────────────────────────────────────
+        // PHP is the authority here — frontend renders whatever keys arrive.
+
         $actions = [];
 
-        if (local_channel()) {
-            $actions['logout'] = z_root() . '/logout';
-            $actions['settings'] = z_root() . '/settings';
-            $actions['manage'] = z_root() . '/manage';  // channel switcher
-            $actions['profile'] = z_root() . '/profile/' . ($channel['channel_address'] ?? '');
+        if ($is_local) {
+            $nick = $channel['channel_address'] ?? '';
+            $actions['profile']  = z_root() . '/profile/' . $nick;
             $actions['profiles'] = z_root() . '/profiles';
+            $actions['settings'] = z_root() . '/settings';
+            $actions['manage']   = z_root() . '/manage';
+            $actions['logout']   = z_root() . '/logout';
+        } elseif ($is_remote) {
+            // Remote OWA user: only logout makes sense
+            $actions['logout']   = z_root() . '/logout';
         } else {
-            $actions['login'] = z_root() . '/login';
+            // Anonymous
+            $actions['login']        = z_root() . '/login';
             $actions['remote_login'] = z_root() . '/rmagic';
-            if (\Zotlabs\Lib\Config::Get('system', 'register_policy') == REGISTER_OPEN ||
-                    \Zotlabs\Lib\Config::Get('system', 'register_policy') == REGISTER_APPROVE) {
+            $reg = \Zotlabs\Lib\Config::Get('system', 'register_policy');
+            if ($reg == REGISTER_OPEN || $reg == REGISTER_APPROVE) {
                 $actions['register'] = z_root() . '/register';
             }
         }
 
-        // ── Apps: pinned & featured ───────────────────────────────────────────────
-        $pinned = [];
-        $featured = [];
+        // ── Pinned apps ───────────────────────────────────────────────────────
+        // Local owners: their personalised pinned list.
+        // Everyone else: a curated public list so the sidebar is never empty.
 
-        if ($is_owner) {
-            // Keep system apps current (mirrors nav() logic exactly)
+        $pinned = [];
+
+        if ($is_local) {
+            // Keep system apps current (mirrors core nav() logic)
             if (get_pconfig($uid, 'system', 'import_system_apps') !==
                     datetime_convert('UTC', 'UTC', 'now', 'Y-m-d')) {
                 \Zotlabs\Lib\Apps::import_system_apps();
@@ -73,100 +84,145 @@ class Nav_api extends \Zotlabs\Web\Controller
             $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_pinned_app']);
             foreach (($list ?: []) as $li)
                 $pinned[] = \Zotlabs\Lib\Apps::app_encode($li);
+
             \Zotlabs\Lib\Apps::translate_system_apps($pinned);
             usort($pinned, 'Zotlabs\Lib\Apps::app_name_compare');
             $pinned = \Zotlabs\Lib\Apps::app_order($uid, $pinned, 'nav_pinned_app');
 
+        } else {
+            // Anonymous / remote: build a minimal public nav from system apps.
+            // Pull the full system list and keep only the apps we want to expose.
+            $system = \Zotlabs\Lib\Apps::get_system_apps(true);
+            \Zotlabs\Lib\Apps::translate_system_apps($system);
+
+            $public_names = ['Directory', 'Help'];
+            if (can_view_public_stream())
+                $public_names[] = 'Network';
+
+            foreach ($system as $app) {
+                if (in_array($app['name'] ?? '', $public_names, true))
+                    $pinned[] = $app;
+            }
+
+            // Preserve the preferred order defined in $public_names
+            usort($pinned, function ($a, $b) use ($public_names) {
+                $ia = array_search($a['name'] ?? '', $public_names);
+                $ib = array_search($b['name'] ?? '', $public_names);
+                return $ia - $ib;
+            });
+        }
+
+        // ── Featured apps ─────────────────────────────────────────────────────
+        // Used by an app drawer (if you build one). Always the full system list,
+        // stripped of local_channel-only entries for non-local viewers.
+
+        $featured = [];
+
+        if ($is_local) {
             $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
             foreach (($list ?: []) as $li)
                 $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
             \Zotlabs\Lib\Apps::translate_system_apps($featured);
         } else {
             $featured = \Zotlabs\Lib\Apps::get_system_apps(true);
-            // Strip local-channel-only apps for non-owners
+            \Zotlabs\Lib\Apps::translate_system_apps($featured);
             $featured = array_values(array_filter($featured, fn($a) =>
-                !isset($a['requires']) || strpos($a['requires'], 'local_channel') === false));
+                empty($a['requires']) ||
+                strpos($a['requires'], 'local_channel') === false
+            ));
         }
 
         usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
         $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
 
-        // Normalise app shape: keep only fields the frontend needs
-        $app_shape = fn(array $app) => [
-            'name' => $app['name'] ?? '',
-            'label' => $app['label'] ?? ($app['name'] ?? ''),
-            'url' => $app['url'] ?? ($app['app_url'] ?? ''),
-            'icon' => $app['icon'] ?? '',
-            'photo' => $app['photo'] ?? '',
+        // ── Normalise app shape ───────────────────────────────────────────────
+
+        $normalise = fn(array $app): array => [
+            'name'     => $app['name']    ?? '',
+            'label'    => $app['label']   ?? ($app['name'] ?? ''),
+            'url'      => $app['url']     ?? ($app['app_url'] ?? ''),
+            'photo'    => $app['photo']   ?? '',
             'requires' => $app['requires'] ?? '',
         ];
 
-        $pinned = array_map($app_shape, $pinned);
-        $featured = array_map($app_shape, $featured);
+        $pinned   = array_map($normalise, $pinned);
+        $featured = array_map($normalise, $featured);
 
-        // ── Channel tabs (only when viewing a channel page) ───────────────────────
+        // ── Channel tabs ──────────────────────────────────────────────────────
+        // Only built when the SPA passes ?channel_nick=<nick>.
+        // Permission-gated per observer — this is the only place subject
+        // context is needed, and the SPA owns that from the URL.
+
         $channel_tabs = [];
-        if (isset(App::$profile['channel_address'])) {
-            $pnick = App::$profile['channel_address'];
-            $puid = App::$profile['profile_uid'] ?? 0;
-            $ob_hash = $observer ? $observer['xchan_hash'] : '';
-            $p = get_all_perms($puid, $ob_hash);
+        $subject_nick = trim($_GET['channel_nick'] ?? '');
 
-            $channel_tabs[] = [
-                'id' => 'stream',
-                'label' => t('Posts'),
-                'url' => z_root() . '/channel/' . $pnick,
-                'icon' => 'house',
-            ];
-            if ($p['view_profile'])
+        if ($subject_nick !== '') {
+            $subject = channelx_by_nick($subject_nick);
+
+            if ($subject && !($subject['channel_removed'] ?? false)) {
+                $puid = intval($subject['channel_id']);
+                $p    = get_all_perms($puid, $ob_hash);
+
+                // Posts tab is always present if we can resolve the channel
                 $channel_tabs[] = [
-                    'id' => 'profile',
-                    'label' => t('About'),
-                    'url' => z_root() . '/profile/' . $pnick,
-                    'icon' => 'person',
+                    'id'    => 'stream',
+                    'label' => t('Posts'),
+                    'url'   => z_root() . '/channel/' . $subject_nick,
+                    'icon'  => 'house',
                 ];
-            if ($p['view_storage']) {
-                $channel_tabs[] = [
-                    'id' => 'photos',
-                    'label' => t('Photos'),
-                    'url' => z_root() . '/photos/' . $pnick,
-                    'icon' => 'image',
-                ];
-                $channel_tabs[] = [
-                    'id' => 'files',
-                    'label' => t('Files'),
-                    'url' => z_root() . '/cloud/' . $pnick,
-                    'icon' => 'folder',
-                ];
+
+                if ($p['view_profile'])
+                    $channel_tabs[] = [
+                        'id'    => 'profile',
+                        'label' => t('About'),
+                        'url'   => z_root() . '/profile/' . $subject_nick,
+                        'icon'  => 'person',
+                    ];
+
+                if ($p['view_storage']) {
+                    $channel_tabs[] = [
+                        'id'    => 'photos',
+                        'label' => t('Photos'),
+                        'url'   => z_root() . '/photos/' . $subject_nick,
+                        'icon'  => 'image',
+                    ];
+                    $channel_tabs[] = [
+                        'id'    => 'files',
+                        'label' => t('Files'),
+                        'url'   => z_root() . '/cloud/' . $subject_nick,
+                        'icon'  => 'folder',
+                    ];
+                }
+
+                if ($p['view_stream'])
+                    $channel_tabs[] = [
+                        'id'    => 'calendar',
+                        'label' => t('Calendar'),
+                        'url'   => z_root() . '/cal/' . $subject_nick,
+                        'icon'  => 'calendar',
+                    ];
+
+                if (!empty($p['chat']) &&
+                    \Zotlabs\Lib\Apps::system_app_installed($puid, 'Chatrooms') &&
+                    \Zotlabs\Lib\Chatroom::list_count($puid))
+                    $channel_tabs[] = [
+                        'id'    => 'chat',
+                        'label' => t('Chatrooms'),
+                        'url'   => z_root() . '/chat/' . $subject_nick,
+                        'icon'  => 'chat',
+                    ];
             }
-            if ($p['view_stream'])
-                $channel_tabs[] = [
-                    'id' => 'calendar',
-                    'label' => t('Calendar'),
-                    'url' => z_root() . '/cal/' . $pnick,
-                    'icon' => 'calendar',
-                ];
-            if ($p['chat'] &&
-                \Zotlabs\Lib\Apps::system_app_installed($puid, 'Chatrooms') &&
-                \Zotlabs\Lib\Chatroom::list_count($puid))
-                $channel_tabs[] = [
-                    'id' => 'chat',
-                    'label' => t('Chatrooms'),
-                    'url' => z_root() . '/chat/' . $pnick,
-                    'icon' => 'chat',
-                ];
         }
 
-        // ── Public stream availability ────────────────────────────────────────────
-        $has_public_stream = (bool) can_view_public_stream();
+        // ── Response ──────────────────────────────────────────────────────────
 
         json_return_and_die([
-            'viewer' => $viewer,
-            'actions' => $actions,
-            'pinned' => $pinned,
-            'featured' => $featured,
-            'channel_tabs' => $channel_tabs,
-            'has_public_stream' => $has_public_stream,
+            'viewer'           => $viewer,
+            'actions'          => $actions,
+            'pinned'           => $pinned,
+            'featured'         => $featured,
+            'channel_tabs'     => $channel_tabs,
+            'has_public_stream' => (bool) can_view_public_stream(),
         ]);
     }
 }
