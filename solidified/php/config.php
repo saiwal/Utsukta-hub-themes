@@ -19,8 +19,10 @@ namespace {
 		register_hook('photos_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_photos_get');
 		register_hook('help_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_help_get');
 		
-		Route::register('view/theme/solidified/mod/nav_json.php', 'nav_api');
+		Route::register('view/theme/solidified/mod/nav.php', 'nav_api');
+		Route::register('view/theme/solidified/mod/chat.php', 'chat_api');
 		Route::register('view/theme/solidified/mod/manage.php', 'manage_api');
+		Route::register('view/theme/solidified/mod/connections.php', 'connections_api');
   }
 
   function solidified_theme_admin_disable() {
@@ -37,8 +39,10 @@ namespace {
 		unregister_hook('photos_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_photos_get');
 		unregister_hook('help_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_help_get');
 
-		Route::unregister('view/theme/solidified/mod/nav_json.php', 'nav_api');
+		Route::unregister('view/theme/solidified/mod/nav.php', 'nav_api');
+		Route::unregister('view/theme/solidified/mod/chat.php', 'chat_api');
 		Route::unregister('view/theme/solidified/mod/manage.php', 'manage_api');
+		Route::unregister('view/theme/solidified/mod/connections.php', 'connections_api');
   }
 
   function theme_admin(&$a) {
