@@ -2,7 +2,7 @@
 
 /**
  *   * Name: Solidified
- *   * Description: SolidJS based theme
+ *   * Description: SolidJS based theme ( for testing & feedback only)
  *   * Version: 0.0-alpha
  *   * MinVersion: 11.0
  *   * MaxVersion: 12.0
