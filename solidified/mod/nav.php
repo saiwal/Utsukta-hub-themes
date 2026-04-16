@@ -50,6 +50,16 @@ class Nav_api extends \Zotlabs\Web\Controller
             $actions['manage'] = z_root() . '/manage';
             $actions['logout'] = z_root() . '/logout';
         } elseif ($is_remote) {
+            $my_url = get_my_url();
+            if (!$my_url) {
+                $observer = App::get_observer();
+                $my_url = (($observer) ? $observer['xchan_url'] : '');
+            }
+            $homelink_arr = parse_url($my_url);
+            $scheme = $homelink_arr['scheme'] ?? '';
+            $host = $homelink_arr['host'] ?? '';
+            $homelink = $scheme . '://' . $host;
+            $actions['navhome'] = $homelink;
             // Remote OWA user: only logout makes sense
             $actions['logout'] = z_root() . '/logout';
         } else {
@@ -227,7 +237,8 @@ class Nav_api extends \Zotlabs\Web\Controller
         }
 
         // ── Response ──────────────────────────────────────────────────────────
-
+        logger(print_r($viewer, true), LOGGER_DEBUG);
+        logger(print_r($actions, true), LOGGER_DEBUG);
         json_return_and_die([
             'viewer' => $viewer,
             'actions' => $actions,

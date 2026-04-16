@@ -23,6 +23,7 @@ namespace {
 		Route::register('view/theme/solidified/mod/chat.php', 'chat_api');
 		Route::register('view/theme/solidified/mod/manage.php', 'manage_api');
 		Route::register('view/theme/solidified/mod/connections.php', 'connections_api');
+		Route::register('view/theme/solidified/mod/directory.php', 'directory_api');
   }
 
   function solidified_theme_admin_disable() {
@@ -43,6 +44,7 @@ namespace {
 		Route::unregister('view/theme/solidified/mod/chat.php', 'chat_api');
 		Route::unregister('view/theme/solidified/mod/manage.php', 'manage_api');
 		Route::unregister('view/theme/solidified/mod/connections.php', 'connections_api');
+		Route::unregister('view/theme/solidified/mod/directory.php', 'directory_api');
   }
 
   function theme_admin(&$a) {
