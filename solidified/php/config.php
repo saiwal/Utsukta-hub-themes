@@ -18,12 +18,12 @@ namespace {
 		register_hook('cloud_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_cloud_get');
 		register_hook('photos_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_photos_get');
 		register_hook('help_mod_content', 'view/theme/solidified/hooks/json_ep.php', 'json_help_get');
-		
 		Route::register('view/theme/solidified/mod/nav.php', 'nav_api');
 		Route::register('view/theme/solidified/mod/chat.php', 'chat_api');
 		Route::register('view/theme/solidified/mod/manage.php', 'manage_api');
 		Route::register('view/theme/solidified/mod/connections.php', 'connections_api');
 		Route::register('view/theme/solidified/mod/directory.php', 'directory_api');
+		Route::register('view/theme/solidified/mod/weather.php', 'weather');
   }
 
   function solidified_theme_admin_disable() {
@@ -45,6 +45,7 @@ namespace {
 		Route::unregister('view/theme/solidified/mod/manage.php', 'manage_api');
 		Route::unregister('view/theme/solidified/mod/connections.php', 'connections_api');
 		Route::unregister('view/theme/solidified/mod/directory.php', 'directory_api');
+		Route::unregister('view/theme/solidified/mod/weather.php', 'weather');
   }
 
   function theme_admin(&$a) {
