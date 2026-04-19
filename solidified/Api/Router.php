@@ -9,8 +9,9 @@ class Router
         'csrf' => Handlers\Csrf::class,
         'manage' => Handlers\Manage::class,
         'network' => Handlers\Network::class,
+        'channel' => Handlers\Channel::class,
         /* 'connections' => Handlers\Connections::class, */
-        /* 'photos' => Handlers\Photos::class, */
+        'photos' => Handlers\Photos::class,
         /* 'notifications' => Handlers\Notifications::class, */
         /* 'post' => Handlers\Post::class, */
     ];
