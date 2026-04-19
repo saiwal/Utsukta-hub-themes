@@ -78,7 +78,8 @@ class Photos
 
     private function getAlbumsSummary(array $channel, string $ob_hash): void
     {
-        require_once \App::$basepath . '/include/attach.php';
+        require_once 'include/attach.php';
+        require_once 'include/photos.php';
 
         $result = photos_albums_list($channel, \App::get_observer());
 
@@ -134,7 +135,8 @@ class Photos
         if (!$albumHash)
             Response::error(400, 'Album hash required');
 
-        require_once \App::$basepath . '/include/attach.php';
+        require_once 'include/photos.php';
+        require_once 'include/attach.php';
 
         // Verify album exists and observer can see it
         $album_row = photos_album_exists($channel['channel_id'], $ob_hash, $albumHash);
