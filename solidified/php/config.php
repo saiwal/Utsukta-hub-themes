@@ -25,6 +25,7 @@ namespace {
 		Route::register('view/theme/solidified/mod/directory.php', 'directory_api');
 		Route::register('view/theme/solidified/mod/weather.php', 'weather');
 		Route::register('view/theme/solidified/mod/webpages.php', 'webpages_api');
+		Route::register('view/theme/solidified/mod/api.php', 'api');
   }
 
   function solidified_theme_admin_disable() {
@@ -48,6 +49,7 @@ namespace {
 		Route::unregister('view/theme/solidified/mod/directory.php', 'directory_api');
 		Route::unregister('view/theme/solidified/mod/weather.php', 'weather');
 		Route::unregister('view/theme/solidified/mod/webpages.php', 'webpages_api');
+		Route::unregister('view/theme/solidified/mod/api.php', 'api');
   }
 
   function theme_admin(&$a) {
