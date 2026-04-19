@@ -85,7 +85,7 @@ class Channel
     // /api/channel/:nick  → channel identified by nick (permission checked)
     private function resolveChannel(int $uid): array
     {
-        $nick = \App::$argv[2] ?? null;
+	        $nick = \App::$argv[2] ?? null;
 
         if ($nick) {
             $channel = channelx_by_nick($nick);

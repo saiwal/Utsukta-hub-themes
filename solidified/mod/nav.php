@@ -179,18 +179,18 @@ class Nav_api extends \Zotlabs\Web\Controller
                 // Posts tab is always present if we can resolve the channel
                 $channel_tabs[] = [
                     'id' => 'stream',
-                    'label' => t('Posts'),
+                    'label' => t('Channel'),
                     'url' => z_root() . '/channel/' . $subject_nick,
                     'icon' => 'house',
                 ];
 
-                if ($p['view_profile'])
-                    $channel_tabs[] = [
-                        'id' => 'profile',
-                        'label' => t('About'),
-                        'url' => z_root() . '/profile/' . $subject_nick,
-                        'icon' => 'person',
-                    ];
+                /* if ($p['view_profile']) */
+                /*     $channel_tabs[] = [ */
+                /*         'id' => 'profile', */
+                /*         'label' => t('About'), */
+                /*         'url' => z_root() . '/profile/' . $subject_nick, */
+                /*         'icon' => 'person', */
+                /*     ]; */
 
                 if ($p['view_storage']) {
                     $channel_tabs[] = [

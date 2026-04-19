@@ -9,7 +9,8 @@ class Router
         'csrf' => Handlers\Csrf::class,
         'manage' => Handlers\Manage::class,
         'network' => Handlers\Network::class,
-        'channel' => Handlers\Channel::class,
+		'channel' => Handlers\Channel::class,
+		'profile' => Handlers\Profile::class,
         /* 'connections' => Handlers\Connections::class, */
         'photos' => Handlers\Photos::class,
         /* 'notifications' => Handlers\Notifications::class, */
