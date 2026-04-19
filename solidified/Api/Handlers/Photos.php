@@ -308,7 +308,6 @@ class Photos
                                AND is_photo = 1
                                $sql_attach
                              ORDER BY created DESC");
-
             if ($siblings) {
                 $hashes = array_column($siblings, 'hash');
                 $pos = array_search($resourceId, $hashes);
