@@ -6,7 +6,6 @@ use Theme\Solidified\Api\Response;
 
 class Csrf {
 
-    // GET /zapi/csrf — returns a token tied to the current session
     public function get(): void {
         Auth::requireLocal();
         Response::send(['token' => self::generate()]);
