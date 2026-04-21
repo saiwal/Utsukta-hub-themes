@@ -6,15 +6,14 @@ use Theme\Solidified\Api\Handlers;
 class Router
 {
     private static array $map = [
+        'sw' => Handlers\Sw::class,
+        'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
         'manage' => Handlers\Manage::class,
         'network' => Handlers\Network::class,
-		'channel' => Handlers\Channel::class,
-		'profile' => Handlers\Profile::class,
-        /* 'connections' => Handlers\Connections::class, */
+        'channel' => Handlers\Channel::class,
+        'profile' => Handlers\Profile::class,
         'photos' => Handlers\Photos::class,
-        /* 'notifications' => Handlers\Notifications::class, */
-        /* 'post' => Handlers\Post::class, */
     ];
 
     public static function dispatch(string $method): void
