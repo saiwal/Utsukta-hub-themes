@@ -23,7 +23,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
-
+	<link rel="icon" href="/view/theme/solidified/assets/favicon.ico">
 	<link rel="manifest" href="/api/manifest" />
 	<meta name="theme-color" content="#1e293b" />
 	<meta name="mobile-web-app-capable" content="yes" />
