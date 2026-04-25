@@ -10,9 +10,11 @@
 
 function channel_hero(&$arr)
 {
-		$current_theme = App::$profile['channel_theme'];
-
-    if (! str_starts_with($current_theme, 'spurgeon')) {
+    if (empty(App::$profile) || !is_array(App::$profile)) {
+        return;
+    }
+    $current_theme = App::$profile['channel_theme'] ?? null;
+    if (!str_starts_with((string)$current_theme, 'spurgeon')) {
         return;
     }
 
