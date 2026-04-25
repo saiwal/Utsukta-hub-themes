@@ -1,10 +1,11 @@
 <?php 
 
 function notification_nav(&$x) {
-
-    $current_theme = App::$channel['channel_theme'];
-
-    if (! str_starts_with($current_theme, 'adminlte')) {
+    if (empty(App::$channel) || !is_array(App::$channel)) {
+        return;
+    }
+    $current_theme = App::$channel['channel_theme'] ?? null;
+    if (!str_starts_with((string)$current_theme, 'adminlte')) {
         return;
     }
 
