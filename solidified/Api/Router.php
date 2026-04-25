@@ -6,21 +6,24 @@ use Theme\Solidified\Api\Handlers;
 class Router
 {
     private static array $map = [
+        'sw' => Handlers\Sw::class,
+        'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
         'manage' => Handlers\Manage::class,
+        'item' => Handlers\Item::class,
         'network' => Handlers\Network::class,
-		'channel' => Handlers\Channel::class,
-		'profile' => Handlers\Profile::class,
-        /* 'connections' => Handlers\Connections::class, */
+        'channel' => Handlers\Channel::class,
+        'profile' => Handlers\Profile::class,
         'photos' => Handlers\Photos::class,
-        /* 'notifications' => Handlers\Notifications::class, */
-        /* 'post' => Handlers\Post::class, */
     ];
 
     public static function dispatch(string $method): void
     {
         // URL: /api/settings       → argv: [0]=api  [1]=settings
         // URL: /api/connections/42 → argv: [0]=api  [1]=connections  [2]=42
+        // Decode percent-encoded segments (needed for mid values in /api/item/:mid/*)
+        \App::$argv = array_map('urldecode', \App::$argv);
+
         $resource = \App::$argv[1] ?? null;
 
         if (!$resource) {
