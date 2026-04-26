@@ -185,13 +185,21 @@ class Nav_api extends \Zotlabs\Web\Controller
                 ];
 
                 /* if ($p['view_profile']) */
-                /*     $channel_tabs[] = [ */
-                /*         'id' => 'profile', */
-                /*         'label' => t('About'), */
-                /*         'url' => z_root() . '/profile/' . $subject_nick, */
-                /*         'icon' => 'person', */
-                /*     ]; */
+                /* $channel_tabs[] = [ */
+                /* 'id' => 'profile', */
+                /* 'label' => t('About'), */
+                /* 'url' => z_root() . '/profile/' . $subject_nick, */
+                /* 'icon' => 'person', */
+                /* ]; */
 
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles')) {
+                    $channel_tabs[] = [
+                        'id' => 'articles-tab',
+                        'label' => t('Articles'),
+                        'url' => z_root() . '/articles/' . $subject_nick,
+                        'icon' => 'newspaper',
+                    ];
+                }
                 if ($p['view_storage']) {
                     $channel_tabs[] = [
                         'id' => 'photos',
@@ -233,6 +241,7 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'icon' => 'layout-text-sidebar',
                     ];
                 }
+
             }
         }
 
