@@ -11,6 +11,7 @@ class Router
         'csrf' => Handlers\Csrf::class,
         'manage' => Handlers\Manage::class,
         'item' => Handlers\Item::class,
+        'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
         'channel' => Handlers\Channel::class,
         'profile' => Handlers\Profile::class,
