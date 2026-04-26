@@ -9,6 +9,8 @@ class Router
         'sw' => Handlers\Sw::class,
         'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
+        'siteinfo' => Handlers\Siteinfo::class,
+        'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
         'item' => Handlers\Item::class,
         'articles' => Handlers\Articles::class,
