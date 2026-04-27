@@ -1,9 +1,9 @@
 <?php
 namespace Theme\Solidified\Api\Handlers;
 
+use Theme\Solidified\Api\Response;
 use Zotlabs\Lib\Config;
 use Zotlabs\Lib\Libzotdir;
-use Theme\Solidified\Api\Response;
 
 class Pubsites
 {
@@ -40,23 +40,23 @@ class Pubsites
 
                 if (strpos($jj['version'], ' ')) {
                     $x = explode(' ', $jj['version']);
-                    if ($x[1]) $jj['version'] = $x[1];
+                    if ($x[1])
+                        $jj['version'] = $x[1];
                 }
 
-                $host = strtolower(substr($jj['url'], strpos($jj['url'], '://') + 3));
-
                 $sites[] = [
-                    'url'            => $jj['url'],
-                    'urltext'        => str_replace('https://', '', $jj['url']),
-                    'host'           => $host,
-                    'sellpage'       => $jj['sellpage'] ?? null,
-                    'access'         => $jj['access'] ?? '',
-                    'register'       => $jj['register'] ?? '',
-                    'project'        => ucwords($jj['project']),
-                    'version'        => $jj['version'] ?? '',
-                    'location'       => $jj['location'] ?? '',
+                    'urltext' => str_replace(['https://', 'http://'], '', $jj['url']),
+                    'host' => str_replace(['https://', 'http://'], '', $jj['url']),
+                    'sellpage' => !empty($jj['sellpage']) ? $jj['sellpage'] : null,
+                    'register_url' => !empty($jj['sellpage']) ? $jj['sellpage'] : rtrim($jj['url'], '/') . '/register',
+                    'url' => $jj['url'],
+                    'access' => $jj['access'] ?? '',
+                    'register' => $jj['register'] ?? '',
+                    'project' => ucwords($jj['project']),
+                    'version' => $jj['version'] ?? '',
+                    'location' => $jj['location'] ?? '',
                     'rating_enabled' => (bool) Config::Get('system', 'rating_enabled'),
-                    'can_rate'       => (bool) local_channel(),
+                    'can_rate' => (bool) local_channel(),
                 ];
             }
         }
