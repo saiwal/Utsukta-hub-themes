@@ -1,1 +1,1 @@
-import{b as t,t as e}from"./app.js";import{S as r}from"./app-SubPageContent.js";var a=e('<p class="text-sm text-muted">Coming soon.');function i(){return t(r,{title:"Privacy",description:"Privacy related settings.",get children(){return a()}})}export{i as default};
+import{a as t,t as e}from"./app.js";import{S as r}from"./app-SubPageContent.js";var a=e('<p class="text-sm text-muted">Coming soon.');function i(){return t(r,{title:"Privacy",description:"Privacy related settings.",get children(){return a()}})}export{i as default};

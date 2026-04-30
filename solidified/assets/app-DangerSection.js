@@ -1,1 +1,1 @@
-import{b as t,t as e}from"./app.js";import{S as n}from"./app-SubPageContent.js";var r=e('<p class="text-sm text-muted">Coming soon.');function s(){return t(n,{title:"Danger",description:"Dangerous settings, be careful.",get children(){return r()}})}export{s as default};
+import{a as t,t as e}from"./app.js";import{S as n}from"./app-SubPageContent.js";var r=e('<p class="text-sm text-muted">Coming soon.');function s(){return t(n,{title:"Danger",description:"Dangerous settings, be careful.",get children(){return r()}})}export{s as default};

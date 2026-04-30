@@ -1,1 +1,1 @@
-import{b as t,t as e}from"./app.js";import{S as n}from"./app-SubPageContent.js";var o=e('<p class="text-sm text-muted">Coming soon.');function a(){return t(n,{title:"Account",description:"Account related settings.",get children(){return o()}})}export{a as default};
+import{a as t,t as e}from"./app.js";import{S as n}from"./app-SubPageContent.js";var o=e('<p class="text-sm text-muted">Coming soon.');function c(){return t(n,{title:"Account",description:"Account related settings.",get children(){return o()}})}export{c as default};

@@ -1,0 +1,1 @@
+import{a as t,t as e}from"./app.js";import{S as o}from"./app-SubPageContent.js";var n=e('<p class="text-sm text-muted">Coming soon.');function a(){return t(o,{title:"Site",description:"Site Configurations.",get children(){return n()}})}export{a as default};
