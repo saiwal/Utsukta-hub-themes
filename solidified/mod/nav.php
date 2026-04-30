@@ -181,7 +181,7 @@ class Nav_api extends \Zotlabs\Web\Controller
                     'id' => 'stream',
                     'label' => t('Channel'),
                     'url' => z_root() . '/channel/' . $subject_nick,
-                    'icon' => 'house',
+                    'icon' => 'home',
                 ];
 
                 /* if ($p['view_profile']) */
@@ -197,7 +197,7 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'id' => 'articles-tab',
                         'label' => t('Articles'),
                         'url' => z_root() . '/articles/' . $subject_nick,
-                        'icon' => 'newspaper',
+                        'icon' => 'articles',
                     ];
                 }
                 if ($p['view_storage']) {
@@ -238,7 +238,7 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'id' => 'webpages',
                         'label' => t('Webpages'),
                         'url' => z_root() . '/page/' . $subject_nick . '/home',
-                        'icon' => 'layout-text-sidebar',
+                        'icon' => 'webpages',
                     ];
                 }
 

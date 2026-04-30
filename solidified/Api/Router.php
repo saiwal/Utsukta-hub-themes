@@ -10,6 +10,7 @@ class Router
         'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
         'siteinfo' => Handlers\Siteinfo::class,
+        'display' => Handlers\Display::class,
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
         'item' => Handlers\Item::class,
