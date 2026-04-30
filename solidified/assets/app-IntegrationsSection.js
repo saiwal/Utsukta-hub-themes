@@ -1,0 +1,1 @@
+import{b as t,t as e}from"./app.js";import{S as n}from"./app-SubPageContent.js";var a=e('<p class="text-sm text-muted">Coming soon.');function i(){return t(n,{title:"Integrations",description:"Manage features and app integrations.",get children(){return a()}})}export{i as default};

@@ -1,0 +1,1 @@
+import{b as t,t as e}from"./app.js";import{S as o}from"./app-SubPageContent.js";var r=e('<p class="text-sm text-muted">Coming soon.');function a(){return t(o,{title:"Profile",description:"Profile related settings.",get children(){return r()}})}export{a as default};
