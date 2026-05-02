@@ -246,4 +246,83 @@ if ($slug) {
             'viewer_repeated' => $repeated,
         ];
     }
+
+    // -------------------------------------------------------------------------
+    // POST /api/articles/:nick
+    // Creates an article (item_type = ITEM_TYPE_ARTICLE).
+    // Body params: title, slug (webpage name), category, body, mimetype
+    // -------------------------------------------------------------------------
+
+    public function post(): void
+    {
+        require_once 'include/items.php';
+        require_once 'include/acl_selectors.php';
+
+        $uid = \Theme\Solidified\Api\Auth::requireLocalJson();
+
+        $nick = \App::$argv[2] ?? '';
+        if (!$nick) {
+            Response::error(400, 'Channel nick required');
+        }
+
+        $channel = channelx_by_nick($nick);
+        if (!$channel || intval($channel['channel_id']) !== $uid) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $input    = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body     = trim($input['body']     ?? '');
+        $title    = trim($input['title']    ?? '');
+        $slug     = trim($input['slug']     ?? '');
+        $category = trim($input['category'] ?? '');
+        $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
+
+        if (!$body) {
+            Response::error(400, 'Body is required');
+        }
+        if (!in_array($mimetype, ['text/bbcode', 'text/html', 'text/plain', 'text/markdown'], true)) {
+            $mimetype = 'text/bbcode';
+        }
+
+        $arr = [
+            'uid'             => $uid,
+            'aid'             => intval($channel['channel_account_id']),
+            'item_type'       => ITEM_TYPE_ARTICLE,
+            'item_thread_top' => 1,
+            'item_origin'     => 1,
+            'item_wall'       => 1,
+            'author_xchan'    => $channel['channel_hash'],
+            'owner_xchan'     => $channel['channel_hash'],
+            'title'           => $title,
+            'body'            => $body,
+            'mimetype'        => $mimetype,
+            'verb'            => 'Create',
+            'obj_type'        => 'Article',
+            'webpage'         => $slug ?: '',
+            'created'         => datetime_convert(),
+            'edited'          => datetime_convert(),
+            'commented'       => datetime_convert(),
+        ];
+
+        if ($category) {
+            $arr['term'] = [[
+                'type' => TERM_CATEGORY,
+                'term' => $category,
+                'url'  => '',
+            ]];
+        }
+
+        $result = item_store($arr);
+
+        if (!$result || !$result['success']) {
+            $msg = $result['message'] ?? 'item_store failed';
+            logger('Articles::post item_store error: ' . $msg, LOGGER_DEBUG);
+            Response::error(500, 'Failed to create article');
+        }
+
+        Response::send([
+            'uuid' => $result['item']['uuid'] ?? '',
+            'iid'  => intval($result['item_id'] ?? 0),
+        ], [], 201);
+    }
 }
