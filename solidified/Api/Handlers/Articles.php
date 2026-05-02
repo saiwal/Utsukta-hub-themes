@@ -215,7 +215,7 @@ if ($slug) {
             'edited'          => $item['edited'],
             'title'           => $item['title'],
             'body'            => $item['body'],
-            'summary'         => $item['item_summary'] ?? '',
+            'summary'         => $item['summary'] ?? '',
             'verb'            => $item['verb'],
             'obj_type'        => $item['obj_type'],
             'item_type'       => intval($item['item_type']),
