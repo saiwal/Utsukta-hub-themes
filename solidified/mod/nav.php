@@ -29,7 +29,7 @@ class Nav_api extends \Zotlabs\Web\Controller
             'is_local' => $is_local,
             'is_remote' => $is_remote,
             'is_admin' => $is_local && is_site_admin(),
-            'nick' => $channel['channel_address'] ?? '',
+            'nick' => $channel['channel_address'] . '@' . App::get_hostname() ?? '',
             'name' => $observer['xchan_name'] ?? '',
             'avatar' => $observer['xchan_photo_m'] ?? '',
             'url' => $observer['xchan_url'] ?? '',
@@ -41,24 +41,24 @@ class Nav_api extends \Zotlabs\Web\Controller
         // PHP is the authority here — frontend renders whatever keys arrive.
 
         $actions = [];
-
+        $my_url = get_my_url();
+        if (!$my_url) {
+            $observer = App::get_observer();
+            $my_url = (($observer) ? $observer['xchan_url'] : '');
+        }
+        $homelink_arr = parse_url($my_url);
+        $scheme = $homelink_arr['scheme'] ?? '';
+        $host = $homelink_arr['host'] ?? '';
+        $homelink = $scheme . '://' . $host;
         if ($is_local) {
             $nick = $channel['channel_address'] ?? '';
             $actions['profile'] = z_root() . '/profile/' . $nick;
             $actions['profiles'] = z_root() . '/profiles';
             $actions['settings'] = z_root() . '/settings';
             $actions['manage'] = z_root() . '/manage';
+            $actions['navhome'] = $homelink;
             $actions['logout'] = z_root() . '/logout';
         } elseif ($is_remote) {
-            $my_url = get_my_url();
-            if (!$my_url) {
-                $observer = App::get_observer();
-                $my_url = (($observer) ? $observer['xchan_url'] : '');
-            }
-            $homelink_arr = parse_url($my_url);
-            $scheme = $homelink_arr['scheme'] ?? '';
-            $host = $homelink_arr['host'] ?? '';
-            $homelink = $scheme . '://' . $host;
             $actions['navhome'] = $homelink;
             // Remote OWA user: only logout makes sense
             $actions['logout'] = z_root() . '/logout';
@@ -241,7 +241,6 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'icon' => 'webpages',
                     ];
                 }
-
             }
         }
 
