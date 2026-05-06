@@ -458,6 +458,7 @@ class Item
         $body = \Auth::$parsedBody ?? [];
         $content = trim($body['body'] ?? '');
         $title = trim($body['title'] ?? '');
+        $summary = trim($body['summary'] ?? '');
 
         if (!$content) {
             json_return_and_die(['error' => 'body is required']);
@@ -477,9 +478,9 @@ class Item
         $iid = intval($item[0]['id']);
         $now = datetime_convert();
 
-        q("UPDATE item SET body = '%s', title = '%s', edited = '%s', changed = '%s'
+        q("UPDATE item SET body = '%s', title = '%s', summary = '%s', edited = '%s', changed = '%s'
            WHERE id = %d AND uid = %d",
-            dbesc($content), dbesc($title), dbesc($now), dbesc($now), $iid, $uid);
+            dbesc($content), dbesc($title), dbesc($summary), dbesc($now), dbesc($now), $iid, $uid);
 
         Master::Summon(['Notifier', 'edit_post', $iid]);
 
