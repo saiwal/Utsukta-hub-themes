@@ -29,7 +29,7 @@ class Nav_api extends \Zotlabs\Web\Controller
             'is_local' => $is_local,
             'is_remote' => $is_remote,
             'is_admin' => $is_local && is_site_admin(),
-            'nick' => $channel['channel_address'] . '@' . App::get_hostname() ?? '',
+            'nick' => $channel['channel_address'],
             'name' => $observer['xchan_name'] ?? '',
             'avatar' => $observer['xchan_photo_m'] ?? '',
             'url' => $observer['xchan_url'] ?? '',
@@ -41,6 +41,7 @@ class Nav_api extends \Zotlabs\Web\Controller
         // PHP is the authority here — frontend renders whatever keys arrive.
 
         $actions = [];
+
         $my_url = get_my_url();
         if (!$my_url) {
             $observer = App::get_observer();
@@ -50,6 +51,7 @@ class Nav_api extends \Zotlabs\Web\Controller
         $scheme = $homelink_arr['scheme'] ?? '';
         $host = $homelink_arr['host'] ?? '';
         $homelink = $scheme . '://' . $host;
+
         if ($is_local) {
             $nick = $channel['channel_address'] ?? '';
             $actions['profile'] = z_root() . '/profile/' . $nick;
