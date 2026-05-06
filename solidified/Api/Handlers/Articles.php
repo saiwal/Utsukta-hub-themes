@@ -248,4 +248,161 @@ if ($slug) {
         ];
     }
 
+    // -------------------------------------------------------------------------
+    // POST /api/articles/:nick
+    // Body (JSON): { title, summary, body, slug, category, mimetype, post_id? }
+    // post_id present → edit existing article via item_store_update
+    // post_id absent  → create new article via item_store
+    // -------------------------------------------------------------------------
+
+    public function post(): void
+    {
+        require_once 'include/items.php';
+        require_once 'include/security.php';
+
+        $uid = \Theme\Solidified\Api\Auth::requireLocalJson();
+
+        $nick = \App::$argv[2] ?? '';
+        if (!$nick) {
+            Response::error(400, 'Channel nick required');
+        }
+
+        $channel = channelx_by_nick($nick);
+        if (!$channel || intval($channel['channel_id']) !== $uid) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $input    = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body     = trim($input['body']     ?? '');
+        $title    = escape_tags(trim($input['title']    ?? ''));
+        $summary  = escape_tags(trim($input['summary']  ?? ''));
+        $slug     = trim($input['slug']     ?? '');
+        $category = trim($input['category'] ?? '');
+        $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
+        $post_id  = intval($input['post_id'] ?? 0);
+
+        if (!$body) {
+            Response::error(400, 'Body is required');
+        }
+        if (!in_array($mimetype, ['text/bbcode', 'text/html', 'text/plain', 'text/markdown'], true)) {
+            $mimetype = 'text/bbcode';
+        }
+        if ($slug) {
+            $slug = str_replace('/', '-', strtolower(\URLify::transliterate($slug)));
+        }
+
+        // ── Build category term tags ──────────────────────────────────────────
+        $post_tags = [];
+        if ($category) {
+            foreach (explode(',', $category) as $cat) {
+                $cat = trim($cat);
+                if (!$cat) continue;
+                $post_tags[] = [
+                    'uid'   => $uid,
+                    'ttype' => TERM_CATEGORY,
+                    'otype' => TERM_OBJ_POST,
+                    'term'  => $cat,
+                    'url'   => channel_url($channel) . '?cat=' . urlencode($cat),
+                ];
+            }
+        }
+
+        // ── Edit existing article ─────────────────────────────────────────────
+        if ($post_id) {
+            $orig = dbq("SELECT * FROM item WHERE id = %d AND uid = %d AND item_type = " . ITEM_TYPE_ARTICLE . " LIMIT 1",
+                intval($post_id), $uid);
+
+            if (!$orig) {
+                Response::error(404, 'Article not found');
+            }
+
+            $datarray                 = $orig[0];
+            $datarray['title']        = $title;
+            $datarray['summary']      = $summary;
+            $datarray['body']         = $body;
+            $datarray['mimetype']     = $mimetype;
+            $datarray['edited']       = datetime_convert();
+            $datarray['changed']      = datetime_convert();
+            $datarray['commented']    = datetime_convert();
+            $datarray['edit']         = true;
+            $datarray['id']           = $post_id;
+            $datarray['term']         = $post_tags;
+
+            if ($slug) {
+                \Zotlabs\Lib\IConfig::Set($datarray, 'system',
+                    item_type_to_namespace(ITEM_TYPE_ARTICLE), $slug, true);
+            }
+
+            $result = item_store_update($datarray);
+
+            if (!$result['success']) {
+                logger('Articles::post update error: ' . ($result['message'] ?? ''), LOGGER_DEBUG);
+                Response::error(500, 'Failed to update article');
+            }
+
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $post_id]);
+
+            Response::send(['uuid' => $orig[0]['uuid'], 'iid' => $post_id]);
+        }
+
+        // ── Create new article ────────────────────────────────────────────────
+        $uuid = item_message_id();
+        $mid  = z_root() . '/item/' . $uuid;
+        $now  = datetime_convert();
+
+        $datarray = [
+            'aid'             => intval($channel['channel_account_id']),
+            'uid'             => $uid,
+            'uuid'            => $uuid,
+            'mid'             => $mid,
+            'parent_mid'      => $mid,
+            'thr_parent'      => $mid,
+            'owner_xchan'     => $channel['channel_hash'],
+            'author_xchan'    => $channel['channel_hash'],
+            'created'         => $now,
+            'edited'          => $now,
+            'commented'       => $now,
+            'received'        => $now,
+            'changed'         => $now,
+            'verb'            => 'Create',
+            'obj_type'        => 'Article',
+            'item_type'       => ITEM_TYPE_ARTICLE,
+            'item_thread_top' => 1,
+            'item_origin'     => 1,
+            'item_wall'       => 1,
+            'item_private'    => 0,
+            'mimetype'        => $mimetype,
+            'title'           => $title,
+            'summary'         => $summary,
+            'body'            => $body,
+            'allow_cid'       => '',
+            'allow_gid'       => '',
+            'deny_cid'        => '',
+            'deny_gid'        => '',
+            'plink'           => $mid,
+            'term'            => $post_tags,
+        ];
+
+        if ($slug) {
+            \Zotlabs\Lib\IConfig::Set($datarray, 'system',
+                item_type_to_namespace(ITEM_TYPE_ARTICLE), $slug, true);
+        }
+
+        $result = item_store($datarray);
+
+        if (!$result || !$result['success']) {
+            logger('Articles::post create error: ' . ($result['message'] ?? ''), LOGGER_DEBUG);
+            Response::error(500, 'Failed to create article');
+        }
+
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
+
+        Response::send([
+            'uuid' => $result['item']['uuid'] ?? $uuid,
+            'iid'  => intval($result['item_id']),
+        ], [], 201);
+    }
+
+
+
 }
