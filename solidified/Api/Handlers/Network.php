@@ -3,8 +3,9 @@
 
 namespace Theme\Solidified\Api\Handlers;
 
-use Theme\Solidified\Api\Response;
 use Theme\Solidified\Api\Concerns\FormatsItems;
+use Theme\Solidified\Api\Auth;
+use Theme\Solidified\Api\Response;
 
 require_once ('include/items.php');
 require_once ('include/conversation.php');
@@ -16,12 +17,7 @@ class Network
 
     public function get(): void
     {
-        if (!local_channel()) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Permission denied']);
-            exit;
-        }
+        Auth::RequireLocalGet();
 
         $uid = local_channel();
         $channel = \App::get_channel();
@@ -344,16 +340,11 @@ class Network
             $items
         );
 
-        header('Content-Type: application/json');
-        Response::send($out, [
-            'offset' => $offset,
-            'limit' => $itemspage,
-            'nouveau' => $nouveau,
-            'has_more' => count($out) >= $itemspage,
-            'ordering' => $ordering,
-            'count' => count($out),
-        ]);
+        Response::paginate(
+            $out,
+            $offset,
+            $itemspage,
+            count($out),
+        );
     }
-
-
 }
