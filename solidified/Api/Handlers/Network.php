@@ -321,11 +321,13 @@ class Network
                 if ($items) {
                     xchan_query($items, true);
                     $items = fetch_post_tags($items, true);
+                    $ordered_parents = array_column($r ?? [], 'item_id');
+                    usort($items, function ($a, $b) use ($ordered_parents) {
+                        $pa = !empty($a['item_thread_top']) ? $a['id'] : $a['parent'];
+                        $pb = !empty($b['item_thread_top']) ? $b['id'] : $b['parent'];
 
-                    usort($items, function ($a, $b) use ($ordering) {
-                        if ($a['item_thread_top'] && $b['item_thread_top']) {
-                            $key = $ordering === 'commented' ? 'commented' : 'created';
-                            return strtotime($b[$key]) - strtotime($a[$key]);
+                        if ($pa !== $pb) {
+                            return array_search($pa, $ordered_parents) - array_search($pb, $ordered_parents);
                         }
                         return strtotime($a['created']) - strtotime($b['created']);
                     });
