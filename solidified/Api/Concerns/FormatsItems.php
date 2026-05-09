@@ -23,7 +23,7 @@ trait FormatsItems
                     $repeated = true;
             }
         }
-
+        $is_boost = ($item['verb'] === ACTIVITY_SHARE);
         return [
             'uuid' => $item['uuid'],
             'mid' => $item['mid'],
@@ -56,14 +56,28 @@ trait FormatsItems
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name' => $item['author']['xchan_name'] ?? '',
-                'address' => $item['author']['xchan_addr'] ?? '',
-                'url' => $item['author']['xchan_url'] ?? '',
+                'name' => ($item['verb'] === 'Announce' ? $item['owner']['xchan_name'] : $item['author']['xchan_name']) ?? '',
+                'address' => ($item['verb'] === 'Announce' ? $item['owner']['xchan_addr'] : $item['author']['xchan_addr']) ?? '',
+                'url' => ($item['verb'] === 'Announce' ? $item['owner']['xchan_url'] : $item['author']['xchan_url']) ?? '',
                 'photo' => [
-                    'src' => $item['author']['xchan_photo_m'] ?? '',
-                    'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
+                    'src' => ($item['verb'] === 'Announce' ? $item['owner']['xchan_photo_m'] : $item['author']['xchan_photo_m']) ?? '',
+                    'mimetype' => ($item['verb'] === 'Announce' ? $item['owner']['xchan_photo_mimetype'] : $item['author']['xchan_photo_mimetype']) ?? '',
                 ],
             ],
+            'owner' => [
+                'name' => $item['owner']['xchan_name'] ?? '',
+                'address' => $item['owner']['xchan_addr'] ?? '',
+                'url' => $item['owner']['xchan_url'] ?? '',
+                'photo' => [
+                    'src' => $item['owner']['xchan_photo_m'] ?? '',
+                    'mimetype' => $item['owner']['xchan_photo_mimetype'] ?? '',
+                ],
+            ],
+            'boosted_by' => $is_boost ? [
+                'name' => $item['author']['xchan_name'] ?? '',
+                'url' => $item['author']['xchan_url'] ?? '',
+                'photo' => $item['author']['xchan_photo_m'] ?? '',
+            ] : null,
             'permalink' => $item['plink'] ?? '',
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
