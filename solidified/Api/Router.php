@@ -11,6 +11,7 @@ class Router
         'csrf' => Handlers\Csrf::class,
         'siteinfo' => Handlers\Siteinfo::class,
         'settings' => Handlers\Settings::class,
+        'help' => Handlers\Help::class,
         'display' => Handlers\Display::class,
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
