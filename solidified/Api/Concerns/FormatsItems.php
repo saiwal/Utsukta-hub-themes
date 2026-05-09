@@ -23,53 +23,37 @@ trait FormatsItems
                     $repeated = true;
             }
         }
-        $is_boost = ($item['verb'] === 'Announce');
+        // Detect a repeated post by presence of [share] tag in body
         $boosted_by = null;
+        $share_match = [];
+        if (preg_match('/\[share\s+([^\]]+)\]/', $item['body'], $share_match)) {
+            // This is a repeat — author of this item is the repeater
+            // Parse original author from [share] attributes
+            $attrs = $share_match[1];
+            $orig_name = '';
+            $orig_profile = '';
+            $orig_avatar = '';
 
-        if ($is_boost) {
-            // For boosts: author = repeater, original post is in obj JSON
-            $obj = $item['obj'] ?? '';
-            if (is_string($obj) && $obj) {
-                $obj = json_decode($obj, true) ?? [];
-            }
-            if (!is_array($obj)) {
-                $obj = [];
-            }
+            if (preg_match("/author='([^']+)'/", $attrs, $m))
+                $orig_name = html_entity_decode($m[1]);
+            if (preg_match("/profile='([^']+)'/", $attrs, $m))
+                $orig_profile = $m[1];
+            if (preg_match("/avatar='([^']+)'/", $attrs, $m))
+                $orig_avatar = $m[1];
 
-            // obj['attributedTo'] or obj['actor'] holds the original author URL
-            $orig_url = '';
-            if (!empty($obj['attributedTo'])) {
-                $orig_url = is_array($obj['attributedTo'])
-                    ? ($obj['attributedTo']['id'] ?? $obj['attributedTo']['url'] ?? '')
-                    : $obj['attributedTo'];
-            } elseif (!empty($obj['actor'])) {
-                $orig_url = is_array($obj['actor'])
-                    ? ($obj['actor']['id'] ?? '')
-                    : $obj['actor'];
-            }
-
-            // Look up original author xchan by URL
-            $orig_xchan = [];
-            if ($orig_url) {
-                $r = q("SELECT xchan_name, xchan_addr, xchan_url, xchan_photo_m, xchan_photo_mimetype
-                FROM xchan WHERE xchan_url = '%s' OR xchan_id_url = '%s' LIMIT 1",
-                    dbesc($orig_url), dbesc($orig_url));
-                if ($r) {
-                    $orig_xchan = $r[0];
-                }
-            }
-
-            // boosted_by = the repeater (current author)
+            // boosted_by = the repeater (current item author)
             $boosted_by = [
                 'name' => $item['author']['xchan_name'] ?? '',
                 'url' => $item['author']['xchan_url'] ?? '',
                 'photo' => $item['author']['xchan_photo_m'] ?? '',
             ];
 
-            // If we found the original author, override author for display
-            if ($orig_xchan) {
-                $item['_orig_xchan'] = $orig_xchan;
-            }
+            // Override displayed author to be the original post author
+            $item['_share_author'] = [
+                'name' => $orig_name,
+                'url' => $orig_profile,
+                'photo' => $orig_avatar,
+            ];
         }
         return [
             'uuid' => $item['uuid'],
@@ -103,12 +87,12 @@ trait FormatsItems
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name' => ($is_boost && !empty($item['_orig_xchan'])) ? $item['_orig_xchan']['xchan_name'] : ($item['author']['xchan_name'] ?? ''),
-                'address' => ($is_boost && !empty($item['_orig_xchan'])) ? $item['_orig_xchan']['xchan_addr'] : ($item['author']['xchan_addr'] ?? ''),
-                'url' => ($is_boost && !empty($item['_orig_xchan'])) ? $item['_orig_xchan']['xchan_url'] : ($item['author']['xchan_url'] ?? ''),
+                'name' => isset($item['_share_author']) ? $item['_share_author']['name'] : ($item['author']['xchan_name'] ?? ''),
+                'address' => $item['author']['xchan_addr'] ?? '',
+                'url' => isset($item['_share_author']) ? $item['_share_author']['url'] : ($item['author']['xchan_url'] ?? ''),
                 'photo' => [
-                    'src' => ($is_boost && !empty($item['_orig_xchan'])) ? $item['_orig_xchan']['xchan_photo_m'] : ($item['author']['xchan_photo_m'] ?? ''),
-                    'mimetype' => ($is_boost && !empty($item['_orig_xchan'])) ? $item['_orig_xchan']['xchan_photo_mimetype'] : ($item['author']['xchan_photo_mimetype'] ?? ''),
+                    'src' => isset($item['_share_author']) ? $item['_share_author']['photo'] : ($item['author']['xchan_photo_m'] ?? ''),
+                    'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
                 ],
             ],
             'boosted_by' => $boosted_by,
