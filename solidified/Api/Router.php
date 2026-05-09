@@ -14,6 +14,7 @@ class Router
         'display' => Handlers\Display::class,
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
+        'stream-widgets' => Handlers\StreamWidgets::class,
         'item' => Handlers\Item::class,
         'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
