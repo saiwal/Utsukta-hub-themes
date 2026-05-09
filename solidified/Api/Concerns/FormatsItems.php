@@ -26,7 +26,9 @@ trait FormatsItems
         // Detect a repeated post by presence of [share] tag in body
         $boosted_by = null;
         $share_match = [];
-        if (preg_match('/\[share\s+([^\]]+)\]/', $item['body'], $share_match)) {
+        /* logger('FORMATITEM body: ' . substr($item['body'] ?? '', 0, 150), LOGGER_DEBUG); */
+        if (preg_match('/\[share\s+([^\]]+)\]/s', $item['body'], $share_match)) {
+            logger('SHARE MATCHED', LOGGER_DEBUG);
             // This is a repeat — author of this item is the repeater
             // Parse original author from [share] attributes
             $attrs = $share_match[1];
@@ -47,7 +49,7 @@ trait FormatsItems
                 'url' => $item['author']['xchan_url'] ?? '',
                 'photo' => $item['author']['xchan_photo_m'] ?? '',
             ];
-
+logger('BOOSTED_BY: ' . json_encode($boosted_by), LOGGER_DEBUG);
             // Override displayed author to be the original post author
             $item['_share_author'] = [
                 'name' => $orig_name,
