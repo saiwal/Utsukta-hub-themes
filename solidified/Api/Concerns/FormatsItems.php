@@ -23,6 +23,14 @@ trait FormatsItems
                     $repeated = true;
             }
         }
+        if (!$boosted_by && intval($item['item_thread_top']) === 1) {
+            $repeaters = $repeaters_map[$item['mid']] ?? [];
+            if ($repeaters) {
+                // Show the first repeater; frontend can show "+N more" if count > 1
+                $boosted_by = $repeaters[0];
+                $boosted_by['others'] = array_slice($repeaters, 1);
+            }
+        }
         // Detect a repeated post by presence of [share] tag in body
         $boosted_by = null;
         $share_match = [];
@@ -49,7 +57,7 @@ trait FormatsItems
                 'url' => $item['author']['xchan_url'] ?? '',
                 'photo' => $item['author']['xchan_photo_m'] ?? '',
             ];
-logger('BOOSTED_BY: ' . json_encode($boosted_by), LOGGER_DEBUG);
+            logger('BOOSTED_BY: ' . json_encode($boosted_by), LOGGER_DEBUG);
             // Override displayed author to be the original post author
             $item['_share_author'] = [
                 'name' => $orig_name,
@@ -98,6 +106,7 @@ logger('BOOSTED_BY: ' . json_encode($boosted_by), LOGGER_DEBUG);
                 ],
             ],
             'boosted_by' => $boosted_by,
+            'repeated_by' => $repeaters_map[$item['mid']] ?? [],  // repeat: array of repeaters
             'permalink' => $item['plink'] ?? '',
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
