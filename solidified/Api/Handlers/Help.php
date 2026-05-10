@@ -2,25 +2,24 @@
 // extend/theme/utsukta-themes/solidified/Api/Handlers/Help.php
 namespace Theme\Solidified\Api\Handlers;
 
-use Michelf\MarkdownExtra;
 use Theme\Solidified\Api\Response;
+use Michelf\MarkdownExtra;
 
-class Help
-{
+class Help {
+
     // Absolute path to src/docs/ inside the theme
-    private function docsBase(): string
-    {
-        return '/view/theme/solidified/src/docs';
+    private function docsBase(): string {
+        // Relative to CWD (/var/www/html/core) — same convention as core Help module
+        return 'view/theme/solidified/docs';
     }
 
     // ── dispatch ──────────────────────────────────────────────────────────────
 
-    public function get(): void
-    {
+    public function get(): void {
         $action = \App::$argv[2] ?? null;
 
         match ($action) {
-            'nav' => $this->handleNav(),
+            'nav'   => $this->handleNav(),
             'topic' => $this->handleTopic(),
             default => Response::error(400, 'Missing action: /api/help/nav or /api/help/topic'),
         };
@@ -29,10 +28,9 @@ class Help
     // ── nav tree ──────────────────────────────────────────────────────────────
     // GET /api/help/nav?section=user&lang=en
 
-    private function handleNav(): void
-    {
+    private function handleNav(): void {
         $section = $this->param('section', 'user');
-        $lang = $this->param('lang', 'en');
+        $lang    = $this->param('lang',    'en');
 
         $base = $this->docsBase() . '/' . $section . '/' . $lang;
 
@@ -44,25 +42,24 @@ class Help
             }
         }
 
-        $tree = $this->buildTree($base, $base, $section, $lang);
+        $tree  = $this->buildTree($base, $base, $section, $lang);
         $langs = $this->availableLangs($section);
 
         Response::send([
-            'tree' => $tree,
-            'langs' => $langs,
+            'tree'    => $tree,
+            'langs'   => $langs,
             'section' => $section,
-            'lang' => $lang,
+            'lang'    => $lang,
         ]);
     }
 
     // ── topic content ─────────────────────────────────────────────────────────
     // GET /api/help/topic?section=user&lang=en&topic=network
 
-    private function handleTopic(): void
-    {
+    private function handleTopic(): void {
         $section = $this->param('section', 'user');
-        $lang = $this->param('lang', 'en');
-        $topic = trim($this->param('topic', ''), '/');
+        $lang    = $this->param('lang',    'en');
+        $topic   = trim($this->param('topic', ''), '/');
 
         // Sanitise topic path — only safe chars
         $topic = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $topic);
@@ -83,20 +80,17 @@ class Help
         $candidates = [
             $base . '/' . $topic . '/index.txt',
             $base . '/' . $topic . '.txt',
-            $base . '/index.txt',  // root of section
+            $base . '/index.txt',   // root of section
         ];
         foreach ($candidates as $c) {
-            if (file_exists($c)) {
-                $file = $c;
-                break;
-            }
+            if (file_exists($c)) { $file = $c; break; }
         }
 
         if (!$file) {
             Response::error(404, "Topic not found: {$topic}");
         }
 
-        $raw = file_get_contents($file);
+        $raw  = file_get_contents($file);
         $html = MarkdownExtra::defaultTransform($raw);
 
         // Extract plain-text title from first # heading
@@ -105,12 +99,12 @@ class Help
         $langs = $this->availableLangs($section);
 
         Response::send([
-            'html' => $html,
-            'title' => $title,
-            'topic' => $topic,
+            'html'    => $html,
+            'title'   => $title,
+            'topic'   => $topic,
             'section' => $section,
-            'lang' => $lang,
-            'langs' => $langs,
+            'lang'    => $lang,
+            'langs'   => $langs,
         ]);
     }
 
@@ -121,43 +115,40 @@ class Help
      * Each node: { slug, label, path, hasContent, children[] }
      * `path` is the full topic slug relative to lang root, e.g. "network/advanced"
      */
-    private function buildTree(string $dir, string $base, string $section, string $lang): array
-    {
+    private function buildTree(string $dir, string $base, string $section, string $lang): array {
         $nodes = [];
 
         foreach (scandir($dir) as $entry) {
-            if ($entry === '.' || $entry === '..')
-                continue;
+            if ($entry === '.' || $entry === '..') continue;
 
-            $full = $dir . '/' . $entry;
+            $full    = $dir . '/' . $entry;
             $relPath = ltrim(substr($full, strlen($base)), '/');
 
             if (is_dir($full)) {
                 $hasContent = file_exists($full . '/index.txt');
-                $children = $this->buildTree($full, $base, $section, $lang);
+                $children   = $this->buildTree($full, $base, $section, $lang);
 
                 // Only include dirs that have content somewhere in the subtree
-                if (!$hasContent && empty($children))
-                    continue;
+                if (!$hasContent && empty($children)) continue;
 
                 $nodes[] = [
-                    'slug' => $entry,
-                    'label' => $this->slugToLabel($entry),
-                    'path' => $relPath,
+                    'slug'       => $entry,
+                    'label'      => $this->slugToLabel($entry),
+                    'path'       => $relPath,
                     'hasContent' => $hasContent,
-                    'children' => $children,
+                    'children'   => $children,
                 ];
             } elseif ($entry !== 'index.txt' && str_ends_with($entry, '.txt')) {
                 // Standalone .txt file (not index)
-                $slug = pathinfo($entry, PATHINFO_FILENAME);
-                $raw = file_get_contents($full);
-                $label = $this->extractTitle($raw) ?: $this->slugToLabel($slug);
+                $slug    = pathinfo($entry, PATHINFO_FILENAME);
+                $raw     = file_get_contents($full);
+                $label   = $this->extractTitle($raw) ?: $this->slugToLabel($slug);
                 $nodes[] = [
-                    'slug' => $slug,
-                    'label' => $label,
-                    'path' => pathinfo($relPath, PATHINFO_DIRNAME) . '/' . $slug,
+                    'slug'       => $slug,
+                    'label'      => $label,
+                    'path'       => pathinfo($relPath, PATHINFO_DIRNAME) . '/' . $slug,
                     'hasContent' => true,
-                    'children' => [],
+                    'children'   => [],
                 ];
             }
         }
@@ -165,23 +156,21 @@ class Help
         // Sort: dirs first, then files, both alphabetically
         usort($nodes, fn($a, $b) =>
             (!empty($a['children']) <=> !empty($b['children'])) * -1
-                ?: strcmp($a['slug'], $b['slug']));
+            ?: strcmp($a['slug'], $b['slug'])
+        );
 
         return $nodes;
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private function param(string $key, string $default = ''): string
-    {
+    private function param(string $key, string $default = ''): string {
         return isset($_GET[$key]) ? trim($_GET[$key]) : $default;
     }
 
-    private function availableLangs(string $section): array
-    {
+    private function availableLangs(string $section): array {
         $base = $this->docsBase() . '/' . $section;
-        if (!is_dir($base))
-            return [];
+        if (!is_dir($base)) return [];
         $langs = [];
         foreach (scandir($base) as $entry) {
             if ($entry !== '.' && $entry !== '..' && is_dir($base . '/' . $entry)) {
@@ -191,23 +180,19 @@ class Help
         return $langs;
     }
 
-    private function findAnyLangBase(string $section): ?string
-    {
+    private function findAnyLangBase(string $section): ?string {
         $langs = $this->availableLangs($section);
-        if (empty($langs))
-            return null;
+        if (empty($langs)) return null;
         // Prefer 'en', then first available
         $lang = in_array('en', $langs) ? 'en' : $langs[0];
         return $this->docsBase() . '/' . $section . '/' . $lang;
     }
 
-    private function slugToLabel(string $slug): string
-    {
+    private function slugToLabel(string $slug): string {
         return ucwords(str_replace(['-', '_'], ' ', $slug));
     }
 
-    private function extractTitle(string $markdown): string
-    {
+    private function extractTitle(string $markdown): string {
         if (preg_match('/^#\s+(.+)$/m', $markdown, $m)) {
             return trim($m[1]);
         }
