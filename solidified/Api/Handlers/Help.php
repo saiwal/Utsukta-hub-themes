@@ -93,6 +93,24 @@ class Help {
         $raw  = file_get_contents($file);
         $html = MarkdownExtra::defaultTransform($raw);
 
+        // Rewrite relative image srcs to absolute docs asset URLs.
+        // The topic dir is the directory containing the resolved file.
+        // e.g. file = view/theme/solidified/docs/user/en/hq/widgets/post-composer/index.txt
+        //   → topicDir = hq/widgets/post-composer
+        //   → assetBase = /view/theme/solidified/docs/user/en/hq/widgets/post-composer/
+        $fileDir    = dirname($file);                     // absolute-ish (relative to CWD)
+        $docsRoot   = $this->docsBase() . '/' . $section . '/' . $lang;
+        $topicDir   = ltrim(substr($fileDir, strlen($docsRoot)), '/');
+        $assetBase  = '/view/theme/solidified/docs/' . $section . '/' . $lang
+                      . ($topicDir ? '/' . $topicDir : '') . '/';
+
+        // Replace src="relative/path" that don't start with http/https/data/or /
+        $html = preg_replace_callback(
+            '/(<img\s[^>]*src=")(?!https?:\/\/|data:|\/)(.*?)(")/i',
+            fn($m) => $m[1] . $assetBase . $m[2] . $m[3],
+            $html
+        );
+
         // Extract plain-text title from first # heading
         $title = $this->extractTitle($raw);
 
