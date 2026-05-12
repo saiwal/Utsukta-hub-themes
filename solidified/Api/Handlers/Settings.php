@@ -695,34 +695,46 @@ class Settings
         Response::send(['status' => 'ok']);
     }
 
+
     private function postIntegrationsSettings(int $uid, array $data): void
     {
-        $name = notags(trim($data['name'] ?? ''));
+        $name   = notags(trim($data['name'] ?? ''));
         $action = $data['action'] ?? '';  // 'install' | 'uninstall'
-
-        if (!$name || !in_array($action, ['install', 'uninstall']))
+ 
+        if (!$name || !in_array($action, ['install', 'uninstall'], true))
             Response::error(400, 'Invalid request');
-
-        $system = \Zotlabs\Lib\Apps::get_system_apps(true);
-        $app = null;
-        foreach ($system as $s) {
-            if (($s['name'] ?? '') === $name) {
-                $app = $s;
-                break;
+ 
+        if ($action === 'install') {
+            // Find the system app definition by name
+            $system = \Zotlabs\Lib\Apps::get_system_apps(true);
+            $app = null;
+            foreach ($system as $s) {
+                if (($s['name'] ?? '') === $name) {
+                    $app = $s;
+                    break;
+                }
             }
-        }
-
-        if (!$app)
-            Response::error(404, 'App not found');
-
-        if ($action === 'install')
+            if (!$app)
+                Response::error(404, 'App not found');
+ 
             \Zotlabs\Lib\Apps::import_app($app, $uid);
-        else
-            \Zotlabs\Lib\Apps::uninstall_app_by_name($uid, $name);
-
+ 
+        } else {
+            // Find the installed record to get its primary-key `id`
+            $rows = q(
+                "SELECT id FROM app WHERE app_channel = %d AND app_name = '%s' LIMIT 1",
+                intval($uid),
+                dbesc($name)
+            );
+            if (!$rows)
+                Response::error(404, 'App not installed');
+ 
+            \Zotlabs\Lib\Apps::app_destroy(intval($rows[0]['id']));
+        }
+ 
         Response::send(['status' => 'ok']);
     }
-
+ 
     private function postProfileSettings(int $uid, array $data): void
     {
         $fields = [

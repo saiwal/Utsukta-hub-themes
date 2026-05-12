@@ -247,8 +247,6 @@ class Nav_api extends \Zotlabs\Web\Controller
         }
 
         // ── Response ──────────────────────────────────────────────────────────
-        logger(print_r($viewer, true), LOGGER_DEBUG);
-        logger(print_r($actions, true), LOGGER_DEBUG);
         json_return_and_die([
             'viewer' => $viewer,
             'actions' => $actions,
