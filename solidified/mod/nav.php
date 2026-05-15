@@ -243,6 +243,15 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'icon' => 'webpages',
                     ];
                 }
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Wiki')) {
+                    $channel_tabs[] = [
+                        'id' => 'wiki',
+                        'label' => t('Wiki'),
+                        'url' => z_root() . '/wiki/' . $subject_nick . '/home',
+                        'icon' => 'wiki',
+                    ];
+                }
+
             }
         }
 
