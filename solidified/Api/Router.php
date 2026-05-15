@@ -24,6 +24,7 @@ class Router
         'profile' => Handlers\Profile::class,
         'photos' => Handlers\Photos::class,
         'pubstream' => Handlers\Pubstream::class,
+        'webpages' => Handlers\Webpages::class,
     ];
 
     public static function dispatch(string $method): void
