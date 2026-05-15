@@ -25,6 +25,7 @@ class Router
         'photos' => Handlers\Photos::class,
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
+        'wiki' => Handlers\Wiki::class,
     ];
 
     public static function dispatch(string $method): void
