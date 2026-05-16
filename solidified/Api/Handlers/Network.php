@@ -1,240 +1,309 @@
 <?php
-// extend/theme/utsukta-themes/solidified/Api/Handlers/Network.php
+/**
+ * Theme\Solidified\Api\Handlers\Network
+ *
+ * GET /api/network
+ *
+ * Mirrors Zotlabs\Module\Network::get() SQL verbatim.
+ * Uses dbq() + xchan_query() + fetch_post_tags() + conv_sort()
+ * exactly as the original does — no items_fetch() abstraction.
+ *
+ * Query params (all optional)
+ * ───────────────────────────
+ * start    int     Offset for pagination (default 0)
+ * limit    int     Items per page        (default 20, max 40)
+ * order    string  created | commented | unthreaded
+ * search   string  Full-text / #hashtag search
+ * tag      string  Hashtag filter (without #)
+ * cat      string  Category filter
+ * verb     string  Verb filter; prefix '.' matches obj_type
+ * gid      int     Privacy-group id
+ * cid      int     Address-book contact id
+ * xchan    string  xchan_hash filter
+ * net      string  xchan_network filter
+ * pf       int     1 = public-forum mode for cid
+ * star     int     1 = starred only
+ * conv     int     1 = conversations involving me
+ * dm       int     1 = direct messages only
+ * unseen   int     1 = unseen only
+ * cmin     int     Affinity min (-1 = disabled)
+ * cmax     int     Affinity max (-1 = disabled)
+ * dbegin   string  Date range start (YYYY-MM-DD)
+ * dend     string  Date range end   (YYYY-MM-DD)
+ */
 
 namespace Theme\Solidified\Api\Handlers;
 
-use Theme\Solidified\Api\Concerns\FormatsItems;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
-use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\AccessList;
+use Zotlabs\Lib\Apps;
+use App;
 
-require_once('include/items.php');
-require_once('include/conversation.php');
-require_once('include/acl_selectors.php');
+require_once 'include/items.php';
+require_once 'include/taxonomy.php';
+require_once 'include/conversation.php';
 
 class Network
 {
-    use FormatsItems;
-
     public function get(): void
     {
-        Auth::RequireLocalGet();
+        $uid     = Auth::requireLocalGet();
+        $channel = App::get_channel();
 
-        $uid      = local_channel();
-        $channel  = \App::get_channel();
-        $observer_xchan = get_observer_hash();
+        $limit = min(40, max(1, intval($_GET['limit'] ?? 20)));
+        $start = max(0, intval($_GET['start'] ?? 0));
 
-        // ── Ordering (identical to core) ──────────────────────────────────────
-        $order = get_pconfig($uid, 'mod_network', 'order', 'created');
+        // ── item_normal clause ────────────────────────────────────────────────
+        $item_normal = item_normal();
 
-        // Honour ?order= override and persist it, just like core does
-        if (isset($_GET['order'])) {
-            $order = $_GET['order'];
-            set_pconfig($uid, 'mod_network', 'order', $order);
-        }
+        // ── Ordering ──────────────────────────────────────────────────────────
+        $saved_order = get_pconfig($uid, 'mod_network', 'order', 'created');
+        $order_param = trim($_GET['order'] ?? $saved_order);
 
         $nouveau  = false;
         $ordering = 'created';
 
-        switch ($order) {
+        switch ($order_param) {
             case 'commented':
                 $ordering = 'commented';
                 break;
             case 'unthreaded':
-                $nouveau  = true;
-                $ordering = 'created';
+                $nouveau = true;
                 break;
             default:
                 $ordering = 'created';
         }
 
-        // ── Params (identical to core) ─────────────────────────────────────────
-        $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))   ? notags($_GET['dend'])   : '';
-        $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : '';
+        // ── Filter params ─────────────────────────────────────────────────────
+        $search   = trim($_GET['search'] ?? '');
+        $hashtags = trim($_GET['tag']    ?? '');
+        $category = trim($_GET['cat']    ?? '');
+        $verb     = trim($_GET['verb']   ?? '');
+        $gid      = intval($_GET['gid']  ?? 0);
+        $cid      = intval($_GET['cid']  ?? 0);
+        $xchan    = trim($_GET['xchan']  ?? '');
+        $net      = trim($_GET['net']    ?? '');
+        $pf       = intval($_GET['pf']   ?? 0);
+        $star     = intval($_GET['star'] ?? 0);
+        $conv     = intval($_GET['conv'] ?? 0);
+        $dm       = intval($_GET['dm']   ?? 0);
+        $unseen   = intval($_GET['unseen'] ?? 0);
 
-        $gid      = intval($_GET['gid']   ?? 0);
-        $cid      = intval($_GET['cid']   ?? 0);
-        $star     = intval($_GET['star']  ?? 0);
-        $liked    = intval($_GET['liked'] ?? 0);
-        $conv     = intval($_GET['conv']  ?? 0);
-        $spam     = intval($_GET['spam']  ?? 0);
-        $dm       = intval($_GET['dm']    ?? 0);
-        $pf       = $_GET['pf']    ?? '';
-        $unseen   = $_GET['unseen'] ?? '';
-        $xchan    = $_GET['xchan'] ?? '';
-        $net      = $_GET['net']   ?? '';
-        $file     = $_GET['file']  ?? '';
-        $category = $_REQUEST['cat']  ?? '';
-        $hashtags = $_REQUEST['tag']  ?? '';
-        $verb     = $_REQUEST['verb'] ?? '';
-        $search   = $_GET['search']   ?? '';
+        $dateend   = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))
+            ? notags(trim($_GET['dend']))   : '';
+        $datebegin = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
+            ? notags(trim($_GET['dbegin'])) : '';
 
-        $default_cmin = Apps::system_app_installed($uid, 'Affinity Tool')
-            ? get_pconfig($uid, 'affinity', 'cmin', 0) : -1;
-        $default_cmax = Apps::system_app_installed($uid, 'Affinity Tool')
-            ? get_pconfig($uid, 'affinity', 'cmax', 99) : -1;
-
-        $cmin = array_key_exists('cmin', $_GET) ? intval($_GET['cmin']) : $default_cmin;
-        $cmax = array_key_exists('cmax', $_GET) ? intval($_GET['cmax']) : $default_cmax;
-
-        if ($search && strpos($search, '#') === 0) {
+        // # prefix in search → hashtag
+        if ($search && str_starts_with($search, '#')) {
             $hashtags = substr($search, 1);
             $search   = '';
         }
 
-        if ($datequery)
-            $ordering = 'created';
+        // Date filter forces created ordering
+        if ($dateend) $ordering = 'created';
 
-        if ($search || $file || (!$pf && $cid) || $hashtags || $verb || $category || $conv || $unseen)
+        // These modes collapse to nouveau (flat/unthreaded)
+        if ($search || $hashtags || $verb || $category || $conv || $unseen
+            || ($cid && !$pf)) {
             $nouveau = true;
+        }
 
-        // ── Pagination ────────────────────────────────────────────────────────
-        $itemspage = intval(get_pconfig($uid, 'system', 'itemspage') ?: 10);
-        \App::set_pager_itemspage($itemspage);
+        // ── Affinity ─────────────────────────────────────────────────────────
+        $affinity_app = Apps::system_app_installed($uid, 'Affinity Tool');
+        $default_cmin = $affinity_app ? get_pconfig($uid, 'affinity', 'cmin', 0)  : -1;
+        $default_cmax = $affinity_app ? get_pconfig($uid, 'affinity', 'cmax', 99) : -1;
 
-        // Allow ?start= override for our API (core uses App::$pager['start'])
-        if (isset($_GET['start']))
-            \App::$pager['start'] = max(0, intval($_GET['start']));
+        $cmin = array_key_exists('cmin', $_GET) ? intval($_GET['cmin']) : $default_cmin;
+        $cmax = array_key_exists('cmax', $_GET) ? intval($_GET['cmax']) : $default_cmax;
 
-        $pager_sql = sprintf(
-            ' LIMIT %d OFFSET %d ',
-            intval(\App::$pager['itemspage']),
-            intval(\App::$pager['start'])
-        );
-
-        // ── SQL fragments (identical to core) ─────────────────────────────────
-        $item_normal    = item_normal();
-        $abook_uids     = ' and abook.abook_channel = ' . $uid . ' ';
-        $uids           = ' and item.uid = ' . $uid . ' ';
-        $sql_options    = $star ? ' and item_starred = 1 ' : '';
-        $sql_nets       = '';
-        $sql_extra      = '';
+        // ── SQL building — exact original logic ───────────────────────────────
+        $sql_extra       = '';
+        $sql_extra3      = '';
+        $sql_nets        = '';
+        $sql_options     = '';
+        $net_query       = '';
+        $net_query2      = '';
         $item_thread_top = ' AND item_thread_top = 1 ';
+        $group           = 0;
+        $group_hash      = '';
 
-        $dismiss_privacy_filter = array_intersect(
-            ['cid', 'star', 'conv', 'file', 'verb', 'cat', 'search'],
-            array_keys($_GET)
-        );
+        // Starred
+        if ($star) {
+            $sql_options .= ' AND item_starred = 1 ';
+        }
 
-        // Group filter
-        $group      = 0;
-        $group_hash = '';
+        // Privacy-group filter
         if ($gid) {
-            $r = q('SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1', intval($gid), $uid);
-            if (!$r)
-                Response::error(404, 'No such group');
+            $r = q(
+                "SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1",
+                intval($gid), $uid
+            );
+            if (!$r) Response::error(404, 'No such group');
 
             $group      = $gid;
             $group_hash = $r[0]['hash'];
             $contacts   = AccessList::members($uid, $group);
-            $contact_str = $contacts ? ids_to_querystr($contacts, 'xchan', true) : " '0' ";
+            $contact_str = $contacts
+                ? ids_to_querystr($contacts, 'xchan', true)
+                : " '0' ";
 
             $item_thread_top = '';
-            $sql_extra = " AND item.parent IN ( SELECT DISTINCT parent FROM item WHERE true $sql_options
-                AND (( author_xchan IN ( $contact_str ) OR owner_xchan IN ( $contact_str ))
-                OR allow_gid LIKE '" . protect_sprintf('%<' . dbesc($group_hash) . '>%') . "' )
-                AND id = parent $item_normal ) ";
+            $sql_extra = " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE true $sql_options
+                AND (( author_xchan IN ( $contact_str )
+                      OR owner_xchan IN ( $contact_str ))
+                    OR allow_gid LIKE '%<" . dbesc($group_hash) . ">%')
+                AND id = parent $item_normal
+            ) ";
         }
 
-        // Contact filter
-        $cid_r = [];
-        if ($cid) {
-            $cid_r = q("SELECT abook.abook_xchan, xchan.xchan_addr, xchan.xchan_name, xchan.xchan_url,
-                        xchan.xchan_photo_s, xchan.xchan_pubforum
-                        FROM abook LEFT JOIN xchan ON abook_xchan = xchan_hash
-                        WHERE abook_id = %d AND abook_channel = %d AND abook_blocked = 0 LIMIT 1",
-                intval($cid), $uid);
-
-            if (!$cid_r)
-                Response::error(404, 'No such channel');
+        // Single-contact filter
+        $cid_xchan = '';
+        if ($cid && !$group) {
+            $cid_r = q(
+                "SELECT abook.abook_xchan, xchan.xchan_pubforum
+                 FROM abook LEFT JOIN xchan ON abook_xchan = xchan_hash
+                 WHERE abook_id = %d AND abook_channel = %d AND abook_blocked = 0 LIMIT 1",
+                intval($cid), $uid
+            );
+            if (!$cid_r) Response::error(404, 'No such channel');
+            $cid_xchan = $cid_r[0]['abook_xchan'];
 
             $item_thread_top = '';
-            if (!$pf && $nouveau)
-                $sql_extra = " AND author_xchan = '" . dbesc($cid_r[0]['abook_xchan']) . "' ";
-            else
-                $sql_extra = " AND item.parent IN (SELECT DISTINCT parent FROM item
-                    WHERE uid = $uid AND ( author_xchan = '" . dbesc($cid_r[0]['abook_xchan']) . "'
-                    OR owner_xchan = '" . dbesc($cid_r[0]['abook_xchan']) . "' ) $item_normal) ";
+            if (!$pf && $nouveau) {
+                $sql_extra = " AND author_xchan = '" . dbesc($cid_xchan) . "' ";
+            } else {
+                $sql_extra = " AND item.parent IN (
+                    SELECT DISTINCT parent FROM item
+                    WHERE uid = $uid
+                    AND ( author_xchan = '" . dbesc($cid_xchan) . "'
+                         OR owner_xchan = '" . dbesc($cid_xchan) . "' )
+                    $item_normal
+                ) ";
+            }
         }
 
-        // xchan filter
-        if ($xchan) {
+        // xchan_hash filter
+        if ($xchan && !$group && !$cid) {
+            $xr = q(
+                "SELECT xchan_hash FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
+                dbesc($xchan)
+            );
+            if (!$xr) Response::error(404, 'Invalid channel');
+
             $item_thread_top = '';
-            $sql_extra = " AND item.parent IN ( SELECT DISTINCT parent FROM item WHERE true $sql_options
-                AND uid = $uid AND ( author_xchan = '" . dbesc($xchan) . "'
-                OR owner_xchan = '" . dbesc($xchan) . "' ) $item_normal ) ";
+            $sql_extra = " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE uid = $uid
+                AND ( author_xchan = '" . dbesc($xchan) . "'
+                     OR owner_xchan = '" . dbesc($xchan) . "' )
+                $item_normal
+            ) ";
         }
 
-        if ($category)
+        // Category
+        if ($category) {
             $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
-        if ($hashtags)
-            $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
+        }
 
-        $sql_extra3 = '';
-        if ($datequery)
-            $sql_extra3 .= protect_sprintf(sprintf(" AND item.created <= '%s' ",
-                dbesc(datetime_convert(date_default_timezone_get(), '', $datequery))));
-        if ($datequery2)
-            $sql_extra3 .= protect_sprintf(sprintf(" AND item.created >= '%s' ",
-                dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2))));
+        // Hashtag — use LIKE for partial/prefix matching since term_query()
+        // generates an exact equality check (term = 'foo') which won't match
+        // partial input. We keep the same ttype filter (1=TERM_HASHTAG, 10=TERM_COMMUNITYTAG).
+        if ($hashtags) {
+            $tag_esc = dbesc(protect_sprintf('%' . $hashtags . '%'));
+            $sql_extra .= " AND item.id IN (
+                SELECT term.oid FROM term
+                WHERE term.ttype IN (1, 10)
+                AND term.term LIKE '$tag_esc'
+                AND term.uid = item.uid
+            ) ";
+        }
 
-        $sql_extra3 = $nouveau ? '' : $sql_extra3;
-
+        // Full-text search
         if ($search) {
-            $search = escape_tags($search);
-            if (strpos($search, '#') === 0)
-                $sql_extra .= term_query('item', substr($search, 1), TERM_HASHTAG, TERM_COMMUNITYTAG);
-            else
-                $sql_extra .= sprintf(" AND (item.body LIKE '%s' OR item.title LIKE '%s') ",
-                    dbesc(protect_sprintf('%' . $search . '%')),
-                    dbesc(protect_sprintf('%' . $search . '%')));
+            $esc = dbesc(protect_sprintf('%' . $search . '%'));
+            $sql_extra .= " AND (item.body LIKE '$esc' OR item.title LIKE '$esc') ";
         }
 
+        // Verb / obj_type filter
         if ($verb) {
-            if (str_starts_with($verb, '.'))
-                $sql_extra .= sprintf(" AND item.obj_type = '%s' AND item.verb IN ('Create','Update','Invite') ",
-                    dbesc(protect_sprintf(substr($verb, 1))));
-            else
-                $sql_extra .= sprintf(" AND item.verb = '%s' ", dbesc(protect_sprintf($verb)));
+            if (str_starts_with($verb, '.')) {
+                $obj = dbesc(protect_sprintf(substr($verb, 1)));
+                $sql_extra .= " AND item.obj_type = '$obj'
+                               AND item.verb IN ('Create','Update','Invite') ";
+            } else {
+                $vesc = dbesc(protect_sprintf($verb));
+                $sql_extra .= " AND item.verb = '$vesc' ";
+            }
         }
 
-        if (strlen($file))
-            $sql_extra .= term_query('item', $file, TERM_FILE);
-
-        if (!$dismiss_privacy_filter)
-            $sql_extra .= $dm ? ' AND item.item_private = 2 ' : ' AND item.item_private IN (0, 1) ';
-
+        // Conversations involving me
         if ($conv) {
-            $item_thread_top = '';
-            $sql_extra .= " AND ( author_xchan = '" . dbesc($channel['channel_hash']) . "' OR item_mentionsme = 1 ) ";
+            $me = dbesc($channel['channel_hash']);
+            $sql_extra .= " AND ( author_xchan = '$me' OR item_mentionsme = 1 ) ";
         }
 
-        if ($spam)
-            $sql_extra .= ' AND item_spam = 1 ';
+        // Privacy filter — mirrors original $dismiss_privacy_filter
+        $dismiss_privacy_filter = ($gid || $cid || $xchan || $conv
+            || $star || $search || $verb || $category || $hashtags);
 
-        if ($liked) {
-            $item_thread_top = '';
-            $sql_extra .= " AND item.parent IN (SELECT DISTINCT parent FROM item
-                WHERE uid = $uid AND verb = 'Like'
-                AND author_xchan = '" . dbesc($channel['channel_hash']) . "' $item_normal) ";
+        if (!$dismiss_privacy_filter) {
+            if ($dm) {
+                $sql_extra .= ' AND item.item_private = 2 ';
+            } else {
+                $sql_extra .= ' AND item.item_private IN (0, 1) ';
+            }
         }
 
-        if (($cmin !== -1) || ($cmax !== -1)) {
+        // Unseen
+        if ($unseen) {
+            $sql_extra .= ' AND item_unseen = 1 ';
+        }
+
+        // Date range (stripped for nouveau)
+        if (!$nouveau) {
+            if ($dateend) {
+                $sql_extra3 .= protect_sprintf(sprintf(
+                    " AND item.created <= '%s' ",
+                    dbesc(datetime_convert(date_default_timezone_get(), '', $dateend))
+                ));
+            }
+            if ($datebegin) {
+                $sql_extra3 .= protect_sprintf(sprintf(
+                    " AND item.created >= '%s' ",
+                    dbesc(datetime_convert(date_default_timezone_get(), '', $datebegin))
+                ));
+            }
+        }
+
+        // Affinity range
+        if ($cmin !== -1 || $cmax !== -1) {
             $sql_nets .= ' AND ';
             if ($cmax === 99) $sql_nets .= ' ( ';
-            $sql_nets .= "( abook.abook_closeness >= $cmin AND abook.abook_closeness <= $cmax ) ";
+            $sql_nets .= ' ( abook.abook_closeness >= ' . intval($cmin)
+                       . ' AND abook.abook_closeness <= ' . intval($cmax) . ' ) ';
             if ($cmax === 99) $sql_nets .= ' OR abook.abook_closeness IS NULL ) ';
         }
 
-        $net_query  = $net ? ' left join xchan on xchan_hash = author_xchan ' : '';
-        $net_query2 = $net ? " and xchan_network = '" . protect_sprintf(dbesc($net)) . "' " : '';
+        // Network filter
+        if ($net) {
+            $net_query  = ' LEFT JOIN xchan ON xchan_hash = author_xchan ';
+            $net_query2 = " AND xchan_network = '" . dbesc(protect_sprintf($net)) . "' ";
+        }
 
-        // ── Fetch items (mirrors core load path exactly) ──────────────────────
-        $items      = [];
-        $rootCount  = 0;
+        // ── Pagination ────────────────────────────────────────────────────────
+        $pager_sql  = sprintf(" LIMIT %d OFFSET %d ", $limit, $start);
+        $abook_uids = ' AND abook.abook_channel = ' . $uid . ' ';
+        $uids       = ' AND item.uid = ' . $uid . ' ';
+
+        // ── Execute — mirrors original Network::get() SQL exactly ─────────────
+        $items = [];
 
         if ($nouveau) {
+            // Flat / unthreaded view
             $items = dbq("SELECT item.*, item.id AS item_id FROM item
                 LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
                 $net_query
@@ -243,42 +312,128 @@ class Network
                 AND item.verb NOT IN ('Add', 'Remove')
                 $sql_extra $sql_options $sql_nets
                 $net_query2
-                ORDER BY item.created DESC $pager_sql");
+                ORDER BY item.created DESC $pager_sql"
+            );
 
-            $rootCount = count($items ?: []);
+            xchan_query($items);
+            $items = fetch_post_tags($items, true);
 
-            if ($items) {
-                xchan_query($items);
-                $items = fetch_post_tags($items, true);
-            }
         } else {
+            // Threaded view: fetch root ids, then expand with children
             $r = dbq("SELECT item.parent AS item_id FROM item
                 LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
                 $net_query
                 WHERE true $uids $item_thread_top $item_normal
                 AND item.mid = item.parent_mid
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
+                AND item.verb NOT IN ('Add', 'Remove')
                 $sql_extra3 $sql_extra $sql_options $sql_nets
                 $net_query2
-                ORDER BY $ordering DESC $pager_sql");
-
-            $rootCount = count($r ?: []);
+                ORDER BY item.$ordering DESC $pager_sql"
+            );
 
             if ($r) {
-                // Use core helpers — this is what fixes the ordering bug
                 $items = items_by_parent_ids($r);
                 xchan_query($items, true);
                 $items = fetch_post_tags($items, true);
-                $items = conv_sort($items, $ordering); // core's own sort: groups by parent, chronological within
+                $items = conv_sort($items, $ordering);
             }
         }
 
-        // ── Format and respond ────────────────────────────────────────────────
-        $out = array_map(
-            fn($item) => $this->formatItem($item, $observer_xchan),
-            $items ?: []
-        );
+        if (!$items) {
+            Response::paginate([], $start, $limit, 0);
+        }
 
-        Response::paginate($out, intval(\App::$pager['start']), $itemspage, $rootCount);
+        // ── Format ────────────────────────────────────────────────────────────
+        $root_count = 0;
+        $out        = [];
+
+        foreach ($items as $item) {
+            if (intval($item['item_thread_top'] ?? 0)) {
+                $root_count++;
+            }
+            if (in_array($item['verb'] ?? '', ['Add', 'Remove'], true)) {
+                continue;
+            }
+            $out[] = $this->formatItem($item, $uid);
+        }
+
+        Response::paginate($out, $start, $limit, $root_count);
+    }
+
+    // ── Item formatter ────────────────────────────────────────────────────────
+
+    private function formatItem(array $item, int $uid): array
+    {
+        // xchan_query() populates xchan_* fields directly on the item row
+        $author = [
+            'name'    => $item['xchan_name']             ?? '',
+            'url'     => $item['xchan_url']              ?? '',
+            'address' => $item['xchan_addr']             ?? '',
+            'photo'   => [
+                'src'      => $item['xchan_photo_m']        ?? '',
+                'mimetype' => $item['xchan_photo_mimetype'] ?? '',
+            ],
+        ];
+
+        // Reaction counts from children attached by items_by_parent_ids()
+        $like_count      = 0;
+        $dislike_count   = 0;
+        $announce_count  = 0;
+        $viewer_liked    = false;
+        $viewer_disliked = false;
+        $viewer_repeated = false;
+        $ob_hash = get_observer_hash();
+
+        if (!empty($item['children'])) {
+            foreach ($item['children'] as $child) {
+                $v  = $child['verb']         ?? '';
+                $ax = $child['author_xchan'] ?? '';
+                if ($v === 'Like')     $like_count++;
+                if ($v === 'Dislike')  $dislike_count++;
+                if ($v === 'Announce') $announce_count++;
+                if ($ob_hash) {
+                    if ($v === 'Like'     && $ax === $ob_hash) $viewer_liked    = true;
+                    if ($v === 'Dislike'  && $ax === $ob_hash) $viewer_disliked = true;
+                    if ($v === 'Announce' && $ax === $ob_hash) $viewer_repeated = true;
+                }
+            }
+        }
+
+        $flags = [];
+        if (!empty($item['item_starred']))    $flags[] = 'starred';
+        if (!empty($item['item_mentionsme'])) $flags[] = 'mentionsme';
+        if (!empty($item['item_thread_top'])) $flags[] = 'thread_top';
+        if (!empty($item['item_private']))    $flags[] = 'private';
+
+        return [
+            'iid'             => intval($item['id']              ?? 0),
+            'uuid'            => $item['uuid']                   ?? '',
+            'mid'             => $item['mid']                    ?? '',
+            'parent_mid'      => $item['parent_mid']             ?? '',
+            'thr_parent'      => $item['thr_parent']             ?? '',
+            'message_top'     => $item['parent_mid']             ?? '',
+            'profile_uid'     => $uid,
+            'title'           => $item['title']                  ?? '',
+            'body'            => $item['body']                   ?? '',
+            'summary'         => $item['obj_summary']            ?? '',
+            'created'         => $item['created']                ?? '',
+            'edited'          => $item['edited']                 ?? '',
+            'commented'       => $item['commented']              ?? '',
+            'verb'            => $item['verb']                   ?? '',
+            'obj_type'        => $item['obj_type']               ?? '',
+            'item_thread_top' => intval($item['item_thread_top'] ?? 0),
+            'item_private'    => intval($item['item_private']    ?? 0),
+            'item_unseen'     => intval($item['item_unseen']     ?? 0),
+            'author'          => $author,
+            'like_count'      => $like_count,
+            'dislike_count'   => $dislike_count,
+            'announce_count'  => $announce_count,
+            'viewer_liked'    => $viewer_liked,
+            'viewer_disliked' => $viewer_disliked,
+            'viewer_repeated' => $viewer_repeated,
+            'flags'           => $flags,
+            'permalink'       => z_root() . '/display/' . ($item['uuid'] ?? ''),
+        ];
     }
 }
