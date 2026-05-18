@@ -15,6 +15,7 @@ class Router
         'help' => Handlers\Help::class,
         'display' => Handlers\Display::class,
         'chat' => Handlers\Chat::class,
+        'cal' => Handlers\Cal::class,
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
