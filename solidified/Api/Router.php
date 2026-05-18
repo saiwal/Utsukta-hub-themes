@@ -26,6 +26,7 @@ class Router
         'channel' => Handlers\Channel::class,
         'profile' => Handlers\Profile::class,
         'photos' => Handlers\Photos::class,
+        'files'  => Handlers\Files::class,
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
         'wiki' => Handlers\Wiki::class,
