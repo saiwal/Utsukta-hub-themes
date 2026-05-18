@@ -20,6 +20,7 @@ class Router
         'manage' => Handlers\Manage::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
         'item' => Handlers\Item::class,
+        'privacy-groups' => Handlers\PrivacyGroups::class,
         'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
         'channel' => Handlers\Channel::class,
