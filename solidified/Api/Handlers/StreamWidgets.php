@@ -39,9 +39,9 @@ class StreamWidgets
 
         if ($type === 'articles') {
             // article_tagadelic defaults to TERM_CATEGORY — pass TERM_HASHTAG explicitly
-            $rows = article_tagadelic($uid, 100, '', '', 0, 0, TERM_HASHTAG);
+            $rows = article_tagadelic($uid, 100, '', '', 'wall', 0, TERM_HASHTAG);
         } else {
-            $rows = tagadelic($uid, 100, '', '', 0, ITEM_TYPE_POST, TERM_HASHTAG);
+            $rows = tagadelic($uid, 100, '', '', 'wall', ITEM_TYPE_POST, TERM_HASHTAG);
         }
 
         // tagadelic() returns [term, total, weight_class] arrays
@@ -64,9 +64,9 @@ class StreamWidgets
 
         if ($type === 'articles') {
             // article_tagadelic defaults to TERM_CATEGORY
-            $rows = article_tagadelic($uid, 0, '', '', 0, 0, TERM_CATEGORY);
+            $rows = article_tagadelic($uid, 0, '', '', 'wall', 0, TERM_CATEGORY);
         } else {
-            $rows = tagadelic($uid, 0, '', '', 0, ITEM_TYPE_POST, TERM_CATEGORY);
+            $rows = tagadelic($uid, 0, '', '', 'wall', ITEM_TYPE_POST, TERM_CATEGORY);
         }
 
         // tagadelic() returns [term, total, weight_class] arrays
@@ -110,6 +110,7 @@ class StreamWidgets
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
+               AND item.item_wall       = 1
                AND item.item_type       = " . intval($item_type_val) . "
                $item_normal
                $permission_sql
