@@ -311,11 +311,6 @@ class Network
                 $items = dbq("SELECT item.*, $reaction_subqueries
                     FROM item
                     WHERE item.id IN ($ids)
-                    OR (item.parent IN ($ids)
-                        AND item.verb IN ('Create', 'Update', 'EmojiReact')
-                        AND item.obj_type NOT IN ('Answer')
-                        AND item.item_thread_top = 0
-                        $item_normal)
                     ORDER BY item.created ASC");
 
                 if ($items) {
@@ -324,15 +319,9 @@ class Network
                     $ordered_parents = array_map('intval', array_column($r, 'item_id'));
 
                     usort($items, function ($a, $b) use ($ordered_parents) {
-                        $pa = intval($a['item_thread_top']) ? intval($a['id']) : intval($a['parent']);
-                        $pb = intval($b['item_thread_top']) ? intval($b['id']) : intval($b['parent']);
-
-                        if ($pa !== $pb) {
-                            $ia = array_search($pa, $ordered_parents);
-                            $ib = array_search($pb, $ordered_parents);
-                            return $ia - $ib;
-                        }
-                        return strtotime($a['created']) - strtotime($b['created']);
+                        $ia = array_search(intval($a['id']), $ordered_parents);
+                        $ib = array_search(intval($b['id']), $ordered_parents);
+                        return $ia - $ib;
                     });
                 }
             }

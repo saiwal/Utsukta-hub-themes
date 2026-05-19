@@ -137,24 +137,14 @@ class Channel
                 $items = dbq("SELECT item.*, $reaction_subqueries
                     FROM item
                     WHERE item.id IN ($ids)
-                    OR (item.parent IN ($ids)
-                        AND item.verb IN ('Create', 'Update', 'EmojiReact')
-                        AND item.obj_type NOT IN ('Answer')
-                        AND item.item_thread_top = 0
-                        $item_normal)
                     ORDER BY item.created ASC");
 
                 if ($items) {
                     xchan_query($items, true);
                     $items = fetch_post_tags($items, true);
 
-                    usort($items, function ($a, $b) use ($ordering) {
-                        if ($a['item_thread_top'] && $b['item_thread_top']) {
-                            $key = $ordering === 'commented' ? 'commented' : 'created';
-                            return strtotime($b[$key]) - strtotime($a[$key]);
-                        }
-                        return strtotime($a['created']) - strtotime($b['created']);
-                    });
+                    $key = $ordering === 'commented' ? 'commented' : 'created';
+                    usort($items, fn($a, $b) => strtotime($b[$key]) - strtotime($a[$key]));
                 }
             }
         }
@@ -166,12 +156,13 @@ class Channel
         );
 
         Response::send($out, [
-            'offset'   => $offset,
-            'limit'    => $itemspage,
-            'nouveau'  => $nouveau,
-            'has_more' => count($out) >= $itemspage,
-            'ordering' => $ordering,
-            'count'    => count($out),
+            'offset'     => $offset,
+            'limit'      => $itemspage,
+            'count'      => count($out),
+            'root_count' => $rootCount,
+            'has_more'   => $rootCount >= $itemspage,
+            'nouveau'    => $nouveau,
+            'ordering'   => $ordering,
         ]);
     }
 

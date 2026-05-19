@@ -150,17 +150,18 @@ class Item
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
 
-        $rootMid = dbesc($root['mid']);
+        $rootId  = intval($root['id']);
         $limit = ($count === 'all' || !is_numeric($count))
             ? ''
             : ' LIMIT ' . max(1, intval($count));
 
-        // Fetch direct replies — verb Create/Update only, not reactions
+        // Fetch all thread children (direct replies + nested) — excludes reactions
         $rows = dbq('SELECT item.*,
             ' . self::reactionSubqueries() . "
             FROM item
-            WHERE item.thr_parent = '$rootMid'
+            WHERE item.parent = $rootId
               AND item.verb IN ('Create', 'Update', 'EmojiReact')
+              AND item.obj_type NOT IN ('Answer')
               AND item.item_thread_top = 0
               $item_normal
             ORDER BY item.created ASC
