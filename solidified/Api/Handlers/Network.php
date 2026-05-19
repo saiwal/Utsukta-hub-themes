@@ -349,7 +349,8 @@ class Network
             $out,
             $offset,
             $itemspage,
-            count($out),
+            $rootCount,
+            $nouveau,
         );
     }
 }

@@ -14,13 +14,15 @@ class Response
         exit;
     }
 
-    public static function paginate(array $items, int $offset, int $limit, int $rootCount): never
+    public static function paginate(array $items, int $offset, int $limit, int $rootCount, bool $nouveau = false): never
     {
         self::send($items, [
-            'offset' => $offset,
-            'limit' => $limit,
-            'count' => count($items),
-            'has_more' => $rootCount >= $limit,
+            'offset'     => $offset,
+            'limit'      => $limit,
+            'count'      => count($items),
+            'root_count' => $rootCount,
+            'has_more'   => $rootCount >= $limit,
+            'nouveau'    => $nouveau,
         ]);
     }
 
