@@ -245,6 +245,14 @@ if ($slug) {
             'viewer_liked'    => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
+            'categories'      => array_values(array_map(
+                fn($t) => $t['term'],
+                array_filter($item['term'] ?? [], fn($t) => intval($t['ttype']) === TERM_CATEGORY)
+            )),
+            'tags'            => array_values(array_map(
+                fn($t) => $t['term'],
+                array_filter($item['term'] ?? [], fn($t) => intval($t['ttype']) === TERM_HASHTAG)
+            )),
         ];
     }
 
