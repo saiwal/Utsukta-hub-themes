@@ -29,51 +29,66 @@ class StreamWidgets
     }
 
     // ── /api/stream-widgets/tags ─────────────────────────────────────────────
-    // Uses Hubzilla's tagadelic() for posts, article_tagadelic() for articles.
-    // Both use TERM_HASHTAG and respect item_permissions_sql() internally.
 
     private function getTags(): void
     {
-        $uid  = $this->resolveUid();
-        $type = $this->itemType();
+        $uid           = $this->resolveUid();
+        $type          = $this->itemType();
+        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $perm_sql      = item_permissions_sql($uid);
 
-        if ($type === 'articles') {
-            // article_tagadelic defaults to TERM_CATEGORY — pass TERM_HASHTAG explicitly
-            $rows = article_tagadelic($uid, 100, '', '', 'wall', 0, TERM_HASHTAG);
-        } else {
-            $rows = tagadelic($uid, 100, '', '', 'wall', ITEM_TYPE_POST, TERM_HASHTAG);
-        }
+        $rows = dbq(
+            "SELECT term.term, COUNT(term.term) AS total
+             FROM term
+             LEFT JOIN item ON term.oid = item.id
+             WHERE term.uid   = " . intval($uid) . "
+               AND term.ttype = " . intval(TERM_HASHTAG) . "
+               AND term.otype = " . intval(TERM_OBJ_POST) . "
+               AND item.item_thread_top = 1
+               AND item.item_wall       = 1
+               $perm_sql $item_normal
+             GROUP BY term.term
+             ORDER BY total DESC
+             LIMIT 100"
+        );
 
-        // tagadelic() returns [term, total, weight_class] arrays
         $tags = array_map(fn($r) => [
-            'name'  => $r[0],
-            'count' => (int) $r[1],
+            'name'  => $r['term'],
+            'count' => (int) $r['total'],
         ], $rows ?: []);
 
         Response::send(['tags' => $tags]);
     }
 
     // ── /api/stream-widgets/categories ──────────────────────────────────────
-    // Uses article_tagadelic() with TERM_CATEGORY for articles,
-    // tagadelic() with TERM_CATEGORY for posts.
 
     private function getCategories(): void
     {
-        $uid  = $this->resolveUid();
-        $type = $this->itemType();
+        $uid           = $this->resolveUid();
+        $type          = $this->itemType();
+        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $perm_sql      = item_permissions_sql($uid);
 
-        if ($type === 'articles') {
-            // article_tagadelic defaults to TERM_CATEGORY
-            $rows = article_tagadelic($uid, 0, '', '', 'wall', 0, TERM_CATEGORY);
-        } else {
-            $rows = tagadelic($uid, 0, '', '', 'wall', ITEM_TYPE_POST, TERM_CATEGORY);
-        }
+        $rows = dbq(
+            "SELECT term.term, COUNT(term.term) AS total
+             FROM term
+             LEFT JOIN item ON term.oid = item.id
+             WHERE term.uid   = " . intval($uid) . "
+               AND term.ttype = " . intval(TERM_CATEGORY) . "
+               AND term.otype = " . intval(TERM_OBJ_POST) . "
+               AND item.item_thread_top = 1
+               AND item.item_wall       = 1
+               $perm_sql $item_normal
+             GROUP BY term.term
+             ORDER BY total DESC"
+        );
 
-        // tagadelic() returns [term, total, weight_class] arrays
         $categories = array_map(fn($r) => [
-            'name'  => $r[0],
-            'slug'  => $this->slugify($r[0]),
-            'count' => (int) $r[1],
+            'name'  => $r['term'],
+            'slug'  => $r['term'],
+            'count' => (int) $r['total'],
         ], $rows ?: []);
 
         Response::send(['categories' => $categories]);
