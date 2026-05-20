@@ -101,7 +101,7 @@ class Channel
              FROM item r
              WHERE r.parent = item.parent
                AND r.thr_parent = item.mid
-               AND r.verb IN ('Like','Dislike','Announce')
+               AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
                AND r.item_deleted = 0) AS reaction_verbs";
 
         // ── Fetch ─────────────────────────────────────────────────────────────

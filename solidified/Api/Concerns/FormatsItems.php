@@ -6,7 +6,7 @@ trait FormatsItems
 {
     private function formatItem(array $item, string $observer_xchan): array
     {
-        $liked = $disliked = $repeated = false;
+        $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
 
         if ($observer_xchan && !empty($item['reaction_verbs'])) {
             foreach (explode('|', $item['reaction_verbs']) as $rv) {
@@ -15,12 +15,12 @@ trait FormatsItems
                 [$verb, $xchan] = explode(':', $rv, 2);
                 if ($xchan !== $observer_xchan)
                     continue;
-                if ($verb === 'Like')
-                    $liked = true;
-                if ($verb === 'Dislike')
-                    $disliked = true;
-                if ($verb === 'Announce')
-                    $repeated = true;
+                if ($verb === 'Like')       $liked      = true;
+                if ($verb === 'Dislike')    $disliked   = true;
+                if ($verb === 'Announce')   $repeated   = true;
+                if ($verb === 'Accept')     $attending  = true;
+                if ($verb === 'Reject')     $declining  = true;
+                if ($verb === 'TentativeAccept') $maybe = true;
             }
         }
 
@@ -68,6 +68,9 @@ trait FormatsItems
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
+            'viewer_attending' => $attending,
+            'viewer_declining' => $declining,
+            'viewer_maybe' => $maybe,
         ];
     }
 }

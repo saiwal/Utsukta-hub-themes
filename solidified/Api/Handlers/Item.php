@@ -84,6 +84,15 @@ class Item
             case 'repeat':
                 $this->toggleReaction($mid, ACTIVITY_SHARE);
                 break;
+            case 'accept':
+                $this->toggleRsvpReaction($mid, 'Accept');
+                break;
+            case 'reject':
+                $this->toggleRsvpReaction($mid, 'Reject');
+                break;
+            case 'tentativeaccept':
+                $this->toggleRsvpReaction($mid, 'TentativeAccept');
+                break;
             case 'star':
                 $this->toggleStar($mid);
                 break;
@@ -419,6 +428,98 @@ class Item
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
     }
 
+    // POST /api/item/:mid/accept|reject|tentativeaccept
+    // Exclusive RSVP toggle: removes conflicting RSVP verbs, toggles the chosen one.
+    private function toggleRsvpReaction(string $mid, string $activityVerb): void
+    {
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $uid = local_channel();
+        $channel = App::get_channel();
+        $ob_hash = $channel['channel_hash'];
+        $item_normal = item_normal();
+
+        $target = $this->resolveItem($mid, $ob_hash);
+        if (!$target) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        $obHashEsc = dbesc($ob_hash);
+        $targetMid = dbesc($target['mid']);
+
+        // Find any existing RSVP from this viewer on this item
+        $existing = dbq("SELECT id, verb FROM item
+                         WHERE uid = $uid
+                           AND verb IN ('Accept','Reject','TentativeAccept')
+                           AND thr_parent = '$targetMid'
+                           AND author_xchan = '$obHashEsc'
+                           AND item_deleted = 0
+                           $item_normal
+                         LIMIT 1");
+
+        $state = 'added';
+
+        if ($existing) {
+            // Always remove the old RSVP first
+            drop_item($existing[0]['id'], DROPITEM_PHASE1);
+            Master::Summon(['Notifier', 'drop', $existing[0]['id']]);
+
+            // If same verb, this is a toggle-off
+            if ($existing[0]['verb'] === $activityVerb) {
+                $state = 'removed';
+                $counts = $this->fetchReactionCounts($target['mid']);
+                json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
+            }
+        }
+
+        // Add the new RSVP reaction
+        $uuid        = item_message_id();
+        $reactionMid = z_root() . '/item/' . $uuid;
+        $now         = datetime_convert();
+
+        $datarray = [
+            'aid'            => $channel['channel_account_id'],
+            'uid'            => intval($target['uid']),
+            'uuid'           => $uuid,
+            'mid'            => $reactionMid,
+            'parent_mid'     => $target['mid'],
+            'thr_parent'     => $target['mid'],
+            'owner_xchan'    => $target['owner_xchan'],
+            'author_xchan'   => $ob_hash,
+            'created'        => $now,
+            'edited'         => $now,
+            'commented'      => $now,
+            'received'       => $now,
+            'changed'        => $now,
+            'verb'           => $activityVerb,
+            'obj_type'       => 'Activity',
+            'body'           => '',
+            'title'          => '',
+            'mimetype'       => 'text/bbcode',
+            'allow_cid'      => $target['allow_cid'],
+            'allow_gid'      => $target['allow_gid'],
+            'deny_cid'       => $target['deny_cid'],
+            'deny_gid'       => $target['deny_gid'],
+            'item_private'   => intval($target['item_private']),
+            'item_wall'      => intval($target['item_wall']),
+            'item_origin'    => 1,
+            'item_thread_top'=> 0,
+            'item_notshown'  => 1,
+            'plink'          => $reactionMid,
+            'route'          => $target['route'] ?? '',
+        ];
+
+        $post = item_store($datarray);
+        if (!$post['success']) {
+            json_return_and_die(['error' => 'RSVP reaction failed']);
+        }
+        Master::Summon(['Notifier', 'like', $post['item_id']]);
+
+        $counts = $this->fetchReactionCounts($target['mid']);
+        json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
+    }
+
     // POST /api/item/:mid/star
     // Toggles the starred flag on the item (local only — not federated)
     private function toggleStar(string $mid): void
@@ -677,7 +778,7 @@ class Item
                  FROM item r
                  WHERE r.parent = item.parent
                    AND r.thr_parent = item.mid
-                   AND r.verb IN ('Like','Dislike','Announce')
+                   AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
                    AND r.item_deleted = 0) AS reaction_verbs";
     }
 
@@ -686,21 +787,27 @@ class Item
     {
         $midEsc = dbesc($mid);
         $r = dbq("SELECT
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count");
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Like'              AND r.item_deleted = 0) AS like_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Dislike'           AND r.item_deleted = 0) AS dislike_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Accept'            AND r.item_deleted = 0) AS attend_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Reject'            AND r.item_deleted = 0) AS decline_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'TentativeAccept'   AND r.item_deleted = 0) AS maybe_count");
 
         return [
-            'like_count' => intval($r[0]['like_count'] ?? 0),
-            'dislike_count' => intval($r[0]['dislike_count'] ?? 0),
+            'like_count'     => intval($r[0]['like_count'] ?? 0),
+            'dislike_count'  => intval($r[0]['dislike_count'] ?? 0),
             'announce_count' => intval($r[0]['announce_count'] ?? 0),
+            'attend_count'   => intval($r[0]['attend_count'] ?? 0),
+            'decline_count'  => intval($r[0]['decline_count'] ?? 0),
+            'maybe_count'    => intval($r[0]['maybe_count'] ?? 0),
         ];
     }
 
     // Shared item formatter — same shape as your existing network/channel items
     private static function formatItem(array $item, string $ob_hash): array
     {
-        $liked = $disliked = $repeated = false;
+        $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
         if ($ob_hash && !empty($item['reaction_verbs'])) {
             foreach (explode('|', $item['reaction_verbs']) as $rv) {
                 if (!str_contains($rv, ':'))
@@ -708,12 +815,12 @@ class Item
                 [$v, $xchan] = explode(':', $rv, 2);
                 if ($xchan !== $ob_hash)
                     continue;
-                if ($v === 'Like')
-                    $liked = true;
-                if ($v === 'Dislike')
-                    $disliked = true;
-                if ($v === 'Announce')
-                    $repeated = true;
+                if ($v === 'Like')           $liked      = true;
+                if ($v === 'Dislike')        $disliked   = true;
+                if ($v === 'Announce')       $repeated   = true;
+                if ($v === 'Accept')         $attending  = true;
+                if ($v === 'Reject')         $declining  = true;
+                if ($v === 'TentativeAccept') $maybe     = true;
             }
         }
 
@@ -756,6 +863,9 @@ class Item
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
+            'viewer_attending' => $attending,
+            'viewer_declining' => $declining,
+            'viewer_maybe' => $maybe,
         ];
     }
 
