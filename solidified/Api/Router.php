@@ -32,6 +32,7 @@ class Router
         'webpages' => Handlers\Webpages::class,
         'wiki' => Handlers\Wiki::class,
         'nav' => Handlers\Nav::class,
+        'admin' => Handlers\Admin::class,
     ];
 
     public static function dispatch(string $method): void
