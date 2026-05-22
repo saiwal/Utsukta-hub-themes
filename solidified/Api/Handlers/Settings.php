@@ -62,23 +62,17 @@ class Settings
 
     private function getDisplaySettings(): void
     {
-        $default_theme = \Zotlabs\Lib\Config::Get('system', 'theme');
-        if (!$default_theme)
-            $default_theme = 'redbasic';
-
-        $themespec = explode(':', \App::$channel['channel_theme']);
-        $existing_theme = $themespec[0] ?? '';
-        $existing_schema = $themespec[1] ?? '';
-
-        $theme = (($existing_theme) ? $existing_theme : $default_theme);
-        $allowed_themes_str = \Zotlabs\Lib\Config::Get('system', 'allowed_themes');
-        $allowed_themes_raw = explode(',', $allowed_themes_str);
-        $allowed_themes = array();
-        if (count($allowed_themes_raw))
-            foreach ($allowed_themes_raw as $x)
-                if (strlen(trim($x)) && is_dir("view/theme/$x"))
-                    $allowed_themes[] = trim($x);
         $uid = local_channel();
+
+        $default_theme = \Zotlabs\Lib\Config::Get('system', 'theme') ?: 'redbasic';
+        $themespec = explode(':', \App::$channel['channel_theme']);
+        $theme = $themespec[0] ?: $default_theme;
+
+        $allowed_themes_raw = explode(',', \Zotlabs\Lib\Config::Get('system', 'allowed_themes'));
+        $allowed_themes = [];
+        foreach ($allowed_themes_raw as $x)
+            if (strlen(trim($x)) && is_dir("view/theme/$x"))
+                $allowed_themes[] = trim($x);
 
         $valid_font_sizes    = ['small', 'medium', 'large'];
         $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
@@ -94,6 +88,15 @@ class Settings
         $bg_fit = get_pconfig($uid, 'spa', 'bg_fit', 'cover');
         if (!in_array($bg_fit, $valid_bg_fits, true)) $bg_fit = 'cover';
 
+        $valid_color_schemes = [
+            'light', 'pastel-soft', 'warm-paper', 'mint', 'sakura', 'latte-cream',
+            'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
+            'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
+            'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
+        ];
+        $color_scheme = get_pconfig($uid, 'spa', 'color_scheme', 'light');
+        if (!in_array($color_scheme, $valid_color_schemes, true)) $color_scheme = 'light';
+
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
@@ -102,12 +105,13 @@ class Settings
             'title_tosource' => intval(get_pconfig($uid, 'system', 'title_tosource', 0)),
             'start_menu' => intval(get_pconfig($uid, 'system', 'start_menu', 0)),
             'user_scalable' => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
-            'theme' => $themespec[0] ?? '',
+            'theme' => $theme,
             'themes' => array_values($allowed_themes),
             'font_size' => $font_size,
             'font_family' => $font_family,
             'bg_url' => (string) $bg_url,
             'bg_fit' => $bg_fit,
+            'color_scheme' => $color_scheme,
         ]);
     }
 
@@ -660,8 +664,6 @@ class Settings
 
     private function postDisplaySettings(int $uid, array $data): void
     {
-        $themespec = explode(':', \App::$channel['channel_theme']);
-
         if (isset($data['thread_allow']))
             set_pconfig($uid, 'system', 'thread_allow', intval($data['thread_allow']));
         if (isset($data['update_interval']))
@@ -677,20 +679,29 @@ class Settings
         if (isset($data['user_scalable']))
             set_pconfig($uid, 'system', 'user_scalable', intval($data['user_scalable']));
         if (isset($data['theme'])) {
-            $newtheme = notags(trim($data['theme']));
+            $themespec = explode(':', \App::$channel['channel_theme']);
+            $newtheme  = notags(trim($data['theme']));
             $newschema = ($themespec[0] === $newtheme) ? ($themespec[1] ?? '') : '';
             $theme_val = $newtheme . ($newschema ? ':' . $newschema : '');
             q("UPDATE channel SET channel_theme = '%s' WHERE channel_id = %d",
                 dbesc($theme_val), intval($uid));
             $_SESSION['theme'] = $theme_val;
         }
-
         $valid_font_sizes_post    = ['small', 'medium', 'large'];
         $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
         if (isset($data['font_size']) && in_array($data['font_size'], $valid_font_sizes_post, true))
             set_pconfig($uid, 'spa', 'font_size', $data['font_size']);
         if (isset($data['font_family']) && in_array($data['font_family'], $valid_font_families_post, true))
             set_pconfig($uid, 'spa', 'font_family', $data['font_family']);
+
+        $valid_color_schemes_post = [
+            'light', 'pastel-soft', 'warm-paper', 'mint', 'sakura', 'latte-cream',
+            'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
+            'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
+            'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
+        ];
+        if (isset($data['color_scheme']) && in_array($data['color_scheme'], $valid_color_schemes_post, true))
+            set_pconfig($uid, 'spa', 'color_scheme', $data['color_scheme']);
 
         if (array_key_exists('bg_url', $data)) {
             $bg_url = notags(trim((string) $data['bg_url']));
