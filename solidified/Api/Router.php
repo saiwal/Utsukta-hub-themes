@@ -6,6 +6,7 @@ use Theme\Solidified\Api\Handlers;
 class Router
 {
     private static array $map = [
+        'pconfig' => Handlers\Pconfig::class,
         'sw' => Handlers\Sw::class,
         'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
@@ -30,6 +31,7 @@ class Router
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
         'wiki' => Handlers\Wiki::class,
+        'nav' => Handlers\Nav::class,
     ];
 
     public static function dispatch(string $method): void

@@ -79,8 +79,22 @@ class Settings
                 if (strlen(trim($x)) && is_dir("view/theme/$x"))
                     $allowed_themes[] = trim($x);
         $uid = local_channel();
+
+        $valid_font_sizes    = ['small', 'medium', 'large'];
+        $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
+
+        $font_size   = get_pconfig($uid, 'spa', 'font_size', 'medium');
+        $font_family = get_pconfig($uid, 'spa', 'font_family', 'system');
+
+        if (!in_array($font_size, $valid_font_sizes, true))     $font_size   = 'medium';
+        if (!in_array($font_family, $valid_font_families, true)) $font_family = 'system';
+
+        $valid_bg_fits = ['tile', 'cover'];
+        $bg_url = get_pconfig($uid, 'spa', 'bg_url', '');
+        $bg_fit = get_pconfig($uid, 'spa', 'bg_fit', 'cover');
+        if (!in_array($bg_fit, $valid_bg_fits, true)) $bg_fit = 'cover';
+
         Response::send([
-            'theme' => \App::$channel['channel_theme'] ?? '',
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
             'itemspage' => intval(get_pconfig($uid, 'system', 'itemspage', 10)),
@@ -89,7 +103,11 @@ class Settings
             'start_menu' => intval(get_pconfig($uid, 'system', 'start_menu', 0)),
             'user_scalable' => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
             'theme' => $themespec[0] ?? '',
-            'themes' => array_values($allowed_themes),  // build $allowed_themes the same way Display::get() does
+            'themes' => array_values($allowed_themes),
+            'font_size' => $font_size,
+            'font_family' => $font_family,
+            'bg_url' => (string) $bg_url,
+            'bg_fit' => $bg_fit,
         ]);
     }
 
@@ -666,6 +684,22 @@ class Settings
                 dbesc($theme_val), intval($uid));
             $_SESSION['theme'] = $theme_val;
         }
+
+        $valid_font_sizes_post    = ['small', 'medium', 'large'];
+        $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
+        if (isset($data['font_size']) && in_array($data['font_size'], $valid_font_sizes_post, true))
+            set_pconfig($uid, 'spa', 'font_size', $data['font_size']);
+        if (isset($data['font_family']) && in_array($data['font_family'], $valid_font_families_post, true))
+            set_pconfig($uid, 'spa', 'font_family', $data['font_family']);
+
+        if (array_key_exists('bg_url', $data)) {
+            $bg_url = notags(trim((string) $data['bg_url']));
+            // Accept empty string (clear) or a valid http/https URL
+            if ($bg_url === '' || filter_var($bg_url, FILTER_VALIDATE_URL) && preg_match('#^https?://#i', $bg_url))
+                set_pconfig($uid, 'spa', 'bg_url', $bg_url);
+        }
+        if (isset($data['bg_fit']) && in_array($data['bg_fit'], ['tile', 'cover'], true))
+            set_pconfig($uid, 'spa', 'bg_fit', $data['bg_fit']);
 
         Response::send(['status' => 'ok']);
     }

@@ -1,35 +1,29 @@
 <?php
-namespace Zotlabs\Module;
+namespace Theme\Solidified\Api\Handlers;
 
 use App;
+use Theme\Solidified\Api\Response;
 
-class Nav_api extends \Zotlabs\Web\Controller
+require_once 'include/security.php';
+require_once 'include/conversation.php';
+
+class Nav
 {
-    function get()
+    public function get(): void
     {
-        if (($_GET['format'] ?? '') !== 'json')
-            return;
-
-        require_once ('include/security.php');
-        require_once ('include/conversation.php');
-
         $observer = App::get_observer();
         $ob_hash = $observer ? $observer['xchan_hash'] : '';
         $is_local = (bool) local_channel();
         $uid = local_channel() ?: 0;
         $channel = $is_local ? App::get_channel() : null;
 
-        // A remote viewer has an observer (OWA cookie) but no local channel.
         $is_remote = (!$is_local && $ob_hash !== '');
-        $is_anon = (!$is_local && $ob_hash === '');
-
-        // ── Viewer identity ───────────────────────────────────────────────────
 
         $viewer = [
             'is_local' => $is_local,
             'is_remote' => $is_remote,
             'is_admin' => $is_local && is_site_admin(),
-            'nick' => $channel['channel_address'],
+            'nick' => $channel['channel_address'] ?? null,
             'name' => $observer['xchan_name'] ?? '',
             'avatar' => $observer['xchan_photo_m'] ?? '',
             'url' => $observer['xchan_url'] ?? '',
@@ -37,20 +31,14 @@ class Nav_api extends \Zotlabs\Web\Controller
             'baseurl' => z_root(),
         ];
 
-        // ── Action links ──────────────────────────────────────────────────────
-        // PHP is the authority here — frontend renders whatever keys arrive.
-
         $actions = [];
 
         $my_url = get_my_url();
-        if (!$my_url) {
-            $observer = App::get_observer();
-            $my_url = (($observer) ? $observer['xchan_url'] : '');
-        }
+        if (!$my_url)
+            $my_url = $observer ? ($observer['xchan_url'] ?? '') : '';
+
         $homelink_arr = parse_url($my_url);
-        $scheme = $homelink_arr['scheme'] ?? '';
-        $host = $homelink_arr['host'] ?? '';
-        $homelink = $scheme . '://' . $host;
+        $homelink = ($homelink_arr['scheme'] ?? '') . '://' . ($homelink_arr['host'] ?? '');
 
         if ($is_local) {
             $nick = $channel['channel_address'] ?? '';
@@ -62,26 +50,19 @@ class Nav_api extends \Zotlabs\Web\Controller
             $actions['logout'] = z_root() . '/logout';
         } elseif ($is_remote) {
             $actions['navhome'] = $homelink;
-            // Remote OWA user: only logout makes sense
             $actions['logout'] = z_root() . '/logout';
         } else {
-            // Anonymous
             $actions['login'] = z_root() . '/login';
             $actions['remote_login'] = z_root() . '/rmagic';
             $reg = \Zotlabs\Lib\Config::Get('system', 'register_policy');
-            if ($reg == REGISTER_OPEN || $reg == REGISTER_APPROVE) {
+            if ($reg == REGISTER_OPEN || $reg == REGISTER_APPROVE)
                 $actions['register'] = z_root() . '/register';
-            }
         }
 
-        // ── Pinned apps ───────────────────────────────────────────────────────
-        // Local owners: their personalised pinned list.
-        // Everyone else: a curated public list so the sidebar is never empty.
-
+        $baseurl = z_root();
         $pinned = [];
 
         if ($is_local) {
-            // Keep system apps current (mirrors core nav() logic)
             if (get_pconfig($uid, 'system', 'import_system_apps') !==
                     datetime_convert('UTC', 'UTC', 'now', 'Y-m-d')) {
                 \Zotlabs\Lib\Apps::import_system_apps();
@@ -101,8 +82,6 @@ class Nav_api extends \Zotlabs\Web\Controller
             usort($pinned, 'Zotlabs\Lib\Apps::app_name_compare');
             $pinned = \Zotlabs\Lib\Apps::app_order($uid, $pinned, 'nav_pinned_app');
         } else {
-            // Anonymous / remote: build a minimal public nav from system apps.
-            // Pull the full system list and keep only the apps we want to expose.
             $system = \Zotlabs\Lib\Apps::get_system_apps(true);
             \Zotlabs\Lib\Apps::translate_system_apps($system);
 
@@ -115,17 +94,12 @@ class Nav_api extends \Zotlabs\Web\Controller
                     $pinned[] = $app;
             }
 
-            // Preserve the preferred order defined in $public_names
             usort($pinned, function ($a, $b) use ($public_names) {
                 $ia = array_search($a['name'] ?? '', $public_names);
                 $ib = array_search($b['name'] ?? '', $public_names);
                 return $ia - $ib;
             });
         }
-
-        // ── Featured apps ─────────────────────────────────────────────────────
-        // Used by an app drawer (if you build one). Always the full system list,
-        // stripped of local_channel-only entries for non-local viewers.
 
         $featured = [];
 
@@ -145,13 +119,10 @@ class Nav_api extends \Zotlabs\Web\Controller
         usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
         $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
 
-        // Replace lines 95-105 with:
         $app_shape = function (array $app) use ($baseurl): array {
             $url = $app['app_url'] ?? ($app['url'] ?? '');
-            // Substitute placeholder and take first if comma-separated
             $url = str_replace('$baseurl', $baseurl, $url);
             $url = trim(explode(',', $url)[0]);
-
             return [
                 'name' => $app['name'] ?? '',
                 'label' => $app['label'] ?? ($app['name'] ?? ''),
@@ -163,10 +134,6 @@ class Nav_api extends \Zotlabs\Web\Controller
 
         $pinned = array_map($app_shape, $pinned);
         $featured = array_map($app_shape, $featured);
-        // ── Channel tabs ──────────────────────────────────────────────────────
-        // Only built when the SPA passes ?channel_nick=<nick>.
-        // Permission-gated per observer — this is the only place subject
-        // context is needed, and the SPA owns that from the URL.
 
         $channel_tabs = [];
         $subject_nick = trim($_GET['channel_nick'] ?? '');
@@ -178,7 +145,6 @@ class Nav_api extends \Zotlabs\Web\Controller
                 $puid = intval($subject['channel_id']);
                 $p = get_all_perms($puid, $ob_hash);
 
-                // Posts tab is always present if we can resolve the channel
                 $channel_tabs[] = [
                     'id' => 'stream',
                     'label' => t('Channel'),
@@ -186,22 +152,14 @@ class Nav_api extends \Zotlabs\Web\Controller
                     'icon' => 'home',
                 ];
 
-                /* if ($p['view_profile']) */
-                /* $channel_tabs[] = [ */
-                /* 'id' => 'profile', */
-                /* 'label' => t('About'), */
-                /* 'url' => z_root() . '/profile/' . $subject_nick, */
-                /* 'icon' => 'person', */
-                /* ]; */
-
-                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles')) {
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
                     $channel_tabs[] = [
                         'id' => 'articles-tab',
                         'label' => t('Articles'),
                         'url' => z_root() . '/articles/' . $subject_nick,
                         'icon' => 'articles',
                     ];
-                }
+
                 if ($p['view_storage']) {
                     $channel_tabs[] = [
                         'id' => 'photos',
@@ -234,29 +192,26 @@ class Nav_api extends \Zotlabs\Web\Controller
                         'url' => z_root() . '/chat/' . $subject_nick,
                         'icon' => 'chat',
                     ];
-                // Webpages — check subject's app installation, use subject's nick
-                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Webpages')) {
+
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Webpages'))
                     $channel_tabs[] = [
                         'id' => 'webpages',
                         'label' => t('Webpages'),
                         'url' => z_root() . '/page/' . $subject_nick . '/home',
                         'icon' => 'webpages',
                     ];
-                }
-                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Wiki')) {
+
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Wiki'))
                     $channel_tabs[] = [
                         'id' => 'wiki',
                         'label' => t('Wiki'),
                         'url' => z_root() . '/wiki/' . $subject_nick . '/home',
                         'icon' => 'wiki',
                     ];
-                }
-
             }
         }
 
-        // ── Response ──────────────────────────────────────────────────────────
-        json_return_and_die([
+        Response::send([
             'viewer' => $viewer,
             'actions' => $actions,
             'pinned' => $pinned,
