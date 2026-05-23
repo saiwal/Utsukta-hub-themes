@@ -71,6 +71,7 @@ trait FormatsItems
             'viewer_attending' => $attending,
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
+            'viewer_following' => (bool)($item['viewer_following'] ?? false),
         ];
     }
 }
