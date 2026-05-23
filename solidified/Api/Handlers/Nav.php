@@ -211,6 +211,17 @@ class Nav
             }
         }
 
+        // Names of all apps the local user has installed (empty for visitors/anon)
+        $installed_apps = [];
+        if ($is_local) {
+            $all = \Zotlabs\Lib\Apps::app_list($uid, false) ?: [];
+            foreach ($all as $app) {
+                $enc = \Zotlabs\Lib\Apps::app_encode($app);
+                if (!empty($enc['name']))
+                    $installed_apps[] = $enc['name'];
+            }
+        }
+
         Response::send([
             'viewer' => $viewer,
             'actions' => $actions,
@@ -218,6 +229,7 @@ class Nav
             'featured' => $featured,
             'channel_tabs' => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
+            'installed_apps' => $installed_apps,
         ]);
     }
 }
