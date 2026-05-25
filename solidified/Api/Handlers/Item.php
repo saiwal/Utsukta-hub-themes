@@ -144,7 +144,22 @@ class Item
         xchan_query($rows, true);
         $rows = fetch_post_tags($rows, true);
 
-        json_return_and_die(['item' => self::formatItem($rows[0], $ob_hash)]);
+        $row = $rows[0];
+        if ($ob_hash) {
+            $pid = intval($row['parent']);
+            $obs = dbesc($ob_hash);
+            $fr = dbq(
+                "SELECT verb FROM item
+                 WHERE parent = $pid
+                   AND author_xchan = '$obs'
+                   AND verb IN ('Follow', 'Ignore')
+                   AND item_deleted = 0
+                 ORDER BY created DESC LIMIT 1"
+            );
+            $row['viewer_following'] = !empty($fr) && $fr[0]['verb'] === 'Follow';
+        }
+
+        json_return_and_die(['item' => self::formatItem($row, $ob_hash)]);
     }
 
     // GET /api/item/:mid/comments
@@ -866,6 +881,7 @@ class Item
             'viewer_attending' => $attending,
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
+            'viewer_following' => (bool)($item['viewer_following'] ?? false),
         ];
     }
 

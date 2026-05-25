@@ -23,7 +23,7 @@ class Nav
             'is_local' => $is_local,
             'is_remote' => $is_remote,
             'is_admin' => $is_local && is_site_admin(),
-            'nick' => $channel['channel_address'] ?? null,
+            'nick' => $channel['channel_address'] ?? '',
             'name' => $observer['xchan_name'] ?? '',
             'avatar' => $observer['xchan_photo_m'] ?? '',
             'url' => $observer['xchan_url'] ?? '',
@@ -87,7 +87,7 @@ class Nav
 
             $public_names = ['Directory', 'Help'];
             if (can_view_public_stream())
-                $public_names[] = 'Network';
+                $public_names[] = 'Public Stream';
 
             foreach ($system as $app) {
                 if (in_array($app['name'] ?? '', $public_names, true))
@@ -122,12 +122,13 @@ class Nav
         $app_shape = function (array $app) use ($baseurl): array {
             $url = $app['app_url'] ?? ($app['url'] ?? '');
             $url = str_replace('$baseurl', $baseurl, $url);
-            $url = trim(explode(',', $url)[0]);
+            // Preserve the full comma-separated value so the SPA can extract
+            // both the primary URL and the optional settings URL.
             return [
-                'name' => $app['name'] ?? '',
-                'label' => $app['label'] ?? ($app['name'] ?? ''),
-                'url' => $url,
-                'photo' => $app['photo'] ?? '',
+                'name'     => $app['name'] ?? '',
+                'label'    => $app['label'] ?? ($app['name'] ?? ''),
+                'url'      => $url,
+                'photo'    => $app['photo'] ?? '',
                 'requires' => $app['requires'] ?? '',
             ];
         };
@@ -152,7 +153,8 @@ class Nav
                     'icon' => 'home',
                 ];
 
-                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
+                if (!empty($p['view_stream']) &&
+                    \Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
                     $channel_tabs[] = [
                         'id' => 'articles-tab',
                         'label' => t('Articles'),
@@ -160,7 +162,7 @@ class Nav
                         'icon' => 'articles',
                     ];
 
-                if ($p['view_storage']) {
+                if (!empty($p['view_storage'])) {
                     $channel_tabs[] = [
                         'id' => 'photos',
                         'label' => t('Photos'),
@@ -175,13 +177,14 @@ class Nav
                     ];
                 }
 
-                if ($p['view_stream'])
+                if (!empty($p['view_stream'])) {
                     $channel_tabs[] = [
                         'id' => 'calendar',
                         'label' => t('Calendar'),
                         'url' => z_root() . '/cal/' . $subject_nick,
                         'icon' => 'calendar',
                     ];
+                }
 
                 if (!empty($p['chat']) &&
                     \Zotlabs\Lib\Apps::system_app_installed($puid, 'Chatrooms') &&
@@ -211,6 +214,17 @@ class Nav
             }
         }
 
+        // Names of all apps the local user has installed (empty for visitors/anon)
+        $installed_apps = [];
+        if ($is_local) {
+            $all = \Zotlabs\Lib\Apps::app_list($uid, false) ?: [];
+            foreach ($all as $app) {
+                $enc = \Zotlabs\Lib\Apps::app_encode($app);
+                if (!empty($enc['name']))
+                    $installed_apps[] = $enc['name'];
+            }
+        }
+
         Response::send([
             'viewer' => $viewer,
             'actions' => $actions,
@@ -218,6 +232,7 @@ class Nav
             'featured' => $featured,
             'channel_tabs' => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
+            'installed_apps' => $installed_apps,
         ]);
     }
 }

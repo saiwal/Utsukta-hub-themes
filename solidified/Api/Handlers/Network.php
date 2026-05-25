@@ -227,6 +227,26 @@ class Network
             $sql_extra .= ' AND item_spam = 1 ';
         }
 
+        // Followed threads (pf=1)
+        if ($pf && $observer_xchan) {
+            $obs = dbesc($observer_xchan);
+            $sql_extra .= " AND item.parent IN (
+                SELECT f.parent
+                FROM item f
+                WHERE f.author_xchan = '$obs'
+                  AND f.verb = 'Follow'
+                  AND f.item_deleted = 0
+                  AND NOT EXISTS (
+                    SELECT 1 FROM item i
+                    WHERE i.parent = f.parent
+                      AND i.author_xchan = '$obs'
+                      AND i.verb = 'Ignore'
+                      AND i.item_deleted = 0
+                      AND i.created > f.created
+                  )
+            ) ";
+        }
+
         // Date range
         $sql_date = '';
         if ($datequery) {
@@ -325,6 +345,32 @@ class Network
                     });
                 }
             }
+        }
+
+        // ── Viewer following state ────────────────────────────────────────────
+        if ($observer_xchan && !empty($items)) {
+            $parent_ids = array_unique(array_map('intval', array_column($items, 'parent')));
+            $ids_str = implode(',', $parent_ids);
+            $obs = dbesc($observer_xchan);
+            $frows = dbq(
+                "SELECT parent, verb FROM item
+                 WHERE parent IN ($ids_str)
+                   AND author_xchan = '$obs'
+                   AND verb IN ('Follow', 'Ignore')
+                   AND item_deleted = 0
+                 ORDER BY created DESC"
+            );
+            $following_map = [];
+            foreach ($frows as $fr) {
+                $pid = intval($fr['parent']);
+                if (!isset($following_map[$pid])) {
+                    $following_map[$pid] = ($fr['verb'] === 'Follow');
+                }
+            }
+            foreach ($items as &$item) {
+                $item['viewer_following'] = $following_map[intval($item['parent'])] ?? false;
+            }
+            unset($item);
         }
 
         // ── Format and respond ────────────────────────────────────────────────

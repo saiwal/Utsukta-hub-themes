@@ -468,26 +468,33 @@ class Settings
     private function getIntegrationsSettings(): void
     {
         $uid = local_channel();
-        $installed = \Zotlabs\Lib\Apps::app_list($uid, false);
         $system = \Zotlabs\Lib\Apps::get_system_apps(true);
         \Zotlabs\Lib\Apps::translate_system_apps($system);
 
-        $installed_names = array_column(
-            array_map(fn($a) => \Zotlabs\Lib\Apps::app_encode($a), $installed ?: []),
-            null, 'name'
-        );
+        // Build a map of installed apps (with terms) keyed by name
+        $installed_list = \Zotlabs\Lib\Apps::app_list($uid, false) ?: [];
+        $installed_map  = [];
+        foreach ($installed_list as $row) {
+            $enc = \Zotlabs\Lib\Apps::app_encode($row);
+            $installed_map[$enc['name']] = $enc;
+        }
 
         $apps = [];
         foreach ($system as $app) {
             $name = $app['name'] ?? '';
-            if (!$name)
-                continue;
+            if (!$name) continue;
+
+            $inst       = $installed_map[$name] ?? null;
+            $categories = $inst['categories'] ?? '';
+
             $apps[] = [
-                'name' => $name,
+                'name'        => $name,
                 'description' => $app['description'] ?? '',
-                'photo' => $app['photo'] ?? '',
-                'installed' => isset($installed_names[$name]),
-                'requires' => $app['requires'] ?? '',
+                'photo'       => $app['photo'] ?? '',
+                'requires'    => $app['requires'] ?? '',
+                'installed'   => $inst !== null,
+                'pinned'      => $inst !== null && str_contains($categories, 'nav_pinned_app'),
+                'featured'    => $inst !== null && str_contains($categories, 'nav_featured_app'),
             ];
         }
 
@@ -744,39 +751,42 @@ class Settings
     private function postIntegrationsSettings(int $uid, array $data): void
     {
         $name   = notags(trim($data['name'] ?? ''));
-        $action = $data['action'] ?? '';  // 'install' | 'uninstall'
- 
-        if (!$name || !in_array($action, ['install', 'uninstall'], true))
+        $action = $data['action'] ?? '';
+
+        if (!$name || !in_array($action, ['install', 'uninstall', 'pin', 'feature'], true))
             Response::error(400, 'Invalid request');
- 
+
+        // All operations key on the whirlpool-hash guid used by Hubzilla for system apps
+        $guid = hash('whirlpool', $name);
+
         if ($action === 'install') {
-            // Find the system app definition by name
             $system = \Zotlabs\Lib\Apps::get_system_apps(true);
-            $app = null;
+            $app    = null;
             foreach ($system as $s) {
-                if (($s['name'] ?? '') === $name) {
-                    $app = $s;
-                    break;
-                }
+                if (($s['name'] ?? '') === $name) { $app = $s; break; }
             }
-            if (!$app)
-                Response::error(404, 'App not found');
- 
-            \Zotlabs\Lib\Apps::import_app($app, $uid);
- 
+            if (!$app) Response::error(404, 'App not found');
+
+            $app['uid']    = $uid;
+            $app['guid']   = $guid;
+            $app['system'] = 1;
+            \Zotlabs\Lib\Apps::app_install($uid, $app);
+
+        } elseif ($action === 'uninstall') {
+            \Zotlabs\Lib\Apps::app_destroy($uid, ['guid' => $guid]);
+
         } else {
-            // Find the installed record to get its primary-key `id`
-            $rows = q(
-                "SELECT id FROM app WHERE app_channel = %d AND app_name = '%s' LIMIT 1",
-                intval($uid),
-                dbesc($name)
+            // pin or feature — app must be installed first
+            $installed = q(
+                "SELECT id FROM app WHERE app_id = '%s' AND app_channel = %d AND app_deleted = 0 LIMIT 1",
+                dbesc($guid), intval($uid)
             );
-            if (!$rows)
-                Response::error(404, 'App not installed');
- 
-            \Zotlabs\Lib\Apps::app_destroy(intval($rows[0]['id']));
+            if (!$installed) Response::error(400, 'App must be installed first');
+
+            $term = ($action === 'pin') ? 'nav_pinned_app' : 'nav_featured_app';
+            \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], $term);
         }
- 
+
         Response::send(['status' => 'ok']);
     }
  

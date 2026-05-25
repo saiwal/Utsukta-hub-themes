@@ -131,6 +131,32 @@ class Display
         xchan_query($items, true);
         $items = fetch_post_tags($items, true);
 
+        // ── Viewer following state ────────────────────────────────────────────
+        if ($observer_hash && !empty($items)) {
+            $parent_ids = array_unique(array_map('intval', array_column($items, 'parent')));
+            $ids_str = implode(',', $parent_ids);
+            $obs = dbesc($observer_hash);
+            $frows = dbq(
+                "SELECT parent, verb FROM item
+                 WHERE parent IN ($ids_str)
+                   AND author_xchan = '$obs'
+                   AND verb IN ('Follow', 'Ignore')
+                   AND item_deleted = 0
+                 ORDER BY created DESC"
+            );
+            $following_map = [];
+            foreach ($frows as $fr) {
+                $pid = intval($fr['parent']);
+                if (!isset($following_map[$pid])) {
+                    $following_map[$pid] = ($fr['verb'] === 'Follow');
+                }
+            }
+            foreach ($items as &$item) {
+                $item['viewer_following'] = $following_map[intval($item['parent'])] ?? false;
+            }
+            unset($item);
+        }
+
         // ── Split root from comments ──────────────────────────────────────────
         $root_item = null;
         $comments  = [];
