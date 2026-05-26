@@ -26,10 +26,14 @@ or manually extract the release in `view/themes`
 
 ![lcars](./lcars/img/screenshot.png)
 
-### 4. [Spurgeon](./spurgeon/README.md)
+### 4. [Solidified (Alpha)](./solidified/README.md)
+
+![solidified screenshot](./solidified/img/screenshot.png)
+
+### 5. [Spurgeon](./spurgeon/README.md)
 
 ![spurgeon](./spurgeon/img/screenshot.png)
 
-### 5. [Typerite](./typerite/README.md)
+### 6. [Typerite](./typerite/README.md)
 
 ![typerite](./typerite/img/screenshot.png)

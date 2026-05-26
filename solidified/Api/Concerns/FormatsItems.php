@@ -72,6 +72,7 @@ trait FormatsItems
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            'attach' => $item['attach'] ? json_decode($item['attach'], true) : [],
         ];
     }
 }
