@@ -64,6 +64,15 @@ trait FormatsItems
                     'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
                 ],
             ],
+            'owner' => (!empty($item['source_xchan']) && !empty($item['source'])) ? [
+                'name' => $item['source']['xchan_name'] ?? '',
+                'address' => $item['source']['xchan_addr'] ?? '',
+                'url' => $item['source']['xchan_url'] ?? '',
+                'photo' => [
+                    'src' => $item['source']['xchan_photo_m'] ?? '',
+                    'mimetype' => $item['source']['xchan_photo_mimetype'] ?? '',
+                ],
+            ] : null,
             'permalink' => $item['plink'] ?? '',
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
