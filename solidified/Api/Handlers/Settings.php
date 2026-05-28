@@ -93,9 +93,16 @@ class Settings
             'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
             'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
             'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
+            'custom',
         ];
         $color_scheme = get_pconfig($uid, 'spa', 'color_scheme', 'light');
         if (!in_array($color_scheme, $valid_color_schemes, true)) $color_scheme = 'light';
+
+        $custom_theme_colors = null;
+        if ($color_scheme === 'custom') {
+            $stored = get_pconfig($uid, 'spa', 'custom_theme_colors', '');
+            if ($stored) $custom_theme_colors = $stored;
+        }
 
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
@@ -112,6 +119,7 @@ class Settings
             'bg_url' => (string) $bg_url,
             'bg_fit' => $bg_fit,
             'color_scheme' => $color_scheme,
+            'custom_theme_colors' => $custom_theme_colors,
         ]);
     }
 
@@ -706,9 +714,24 @@ class Settings
             'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
             'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
             'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
+            'custom',
         ];
         if (isset($data['color_scheme']) && in_array($data['color_scheme'], $valid_color_schemes_post, true))
             set_pconfig($uid, 'spa', 'color_scheme', $data['color_scheme']);
+
+        if (isset($data['custom_theme_colors'])) {
+            $raw = (string) $data['custom_theme_colors'];
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)
+                && isset($decoded['base'], $decoded['txt'], $decoded['accent'], $decoded['isDark'])
+                && preg_match('/^#[0-9a-fA-F]{6}$/', $decoded['base'])
+                && preg_match('/^#[0-9a-fA-F]{6}$/', $decoded['txt'])
+                && preg_match('/^#[0-9a-fA-F]{6}$/', $decoded['accent'])
+                && is_bool($decoded['isDark'])
+            ) {
+                set_pconfig($uid, 'spa', 'custom_theme_colors', $raw);
+            }
+        }
 
         if (array_key_exists('bg_url', $data)) {
             $bg_url = notags(trim((string) $data['bg_url']));
