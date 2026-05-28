@@ -74,7 +74,7 @@ class Settings
             if (strlen(trim($x)) && is_dir("view/theme/$x"))
                 $allowed_themes[] = trim($x);
 
-        $valid_font_sizes    = ['small', 'medium', 'large'];
+        $valid_font_sizes    = ['small', 'medium', 'large', 'xl'];
         $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
 
         $font_size   = get_pconfig($uid, 'spa', 'font_size', 'medium');
@@ -702,7 +702,7 @@ class Settings
                 dbesc($theme_val), intval($uid));
             $_SESSION['theme'] = $theme_val;
         }
-        $valid_font_sizes_post    = ['small', 'medium', 'large'];
+        $valid_font_sizes_post    = ['small', 'medium', 'large', 'xl'];
         $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
         if (isset($data['font_size']) && in_array($data['font_size'], $valid_font_sizes_post, true))
             set_pconfig($uid, 'spa', 'font_size', $data['font_size']);
