@@ -21,6 +21,7 @@ class Router
         'manage' => Handlers\Manage::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
         'item' => Handlers\Item::class,
+        'item-source' => Handlers\Itemsrc::class,
         'privacy-groups' => Handlers\PrivacyGroups::class,
         'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
