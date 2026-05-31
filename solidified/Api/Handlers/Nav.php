@@ -6,6 +6,7 @@ use Theme\Solidified\Api\Response;
 
 require_once 'include/security.php';
 require_once 'include/conversation.php';
+require_once 'include/menu.php';
 
 class Nav
 {
@@ -19,16 +20,34 @@ class Nav
 
         $is_remote = (!$is_local && $ob_hash !== '');
 
+        // True when the local user owns the subject channel being viewed.
+        // No subject (channel_nick absent) means the viewer is in their own context.
+        $subject_nick = trim($_GET['channel_nick'] ?? '');
+        $is_owner = $is_local && (
+            $subject_nick === '' ||
+            (($channel['channel_address'] ?? '') === $subject_nick)
+        );
+
         $viewer = [
-            'is_local' => $is_local,
-            'is_remote' => $is_remote,
-            'is_admin' => $is_local && is_site_admin(),
-            'nick' => $channel['channel_address'] ?? '',
-            'name' => $observer['xchan_name'] ?? '',
-            'avatar' => $observer['xchan_photo_m'] ?? '',
-            'url' => $observer['xchan_url'] ?? '',
-            'uid' => $uid,
-            'baseurl' => z_root(),
+            'is_local'    => $is_local,
+            'is_remote'   => $is_remote,
+            'is_admin'    => $is_local && is_site_admin(),
+            'is_owner'    => $is_owner,
+            'nick'        => $channel['channel_address'] ?? '',
+            'name'        => $observer['xchan_name'] ?? '',
+            'addr'        => $observer['xchan_addr'] ?? '',
+            'avatar'      => $observer['xchan_photo_m'] ?? '',
+            'avatar_s'    => $observer['xchan_photo_s'] ?? '',
+            'avatar_l'    => $observer['xchan_photo_l'] ?? '',
+            'avatar_mime' => $observer['xchan_photo_mimetype'] ?? '',
+            'forum'       => (bool)($observer['xchan_pubforum'] ?? false),
+            'url'         => $observer['xchan_url'] ?? '',
+            'uid'         => $uid,
+            'baseurl'     => z_root(),
+            'location'    => $channel['channel_location'] ?? '',
+            'theme'       => $channel['channel_theme'] ?? '',
+            'timezone'    => $channel['channel_timezone'] ?? '',
+            'startpage'   => $channel['channel_startpage'] ?? '',
         ];
 
         $actions = [];
@@ -57,6 +76,37 @@ class Nav
             $reg = \Zotlabs\Lib\Config::Get('system', 'register_policy');
             if ($reg == REGISTER_OPEN || $reg == REGISTER_APPROVE)
                 $actions['register'] = z_root() . '/register';
+        }
+
+        // Site banner
+        $banner = \Zotlabs\Lib\Config::Get('system', 'banner');
+        if ($banner === false)
+            $banner = \Zotlabs\Lib\Config::Get('system', 'sitename');
+
+        // Current channel reddress or site @hostname for visitors
+        $sitelocation = '';
+        if (!$is_local)
+            $sitelocation = isset(App::$profile['reddress'])
+                ? App::$profile['reddress']
+                : '@' . App::get_hostname();
+
+        // Multi-channel switcher — only for local users without a delegate session
+        $channels = [];
+        if ($is_local && empty($_SESSION['delegate'])) {
+            $chans = q(
+                "SELECT channel_name, channel_id, channel_address
+                 FROM channel
+                 WHERE channel_account_id = %d AND channel_removed = 0
+                 ORDER BY channel_name",
+                intval(get_account_id())
+            );
+            foreach (($chans ?: []) as $ch) {
+                $channels[] = [
+                    'id'   => intval($ch['channel_id']),
+                    'nick' => $ch['channel_address'],
+                    'name' => $ch['channel_name'],
+                ];
+            }
         }
 
         $baseurl = z_root();
@@ -101,29 +151,30 @@ class Nav
             });
         }
 
+        // featured = user's personal nav_featured_app selection (empty for non-local users)
         $featured = [];
-
         if ($is_local) {
             $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
             foreach (($list ?: []) as $li)
                 $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
             \Zotlabs\Lib\Apps::translate_system_apps($featured);
-        } else {
-            $featured = \Zotlabs\Lib\Apps::get_system_apps(true);
-            \Zotlabs\Lib\Apps::translate_system_apps($featured);
-            $featured = array_values(array_filter($featured, fn($a) =>
-                empty($a['requires']) ||
-                strpos($a['requires'], 'local_channel') === false));
+            usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
+            $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
         }
 
-        usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
-        $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
+        // system_apps = full built-in app list (syslist), visible to all users.
+        // Apps requiring a local channel are excluded for visitors.
+        $sys_raw = \Zotlabs\Lib\Apps::get_system_apps(true);
+        \Zotlabs\Lib\Apps::translate_system_apps($sys_raw);
+        if (!$is_local)
+            $sys_raw = array_values(array_filter($sys_raw, fn($a) =>
+                empty($a['requires']) || strpos($a['requires'], 'local_channel') === false));
+        usort($sys_raw, 'Zotlabs\Lib\Apps::app_name_compare');
 
-        $app_shape = function (array $app) use ($baseurl): array {
+        $viewer_nick = $channel['channel_address'] ?? '';
+        $app_shape = function (array $app) use ($baseurl, $viewer_nick): array {
             $url = $app['app_url'] ?? ($app['url'] ?? '');
-            $url = str_replace('$baseurl', $baseurl, $url);
-            // Preserve the full comma-separated value so the SPA can extract
-            // both the primary URL and the optional settings URL.
+            $url = str_replace(['$baseurl', '$nick'], [$baseurl, $viewer_nick], $url);
             return [
                 'name'     => $app['name'] ?? '',
                 'label'    => $app['label'] ?? ($app['name'] ?? ''),
@@ -133,11 +184,11 @@ class Nav
             ];
         };
 
-        $pinned = array_map($app_shape, $pinned);
-        $featured = array_map($app_shape, $featured);
+        $pinned       = array_map($app_shape, $pinned);
+        $featured     = array_map($app_shape, $featured);
+        $system_apps  = array_map($app_shape, $sys_raw);
 
         $channel_tabs = [];
-        $subject_nick = trim($_GET['channel_nick'] ?? '');
 
         if ($subject_nick !== '') {
             $subject = channelx_by_nick($subject_nick);
@@ -152,6 +203,14 @@ class Nav
                     'url' => z_root() . '/channel/' . $subject_nick,
                     'icon' => 'home',
                 ];
+
+                if (!empty($p['view_profile']))
+                    $channel_tabs[] = [
+                        'id'    => 'profile',
+                        'label' => t('About'),
+                        'url'   => z_root() . '/profile/' . $subject_nick,
+                        'icon'  => 'person',
+                    ];
 
                 if (!empty($p['view_stream']) &&
                     \Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
@@ -196,6 +255,18 @@ class Nav
                         'icon' => 'chat',
                     ];
 
+                if ($is_owner) {
+                    $has_bookmarks = menu_list_count($uid, '', MENU_BOOKMARK)
+                                   + menu_list_count($uid, '', MENU_SYSTEM | MENU_BOOKMARK);
+                    if ($has_bookmarks)
+                        $channel_tabs[] = [
+                            'id'    => 'bookmarks',
+                            'label' => t('Bookmarks'),
+                            'url'   => z_root() . '/bookmarks',
+                            'icon'  => 'bookmark',
+                        ];
+                }
+
                 if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Webpages'))
                     $channel_tabs[] = [
                         'id' => 'webpages',
@@ -226,13 +297,17 @@ class Nav
         }
 
         Response::send([
-            'viewer' => $viewer,
-            'actions' => $actions,
-            'pinned' => $pinned,
-            'featured' => $featured,
-            'channel_tabs' => $channel_tabs,
+            'viewer'           => $viewer,
+            'actions'          => $actions,
+            'banner'           => (string)($banner ?: ''),
+            'sitelocation'     => $sitelocation,
+            'channels'         => $channels,
+            'pinned'           => $pinned,
+            'featured'         => $featured,
+            'system_apps'      => $system_apps,
+            'channel_tabs'     => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
-            'installed_apps' => $installed_apps,
+            'installed_apps'   => $installed_apps,
         ]);
     }
 }
