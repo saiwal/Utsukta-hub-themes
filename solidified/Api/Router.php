@@ -34,6 +34,8 @@ class Router
         'wiki' => Handlers\Wiki::class,
         'nav' => Handlers\Nav::class,
         'admin' => Handlers\Admin::class,
+        'login' => Handlers\Login::class,
+        'logout' => Handlers\Logout::class,
     ];
 
     public static function dispatch(string $method): void
