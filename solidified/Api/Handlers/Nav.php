@@ -279,7 +279,7 @@ class Nav
                     $channel_tabs[] = [
                         'id' => 'wiki',
                         'label' => t('Wiki'),
-                        'url' => z_root() . '/wiki/' . $subject_nick . '/home',
+                        'url' => z_root() . '/wiki/' . $subject_nick,
                         'icon' => 'wiki',
                     ];
             }
