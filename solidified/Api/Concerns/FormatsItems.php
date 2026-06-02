@@ -56,11 +56,12 @@ trait FormatsItems
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name' => $item['author']['xchan_name'] ?? '',
-                'address' => $item['author']['xchan_addr'] ?? '',
-                'url' => $item['author']['xchan_url'] ?? '',
-                'photo' => [
-                    'src' => $item['author']['xchan_photo_m'] ?? '',
+                'name'    => $item['author']['xchan_name']         ?? '',
+                'address' => $item['author']['xchan_addr']         ?? '',
+                'url'     => $item['author']['xchan_url']          ?? '',
+                'network' => $item['author']['xchan_network']      ?? '',
+                'photo'   => [
+                    'src'      => $item['author']['xchan_photo_m']        ?? '',
                     'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
                 ],
             ],
