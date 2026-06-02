@@ -1,0 +1,113 @@
+# API Client
+
+## Overview
+
+All API communication goes through thin fetch wrappers. There are two sets:
+
+- **`apiGet`** — Hubzilla's built-in REST API at `/api/z/1.0/`
+- **`moduleGet` / `modulePost`** — The SPA's own PHP API at `/api/*`
+
+File: `src/shared/lib/api.ts`
+
+## apiGet
+
+```typescript
+import { apiGet } from "@/shared/lib/api";
+
+const result = await apiGet<MyType>("channel/alice");
+// → GET /api/z/1.0/channel/alice
+```
+
+Used for Hubzilla's native Zot API endpoints. Throws on non-2xx responses.
+
+## moduleGet
+
+```typescript
+import { moduleGet } from "@/shared/lib/api";
+
+const data = await moduleGet<MyType>("api/network?start=0");
+// → GET /api/network?start=0
+```
+
+Used for the SPA-specific PHP API handlers.
+
+## modulePost
+
+```typescript
+import { modulePost } from "@/shared/lib/api";
+
+const result = await modulePost<MyType>("api/item/abc123/like", {});
+// → POST /api/item/abc123/like
+//   Content-Type: application/json
+//   body: {}
+```
+
+All POST requests to the PHP API must:
+1. Use `Content-Type: application/json`
+2. Include a valid CSRF token (see below)
+
+`modulePost` sets the content type header but does **not** automatically attach a CSRF token — callers must fetch one and include it when the PHP handler checks for it (via `Auth::requireLocalJson()`).
+
+## CSRF Token Management
+
+File: `src/shared/lib/csrf.ts`
+
+The PHP API requires a CSRF token for all state-changing POST requests. The token is fetched once from `/api/csrf` and cached for 30 minutes.
+
+```typescript
+import { getCsrfToken, resetCsrfToken } from "@/shared/lib/csrf";
+
+// Fetch (or return cached) token
+const token = await getCsrfToken();
+
+// Invalidate cache (e.g. after a 403)
+resetCsrfToken();
+```
+
+The token should be included as a request header or body field depending on what the PHP handler expects. The standard pattern used in this codebase is to pass it as a header:
+
+```typescript
+const token = await getCsrfToken();
+const res = await fetch("/api/item", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+    "X-CSRF-Token": token,
+  },
+  body: JSON.stringify(payload),
+});
+```
+
+## Error Handling
+
+The fetch wrappers throw a plain `Error` with the HTTP status code in the message on non-2xx responses. Module-level code is responsible for catching errors and updating UI state accordingly.
+
+```typescript
+try {
+  const data = await moduleGet<Post[]>("api/network");
+} catch (err) {
+  console.error("Failed to load network:", err);
+  setError("Could not load posts.");
+}
+```
+
+## API Response Envelope
+
+All PHP API responses use a consistent envelope (see [php-api.txt](php-api.txt)):
+
+```json
+{ "data": <payload> }
+{ "data": [...], "meta": { "offset": 0, "limit": 20, "has_more": true, ... } }
+{ "error": { "status": 404, "message": "Not found" } }
+```
+
+The `data` field is what you typically destructure in fetch callers.
+
+## Dev Proxy
+
+During development the Vite dev server proxies requests:
+- `/api/*` → `https://hz-ddev.ddev.site/api/*`
+- `/perfstats` → same target
+
+This means module code can use relative `/api/` URLs in both dev and production.

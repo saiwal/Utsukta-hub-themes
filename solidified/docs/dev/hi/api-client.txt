@@ -1,0 +1,113 @@
+# API क्लाइंट
+
+## अवलोकन
+
+सभी API संचार पतले fetch रैपर्स से होता है। दो सेट हैं:
+
+- **`apiGet`** — Hubzilla का बिल्ट-इन REST API, `/api/z/1.0/` पर
+- **`moduleGet` / `modulePost`** — SPA का खुद का PHP API, `/api/*` पर
+
+फ़ाइल: `src/shared/lib/api.ts`
+
+## apiGet
+
+```typescript
+import { apiGet } from "@/shared/lib/api";
+
+const result = await apiGet<MyType>("channel/alice");
+// → GET /api/z/1.0/channel/alice
+```
+
+Hubzilla के नेटिव Zot API एंडपॉइंट के लिए उपयोग होता है। non-2xx रिस्पॉन्स पर Error थ्रो करता है।
+
+## moduleGet
+
+```typescript
+import { moduleGet } from "@/shared/lib/api";
+
+const data = await moduleGet<MyType>("api/network?start=0");
+// → GET /api/network?start=0
+```
+
+SPA-स्पेसिफ़िक PHP API हैंडलर के लिए उपयोग होता है।
+
+## modulePost
+
+```typescript
+import { modulePost } from "@/shared/lib/api";
+
+const result = await modulePost<MyType>("api/item/abc123/like", {});
+// → POST /api/item/abc123/like
+//   Content-Type: application/json
+//   body: {}
+```
+
+PHP API पर सभी POST रिक्वेस्ट के लिए ज़रूरी है:
+1. `Content-Type: application/json`
+2. वैध CSRF टोकन (नीचे देखें)
+
+`modulePost` कंटेंट टाइप हेडर सेट करता है लेकिन CSRF टोकन अपने आप नहीं जोड़ता — कॉलर को टोकन फ़ेच करके शामिल करना होगा (जब PHP हैंडलर `Auth::requireLocalJson()` चेक करे)।
+
+## CSRF टोकन मैनेजमेंट
+
+फ़ाइल: `src/shared/lib/csrf.ts`
+
+PHP API को सभी state-changing POST रिक्वेस्ट के लिए CSRF टोकन चाहिए। टोकन `/api/csrf` से एक बार फ़ेच होता है और 30 मिनट तक कैश रहता है।
+
+```typescript
+import { getCsrfToken, resetCsrfToken } from "@/shared/lib/csrf";
+
+// टोकन फ़ेच करें (या कैश्ड लौटाएं)
+const token = await getCsrfToken();
+
+// कैश अमान्य करें (जैसे 403 के बाद)
+resetCsrfToken();
+```
+
+टोकन को request header के रूप में पास करना इस कोडबेस का मानक पैटर्न है:
+
+```typescript
+const token = await getCsrfToken();
+const res = await fetch("/api/item", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+    "X-CSRF-Token": token,
+  },
+  body: JSON.stringify(payload),
+});
+```
+
+## एरर हैंडलिंग
+
+fetch रैपर non-2xx रिस्पॉन्स पर HTTP status कोड संदेश वाला plain `Error` थ्रो करते हैं। एरर पकड़ना और UI स्टेट अपडेट करना मॉड्यूल-लेवल कोड की ज़िम्मेदारी है।
+
+```typescript
+try {
+  const data = await moduleGet<Post[]>("api/network");
+} catch (err) {
+  console.error("नेटवर्क लोड नहीं हुआ:", err);
+  setError("पोस्ट लोड नहीं हो सकीं।");
+}
+```
+
+## API रिस्पॉन्स एनवेलप
+
+सभी PHP API रिस्पॉन्स एक समान एनवेलप उपयोग करते हैं (देखें [php-api.txt](php-api.txt)):
+
+```json
+{ "data": <payload> }
+{ "data": [...], "meta": { "offset": 0, "limit": 20, "has_more": true, ... } }
+{ "error": { "status": 404, "message": "Not found" } }
+```
+
+fetch कॉलर में आमतौर पर `data` फ़ील्ड को destructure किया जाता है।
+
+## Dev प्रॉक्सी
+
+डेवलपमेंट में Vite dev सर्वर रिक्वेस्ट प्रॉक्सी करता है:
+- `/api/*` → `https://hz-ddev.ddev.site/api/*`
+- `/perfstats` → वही टार्गेट
+
+इसका मतलब है कि मॉड्यूल कोड dev और प्रोडक्शन दोनों में relative `/api/` URL उपयोग कर सकता है।

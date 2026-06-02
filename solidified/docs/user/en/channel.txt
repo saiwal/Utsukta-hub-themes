@@ -1,0 +1,65 @@
+# Channel Pages
+
+A **channel** is a Hubzilla identity — your public-facing profile and wall. Every user has at least one channel. Channels can represent people, projects, communities, or anything else.
+
+## Visiting a Channel
+
+Navigate to `/channel/<nick>` (e.g. `/channel/alice`). You see:
+
+- The channel's **profile header** (name, photo, description)
+- A feed of that channel's **public posts**
+- The channel's **tabs** (Photos, Articles, Wiki, etc.) if enabled
+
+[IMAGE: Channel page with profile header and post feed]
+
+## Profile Header
+
+The profile header shows:
+- **Cover photo** (banner image)
+- **Avatar** (profile photo)
+- **Display name** and channel address
+- **Short description**
+- **Follow / Connect button** (if you are not already connected)
+
+[IMAGE: Profile header with avatar, cover, name, and connect button]
+
+## Channel Tabs
+
+At the top of a channel's content area you may see tabs for installed apps:
+
+- **Wall** — the channel's posts
+- **Photos** — photo albums
+- **Articles** — published articles
+- **Wiki** — collaborative wiki pages
+- **Files** — shared files
+- **Calendar** — events
+
+Which tabs appear depends on which apps the channel owner has installed and made public.
+
+[IMAGE: Channel tabs navigation bar]
+
+## Viewing Your Own Channel
+
+When you visit your own channel (`/channel/<your-nick>`), you can:
+- See exactly what visitors see
+- Access your channel-specific settings and tabs
+- The post composer may appear if you have configured it on your wall
+
+## Profile Detail
+
+Click the profile header or a dedicated **About** link to see the full profile:
+- Hometown
+- Homepage
+- Gender / birthday (if shared)
+- About text
+- Keywords / interests
+
+[IMAGE: Full profile detail page]
+
+## Following / Connecting
+
+If you are logged in and visiting someone else's channel:
+- Click **Follow** or **Connect** to send a connection request.
+- Once accepted, their posts will appear in your Network stream.
+
+Connections can be organised into **Privacy Groups** — see [connections.txt](./connections.txt).

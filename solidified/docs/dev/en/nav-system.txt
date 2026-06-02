@@ -1,0 +1,88 @@
+# Navigation System
+
+## Overview
+
+The navigation list is computed dynamically from several sources:
+- Pinned apps (user's personal pinned apps from `/api/nav`)
+- Featured apps (Hubzilla's installed featured apps)
+- Channel tabs (tabs visible on a channel page)
+- System apps (apps visible to non-owner visitors)
+- Hardcoded entries: admin panel
+
+The result depends on the **viewer role** and the current **subject nick** (channel being viewed).
+
+## useNav
+
+`src/shared/lib/useNav.ts` — the main hook for computing the nav list.
+
+```typescript
+import { useNav } from "@/shared/lib/useNav";
+import { useSubjectNick } from "@/shared/store/site-config";
+
+const subjectNick = useSubjectNick();
+const navItems = useNav(subjectNick);  // () => NavItemDef[]
+```
+
+### Role-Based Nav Logic
+
+| Context | Nav shown |
+|---------|-----------|
+| `local` (visiting someone else's channel) | Channel tabs only |
+| `anonymous` or `remote` (visiting a channel) | Channel tabs + system apps |
+| `owner` (own channel / personal pages) | Pinned + featured (if installed) + admin (if admin) |
+| Visitor not on a channel | System apps only |
+
+### App Filtering
+
+Only apps that have a registered SPA route are included. `isSpaApp()` checks the app's URL against the set of known SPA route roots (derived from `getRoutes()`). Apps that link outside the SPA are excluded from the nav.
+
+Installed-app filtering: featured apps that are not in the viewer's installed set are omitted (the installed set comes from `/api/nav`).
+
+Deduplication: `dedupByHref()` removes items with identical `href` values.
+
+## useNavActionItems
+
+Returns contextual action items (settings, manage, login, logout, etc.) filtered by viewer role:
+
+```typescript
+import { useNavActionItems } from "@/shared/lib/useNav";
+
+const actionItems = useNavActionItems(); // () => NavItemDef[]
+```
+
+Actions rendered, in order: `admin`, `settings`, `manage`, `navhome`, `logout`, `login`, `remote_login`, `register`.
+
+Actions that have SPA routes (`/admin`, `/settings`, `/manage`) use in-app navigation; others use the URL from the API response to avoid a hard page reload.
+
+## Viewer Role
+
+`useViewerRole()` from `src/shared/store/site-config.ts` returns the viewer's relationship to the current page:
+
+```typescript
+type ViewerRole = "owner" | "local" | "remote" | "anonymous";
+```
+
+The role is derived from:
+1. Auth state (is the user logged in? are they local?)
+2. Subject nick (is there a `:nick` in the URL, and does it match the logged-in user's nick?)
+
+This is a pure computation — no extra API call.
+
+## NavContext on Module navItem
+
+Every module's `navItem` carries a `context` field that controls visibility:
+
+```typescript
+context: "owner"         // show only to the channel owner
+context: "all"           // show to everyone
+context: ["owner", "local"]  // multiple roles
+```
+
+`matchesRole(context, role)` in `useNav.ts` enforces this. The `admin` context is handled separately via `isAdmin()`.
+
+## Channel Tabs vs Pinned Apps
+
+- **Channel tabs** come from `/api/nav?channel_nick=<nick>` — they are permission-gated by the server and represent the channel's public-facing feature tabs.
+- **Pinned apps** come from `/api/nav` (no nick) — they are the viewer's personal pinned shortcuts.
+
+These two lists are never mixed for the same request. The nav switches between them based on the subject nick and viewer role.

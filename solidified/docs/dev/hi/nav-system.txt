@@ -1,0 +1,88 @@
+# नेविगेशन सिस्टम
+
+## अवलोकन
+
+नेविगेशन सूची कई स्रोतों से डायनामिक रूप से कम्प्यूट होती है:
+- Pinned apps (यूज़र के `/api/nav` से पर्सनल pinned ऐप)
+- Featured apps (Hubzilla के इन्स्टॉल्ड featured ऐप)
+- Channel tabs (चैनल पेज पर दिखने वाले टैब)
+- System apps (non-owner विज़िटर को दिखने वाले ऐप)
+- हार्डकोडेड एंट्री: admin panel
+
+परिणाम **व्यूअर रोल** और मौजूदा **सब्जेक्ट nick** (देखे जा रहे चैनल) पर निर्भर करता है।
+
+## useNav
+
+`src/shared/lib/useNav.ts` — नेव सूची कम्प्यूट करने का मुख्य हुक।
+
+```typescript
+import { useNav } from "@/shared/lib/useNav";
+import { useSubjectNick } from "@/shared/store/site-config";
+
+const subjectNick = useSubjectNick();
+const navItems = useNav(subjectNick);  // () => NavItemDef[]
+```
+
+### रोल-आधारित नेव लॉजिक
+
+| कॉन्टेक्स्ट | दिखाया जाने वाला नेव |
+|------------|---------------------|
+| `local` (किसी और का चैनल देख रहा है) | केवल Channel tabs |
+| `anonymous` या `remote` (चैनल पर) | Channel tabs + system apps |
+| `owner` (अपना चैनल / पर्सनल पेज) | Pinned + featured (अगर इन्स्टॉल हो) + admin (अगर admin हो) |
+| चैनल पर नहीं है विज़िटर | केवल System apps |
+
+### ऐप फ़िल्टरिंग
+
+केवल वे ऐप शामिल होते हैं जिनका एक रजिस्टर्ड SPA रूट हो। `isSpaApp()` ऐप के URL को ज्ञात SPA रूट रूट्स के सेट से जांचता है (जो `getRoutes()` से डेरिव होते हैं)। SPA से बाहर लिंक करने वाले ऐप नेव में नहीं आते।
+
+Installed-app फ़िल्टरिंग: वे featured ऐप जो व्यूअर के installed सेट में नहीं हैं, छोड़ दिए जाते हैं।
+
+डिडुप्लिकेशन: `dedupByHref()` एक जैसे `href` वाले आइटम हटाता है।
+
+## useNavActionItems
+
+व्यूअर रोल के अनुसार फ़िल्टर किए गए कॉन्टेक्स्टुअल एक्शन आइटम रिटर्न करता है (settings, manage, login, logout आदि):
+
+```typescript
+import { useNavActionItems } from "@/shared/lib/useNav";
+
+const actionItems = useNavActionItems(); // () => NavItemDef[]
+```
+
+क्रम में रेंडर होने वाले एक्शन: `admin`, `settings`, `manage`, `navhome`, `logout`, `login`, `remote_login`, `register`।
+
+जिन एक्शन के SPA रूट हैं (`/admin`, `/settings`, `/manage`), वे in-app नेविगेशन उपयोग करते हैं; बाकी API रिस्पॉन्स की URL उपयोग करते हैं ताकि हार्ड पेज रीलोड न हो।
+
+## व्यूअर रोल
+
+`useViewerRole()` (`src/shared/store/site-config.ts` से) व्यूअर का मौजूदा पेज से संबंध रिटर्न करता है:
+
+```typescript
+type ViewerRole = "owner" | "local" | "remote" | "anonymous";
+```
+
+रोल इन चीज़ों से डेरिव होता है:
+1. Auth स्टेट (क्या यूज़र लॉग इन है? क्या वह लोकल है?)
+2. Subject nick (क्या URL में `:nick` है, और क्या यह लॉग-इन यूज़र के nick से मेल खाता है?)
+
+यह एक शुद्ध गणना है — कोई अतिरिक्त API कॉल नहीं।
+
+## मॉड्यूल navItem पर NavContext
+
+हर मॉड्यूल का `navItem` एक `context` फ़ील्ड लेता है जो visibility कंट्रोल करता है:
+
+```typescript
+context: "owner"              // केवल चैनल owner को दिखे
+context: "all"                // सभी को दिखे
+context: ["owner", "local"]   // एकाधिक रोल
+```
+
+`useNav.ts` में `matchesRole(context, role)` यह लागू करता है। `admin` context अलग से `isAdmin()` के ज़रिए हैंडल होता है।
+
+## Channel Tabs बनाम Pinned Apps
+
+- **Channel tabs** `/api/nav?channel_nick=<nick>` से आते हैं — सर्वर द्वारा परमिशन-गेटेड होते हैं और चैनल के पब्लिक फ़ीचर टैब दर्शाते हैं।
+- **Pinned apps** `/api/nav` (nick के बिना) से आते हैं — व्यूअर के पर्सनल pinned शॉर्टकट होते हैं।
+
+ये दोनों सूचियाँ एक ही रिक्वेस्ट के लिए कभी मिक्स नहीं होतीं। subject nick और viewer role के आधार पर नेव इन दोनों के बीच स्विच करता है।

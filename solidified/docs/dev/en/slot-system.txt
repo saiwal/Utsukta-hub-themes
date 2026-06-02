@@ -1,0 +1,103 @@
+# Slot System
+
+Modules inject UI widgets into named **slots** — predefined layout regions that the shell (`Layout.tsx`) renders. This keeps feature code decoupled from the layout.
+
+## Available Slots
+
+| Slot key | Where rendered |
+|----------|---------------|
+| `right` | Right sidebar (desktop) |
+| `leftBottom` | Bottom of left sidebar |
+| `mainTop` | Top of main content area |
+| `rightVisitor` | Right sidebar shown to visitors |
+| `help` | Help overlay content |
+
+## Declaring Slot Widgets in a Module
+
+```typescript
+// A single widget
+slots: {
+  right: () => import("./widgets/MySidebarWidget"),
+}
+
+// Multiple widgets (rendered in order)
+slots: {
+  right: [
+    () => import("./widgets/WidgetA"),
+    () => import("./widgets/WidgetB"),
+  ],
+}
+```
+
+Each entry is a **slot loader** — a function that returns `Promise<{ default: Component }>`.
+
+## Global vs Module-Local Slots
+
+By default, slot widgets are **module-local**: they are rendered only while that module's route is active. When the user navigates away, the widget unmounts.
+
+**Global slots** stay mounted for the entire session — they survive navigation. Mark a loader as global with `globalSlot()`:
+
+```typescript
+// shared/slots.ts
+import { globalSlot } from "./lib/module-registry";
+
+export const notificationSlot = globalSlot(
+  () => import("./widgets/notifications/NotificationsAside")
+);
+```
+
+Then reference it from any module's `slots` definition:
+
+```typescript
+import { notificationSlot } from "@/shared/slots";
+
+registerModule({
+  id: "hq",
+  slots: { right: [notificationSlot] },
+  // …
+});
+```
+
+Global loaders are deduplicated by reference — registering the same loader from multiple modules only mounts it once.
+
+## The Slot Component
+
+`src/shared/views/Slot.tsx` renders a slot by name:
+
+```tsx
+<Slot name="right" />
+<Slot name="right" moduleId="network" />  // explicit module override
+```
+
+If `moduleId` is omitted, the active module is inferred from the current URL path.
+
+Internally, `Slot` renders:
+
+1. All **global** widgets for the slot (always mounted, never torn down).
+2. **Local** widgets for the active module (swapped on navigation).
+
+Local widgets are skipped when the module's `appName` app is not installed.
+
+## Lazy Caching
+
+`getLazy(loader)` in `module-registry.ts` wraps each loader in `lazy()` exactly once, preventing Solid from remounting the component when reactive memos recompute:
+
+```typescript
+const lazyCache = new WeakMap<SlotLoader, Component>();
+export function getLazy(loader: SlotLoader): Component {
+  if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
+  return lazyCache.get(loader)!;
+}
+```
+
+## Reactivity: globalVersion
+
+`globalVersion` is a signal that increments whenever a new global loader is registered. The `Slot` component tracks it so that widgets registered after async module import are immediately reflected:
+
+```typescript
+const globalVersion = getGlobalVersion();
+const globalWidgets = createMemo(() => {
+  globalVersion(); // subscribe
+  return resolveGlobalSlots(props.name).map(getLazy);
+});
+```

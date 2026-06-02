@@ -1,0 +1,103 @@
+# स्लॉट सिस्टम
+
+मॉड्यूल UI विजेट को नामित **स्लॉट** में इंजेक्ट करते हैं — ये पूर्व-निर्धारित लेआउट क्षेत्र हैं जिन्हें शेल (`Layout.tsx`) रेंडर करता है। इससे फ़ीचर कोड लेआउट से अलग रहता है।
+
+## उपलब्ध स्लॉट
+
+| स्लॉट की | कहाँ रेंडर होता है |
+|----------|------------------|
+| `right` | राइट साइडबार (डेस्कटॉप) |
+| `leftBottom` | लेफ्ट साइडबार का निचला हिस्सा |
+| `mainTop` | मुख्य कंटेंट एरिया का ऊपरी हिस्सा |
+| `rightVisitor` | विज़िटर को दिखने वाला राइट साइडबार |
+| `help` | हेल्प ओवरले कंटेंट |
+
+## मॉड्यूल में स्लॉट विजेट घोषित करना
+
+```typescript
+// एकल विजेट
+slots: {
+  right: () => import("./widgets/MySidebarWidget"),
+}
+
+// एकाधिक विजेट (क्रम में रेंडर होते हैं)
+slots: {
+  right: [
+    () => import("./widgets/WidgetA"),
+    () => import("./widgets/WidgetB"),
+  ],
+}
+```
+
+हर एंट्री एक **स्लॉट लोडर** है — एक फ़ंक्शन जो `Promise<{ default: Component }>` रिटर्न करता है।
+
+## ग्लोबल बनाम मॉड्यूल-लोकल स्लॉट
+
+डिफ़ॉल्ट रूप से स्लॉट विजेट **मॉड्यूल-लोकल** होते हैं: वे केवल तब रेंडर होते हैं जब उस मॉड्यूल का रूट एक्टिव हो। यूज़र के नेविगेट करते ही विजेट अनमाउंट हो जाता है।
+
+**ग्लोबल स्लॉट** पूरे सेशन में माउंटेड रहते हैं — नेविगेशन के बाद भी। लोडर को `globalSlot()` से मार्क करें:
+
+```typescript
+// shared/slots.ts
+import { globalSlot } from "./lib/module-registry";
+
+export const notificationSlot = globalSlot(
+  () => import("./widgets/notifications/NotificationsAside")
+);
+```
+
+फिर किसी भी मॉड्यूल की `slots` परिभाषा में इसे रेफ़र करें:
+
+```typescript
+import { notificationSlot } from "@/shared/slots";
+
+registerModule({
+  id: "hq",
+  slots: { right: [notificationSlot] },
+  // …
+});
+```
+
+ग्लोबल लोडर रेफ़रेंस द्वारा डिडुप्लिकेट होते हैं — एक ही लोडर को कई मॉड्यूल से रजिस्टर करने पर भी केवल एक बार माउंट होगा।
+
+## Slot कॉम्पोनेंट
+
+`src/shared/views/Slot.tsx` नाम से एक स्लॉट रेंडर करता है:
+
+```tsx
+<Slot name="right" />
+<Slot name="right" moduleId="network" />  // स्पष्ट मॉड्यूल ओवरराइड
+```
+
+अगर `moduleId` न दिया जाए तो एक्टिव मॉड्यूल मौजूदा URL पाथ से अनुमान लगाया जाता है।
+
+`Slot` अंदर से रेंडर करता है:
+
+1. स्लॉट के सभी **ग्लोबल** विजेट (हमेशा माउंटेड, कभी टियर-डाउन नहीं)।
+2. एक्टिव मॉड्यूल के **लोकल** विजेट (नेविगेशन पर स्वैप होते हैं)।
+
+लोकल विजेट तब स्किप हो जाते हैं जब मॉड्यूल का `appName` ऐप इन्स्टॉल न हो।
+
+## लेज़ी कैशिंग
+
+`module-registry.ts` में `getLazy(loader)` हर लोडर को ठीक एक बार `lazy()` में रैप करता है, ताकि रिएक्टिव मेमो के रि-कम्प्यूट होने पर Solid कॉम्पोनेंट को फिर से माउंट न करे:
+
+```typescript
+const lazyCache = new WeakMap<SlotLoader, Component>();
+export function getLazy(loader: SlotLoader): Component {
+  if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
+  return lazyCache.get(loader)!;
+}
+```
+
+## रिएक्टिविटी: globalVersion
+
+`globalVersion` एक सिग्नल है जो हर बार नया ग्लोबल लोडर रजिस्टर होने पर बढ़ता है। `Slot` कॉम्पोनेंट इसे ट्रैक करता है ताकि async मॉड्यूल इम्पोर्ट के बाद रजिस्टर हुए विजेट भी तुरंत दिखें:
+
+```typescript
+const globalVersion = getGlobalVersion();
+const globalWidgets = createMemo(() => {
+  globalVersion(); // सब्सक्राइब करें
+  return resolveGlobalSlots(props.name).map(getLazy);
+});
+```

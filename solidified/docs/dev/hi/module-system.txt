@@ -1,0 +1,125 @@
+# मॉड्यूल सिस्टम
+
+SPA में हर फ़ीचर एक स्वतंत्र **मॉड्यूल** है। मॉड्यूल अपने रूट, नेविगेशन आइटम, UI स्लॉट योगदान और (वैकल्पिक रूप से) Hubzilla ऐप की पूर्वापेक्षा घोषित करता है।
+
+## मॉड्यूल रजिस्टर करना
+
+`src/modules/<id>/index.ts` बनाएं और `registerModule()` कॉल करें:
+
+```typescript
+import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
+
+registerModule({
+  id: "myfeature",
+  routes: [
+    { path: "/myfeature", component: () => import("./views/MyView") },
+    { path: "/myfeature/:nick", component: () => import("./views/MyView") },
+  ],
+  navItem: {
+    label: () => useI18n().t("nav.myfeature"),
+    icon: "star",
+    path: "/myfeature",
+    href: "/myfeature",
+    context: "owner",        // कौन यह नेव आइटम देखेगा
+  },
+  slots: {
+    right: () => import("./widgets/MySidebarWidget"),
+  },
+  appName: "MyFeature",      // कोई ऐप प्रीरिक्विज़िट न हो तो हटाएं
+});
+```
+
+यह फ़ाइल `App.tsx` में `import.meta.glob("./modules/*/index.ts", { eager: true })` से ऑटो-इम्पोर्ट होती है। किसी केंद्रीय सूची को अपडेट नहीं करना पड़ता।
+
+## ModuleDef इंटरफ़ेस
+
+```typescript
+interface ModuleDef {
+  id: string;                   // यूनीक मॉड्यूल पहचानकर्ता
+  routes: RouteDef[];           // SPA रूट (लेज़ी-लोडेड)
+  navItem: NavItemDef;          // नेविगेशन एंट्री
+  slots?: SlotsDef;             // विजेट इंजेक्शन
+  permissions?: string[];       // भविष्य के उपयोग के लिए
+  appName?: string;             // Hubzilla ऐप गेट (जैसे "Photos")
+}
+```
+
+## NavItemDef
+
+```typescript
+interface NavItemDef {
+  label: string | (() => string);  // स्टेटिक स्ट्रिंग या रिएक्टिव i18n एक्सेसर
+  icon: string;                    // आइकन की (solid-icons / icon map देखें)
+  path: string;                    // रूट पाथ (active-link मिलान के लिए)
+  href: string | (() => string);   // नेविगेशन टार्गेट (रिएक्टिव हो सकता है)
+  context?: NavContext | NavContext[];
+  hidden?: boolean;
+}
+
+type NavContext =
+  | "owner"      // चैनल के मालिक का लॉगिन
+  | "local"      // किसी और के चैनल पर लॉग-इन यूज़र
+  | "remote"     // OWA / रिमोट-ऑथेंटिकेटेड विज़िटर
+  | "anonymous"  // बिना लॉगिन के विज़िटर
+  | "admin"      // एडमिनिस्ट्रेटर
+  | "all";       // सभी को दिखे
+```
+
+जब डेस्टिनेशन मौजूदा चैनल nick पर निर्भर हो, तब रिएक्टिव `href` उपयोग करें:
+
+```typescript
+import { usePageNick } from "@/shared/store/site-config";
+
+href: () => `/photos/${usePageNick()()}`,
+```
+
+## ऐप गेटिंग (appName)
+
+जब `appName` सेट हो, तो मॉड्यूल तब तक निष्क्रिय रहता है जब तक उस नाम का Hubzilla ऐप व्यूअर की installed-apps सूची में न हो।
+
+- रूट रीडायरेक्ट हो जाते हैं (`App.tsx` में `ModuleGuard` के ज़रिए)।
+- स्लॉट विजेट रेंडर नहीं होते (`Slot.tsx` में जांच होती है)।
+- नेव आइटम `useInstalledApps()` द्वारा फ़िल्टर हो जाता है।
+
+installed-apps सूची `/api/nav` से आती है और शुरुआती लोड के दौरान खाली `Set` होती है — उस समय सभी मॉड्यूल सक्रिय माने जाते हैं।
+
+```typescript
+// module-registry.ts
+export function isModuleActive(moduleId: string, installedApps: Set<string>): boolean {
+  const mod = modules.get(moduleId);
+  if (!mod) return false;
+  if (!mod.appName) return true;             // कोई गेट नहीं
+  if (installedApps.size === 0) return true; // अभी लोड नहीं हुआ
+  return installedApps.has(mod.appName);
+}
+```
+
+## अनुशंसित फ़ोल्डर संरचना
+
+```
+src/modules/myfeature/
+├── index.ts        # registerModule() कॉल
+├── views/
+│   └── MyView.tsx  # लेज़ी-लोडेड पेज कॉम्पोनेंट
+├── api/
+│   └── api.ts      # इस मॉड्यूल के fetch रैपर
+├── store/
+│   └── store.ts    # मॉड्यूल-लोकल सिग्नल / रिसोर्स
+└── widgets/
+    └── MySidebarWidget.tsx
+```
+
+## एकाधिक रूट
+
+एक मॉड्यूल जितने चाहे उतने रूट रजिस्टर कर सकता है। सभी एक ही `moduleId` शेयर करते हैं:
+
+```typescript
+routes: [
+  { path: "/articles",             component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick",       component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick/:uuid", component: () => import("./views/ArticleView") },
+],
+```
+
+`moduleId` `registerModule()` द्वारा हर रूट पर अपने आप सेट होता है — इसे मैन्युअली न दें।

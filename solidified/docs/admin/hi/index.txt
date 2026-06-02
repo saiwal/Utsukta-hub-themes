@@ -1,0 +1,32 @@
+# Hubzilla SPA — एडमिन मार्गदर्शिका
+
+यह मार्गदर्शिका `/admin` पर Admin panel को cover करती है। यह केवल administrator privileges वाले accounts को दिखता है।
+
+## विषय-सूची
+
+- [summary.txt](summary.txt) — Site अवलोकन: user counts, queue, version, plugins
+- [site.txt](site.txt) — Site नाम, registration policy, access policy
+- [security.txt](security.txt) — Block lists, allowlists, HTTP security headers
+- [accounts.txt](accounts.txt) — Registered accounts: block, delete, paginate
+- [channels.txt](channels.txt) — Hub के सभी channels
+- [features.txt](features.txt) — Optional site features enable/disable
+- [addons.txt](addons.txt) — Plugins/addons install और manage करें
+- [logs.txt](logs.txt) — System log viewer level filtering के साथ
+- [queue.txt](queue.txt) — Outbound message queue inspection
+- [themes.txt](themes.txt) — Installed themes management
+- [profile-fields.txt](profile-fields.txt) — Custom profile field definitions
+- [db-updates.txt](db-updates.txt) — Pending database schema updates
+
+## Admin Panel तक पहुँचना
+
+Admin section केवल तभी accessible है जब आपके account पर administrator flag हो। `/admin` पर navigate करें या left sidebar के action menu में **Admin** link से।
+
+Admin panel में Settings जैसा sub-page layout है — बाईं ओर sections की सूची और दाईं ओर content।
+
+[IMAGE: Admin panel overview section list के साथ]
+
+## त्वरित स्वास्थ्य जाँच
+
+1. **Summary** खोलें — queue count देखें। बड़ा और बढ़ता queue federation delivery problems का संकेत है।
+2. **Logs** खोलें — **Error** level से filter करें। यहाँ persistent errors पर तुरंत ध्यान दें।
+3. **Accounts** खोलें — blocked या expired accounts की समीक्षा करें।

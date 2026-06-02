@@ -1,0 +1,74 @@
+# Architecture Overview
+
+## What This Is
+
+**hubzilla-spa** is a Solid.js SPA that replaces the server-rendered Hubzilla UI. It talks to a custom PHP API layer (`src/Api/`) that is deployed as part of the Hubzilla theme and lives at `/api/*`.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| UI framework | Solid.js v1.9 |
+| Routing | @solidjs/router v0.15 |
+| Styling | Tailwind CSS v4 |
+| Build | Vite + vite-plugin-solid |
+| i18n | @solid-primitives/i18n |
+| Markup | BBCode → HTML (bbcodeToHtml), DOMPurify sanitisation |
+| Icons | solid-icons (Iconify-based) |
+| Animations | solid-motionone |
+| Backend | PHP 8 inside the Hubzilla theme |
+
+## Project Layout
+
+```
+src/
+├── App.tsx             # Root: loads modules via import.meta.glob, builds routes
+├── Layout.tsx          # Shell: top nav, left nav, right sidebar, mobile tab bar
+├── index.tsx           # Entry point: PWA init, theme, font setup
+├── router.tsx          # Re-exports getRoutes() signal
+├── index.css           # Global CSS (Tailwind imports, custom properties)
+├── pwa.ts              # Service worker update detection
+├── i18n/               # I18nProvider + locale dictionaries
+├── modules/            # 22 feature modules (each self-registers)
+├── shared/
+│   ├── lib/            # Utilities: module-registry, api, csrf, useNav, bbcode, …
+│   ├── store/          # Global reactive stores: auth, nav, site-config
+│   ├── types/          # Shared TypeScript interfaces
+│   ├── views/          # Shared UI components (NotFound, HelpOverlay, Slot, …)
+│   ├── widgets/        # Shared widgets (notifications aside, stream widgets)
+│   ├── editor/         # Rich text editor (used in post composer)
+│   └── stream/         # Stream / feed display components
+└── Api/                # PHP backend (deployed with the Hubzilla theme)
+    ├── Router.php
+    ├── Auth.php
+    ├── Response.php
+    ├── Concerns/
+    └── Handlers/       # One handler class per API resource
+```
+
+## Build Output
+
+The Vite build writes to:
+```
+../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets/
+```
+
+Outputs: `app.js`, `app-[name].js` (code-split chunks), `app.css`.
+Static `src/docs/` and `src/Api/` are copied verbatim alongside.
+
+## Dev Proxy
+
+In development, Vite proxies `/api` and `/perfstats` to `https://hz-ddev.ddev.site` so the SPA can talk to a real Hubzilla instance without CORS issues.
+
+## Module Auto-Import
+
+```typescript
+// App.tsx
+import.meta.glob("./modules/*/index.ts", { eager: true });
+```
+
+This one line eagerly imports every `src/modules/*/index.ts`, which each call `registerModule()`. No explicit list is needed — adding a new folder is enough.
+
+## Deployment Notes
+
+The app is a Hubzilla **theme** artefact. The PHP API and the built JS/CSS are part of the `solidified` theme. The SPA mounts inside a single Hubzilla page that serves `app.js` and `app.css`.

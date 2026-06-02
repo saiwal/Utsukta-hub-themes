@@ -1,0 +1,125 @@
+# Module System
+
+Every feature in the SPA is a self-contained **module**. A module declares its routes, navigation item, UI slot contributions, and (optionally) a Hubzilla app prerequisite.
+
+## Registering a Module
+
+Create `src/modules/<id>/index.ts` and call `registerModule()`:
+
+```typescript
+import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
+
+registerModule({
+  id: "myfeature",
+  routes: [
+    { path: "/myfeature", component: () => import("./views/MyView") },
+    { path: "/myfeature/:nick", component: () => import("./views/MyView") },
+  ],
+  navItem: {
+    label: () => useI18n().t("nav.myfeature"),
+    icon: "star",
+    path: "/myfeature",
+    href: "/myfeature",
+    context: "owner",        // who sees this nav item
+  },
+  slots: {
+    right: () => import("./widgets/MySidebarWidget"),
+  },
+  appName: "MyFeature",      // omit if no app prerequisite
+});
+```
+
+The file is auto-imported by `App.tsx` via `import.meta.glob("./modules/*/index.ts", { eager: true })`. You never need to update a central list.
+
+## ModuleDef Interface
+
+```typescript
+interface ModuleDef {
+  id: string;                   // unique module identifier
+  routes: RouteDef[];           // SPA routes (lazy-loaded)
+  navItem: NavItemDef;          // navigation entry
+  slots?: SlotsDef;             // widget injections
+  permissions?: string[];       // future use
+  appName?: string;             // Hubzilla app gate (e.g. "Photos")
+}
+```
+
+## NavItemDef
+
+```typescript
+interface NavItemDef {
+  label: string | (() => string);  // static string or reactive i18n accessor
+  icon: string;                    // icon key (see solid-icons / icon map)
+  path: string;                    // route path (for active-link matching)
+  href: string | (() => string);   // navigation target (can be reactive)
+  context?: NavContext | NavContext[];
+  hidden?: boolean;
+}
+
+type NavContext =
+  | "owner"      // logged-in user on their own channel
+  | "local"      // logged-in user on someone else's channel
+  | "remote"     // OWA / remote-authenticated visitor
+  | "anonymous"  // unauthenticated
+  | "admin"      // administrator
+  | "all";       // always visible
+```
+
+Use reactive `href` when the destination depends on the current channel nick:
+
+```typescript
+import { usePageNick } from "@/shared/store/site-config";
+
+href: () => `/photos/${usePageNick()()}`,
+```
+
+## App Gating (appName)
+
+When `appName` is set, the module is suppressed unless the Hubzilla app by that name is in the viewer's installed-apps list.
+
+- Routes redirect away (via `ModuleGuard` in `App.tsx`).
+- Slot widgets are not rendered (checked in `Slot.tsx`).
+- The nav item is filtered out by `useInstalledApps()`.
+
+The installed-apps list comes from `/api/nav` and is an empty `Set` during the initial load — while the set is empty every module is treated as active (pass-through).
+
+```typescript
+// module-registry.ts
+export function isModuleActive(moduleId: string, installedApps: Set<string>): boolean {
+  const mod = modules.get(moduleId);
+  if (!mod) return false;
+  if (!mod.appName) return true;             // no gate
+  if (installedApps.size === 0) return true; // not yet loaded
+  return installedApps.has(mod.appName);
+}
+```
+
+## Recommended Folder Structure
+
+```
+src/modules/myfeature/
+├── index.ts        # registerModule() call
+├── views/
+│   └── MyView.tsx  # lazy-loaded page components
+├── api/
+│   └── api.ts      # fetch wrappers for this module
+├── store/
+│   └── store.ts    # module-local signals / resources
+└── widgets/
+    └── MySidebarWidget.tsx
+```
+
+## Multiple Routes
+
+A module can register as many routes as needed. All share the same `moduleId`:
+
+```typescript
+routes: [
+  { path: "/articles",           component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick",     component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick/:uuid", component: () => import("./views/ArticleView") },
+],
+```
+
+`moduleId` is set automatically on every route by `registerModule()` — do not supply it manually.

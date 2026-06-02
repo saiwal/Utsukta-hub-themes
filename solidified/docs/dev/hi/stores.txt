@@ -1,0 +1,108 @@
+# रिएक्टिव स्टोर
+
+स्टेट **Solid के रिएक्टिव प्रिमिटिव** (signals, memos, resources) से मैनेज होती है। कोई केंद्रीय स्टोर नहीं है — स्टेट वहीं स्कोप होती है जहाँ ज़रूरत हो। शेयर्ड स्टोर क्रॉस-कटिंग चीज़ें कवर करते हैं: ऑथेंटिकेशन, नेविगेशन डेटा और पेज कॉन्टेक्स्ट।
+
+## Auth Store (`src/shared/store/auth-store.ts`)
+
+स्टार्टअप पर `/api/pconfig` से व्यूअर की पहचान एक बार फ़ेच करता है।
+
+```typescript
+type AuthState = {
+  isLocal: boolean;      // नेटिव लॉग-इन यूज़र
+  isLoggedIn: boolean;   // कोई भी ऑथेंटिकेटेड यूज़र (लोकल या रिमोट)
+  isAdmin: boolean;
+  nick: string;          // चैनल nick, anonymous होने पर ""
+  uid: number;           // लोकल चैनल id, विज़िटर के लिए 0
+  pageSize: number;      // पेर पेज पसंदीदा आइटम
+  updateInterval: number; // पोलिंग इंटरवल (सेकंड में)
+};
+```
+
+**उपयोग:**
+```typescript
+import { useAuth, isAdmin } from "@/shared/store/auth-store";
+
+const auth = useAuth();     // () => AuthState | undefined
+const admin = isAdmin();    // boolean
+```
+
+लोड होने पर यह स्टोर pconfig रिस्पॉन्स से `spa` प्रेफ़रेन्स भी पढ़ता है और टाइपोग्राफ़ी, बैकग्राउंड और थीम सेटिंग तुरंत लागू करता है।
+
+## Nav Store (`src/shared/store/nav-store.ts`)
+
+जब भी सब्जेक्ट चैनल बदले, `/api/nav` (वैकल्पिक रूप से `?channel_nick=<nick>` के साथ) फ़ेच करता है। इसमें व्यूअर की पहचान, pinned/featured ऐप, चैनल टैब, इन्स्टॉल्ड ऐप नाम और system apps होते हैं।
+
+Nick सिग्नल `navNick` स्टार्टअप पर URL से इनिशियलाइज़ होता है और `Layout.tsx` हर नेविगेशन पर इसे अपडेट करता है।
+
+**उपयोग:**
+```typescript
+import {
+  useNavData,
+  usePinnedApps,
+  useFeaturedApps,
+  useSystemApps,
+  useInstalledApps,
+  useChannelNav,
+} from "@/shared/store/nav-store";
+
+const navData    = useNavData();        // Resource<NavApiResponse>
+const pinned     = usePinnedApps();     // () => NavApp[]
+const installed  = useInstalledApps();  // () => Set<string>
+```
+
+`useChannelNav(subjectNick)` एक रिसोर्स रिटर्न करता है जिसमें `channel_tabs` होते हैं — ये केवल तब पॉपुलेट होते हैं जब nick दिया गया हो।
+
+## Site Config Store (`src/shared/store/site-config.ts`)
+
+मौजूदा URL और auth स्टेट से पेज कॉन्टेक्स्ट डेरिव करता है — कोई अतिरिक्त API कॉल नहीं।
+
+### useSubjectNick
+
+```typescript
+import { useSubjectNick } from "@/shared/store/site-config";
+const nick = useSubjectNick(); // () => string — nick वाले पेज पर "" अगर nick नहीं
+```
+
+`/channel/:nick`, `/photos/:nick` आदि जैसे रूट के लिए `:nick` URL सेगमेंट रिटर्न करता है।
+
+### useViewerRole
+
+```typescript
+import { useViewerRole } from "@/shared/store/site-config";
+const role = useViewerRole(); // () => ViewerRole
+```
+
+व्यूअर का मौजूदा पेज सब्जेक्ट से संबंध डेरिव करता है:
+
+| रोल | स्थिति |
+|-----|--------|
+| `"anonymous"` | लॉग इन नहीं |
+| `"remote"` | ऑथेंटिकेटेड लेकिन लोकल यूज़र नहीं |
+| `"local"` | लोकल यूज़र, किसी और का चैनल देख रहा है |
+| `"owner"` | लोकल यूज़र, अपना चैनल या पर्सनल पेज |
+
+### usePageNick
+
+```typescript
+import { usePageNick } from "@/shared/store/site-config";
+const nick = usePageNick(); // () => string
+```
+
+API कॉल के लिए उपयोग होने वाला nick रिटर्न करता है:
+- `/channel/:nick` पर → URL nick (owner और विज़िटर दोनों के लिए)
+- `/hq` या अन्य owner-only पेज पर → लॉग-इन यूज़र का nick
+- Non-channel पेज पर anonymous → `""`
+
+## मॉड्यूल-लेवल स्टोर
+
+हर मॉड्यूल में आमतौर पर डेटा फ़ेचिंग के लिए `createResource` उपयोग करने वाला `store/store.ts` होता है:
+
+```typescript
+// उदाहरण पैटर्न
+const [posts, { refetch }] = createResource(
+  () => `network?start=${offset()}`,
+  (key) => moduleGet(`api/${key}`)
+);
+```
+
+मॉड्यूल स्टोर को मॉड्यूल फ़ोल्डर के अंदर रखें। मॉड्यूल के बीच म्यूटेबल स्टेट ग्लोबल सिग्नल से शेयर न करें जब तक वह सच में शेयर्ड लेयर से न हो।

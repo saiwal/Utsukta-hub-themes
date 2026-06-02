@@ -1,0 +1,25 @@
+# Hubzilla SPA — डेवलपर दस्तावेज़
+
+यह **hubzilla-spa** के लिए डेवलपर संदर्भ है — Hubzilla फ़ेडरेटेड सोशल प्लेटफ़ॉर्म के लिए एक Solid.js सिंगल-पेज एप्लिकेशन।
+
+## विषय-सूची
+
+- [overview.txt](overview.txt) — आर्किटेक्चर, टेक स्टैक, प्रोजेक्ट संरचना
+- [module-system.txt](module-system.txt) — फ़ीचर मॉड्यूल बनाना, रजिस्टर करना और गेटिंग
+- [slot-system.txt](slot-system.txt) — लेआउट क्षेत्रों में विजेट इंजेक्ट करना
+- [routing.txt](routing.txt) — SPA रूटिंग, लेज़ी लोडिंग और ModuleGuard
+- [stores.txt](stores.txt) — रिएक्टिव स्टेट: auth, nav, site-config
+- [nav-system.txt](nav-system.txt) — नेविगेशन की गणना और व्यूअर रोल
+- [api-client.txt](api-client.txt) — फ्रंटएंड API यूटिलिटी और CSRF हैंडलिंग
+- [php-api.txt](php-api.txt) — बैकएंड PHP API: router, auth, response, handlers
+- [i18n.txt](i18n.txt) — अंतर्राष्ट्रीयकरण (i18n) सिस्टम
+
+## त्वरित शुरुआत
+
+```bash
+npm run dev        # dev सर्वर (/api को https://hz-ddev.ddev.site पर प्रॉक्सी करता है)
+npm run build      # प्रोडक्शन बिल्ड
+npm run typecheck  # TypeScript वॉच मोड
+```
+
+ऐप का एंट्री पॉइंट `src/index.tsx` है। सभी फ़ीचर मॉड्यूल `src/modules/` के अंदर हैं और `src/App.tsx` में `import.meta.glob` के ज़रिए ख़ुद रजिस्टर होते हैं।

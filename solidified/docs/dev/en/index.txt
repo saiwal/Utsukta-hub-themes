@@ -1,0 +1,25 @@
+# Hubzilla SPA — Developer Documentation
+
+This is the developer reference for **hubzilla-spa**, a Solid.js single-page application for the Hubzilla federated social platform.
+
+## Contents
+
+- [overview.txt](overview.txt) — Architecture overview, tech stack, project layout
+- [module-system.txt](module-system.txt) — Creating, registering, and gating feature modules
+- [slot-system.txt](slot-system.txt) — Injecting widgets into layout regions
+- [routing.txt](routing.txt) — SPA routing, lazy loading, and the ModuleGuard
+- [stores.txt](stores.txt) — Reactive state: auth, nav, site-config
+- [nav-system.txt](nav-system.txt) — Navigation computation and viewer roles
+- [api-client.txt](api-client.txt) — Frontend API utilities and CSRF handling
+- [php-api.txt](php-api.txt) — Backend PHP API: router, auth, response, handlers
+- [i18n.txt](i18n.txt) — Internationalization (i18n) system
+
+## Quick Start
+
+```bash
+npm run dev        # dev server (proxies /api to https://hz-ddev.ddev.site)
+npm run build      # production build
+npm run typecheck  # TypeScript watch
+```
+
+The app entry point is `src/index.tsx`. All feature modules live under `src/modules/` and self-register via `import.meta.glob` in `src/App.tsx`.
