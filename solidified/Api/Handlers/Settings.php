@@ -488,9 +488,12 @@ class Settings
         }
 
         $apps = [];
+        $seen = [];
+
         foreach ($system as $app) {
             $name = $app['name'] ?? '';
             if (!$name) continue;
+            $seen[$name] = true;
 
             $inst       = $installed_map[$name] ?? null;
             $categories = $inst['categories'] ?? '';
@@ -506,8 +509,27 @@ class Settings
             ];
         }
 
+        // Include installed apps that are not in the system list (user apps, plugin apps, etc.)
+        foreach ($installed_map as $name => $inst) {
+            if (isset($seen[$name])) continue;
+            $categories = $inst['categories'] ?? '';
+            $apps[] = [
+                'name'        => $name,
+                'description' => $inst['description'] ?? '',
+                'photo'       => $inst['photo'] ?? '',
+                'requires'    => $inst['requires'] ?? '',
+                'installed'   => true,
+                'pinned'      => str_contains($categories, 'nav_pinned_app'),
+                'featured'    => str_contains($categories, 'nav_featured_app'),
+            ];
+        }
+
         usort($apps, fn($a, $b) => strcasecmp($a['name'], $b['name']));
-        Response::send(['apps' => $apps]);
+
+        $nav_order_raw = get_pconfig($uid, 'spa', 'nav_order', '');
+        $nav_order = $nav_order_raw ? (json_decode($nav_order_raw, true) ?? []) : [];
+
+        Response::send(['apps' => $apps, 'nav_order' => array_values((array) $nav_order)]);
     }
 
     private function getNotificationSettings(): void
@@ -773,11 +795,24 @@ class Settings
 
     private function postIntegrationsSettings(int $uid, array $data): void
     {
-        $name   = notags(trim($data['name'] ?? ''));
         $action = $data['action'] ?? '';
 
-        if (!$name || !in_array($action, ['install', 'uninstall', 'pin', 'feature'], true))
+        if (!in_array($action, ['install', 'uninstall', 'pin', 'feature', 'reorder'], true))
             Response::error(400, 'Invalid request');
+
+        if ($action === 'reorder') {
+            $raw = $data['order'] ?? null;
+            if (!is_array($raw)) Response::error(400, 'Invalid order');
+            $order = array_values(array_filter(
+                array_map(fn($n) => is_string($n) ? notags(trim($n)) : null, $raw),
+                fn($n) => $n !== null && $n !== ''
+            ));
+            set_pconfig($uid, 'spa', 'nav_order', json_encode($order));
+            Response::send(['status' => 'ok']);
+        }
+
+        $name = notags(trim($data['name'] ?? ''));
+        if (!$name) Response::error(400, 'Invalid request');
 
         // All operations key on the whirlpool-hash guid used by Hubzilla for system apps
         $guid = hash('whirlpool', $name);
