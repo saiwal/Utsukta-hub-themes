@@ -22,7 +22,7 @@ class Pconfig
             'light','pastel-soft','warm-paper','mint','sakura','latte-cream',
             'dark','nord','dracula','monokai','one-dark','cyberpunk','rose-pine',
             'gruvbox-dark','gruvbox-light','catppuccin-latte','catppuccin-mocha',
-            'solarized-light','solarized-dark','tokyo-night','matrix',
+            'solarized-light','solarized-dark','tokyo-night','matrix','custom',
         ];
 
         $bg_fit       = get_pconfig($cuid, 'spa', 'bg_fit',       'cover');
@@ -30,13 +30,20 @@ class Pconfig
         $font_family  = get_pconfig($cuid, 'spa', 'font_family',  'system');
         $color_scheme = get_pconfig($cuid, 'spa', 'color_scheme', '');
 
-        return [
+        $result = [
             'bg_url'       => (string) get_pconfig($cuid, 'spa', 'bg_url', ''),
             'bg_fit'       => in_array($bg_fit,       $valid_fits,     true) ? $bg_fit       : 'cover',
             'font_size'    => in_array($font_size,    $valid_sizes,    true) ? $font_size    : 'medium',
             'font_family'  => in_array($font_family,  $valid_families, true) ? $font_family  : 'system',
             'color_scheme' => in_array($color_scheme, $valid_schemes,  true) ? $color_scheme : '',
         ];
+
+        if ($result['color_scheme'] === 'custom') {
+            $stored = get_pconfig($cuid, 'spa', 'custom_theme_colors', '');
+            if ($stored) $result['custom_theme_colors'] = $stored;
+        }
+
+        return $result;
     }
 
     public function get(): void

@@ -1,0 +1,36 @@
+# Wiki
+
+The Wiki app provides collaborative, editable pages attached to a channel. It is useful for documentation, project notes, FAQs, or any content that needs to grow over time.
+
+Navigate to `/wiki/<nick>` to see a channel's wikis.
+
+[IMAGE: Wiki list page showing available wiki names]
+
+## Wiki Structure
+
+A channel can have **multiple wikis** — each wiki is like a mini-site with its own set of pages.
+
+- The **Wiki list** (`/wiki/<nick>`) shows all wikis for that channel.
+- Click a wiki name to open it and see its pages.
+- The **Pages view** lists all pages in the wiki.
+- Click a page title to read it.
+
+[IMAGE: Wiki pages listing within a single wiki]
+
+## Reading a Wiki Page
+
+Wiki pages are written in BBCode or Markdown and rendered as formatted HTML. A breadcrumb trail at the top shows where you are.
+
+[IMAGE: Single wiki page with rendered content and breadcrumb]
+
+## Editing Pages
+
+If you have permission (channel owner or granted editor), click **Edit** on a page to modify its content. Changes are saved immediately on submit.
+
+[IMAGE: Wiki page edit view with text editor]
+
+## Creating New Pages
+
+Use the **New page** button (if you have permission) to add a page to the current wiki. Give it a title and write the content.
+
+> **Note:** The Wiki app must be installed on the channel. If you don't see the Wiki tab on a channel, the app is not active there.

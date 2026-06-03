@@ -105,6 +105,9 @@ class Item
             case 'edit':
                 $this->editItem($mid);
                 break;
+            case 'reshare':
+                $this->createReshare($mid);
+                break;
             default:
                 // POST /api/item/:mid  with no verb → comment (convenience alias)
                 $this->createComment($mid);
@@ -883,6 +886,104 @@ class Item
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
         ];
+    }
+
+    // POST /api/item/:mid/reshare
+    // Body: { body? }  (optional additional text above the share block)
+    private function createReshare(string $mid): void
+    {
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $uid = local_channel();
+        $ob_hash = get_observer_hash();
+
+        $requestBody = json_decode(file_get_contents('php://input'), true) ?? [];
+        $extraContent = trim($requestBody['body'] ?? '');
+
+        $item = $this->resolveItem($mid, $ob_hash);
+        if (!$item) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        $iid = intval($item['id']);
+
+        $share = new \Zotlabs\Lib\Share($iid);
+        $shareBlock = $share->bbcode();
+
+        // Core Share::bbcode() refuses to wrap posts whose body already contains
+        // [/share] (i.e. reshares). Build the block ourselves in that case.
+        if (!$shareBlock) {
+            $shareBlock = $this->buildShareBlock($item);
+        }
+
+        if (!$shareBlock) {
+            json_return_and_die(['error' => 'Cannot reshare this post']);
+        }
+
+        $content = $extraContent
+            ? $extraContent . "\r\n\r\n" . $shareBlock
+            : $shareBlock;
+
+        $acl = self::scopeToAcl('public', $uid);
+
+        $datarray = self::buildItemArray(
+            profileUid: $uid,
+            content: $content,
+            title: '',
+            mimetype: 'text/bbcode',
+            acl: $acl,
+            isWall: true,
+        );
+
+        $post = item_store($datarray);
+
+        if (!$post['success']) {
+            json_return_and_die(['error' => 'Failed to create reshare post']);
+        }
+
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+
+        json_return_and_die([
+            'success' => true,
+            'iid'  => $post['item_id'],
+            'mid'  => $datarray['mid'],
+            'uuid' => $datarray['uuid'],
+        ]);
+    }
+
+    private function buildShareBlock(array $item): string
+    {
+        if ($item['item_private'] || $item['mimetype'] !== 'text/bbcode') {
+            return '';
+        }
+
+        $rows = [$item];
+        xchan_query($rows, true);
+        $author  = $rows[0]['author'] ?? [];
+        $network = $author['xchan_network'] ?? '';
+        $quote   = in_array($network, ['zot6', 'activitypub']) ? "quote='true'" : '';
+
+        $bb  = "[share author='" . urlencode($author['xchan_name'] ?? '') . "'\n";
+        $bb .= "\tprofile='" . ($author['xchan_url'] ?? '') . "'\n";
+        $bb .= "\tavatar='" . ($author['xchan_photo_s'] ?? '') . "'\n";
+        $bb .= "\tlink='" . ($item['plink'] ?? '') . "'\n";
+        $bb .= "\tauth='" . ($network === 'zot6' ? 'true' : 'false') . "'\n";
+        $bb .= "\tposted='" . ($item['created'] ?? '') . "'\n";
+        $bb .= "\tmessage_id='" . ($item['mid'] ?? '') . "'\n";
+        if ($quote) {
+            $bb .= "\t$quote\n";
+        }
+        $bb .= ']';
+
+        if ($item['title']) {
+            $bb .= '[h3][b]' . $item['title'] . '[/b][/h3]' . "\r\n";
+        }
+
+        $bb .= $item['body'];
+        $bb .= '[/share]';
+
+        return $bb;
     }
 
     // ── Guards ────────────────────────────────────────────────────────────────

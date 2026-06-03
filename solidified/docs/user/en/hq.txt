@@ -1,0 +1,50 @@
+# HQ — Your Dashboard
+
+HQ is your personal home base. It is the first page you see after logging in. It gives you a quick overview of what's happening and lets you post without navigating elsewhere.
+
+[IMAGE: Full HQ page with all widgets visible]
+
+## Post Composer
+
+The composer at the top of HQ lets you write and publish a new post directly.
+
+[IMAGE: HQ composer in its collapsed state]
+
+- Click the text area to expand the full composer.
+- Write your post using plain text or BBCode formatting.
+- Use the **toolbar** to quickly insert bold, italic, links, images, and other BBCode tags.
+- Choose who can see your post with the **privacy selector** (see [composing-posts.txt](composing-posts.txt) for details).
+- Your draft is saved automatically as you type — if you close the tab by accident it will still be there.
+
+[IMAGE: Composer expanded with toolbar and privacy picker visible]
+
+## Drafts Widget
+
+Unfinished posts are saved as drafts. The **Drafts** widget (right column on HQ) shows your saved drafts. Click a draft to continue editing it.
+
+[IMAGE: Drafts widget showing a list of draft titles]
+
+## Upcoming Events Widget
+
+Shows your next events from the Calendar app — anything in the next 30 days. Each event shows the date, month, time, and title.
+
+- Click the **+** button to create a new event directly from HQ.
+- Click an event title to open the full calendar view.
+
+[IMAGE: Upcoming events widget with event list and create button]
+
+## Messages Widget
+
+Shows recent private direct messages. Click a message to open the full conversation in the Network view (DM filter).
+
+[IMAGE: Messages widget showing message previews]
+
+## Activity / Performance Widget
+
+A stats overview card. In the default setup it shows placeholder stats (Users, Revenue, Open tickets). On a fully configured installation, this connects to live data.
+
+[IMAGE: Stats widget with three stat cards]
+
+## Keyboard Tip
+
+Press **Enter** (or **Ctrl+Enter** depending on settings) to submit a post from the composer. The exact behaviour is set in Display Settings.

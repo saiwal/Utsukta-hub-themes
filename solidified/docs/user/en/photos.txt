@@ -1,0 +1,45 @@
+# Photos
+
+The Photos app (`/photos/<nick>`) lets you organise and share images in albums.
+
+[IMAGE: Photos page showing album grid]
+
+## Albums
+
+Your photos are organised into **albums**. The main Photos page lists all your albums as cards — each shows the album cover, name, and photo count.
+
+- Click an album to open it and see the photos inside.
+- Create a new album using the **+ New album** button (or equivalent action button).
+
+[IMAGE: Album listing with cover thumbnails]
+
+## Viewing Photos
+
+Inside an album, photos are displayed in a grid.
+
+- Click a photo to open the **full-size image viewer**.
+- The viewer shows the image, its title, and any description.
+- Use the left/right arrows (or swipe on mobile) to navigate between images in the album.
+
+[IMAGE: Photo viewer with navigation arrows and image details]
+
+## Right Sidebar Widgets
+
+When you are on the Photos page, the right sidebar shows:
+
+- **Recent photos** — a quick-scroll view of your latest uploads
+- Other album-related shortcuts (if configured)
+
+[IMAGE: Photos right sidebar widget]
+
+## Visiting Someone Else's Photos
+
+Navigate to `/photos/<their-nick>` to see their public photo albums. You can browse albums and view images that they have made public.
+
+[IMAGE: Visiting another channel's photos page]
+
+## Privacy
+
+Photos inherit the privacy settings of the album they are in. Only photos in public albums are visible to visitors and the wider network.
+
+> **Tip:** To share a single photo publicly, place it in a public album.

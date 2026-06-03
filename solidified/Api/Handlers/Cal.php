@@ -168,4 +168,83 @@ class Cal
 
         Response::send($events);
     }
+
+    /**
+     * POST /api/cal
+     *
+     * Body (JSON):
+     *   { title, description?, location?, start (ISO-8601 UTC), end? (ISO-8601 UTC),
+     *     allDay?, nofinish? }
+     *
+     * Response: { data: { id: int, uri: string } }
+     */
+    public function post(): void
+    {
+        $uid = Auth::requireLocalJson();
+
+        $channel = \App::get_channel();
+        if (!$channel) {
+            Response::error(403, 'Not logged in');
+        }
+
+        $body = Auth::$parsedBody;
+
+        $title       = trim($body['title'] ?? '');
+        $description = trim($body['description'] ?? '');
+        $location    = trim($body['location'] ?? '');
+        $startIso    = $body['start'] ?? '';
+        $endIso      = $body['end'] ?? null;
+        $allDay      = (bool)($body['allDay'] ?? false);
+        $nofinish    = (bool)($body['nofinish'] ?? false);
+
+        if (!$title) {
+            Response::error(400, 'Title is required');
+        }
+        if (!$startIso) {
+            Response::error(400, 'Start time is required');
+        }
+
+        // adjust=0 means all-day (no tz conversion stored); adjust=1 means timed/UTC
+        $adjust  = $allDay ? 0 : 1;
+        $dtstart = datetime_convert('UTC', 'UTC', $startIso);
+
+        // Passing empty dtend triggers event_store_event() to set nofinish=1 automatically
+        $dtend = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
+
+        $datarray = [
+            'uid'         => intval($uid),
+            'account'     => get_account_id(),
+            'event_xchan' => $channel['channel_hash'],
+            'etype'       => 'event',
+            'summary'     => $title,
+            'description' => $description,
+            'location'    => $location,
+            'dtstart'     => $dtstart,
+            'dtend'       => $dtend,
+            'nofinish'    => ($nofinish || !$endIso) ? 1 : 0,
+            'adjust'      => $adjust,
+            'timezone'    => 'UTC',
+            'allow_cid'   => '',
+            'allow_gid'   => '',
+            'deny_cid'    => '',
+            'deny_gid'    => '',
+        ];
+
+        $event = event_store_event($datarray);
+
+        if (!$event) {
+            Response::error(500, 'Failed to create event');
+        }
+
+        $post = event_store_item($datarray, $event);
+
+        if (!empty($post['item_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'event', $post['item_id']]);
+        }
+
+        Response::send([
+            'id'  => intval($event['id']),
+            'uri' => $event['event_hash'] ?? '',
+        ]);
+    }
 }

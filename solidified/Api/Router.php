@@ -21,6 +21,7 @@ class Router
         'manage' => Handlers\Manage::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
         'item' => Handlers\Item::class,
+        'item-source' => Handlers\Itemsrc::class,
         'privacy-groups' => Handlers\PrivacyGroups::class,
         'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
@@ -33,6 +34,9 @@ class Router
         'wiki' => Handlers\Wiki::class,
         'nav' => Handlers\Nav::class,
         'admin' => Handlers\Admin::class,
+        'login' => Handlers\Login::class,
+        'logout' => Handlers\Logout::class,
+        'search' => Handlers\Search::class,
     ];
 
     public static function dispatch(string $method): void

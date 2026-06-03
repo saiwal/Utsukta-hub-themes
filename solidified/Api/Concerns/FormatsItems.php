@@ -56,14 +56,45 @@ trait FormatsItems
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name' => $item['author']['xchan_name'] ?? '',
-                'address' => $item['author']['xchan_addr'] ?? '',
-                'url' => $item['author']['xchan_url'] ?? '',
-                'photo' => [
-                    'src' => $item['author']['xchan_photo_m'] ?? '',
+                'name'    => $item['author']['xchan_name']         ?? '',
+                'address' => $item['author']['xchan_addr']         ?? '',
+                'url'     => $item['author']['xchan_url']          ?? '',
+                'network' => $item['author']['xchan_network']      ?? '',
+                'photo'   => [
+                    'src'      => $item['author']['xchan_photo_m']        ?? '',
                     'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
                 ],
             ],
+            'owner' => (function () use ($item): ?array {
+                // Hubzilla Announce: original content is fetched, booster stored in source_xchan
+                if (!empty($item['source_xchan']) && !empty($item['source'])) {
+                    $x = $item['source'];
+                    return [
+                        'name'    => $x['xchan_name']            ?? '',
+                        'address' => $x['xchan_addr']            ?? '',
+                        'url'     => $x['xchan_url']             ?? '',
+                        'photo'   => [
+                            'src'      => $x['xchan_photo_m']        ?? '',
+                            'mimetype' => $x['xchan_photo_mimetype'] ?? '',
+                        ],
+                    ];
+                }
+                // ActivityPub (Lemmy communities, Mastodon boosts etc.): the delivering
+                // connection is owner_xchan when it differs from the content's author_xchan
+                if ($item['owner_xchan'] !== $item['author_xchan'] && !empty($item['owner'])) {
+                    $x = $item['owner'];
+                    return [
+                        'name'    => $x['xchan_name']            ?? '',
+                        'address' => $x['xchan_addr']            ?? '',
+                        'url'     => $x['xchan_url']             ?? '',
+                        'photo'   => [
+                            'src'      => $x['xchan_photo_m']        ?? '',
+                            'mimetype' => $x['xchan_photo_mimetype'] ?? '',
+                        ],
+                    ];
+                }
+                return null;
+            })(),
             'permalink' => $item['plink'] ?? '',
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
