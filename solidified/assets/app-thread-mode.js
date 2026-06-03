@@ -1,1 +1,0 @@
-import{i as t}from"./app.js";const[a,o]=t(localStorage.getItem("hz-thread-mode")!=="flat");function d(){return a}function h(e){o(e),localStorage.setItem("hz-thread-mode",e?"threaded":"flat")}export{h as s,d as u};
