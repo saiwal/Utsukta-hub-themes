@@ -757,8 +757,8 @@ class Settings
 
         if (array_key_exists('bg_url', $data)) {
             $bg_url = notags(trim((string) $data['bg_url']));
-            // Accept empty string (clear) or a valid http/https URL
-            if ($bg_url === '' || filter_var($bg_url, FILTER_VALIDATE_URL) && preg_match('#^https?://#i', $bg_url))
+            // Accept empty string (clear), a valid http/https URL, or a server-relative path (preset assets)
+            if ($bg_url === '' || (filter_var($bg_url, FILTER_VALIDATE_URL) && preg_match('#^https?://#i', $bg_url)) || preg_match('#^/#', $bg_url))
                 set_pconfig($uid, 'spa', 'bg_url', $bg_url);
         }
         if (isset($data['bg_fit']) && in_array($data['bg_fit'], ['tile', 'cover'], true))
