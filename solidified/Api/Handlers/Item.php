@@ -11,6 +11,7 @@ require_once ('include/crypto.php');
 use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
 use App;
+use Theme\Solidified\Api\Auth;
 
 class Item
 {
@@ -263,7 +264,7 @@ class Item
         $this->requireLocalChannel();
         $this->requireCsrf();
 
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $uid = local_channel();
 
         $content = trim($body['body'] ?? '');
@@ -310,7 +311,7 @@ class Item
         $this->requireLocalChannel();
         $this->requireCsrf();
 
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $content = trim($body['body'] ?? '');
 
         if (!$content) {
@@ -575,7 +576,7 @@ class Item
         $this->requireCsrf();
 
         $uid = local_channel();
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $content = trim($body['body'] ?? '');
         $title = trim($body['title'] ?? '');
         $summary = trim($body['summary'] ?? '');
@@ -625,7 +626,8 @@ class Item
         $midEsc = dbesc($mid);
 
         // Find any copy to verify identity and permission
-        $item = dbq("SELECT * FROM item WHERE $col = '$midEsc' $item_normal LIMIT 1");
+        // Deliberately not using item_normal() — it excludes articles (item_type != 0)
+        $item = dbq("SELECT * FROM item WHERE $col = '$midEsc' AND item_deleted = 0 LIMIT 1");
 
         if (!$item) {
             json_return_and_die(['error' => 'Item not found']);
@@ -645,7 +647,7 @@ class Item
 
         // Drop all local copies (same mid stored under different channel uids)
         $globalMidEsc = dbesc($i['mid']);
-        $all_copies = dbq("SELECT * FROM item WHERE mid = '$globalMidEsc' $item_normal");
+        $all_copies = dbq("SELECT * FROM item WHERE mid = '$globalMidEsc' AND item_deleted = 0");
 
         // Prefer the wall copy for federation; fall back to first found
         $primary = $i;
