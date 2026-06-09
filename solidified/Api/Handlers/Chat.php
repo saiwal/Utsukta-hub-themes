@@ -419,9 +419,12 @@ class Chat
 
         $messages = [];
         foreach (($msgs ?: []) as $m) {
+            $raw     = $m['chat_text'];
+            $decoded = base64url_decode(str_rot47($raw));
+            $body    = ($decoded !== false && mb_check_encoding($decoded, 'UTF-8')) ? $decoded : $raw;
             $messages[] = [
                 'id'          => intval($m['chat_id']),
-                'body'        => $m['chat_text'],
+                'body'        => $body,
                 'created'     => $m['created'],
                 'author_name' => $m['xchan_name'] ?? '',
                 'author_avatar' => $m['xchan_photo_m'] ?? '',
@@ -476,14 +479,14 @@ class Chat
         if (!$text)
             Response::error(400, 'Message body required');
 
-        // Hubzilla's chat table
+        // Hubzilla stores chat_text as str_rot47(base64url_encode($text))
         $r = q(
             "INSERT INTO chat (chat_room, chat_xchan, created, chat_text)
              VALUES (%d, '%s', '%s', '%s')",
             intval($this->roomId),
             dbesc($ob_hash),
             dbesc(datetime_convert()),
-            dbesc($text)
+            dbesc(str_rot47(base64url_encode($text)))
         );
 
         if (!$r)
