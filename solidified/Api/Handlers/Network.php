@@ -135,6 +135,7 @@ class Network
             $sql_extra .= " AND item.parent IN (
                 SELECT DISTINCT parent FROM item
                 WHERE uid = $uid
+                AND id = parent
                 AND ( author_xchan = '" . dbesc($cid_xchan) . "'
                    OR owner_xchan  = '" . dbesc($cid_xchan) . "')
                 $item_normal
