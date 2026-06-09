@@ -460,6 +460,7 @@ class Chat
             'messages'    => $messages,
             'presence'    => $present,
             'viewer_hash' => $viewer_hash,
+            'room_name'   => $room[0]['cr_name'],
         ]);
     }
 
