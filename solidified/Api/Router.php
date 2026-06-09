@@ -37,6 +37,7 @@ class Router
         'login' => Handlers\Login::class,
         'logout' => Handlers\Logout::class,
         'search' => Handlers\Search::class,
+        'saved-searches' => Handlers\SavedSearches::class,
     ];
 
     public static function dispatch(string $method): void
