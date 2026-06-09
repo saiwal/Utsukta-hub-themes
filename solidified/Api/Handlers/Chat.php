@@ -338,11 +338,11 @@ class Chat
 
     private function joinRoom(): void
     {
-        Auth::requireLocalJson();
+        \Theme\Solidified\Api\Handlers\Csrf::validate();
         $observer = App::get_observer();
         $ob_hash  = $observer ? $observer['xchan_hash'] : '';
         if (!$ob_hash)
-            Response::error(403, 'Observer required');
+            Response::error(403, 'Authentication required');
 
         $x = Chatroom::enter($ob_hash, $this->roomId, 'online', $_SERVER['REMOTE_ADDR'] ?? '');
         if (!$x)
