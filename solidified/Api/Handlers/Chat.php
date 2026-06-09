@@ -465,16 +465,17 @@ class Chat
 
     private function sendMessage(): void
     {
-        $uid = Auth::requireLocalJson();
+        \Theme\Solidified\Api\Handlers\Csrf::validate();
         $observer = App::get_observer();
         $ob_hash  = $observer ? $observer['xchan_hash'] : '';
         if (!$ob_hash)
-            Response::error(403, 'Observer required');
+            Response::error(403, 'Authentication required');
 
         if (!perm_is_allowed($this->subjectUid, $ob_hash, 'chat'))
             Response::error(403, 'Permission denied');
 
-        $data = Auth::$parsedBody;
+        $raw  = file_get_contents('php://input');
+        $data = $raw ? (json_decode($raw, true) ?? []) : [];
         $text = trim($data['body'] ?? '');
         if (!$text)
             Response::error(400, 'Message body required');
