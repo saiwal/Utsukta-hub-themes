@@ -7,7 +7,6 @@ use Theme\Solidified\Api\Response;
 class Csrf {
 
     public function get(): void {
-        Auth::requireLocal();
         Response::send(['token' => self::generate()]);
     }
 

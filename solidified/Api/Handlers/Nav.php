@@ -131,6 +131,20 @@ class Nav
             \Zotlabs\Lib\Apps::translate_system_apps($pinned);
             usort($pinned, 'Zotlabs\Lib\Apps::app_name_compare');
             $pinned = \Zotlabs\Lib\Apps::app_order($uid, $pinned, 'nav_pinned_app');
+
+            $nav_order_raw = get_pconfig($uid, 'spa', 'nav_order', '');
+            if ($nav_order_raw) {
+                $nav_order = json_decode($nav_order_raw, true);
+                if (is_array($nav_order) && count($nav_order) > 0) {
+                    $order_idx = array_flip($nav_order);
+                    $n = count($nav_order);
+                    usort($pinned, function ($a, $b) use ($order_idx, $n) {
+                        $ia = $order_idx[$a['name'] ?? ''] ?? $n;
+                        $ib = $order_idx[$b['name'] ?? ''] ?? $n;
+                        return $ia - $ib;
+                    });
+                }
+            }
         } else {
             $system = \Zotlabs\Lib\Apps::get_system_apps(true);
             \Zotlabs\Lib\Apps::translate_system_apps($system);

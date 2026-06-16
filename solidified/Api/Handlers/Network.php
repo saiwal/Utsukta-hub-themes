@@ -132,17 +132,14 @@ class Network
             $cid_xchan = $cid_r[0]['abook_xchan'];
             $item_thread_top = '';
 
-            if (!$pf && $nouveau) {
-                $sql_extra .= " AND author_xchan = '" . dbesc($cid_xchan) . "' ";
-            } else {
-                $sql_extra .= " AND item.parent IN (
-                    SELECT DISTINCT parent FROM item
-                    WHERE uid = $uid
-                    AND ( author_xchan = '" . dbesc($cid_xchan) . "'
-                       OR owner_xchan  = '" . dbesc($cid_xchan) . "')
-                    $item_normal
-                ) ";
-            }
+            $sql_extra .= " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE uid = $uid
+                AND id = parent
+                AND ( author_xchan = '" . dbesc($cid_xchan) . "'
+                   OR owner_xchan  = '" . dbesc($cid_xchan) . "')
+                $item_normal
+            ) ";
         }
 
         // xchan

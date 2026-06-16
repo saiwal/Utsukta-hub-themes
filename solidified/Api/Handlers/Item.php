@@ -11,6 +11,7 @@ require_once ('include/crypto.php');
 use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
 use App;
+use Theme\Solidified\Api\Auth;
 
 class Item
 {
@@ -263,7 +264,7 @@ class Item
         $this->requireLocalChannel();
         $this->requireCsrf();
 
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $uid = local_channel();
 
         $content = trim($body['body'] ?? '');
@@ -310,7 +311,7 @@ class Item
         $this->requireLocalChannel();
         $this->requireCsrf();
 
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $content = trim($body['body'] ?? '');
 
         if (!$content) {
@@ -575,7 +576,7 @@ class Item
         $this->requireCsrf();
 
         $uid = local_channel();
-        $body = \Auth::$parsedBody ?? [];
+        $body = Auth::$parsedBody ?? [];
         $content = trim($body['body'] ?? '');
         $title = trim($body['title'] ?? '');
         $summary = trim($body['summary'] ?? '');
@@ -617,9 +618,16 @@ class Item
         $uid = local_channel();
         $ob_hash = get_observer_hash();
         $item_normal = item_normal();
+
+        if (str_starts_with($mid, 'b64.')) {
+            $mid = unpack_link_id($mid);
+        }
+        $col = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
         $midEsc = dbesc($mid);
 
-        $item = dbq("SELECT * FROM item WHERE mid = '$midEsc' $item_normal LIMIT 1");
+        // Find any copy to verify identity and permission
+        // Deliberately not using item_normal() — it excludes articles (item_type != 0)
+        $item = dbq("SELECT * FROM item WHERE $col = '$midEsc' AND item_deleted = 0 LIMIT 1");
 
         if (!$item) {
             json_return_and_die(['error' => 'Item not found']);
@@ -637,19 +645,34 @@ class Item
             json_return_and_die(['error' => 'Permission denied']);
         }
 
-        drop_item($i['id'], DROPITEM_PHASE1);
+        // Drop all local copies (same mid stored under different channel uids)
+        $globalMidEsc = dbesc($i['mid']);
+        $all_copies = dbq("SELECT * FROM item WHERE mid = '$globalMidEsc' AND item_deleted = 0");
 
-        $r = q('SELECT * FROM item WHERE id = %d', intval($i['id']));
+        // Prefer the wall copy for federation; fall back to first found
+        $primary = $i;
+        foreach ($all_copies as $copy) {
+            if (intval($copy['item_wall'])) {
+                $primary = $copy;
+                break;
+            }
+        }
+
+        foreach ($all_copies as $copy) {
+            drop_item($copy['id'], DROPITEM_PHASE1);
+        }
+
+        $r = q('SELECT * FROM item WHERE id = %d', intval($primary['id']));
         if ($r) {
             xchan_query($r);
             $sync = fetch_post_tags($r);
-            Libsync::build_sync_packet($i['uid'], ['item' => [encode_item($sync[0], true)]]);
+            Libsync::build_sync_packet($primary['uid'], ['item' => [encode_item($sync[0], true)]]);
         }
 
-        tag_deliver($i['uid'], $i['id']);
+        tag_deliver($primary['uid'], $primary['id']);
 
-        if (intval($i['item_wall']) || $i['mid'] !== $i['parent_mid']) {
-            Master::Summon(['Notifier', 'drop', $i['id']]);
+        if (intval($primary['item_wall']) || $primary['mid'] !== $primary['parent_mid']) {
+            Master::Summon(['Notifier', 'drop', $primary['id']]);
         }
 
         json_return_and_die(['success' => true]);

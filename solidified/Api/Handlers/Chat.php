@@ -338,11 +338,11 @@ class Chat
 
     private function joinRoom(): void
     {
-        Auth::requireLocalJson();
+        \Theme\Solidified\Api\Handlers\Csrf::validate();
         $observer = App::get_observer();
         $ob_hash  = $observer ? $observer['xchan_hash'] : '';
         if (!$ob_hash)
-            Response::error(403, 'Observer required');
+            Response::error(403, 'Authentication required');
 
         $x = Chatroom::enter($ob_hash, $this->roomId, 'online', $_SERVER['REMOTE_ADDR'] ?? '');
         if (!$x)
@@ -419,9 +419,12 @@ class Chat
 
         $messages = [];
         foreach (($msgs ?: []) as $m) {
+            $raw     = $m['chat_text'];
+            $decoded = base64url_decode(str_rot47($raw));
+            $body    = ($decoded !== false && mb_check_encoding($decoded, 'UTF-8')) ? $decoded : $raw;
             $messages[] = [
                 'id'          => intval($m['chat_id']),
-                'body'        => $m['chat_text'],
+                'body'        => $body,
                 'created'     => $m['created'],
                 'author_name' => $m['xchan_name'] ?? '',
                 'author_avatar' => $m['xchan_photo_m'] ?? '',
@@ -457,33 +460,35 @@ class Chat
             'messages'    => $messages,
             'presence'    => $present,
             'viewer_hash' => $viewer_hash,
+            'room_name'   => $room[0]['cr_name'],
         ]);
     }
 
     private function sendMessage(): void
     {
-        $uid = Auth::requireLocalJson();
+        \Theme\Solidified\Api\Handlers\Csrf::validate();
         $observer = App::get_observer();
         $ob_hash  = $observer ? $observer['xchan_hash'] : '';
         if (!$ob_hash)
-            Response::error(403, 'Observer required');
+            Response::error(403, 'Authentication required');
 
         if (!perm_is_allowed($this->subjectUid, $ob_hash, 'chat'))
             Response::error(403, 'Permission denied');
 
-        $data = Auth::$parsedBody;
+        $raw  = file_get_contents('php://input');
+        $data = $raw ? (json_decode($raw, true) ?? []) : [];
         $text = trim($data['body'] ?? '');
         if (!$text)
             Response::error(400, 'Message body required');
 
-        // Hubzilla's chat table
+        // Hubzilla stores chat_text as str_rot47(base64url_encode($text))
         $r = q(
             "INSERT INTO chat (chat_room, chat_xchan, created, chat_text)
              VALUES (%d, '%s', '%s', '%s')",
             intval($this->roomId),
             dbesc($ob_hash),
             dbesc(datetime_convert()),
-            dbesc($text)
+            dbesc(str_rot47(base64url_encode($text)))
         );
 
         if (!$r)
