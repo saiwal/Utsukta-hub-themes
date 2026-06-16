@@ -75,7 +75,7 @@ class Settings
                 $allowed_themes[] = trim($x);
 
         $valid_font_sizes    = ['small', 'medium', 'large', 'xl'];
-        $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
+        $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'saira', 'share-tech', 'playfair', 'libre-baskerville', 'comfortaa', 'space-mono', 'iosevka', 'righteous', 'playwrite-england', 'comic', 'opendyslexic'];
 
         $font_size   = get_pconfig($uid, 'spa', 'font_size', 'medium');
         $font_family = get_pconfig($uid, 'spa', 'font_family', 'system');
@@ -725,7 +725,7 @@ class Settings
             $_SESSION['theme'] = $theme_val;
         }
         $valid_font_sizes_post    = ['small', 'medium', 'large', 'xl'];
-        $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'playfair', 'comfortaa', 'space-mono', 'pacifico', 'righteous', 'comic', 'opendyslexic'];
+        $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'saira', 'share-tech', 'playfair', 'libre-baskerville', 'comfortaa', 'space-mono', 'iosevka', 'righteous', 'playwrite-england', 'comic', 'opendyslexic'];
         if (isset($data['font_size']) && in_array($data['font_size'], $valid_font_sizes_post, true))
             set_pconfig($uid, 'spa', 'font_size', $data['font_size']);
         if (isset($data['font_family']) && in_array($data['font_family'], $valid_font_families_post, true))
