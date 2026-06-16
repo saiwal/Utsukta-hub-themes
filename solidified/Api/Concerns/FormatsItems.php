@@ -56,7 +56,7 @@ trait FormatsItems
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name'    => $item['author']['xchan_name']         ?? '',
+                'name'    => urldecode($item['author']['xchan_name']         ?? ''),
                 'address' => $item['author']['xchan_addr']         ?? '',
                 'url'     => $item['author']['xchan_url']          ?? '',
                 'network' => $item['author']['xchan_network']      ?? '',
@@ -70,7 +70,7 @@ trait FormatsItems
                 if (!empty($item['source_xchan']) && !empty($item['source'])) {
                     $x = $item['source'];
                     return [
-                        'name'    => $x['xchan_name']            ?? '',
+                        'name'    => urldecode($x['xchan_name']            ?? ''),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
                         'photo'   => [
@@ -84,7 +84,7 @@ trait FormatsItems
                 if ($item['owner_xchan'] !== $item['author_xchan'] && !empty($item['owner'])) {
                     $x = $item['owner'];
                     return [
-                        'name'    => $x['xchan_name']            ?? '',
+                        'name'    => urldecode($x['xchan_name']            ?? ''),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
                         'photo'   => [
