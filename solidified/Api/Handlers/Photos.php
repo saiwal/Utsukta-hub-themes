@@ -343,6 +343,114 @@ class Photos
         ]);
     }
 
+    // ── POST /api/photos/:nick/image/:resource_id/edit ────────────────────────
+    // Saves the edited image as a NEW copy in the same album; never touches the original.
+
+    public function post(): void
+    {
+        require_once 'include/photo/photo_driver.php';
+        require_once 'include/attach.php';
+        require_once 'include/photos.php';
+        require_once 'include/security.php';
+
+        $uid      = Auth::requireLocalMultipart();
+        $channel  = \App::get_channel();
+        $datatype = \App::$argv[3] ?? '';
+        $origId   = \App::$argv[4] ?? '';
+        $action   = \App::$argv[5] ?? '';
+
+        if ($datatype !== 'image' || !$origId || $action !== 'edit') {
+            Response::error(400, 'Expected /photos/:nick/image/:id/edit');
+        }
+
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            Response::error(400, 'No file uploaded');
+        }
+
+        // Verify the original belongs to this user and get its album
+        $existing = q("SELECT filename, description, album, allow_cid, allow_gid, deny_cid, deny_gid
+                       FROM photo
+                       WHERE uid = %d AND resource_id = '%s' AND photo_usage = %d
+                       LIMIT 1",
+                      intval($uid), dbesc($origId), intval(PHOTO_NORMAL));
+
+        if (!$existing) {
+            Response::error(404, 'Photo not found or not yours');
+        }
+
+        $meta    = $existing[0];
+        $newHash = photo_new_resource();
+
+        // Store the edited file as a fresh attachment in the same album (original untouched)
+        $_FILES['userfile'] = $_FILES['file'];
+        $res = attach_store($channel, get_observer_hash(), '', [
+            'album'  => $meta['album'],
+            'hash'   => $newHash,
+            'nosync' => true,
+            'source' => 'photos',
+        ]);
+
+        if (!$res || !intval($res['data']['is_photo'] ?? 0)) {
+            Response::error(500, 'Image save failed');
+        }
+
+        // Load the photo row created by attach_store to get image data + mimetype
+        $rows = q("SELECT * FROM photo WHERE resource_id = '%s' AND uid = %d ORDER BY imgscale ASC LIMIT 1",
+                  dbesc($newHash), intval($uid));
+
+        if (!$rows) {
+            Response::error(500, 'Photo record not found after save');
+        }
+
+        $base      = $rows[0];
+        $imagedata = intval($base['os_storage'])
+            ? @file_get_contents(dbunescbin($base['content']))
+            : dbunescbin($base['content']);
+
+        $im = photo_factory($imagedata, $base['mimetype']);
+        if (!$im->is_valid()) {
+            Response::error(500, 'Unable to process saved image');
+        }
+
+        $ph_drv    = photo_factory('');
+        $phototypes = $ph_drv->supportedTypes();
+        $ext       = $phototypes[$base['mimetype']] ?? 'jpg';
+        $fullScale = intval($base['imgscale']);
+
+        $p = [
+            'aid'          => get_account_id(),
+            'uid'          => $uid,
+            'resource_id'  => $newHash,
+            'filename'     => $meta['filename'],
+            'description'  => $meta['description'],
+            'album'        => $meta['album'],
+            'os_path'      => $base['os_path'] ?? '',
+            'display_path' => $base['display_path'] ?? '',
+            'photo_usage'  => PHOTO_NORMAL,
+            'allow_cid'    => $meta['allow_cid'],
+            'allow_gid'    => $meta['allow_gid'],
+            'deny_cid'     => $meta['deny_cid'],
+            'deny_gid'     => $meta['deny_gid'],
+            'edited'       => dbescdate($base['edited']),
+        ];
+
+        // Medium scale (imgscale 1, ≤1024px) — for ImageView display
+        $im->scaleImage(1024);
+        $im->storeThumbnail($p, 1);
+
+        // Thumbnail (imgscale 2, ≤320px) — for the photo grid
+        $im2 = photo_factory($imagedata, $base['mimetype']);
+        $im2->scaleImage(320);
+        $im2->storeThumbnail($p, 2);
+
+        $t = time();
+        Response::send([
+            'resource_id' => $newHash,
+            'src'         => z_root() . '/photo/' . $newHash . '-2.' . $ext . '?t=' . $t,
+            'src_full'    => z_root() . '/photo/' . $newHash . '-' . $fullScale . '.' . $ext . '?t=' . $t,
+        ]);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function resolveChannel(): array

@@ -27,6 +27,7 @@ class Router
         'network' => Handlers\Network::class,
         'channel' => Handlers\Channel::class,
         'profile' => Handlers\Profile::class,
+        'profiles' => Handlers\Profiles::class,
         'photos' => Handlers\Photos::class,
         'files'  => Handlers\Files::class,
         'pubstream' => Handlers\Pubstream::class,
@@ -39,6 +40,7 @@ class Router
         'search' => Handlers\Search::class,
         'saved-searches' => Handlers\SavedSearches::class,
         'bookmarks'      => Handlers\Bookmarks::class,
+        'avatar'         => Handlers\Avatar::class,
     ];
 
     public static function dispatch(string $method): void

@@ -26,7 +26,10 @@ class Settings
                 $this->getDisplaySettings();
                 break;
             case 'profile':
-                $this->postProfileSettings($uid, $data);
+                $this->getProfileSettings();
+                break;
+            case 'features':
+                $this->getFeaturesSettings();
                 break;
             case 'account':
                 $this->getAccountSettings();
@@ -691,6 +694,9 @@ class Settings
             case 'integrations':
                 $this->postIntegrationsSettings($uid, $data);
                 break;
+            case 'features':
+                $this->postFeaturesSettings($uid, $data);
+                break;
             case 'danger':
                 $this->postDangerSettings($uid, $data);
                 break;
@@ -904,5 +910,68 @@ class Settings
         }
 
         Response::error(400, 'Unknown action');
+    }
+
+    private function getFeaturesSettings(): void
+    {
+        $uid = local_channel();
+        require_once('include/features.php');
+
+        $features_raw = get_features(false);
+        $result = [];
+
+        foreach ($features_raw as $group) {
+            if (!is_array($group)) continue;
+            $group_label = '';
+            foreach ($group as $idx => $item) {
+                if ($idx === 0) {
+                    $group_label = is_string($item) ? $item : '';
+                    continue;
+                }
+                if (!is_array($item) || count($item) < 2) continue;
+
+                $name = $item[0] ?? '';
+                if (!$name) continue;
+
+                $result[] = [
+                    'name'        => $name,
+                    'label'       => $item[1] ?? $name,
+                    'description' => $item[2] ?? '',
+                    'group'       => $group_label,
+                    'enabled'     => (bool) feature_enabled($uid, $name),
+                ];
+            }
+        }
+
+        Response::send(['features' => $result]);
+    }
+
+    private function postFeaturesSettings(int $uid, array $data): void
+    {
+        require_once('include/features.php');
+
+        $feature = notags(trim($data['feature'] ?? ''));
+        $enabled = intval($data['enabled'] ?? 0) ? 1 : 0;
+
+        if (!$feature) Response::error(400, 'Feature name required');
+
+        // Validate the feature exists in the system feature list
+        $features_raw = get_features(false);
+        $valid = false;
+        foreach ($features_raw as $group) {
+            if (!is_array($group)) continue;
+            foreach ($group as $idx => $item) {
+                if ($idx === 0 || !is_array($item)) continue;
+                if (($item[0] ?? '') === $feature) {
+                    $valid = true;
+                    break 2;
+                }
+            }
+        }
+
+        if (!$valid) Response::error(400, 'Unknown feature');
+
+        set_pconfig($uid, 'feature', $feature, $enabled);
+        Response::send(['status' => 'ok', 'enabled' => (bool) $enabled]);
     }
 }

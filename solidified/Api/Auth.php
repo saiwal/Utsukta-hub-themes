@@ -30,6 +30,13 @@ class Auth
         return self::requireLocal();
     }
 
+    // For multipart POST (file uploads) — auth + CSRF, no JSON content-type required
+    public static function requireLocalMultipart(): int
+    {
+        Csrf::validate();
+        return self::requireLocal();
+    }
+
     private static function requireJson(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET')
