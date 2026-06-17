@@ -173,9 +173,11 @@ class Display
             Response::error(404, 'Root item not found');
         }
 
+        $deletedStubs = $this->deletedParentStubs($comments, $root_item['mid']);
+
         Response::send([
             'post'     => $root_item,
-            'comments' => $comments,
+            'comments' => array_merge($comments, $deletedStubs),
         ]);
     }
 }

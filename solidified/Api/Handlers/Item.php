@@ -58,6 +58,9 @@ class Item
             case 'repeats':
                 $this->getReactions($mid, ACTIVITY_SHARE);
                 break;
+            case 'folders':
+                $this->getItemFolders($mid);
+                break;
             default:
                 $this->getItem($mid);
                 break;
@@ -108,6 +111,9 @@ class Item
                 break;
             case 'reshare':
                 $this->createReshare($mid);
+                break;
+            case 'saveto':
+                $this->saveToFolder($mid);
                 break;
             default:
                 // POST /api/item/:mid  with no verb → comment (convenience alias)
@@ -205,10 +211,12 @@ class Item
             $rows ?: []
         );
 
+        $deletedStubs = self::findDeletedParentStubs($comments, $root['mid']);
+
         json_return_and_die([
-            'mid' => $root['mid'],
-            'total' => count($comments),
-            'comments' => $comments,
+            'mid'      => $root['mid'],
+            'total'    => count($comments),
+            'comments' => array_merge($comments, $deletedStubs),
         ]);
     }
 
@@ -684,6 +692,68 @@ class Item
 
     // Resolve a mid (or uuid) to a readable item row, permission-checked.
     // Accepts full mid (zot6 URL), short uuid, or b64-encoded mid.
+    // GET /api/item/:mid/folders
+    // Returns the folder names this post is currently filed under for the local user.
+    private function getItemFolders(string $mid): void
+    {
+        Auth::RequireLocalGet();
+        $uid = local_channel();
+
+        $item = $this->resolveItem($mid, get_observer_hash());
+        if (!$item || intval($item['uid']) !== $uid) {
+            json_return_and_die(['data' => []]);
+        }
+
+        $rows = q(
+            "SELECT term FROM term WHERE uid = %d AND oid = %d AND ttype = %d ORDER BY term ASC",
+            intval($uid), intval($item['id']), intval(TERM_FILE)
+        );
+
+        json_return_and_die(['data' => $rows ? array_column($rows, 'term') : []]);
+    }
+
+    // POST /api/item/:mid/saveto
+    // Body: { "name": "folder name" }            → add to folder
+    // Body: { "name": "folder name", "remove": true } → remove from folder
+    private function saveToFolder(string $mid): void
+    {
+        Auth::requireLocalJson();
+        $uid = local_channel();
+
+        $name = trim(Auth::$parsedBody['name'] ?? '');
+        $remove = !empty(Auth::$parsedBody['remove']);
+
+        if (!$name) {
+            \Theme\Solidified\Api\Response::error(400, 'name required');
+        }
+
+        $item = $this->resolveItem($mid, get_observer_hash());
+        if (!$item || intval($item['uid']) !== $uid) {
+            \Theme\Solidified\Api\Response::error(403, 'Item not found in your stream');
+        }
+
+        $item_id = intval($item['id']);
+        $parent_id = intval($item['parent']);
+
+        if ($remove) {
+            q("DELETE FROM term WHERE uid = %d AND oid = %d AND ttype = %d AND term = '%s'",
+                intval($uid), $item_id, intval(TERM_FILE), dbesc($name));
+            q("UPDATE item SET item_retained = 0, changed = '%s' WHERE id = %d AND uid = %d",
+                dbesc(datetime_convert()), $item_id, intval($uid));
+        } else {
+            store_item_tag($uid, $item_id, TERM_OBJ_POST, TERM_FILE, $name, '');
+            q("UPDATE item SET item_retained = 1, changed = '%s' WHERE id = %d AND uid = %d",
+                dbesc(datetime_convert()), $parent_id, intval($uid));
+        }
+
+        $rows = q(
+            "SELECT term FROM term WHERE uid = %d AND oid = %d AND ttype = %d ORDER BY term ASC",
+            intval($uid), $item_id, intval(TERM_FILE)
+        );
+
+        json_return_and_die(['data' => ['folders' => $rows ? array_column($rows, 'term') : []]]);
+    }
+
     private function resolveItem(string $mid, string $ob_hash): ?array
     {
         $item_normal = item_normal();
@@ -806,6 +876,62 @@ class Item
         }
         // public
         return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
+    }
+
+    // Find deleted items that are parents of the given formatted comments but
+    // absent from the result set. Returns pre-formatted stubs so the frontend
+    // can build a complete thread tree without gaps.
+    private static function findDeletedParentStubs(array $comments, string $rootMid): array
+    {
+        if (empty($comments)) return [];
+
+        $presentMids = array_column($comments, 'mid');
+        $missing = [];
+        foreach ($comments as $c) {
+            $tp = $c['thr_parent'] ?? '';
+            if ($tp && $tp !== $rootMid && !in_array($tp, $presentMids) && !in_array($tp, $missing)) {
+                $missing[] = $tp;
+            }
+        }
+        if (empty($missing)) return [];
+
+        $inList  = implode("','", array_map('dbesc', $missing));
+        $deleted = dbq("SELECT uuid, mid, parent_mid, thr_parent, created
+                        FROM item
+                        WHERE mid IN ('$inList') AND item_deleted = 1
+                        ORDER BY created ASC");
+
+        return array_map(fn($d) => [
+            'uuid'             => $d['uuid'],
+            'mid'              => $d['mid'],
+            'parent_mid'       => $d['parent_mid'],
+            'thr_parent'       => $d['thr_parent'],
+            'created'          => $d['created'],
+            'edited'           => $d['created'],
+            'title'            => '',
+            'body'             => '',
+            'verb'             => 'Create',
+            'obj_type'         => 'Note',
+            'like_count'       => 0,
+            'dislike_count'    => 0,
+            'announce_count'   => 0,
+            'comment_count'    => 0,
+            'item_private'     => 0,
+            'item_thread_top'  => 0,
+            'item_unseen'      => 0,
+            'iid'              => 0,
+            'profile_uid'      => 0,
+            'flags'            => ['deleted'],
+            'author'           => ['name' => '', 'address' => '', 'url' => '', 'photo' => ['src' => '', 'mimetype' => '']],
+            'permalink'        => '',
+            'viewer_liked'     => false,
+            'viewer_disliked'  => false,
+            'viewer_repeated'  => false,
+            'viewer_attending' => false,
+            'viewer_declining' => false,
+            'viewer_maybe'     => false,
+            'viewer_following' => false,
+        ], $deleted ?: []);
     }
 
     // Shared reaction count subqueries string
