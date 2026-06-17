@@ -41,6 +41,7 @@ class Router
         'saved-searches' => Handlers\SavedSearches::class,
         'bookmarks'      => Handlers\Bookmarks::class,
         'avatar'         => Handlers\Avatar::class,
+        'folders'        => Handlers\Folders::class,
     ];
 
     public static function dispatch(string $method): void
