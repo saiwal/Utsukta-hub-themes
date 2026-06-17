@@ -205,10 +205,12 @@ class Item
             $rows ?: []
         );
 
+        $deletedStubs = self::findDeletedParentStubs($comments, $root['mid']);
+
         json_return_and_die([
-            'mid' => $root['mid'],
-            'total' => count($comments),
-            'comments' => $comments,
+            'mid'      => $root['mid'],
+            'total'    => count($comments),
+            'comments' => array_merge($comments, $deletedStubs),
         ]);
     }
 
@@ -806,6 +808,62 @@ class Item
         }
         // public
         return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
+    }
+
+    // Find deleted items that are parents of the given formatted comments but
+    // absent from the result set. Returns pre-formatted stubs so the frontend
+    // can build a complete thread tree without gaps.
+    private static function findDeletedParentStubs(array $comments, string $rootMid): array
+    {
+        if (empty($comments)) return [];
+
+        $presentMids = array_column($comments, 'mid');
+        $missing = [];
+        foreach ($comments as $c) {
+            $tp = $c['thr_parent'] ?? '';
+            if ($tp && $tp !== $rootMid && !in_array($tp, $presentMids) && !in_array($tp, $missing)) {
+                $missing[] = $tp;
+            }
+        }
+        if (empty($missing)) return [];
+
+        $inList  = implode("','", array_map('dbesc', $missing));
+        $deleted = dbq("SELECT uuid, mid, parent_mid, thr_parent, created
+                        FROM item
+                        WHERE mid IN ('$inList') AND item_deleted = 1
+                        ORDER BY created ASC");
+
+        return array_map(fn($d) => [
+            'uuid'             => $d['uuid'],
+            'mid'              => $d['mid'],
+            'parent_mid'       => $d['parent_mid'],
+            'thr_parent'       => $d['thr_parent'],
+            'created'          => $d['created'],
+            'edited'           => $d['created'],
+            'title'            => '',
+            'body'             => '',
+            'verb'             => 'Create',
+            'obj_type'         => 'Note',
+            'like_count'       => 0,
+            'dislike_count'    => 0,
+            'announce_count'   => 0,
+            'comment_count'    => 0,
+            'item_private'     => 0,
+            'item_thread_top'  => 0,
+            'item_unseen'      => 0,
+            'iid'              => 0,
+            'profile_uid'      => 0,
+            'flags'            => ['deleted'],
+            'author'           => ['name' => '', 'address' => '', 'url' => '', 'photo' => ['src' => '', 'mimetype' => '']],
+            'permalink'        => '',
+            'viewer_liked'     => false,
+            'viewer_disliked'  => false,
+            'viewer_repeated'  => false,
+            'viewer_attending' => false,
+            'viewer_declining' => false,
+            'viewer_maybe'     => false,
+            'viewer_following' => false,
+        ], $deleted ?: []);
     }
 
     // Shared reaction count subqueries string

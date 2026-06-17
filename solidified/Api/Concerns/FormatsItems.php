@@ -4,6 +4,66 @@ namespace Theme\Solidified\Api\Concerns;
 
 trait FormatsItems
 {
+    // Find deleted items that are parents of the given comments but absent from
+    // the result set. Returns pre-formatted stubs (same shape as formatItem output)
+    // so the frontend can build a complete thread tree without gaps.
+    protected function deletedParentStubs(array $comments, string $rootMid): array
+    {
+        if (empty($comments)) return [];
+
+        $presentMids = array_column($comments, 'mid');
+        $missing = [];
+        foreach ($comments as $c) {
+            $tp = $c['thr_parent'] ?? '';
+            if ($tp && $tp !== $rootMid && !in_array($tp, $presentMids) && !in_array($tp, $missing)) {
+                $missing[] = $tp;
+            }
+        }
+        if (empty($missing)) return [];
+
+        $inList  = implode("','", array_map('dbesc', $missing));
+        $deleted = dbq("SELECT uuid, mid, parent_mid, thr_parent, created
+                        FROM item
+                        WHERE mid IN ('$inList') AND item_deleted = 1
+                        ORDER BY created ASC");
+
+        return array_map(fn($d) => [
+            'uuid'             => $d['uuid'],
+            'mid'              => $d['mid'],
+            'parent_mid'       => $d['parent_mid'],
+            'thr_parent'       => $d['thr_parent'],
+            'message_top'      => $d['parent_mid'],
+            'created'          => $d['created'],
+            'edited'           => $d['created'],
+            'commented'        => $d['created'],
+            'title'            => '',
+            'body'             => '',
+            'verb'             => 'Create',
+            'obj_type'         => 'Note',
+            'like_count'       => 0,
+            'dislike_count'    => 0,
+            'announce_count'   => 0,
+            'comment_count'    => 0,
+            'item_private'     => 0,
+            'item_thread_top'  => 0,
+            'item_unseen'      => 0,
+            'iid'              => 0,
+            'profile_uid'      => 0,
+            'flags'            => ['deleted'],
+            'author'           => ['name' => '', 'address' => '', 'url' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
+            'owner'            => null,
+            'permalink'        => '',
+            'viewer_liked'     => false,
+            'viewer_disliked'  => false,
+            'viewer_repeated'  => false,
+            'viewer_attending' => false,
+            'viewer_declining' => false,
+            'viewer_maybe'     => false,
+            'viewer_following' => false,
+            'attach'           => [],
+        ], $deleted ?: []);
+    }
+
     private function formatItem(array $item, string $observer_xchan): array
     {
         $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
