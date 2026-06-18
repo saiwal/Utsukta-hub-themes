@@ -161,6 +161,21 @@ class Directory
             }
             ksort($ordered);
             $results = array_values($ordered);
+        } else {
+            switch ($order) {
+                case 'alphabetic':
+                    usort($results, fn($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+                    break;
+                case 'ralpha':
+                    usort($results, fn($a, $b) => strcasecmp($b['name'] ?? '', $a['name'] ?? ''));
+                    break;
+                case 'date':
+                    usort($results, fn($a, $b) => strcmp($b['updated'] ?? '', $a['updated'] ?? ''));
+                    break;
+                case 'rdate':
+                    usort($results, fn($a, $b) => strcmp($a['updated'] ?? '', $b['updated'] ?? ''));
+                    break;
+            }
         }
 
         $entries = [];
@@ -204,6 +219,7 @@ class Directory
                 'homepage'     => html2plain($rr['homepage'] ?? ''),
                 'hometown'     => html2plain($rr['hometown'] ?? ''),
                 'keywords'     => $kw_arr,
+                'updated'      => $rr['updated']      ?? '',
                 'public_forum' => !empty($rr['public_forum']),
                 'is_connected' => $is_connected,
                 'connect_url'  => $connect_url,
