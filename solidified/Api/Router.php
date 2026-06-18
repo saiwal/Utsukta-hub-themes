@@ -42,6 +42,9 @@ class Router
         'bookmarks'      => Handlers\Bookmarks::class,
         'avatar'         => Handlers\Avatar::class,
         'folders'        => Handlers\Folders::class,
+        'xchan'          => Handlers\Xchan::class,
+        'connections'    => Handlers\Connections::class,
+        'directory'      => Handlers\Directory::class,
     ];
 
     public static function dispatch(string $method): void
