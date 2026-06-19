@@ -1,4 +1,4 @@
-import{r as p,v as g,L as y,t as v}from"./app.js";import{F as f,T as x,a as d}from"./app-vendor-image-editor.js";var h=v("<div style=position:fixed;inset:0;z-index:9999>");function S(){const c=getComputedStyle(document.documentElement),t=m=>c.getPropertyValue(m).trim(),r=t("--color-elevated"),o=t("--color-surface"),s=t("--color-txt"),n=t("--color-subtle"),e=t("--color-rim"),l=t("--color-accent"),a=document.createElement("style");return a.textContent=`
+import{r as p,v as g,O as y,t as v}from"./app.js";import{F as f,T as x,a as d}from"./app-vendor-image-editor.js";var h=v("<div style=position:fixed;inset:0;z-index:9999>");function S(){const c=getComputedStyle(document.documentElement),t=m=>c.getPropertyValue(m).trim(),r=t("--color-elevated"),o=t("--color-surface"),s=t("--color-txt"),n=t("--color-subtle"),e=t("--color-rim"),l=t("--color-accent"),a=document.createElement("style");return a.textContent=`
     .SfxInput-root {
       background-color: ${r} !important;
       color: ${s} !important;
