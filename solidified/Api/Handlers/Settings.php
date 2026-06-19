@@ -107,6 +107,10 @@ class Settings
             if ($stored) $custom_theme_colors = $stored;
         }
 
+        $valid_scroll_styles = ['endless', 'load_more'];
+        $scroll_style = get_pconfig($uid, 'spa', 'scroll_style', 'endless');
+        if (!in_array($scroll_style, $valid_scroll_styles, true)) $scroll_style = 'endless';
+
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
@@ -123,6 +127,7 @@ class Settings
             'bg_fit' => $bg_fit,
             'color_scheme' => $color_scheme,
             'custom_theme_colors' => $custom_theme_colors,
+            'scroll_style' => $scroll_style,
         ]);
     }
 
@@ -769,6 +774,9 @@ class Settings
         }
         if (isset($data['bg_fit']) && in_array($data['bg_fit'], ['tile', 'cover'], true))
             set_pconfig($uid, 'spa', 'bg_fit', $data['bg_fit']);
+
+        if (isset($data['scroll_style']) && in_array($data['scroll_style'], ['endless', 'load_more'], true))
+            set_pconfig($uid, 'spa', 'scroll_style', $data['scroll_style']);
 
         Response::send(['status' => 'ok']);
     }
