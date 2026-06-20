@@ -23,14 +23,16 @@ class Api extends \Zotlabs\Web\Controller {
     }
 
     function get() {
-        Router::dispatch('get');
+        // Hubzilla only dispatches post() for POST; everything else hits get().
+        // Detect the real HTTP method so DELETE/PUT/PATCH reach their handlers.
+        $method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'get');
+        Router::dispatch(in_array($method, ['get', 'delete', 'put', 'patch']) ? $method : 'get');
     }
 
     function post() {
         Router::dispatch('post');
     }
 
-    function delete() {
-        Router::dispatch('delete');
-    }
+    // Note: Hubzilla never calls delete()/put() on controllers — real HTTP method
+    // dispatch is handled above in get() via $_SERVER['REQUEST_METHOD'].
 }
