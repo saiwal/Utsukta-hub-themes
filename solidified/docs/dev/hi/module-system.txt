@@ -110,6 +110,31 @@ src/modules/myfeature/
     └── MySidebarWidget.tsx
 ```
 
+## कॉम्पोनेंट के अंदर ऐप गेटिंग
+
+`appName` पूरे मॉड्यूल को गेट करता है। किसी **कॉम्पोनेंट के अंदर एक सेक्शन** को Hubzilla ऐप के आधार पर गेट करने के लिए `useInstalledApps()` सीधे उपयोग करें:
+
+```typescript
+import { useInstalledApps } from "@/shared/store/nav-store";
+
+const installedApps = useInstalledApps();
+const affinityInstalled = () => installedApps().has("Affinity Tool");
+```
+
+फिर कंडिशनल UI को `<Show>` में लपेटें:
+
+```tsx
+<Show when={affinityInstalled()}>
+  <AffinitySlider ... />
+</Show>
+```
+
+**कहाँ उपयोग हो रहा है:**
+- `StreamFiltersWidget.tsx` — Closeness / Affinity स्लाइडर तब तक छिपा रहता है जब तक "Affinity Tool" ऐप इंस्टॉल न हो।
+- `StreamFiltersWidget.tsx` — Privacy Groups पिकर तब तक छिपा रहता है जब तक "Privacy Groups" इंस्टॉल न हो।
+
+यहाँ भी वही empty-set pass-through नियम लागू होता है: `/api/nav` का रिस्पॉन्स आने से पहले `useInstalledApps()` खाली `Set` लौटाता है, इसलिए शुरुआती रेंडर में सेक्शन दिखेगा। यदि default-hide चाहते हैं तो `installedApps().size > 0 && affinityInstalled()` से गार्ड करें।
+
 ## एकाधिक रूट
 
 एक मॉड्यूल जितने चाहे उतने रूट रजिस्टर कर सकता है। सभी एक ही `moduleId` शेयर करते हैं:
