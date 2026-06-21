@@ -937,9 +937,9 @@ class Item
     // Shared reaction count subqueries string
     private static function reactionSubqueries(): string
     {
-        return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+        return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
+                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
+                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
                 (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce')) AS comment_count,
                 (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
                  FROM item r
@@ -953,10 +953,11 @@ class Item
     private function fetchReactionCounts(string $mid): array
     {
         $midEsc = dbesc($mid);
+        $uid = intval(local_channel());
         $r = dbq("SELECT
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Like'              AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Dislike'           AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Like'              AND r.item_deleted = 0) AS like_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Dislike'           AND r.item_deleted = 0) AS dislike_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
             (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Accept'            AND r.item_deleted = 0) AS attend_count,
             (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Reject'            AND r.item_deleted = 0) AS decline_count,
             (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'TentativeAccept'   AND r.item_deleted = 0) AS maybe_count");
