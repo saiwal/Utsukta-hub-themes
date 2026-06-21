@@ -24,6 +24,7 @@ class Drafts
              WHERE uid = %d
                AND item_unpublished = 1
                AND item_deleted = 0
+               AND route LIKE '%%\"scope\":\"post:%%'
              ORDER BY edited DESC",
             intval($uid)
         );
