@@ -64,6 +64,17 @@ trait FormatsItems
         ], $deleted ?: []);
     }
 
+    private static function normalizeAttach(array $items): array
+    {
+        $root = z_root();
+        return array_map(function (array $a) use ($root): array {
+            if (isset($a['href']) && str_starts_with($a['href'], '/')) {
+                $a['href'] = $root . $a['href'];
+            }
+            return $a;
+        }, $items);
+    }
+
     private function formatItem(array $item, string $observer_xchan): array
     {
         $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
@@ -163,7 +174,7 @@ trait FormatsItems
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
-            'attach' => $item['attach'] ? json_decode($item['attach'], true) : [],
+            'attach' => self::normalizeAttach($item['attach'] ? json_decode($item['attach'], true) : []),
         ];
     }
 }
