@@ -233,15 +233,18 @@ class Item
         }
 
         $rootMid = dbesc($root['mid']);
+        $rootUid = intval($root['uid']);
         $verb = dbesc($activityVerb);
 
-        $rows = dbq("SELECT item.id, item.author_xchan, item.created
+        $rows = dbq("SELECT DISTINCT item.author_xchan, MIN(item.created) AS created
                      FROM item
-                     WHERE item.thr_parent = '$rootMid'
+                     WHERE item.uid = $rootUid
+                       AND item.thr_parent = '$rootMid'
                        AND item.verb = '$verb'
                        AND item.item_deleted = 0
                        $item_normal
-                     ORDER BY item.created ASC");
+                     GROUP BY item.author_xchan
+                     ORDER BY MIN(item.created) ASC");
 
         if (!$rows) {
             json_return_and_die(['reactions' => [], 'total' => 0]);
