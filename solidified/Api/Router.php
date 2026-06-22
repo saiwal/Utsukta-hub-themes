@@ -33,6 +33,7 @@ class Router
         'files'  => Handlers\Files::class,
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
+        'notes' => Handlers\Notes::class,
         'wiki' => Handlers\Wiki::class,
         'nav' => Handlers\Nav::class,
         'admin' => Handlers\Admin::class,

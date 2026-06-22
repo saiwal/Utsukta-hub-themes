@@ -359,12 +359,88 @@ class Photos
         $origId   = \App::$argv[4] ?? '';
         $action   = \App::$argv[5] ?? '';
 
-        if ($datatype !== 'image' || !$origId || $action !== 'edit') {
-            Response::error(400, 'Expected /photos/:nick/image/:id/edit');
+        if ($datatype !== 'image' || !$origId) {
+            Response::error(400, 'Invalid request');
         }
 
         if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             Response::error(400, 'No file uploaded');
+        }
+
+        // ── POST /api/photos/:nick/image/upload ─────────────────────────────────
+        // Upload a new photo to the user's library (no original required).
+        if ($origId === 'upload') {
+            $album   = trim($_POST['album'] ?? '');
+            $newHash = photo_new_resource();
+
+            $_FILES['userfile'] = $_FILES['file'];
+            $res = attach_store($channel, get_observer_hash(), '', [
+                'album'  => $album,
+                'hash'   => $newHash,
+                'nosync' => true,
+                'source' => 'photos',
+            ]);
+
+            if (!$res || !intval($res['data']['is_photo'] ?? 0)) {
+                Response::error(500, 'Image save failed');
+            }
+
+            $rows = q("SELECT * FROM photo WHERE resource_id = '%s' AND uid = %d ORDER BY imgscale ASC LIMIT 1",
+                      dbesc($newHash), intval($uid));
+
+            if (!$rows) {
+                Response::error(500, 'Photo record not found after save');
+            }
+
+            $base      = $rows[0];
+            $imagedata = intval($base['os_storage'])
+                ? @file_get_contents(dbunescbin($base['content']))
+                : dbunescbin($base['content']);
+
+            $im = photo_factory($imagedata, $base['mimetype']);
+            if (!$im->is_valid()) {
+                Response::error(500, 'Unable to process image');
+            }
+
+            $ph_drv    = photo_factory('');
+            $phototypes = $ph_drv->supportedTypes();
+            $ext       = $phototypes[$base['mimetype']] ?? 'jpg';
+            $fullScale = intval($base['imgscale']);
+
+            $p = [
+                'aid'          => get_account_id(),
+                'uid'          => $uid,
+                'resource_id'  => $newHash,
+                'filename'     => basename($_FILES['file']['name'] ?? 'photo.jpg'),
+                'description'  => '',
+                'album'        => $album,
+                'os_path'      => $base['os_path'] ?? '',
+                'display_path' => $base['display_path'] ?? '',
+                'photo_usage'  => PHOTO_NORMAL,
+                'allow_cid'    => $channel['channel_allow_cid'],
+                'allow_gid'    => $channel['channel_allow_gid'],
+                'deny_cid'     => $channel['channel_deny_cid'],
+                'deny_gid'     => $channel['channel_deny_gid'],
+            ];
+
+            $im->scaleImage(1024);
+            $im->storeThumbnail($p, 1);
+
+            $im2 = photo_factory($imagedata, $base['mimetype']);
+            $im2->scaleImage(320);
+            $im2->storeThumbnail($p, 2);
+
+            $t = time();
+            Response::send([
+                'resource_id' => $newHash,
+                'src'         => z_root() . '/photo/' . $newHash . '-2.' . $ext . '?t=' . $t,
+                'src_full'    => z_root() . '/photo/' . $newHash . '-' . $fullScale . '.' . $ext . '?t=' . $t,
+            ]);
+            return;
+        }
+
+        if ($action !== 'edit') {
+            Response::error(400, 'Expected /photos/:nick/image/:id/edit');
         }
 
         // Verify the original belongs to this user and get its album

@@ -100,6 +100,36 @@ class Webpages
             Response::send($this->formatDetail($p[0]));
         }
 
+        // ── Page fetch by iid — owner only (for SPA editor) ──────────────────
+        if (!empty($_GET['iid'])) {
+            Auth::requireLocalGet();
+            if (!$perms['write_pages']) {
+                Response::error(403, 'Permission denied');
+            }
+
+            $p = q(
+                "SELECT item.* FROM item
+                 LEFT JOIN iconfig ON iconfig.iid = item.id
+                 WHERE item.uid = %d
+                   AND item.id = %d
+                   AND iconfig.cat = 'system'
+                   AND iconfig.k = 'WEBPAGE'
+                   AND item_type = %d
+                 LIMIT 1",
+                $owner,
+                intval($_GET['iid']),
+                intval(ITEM_TYPE_WEBPAGE)
+            );
+
+            if (!$p) {
+                Response::error(404, 'Page not found');
+            }
+
+            xchan_query($p, true);
+            $p = fetch_post_tags($p, true);
+            Response::send($this->formatDetail($p[0]));
+        }
+
         // ── List webpages — owner only ─────────────────────────────────────────
         // Listing requires write_pages (you need edit/delete capability to use the list)
         Auth::requireLocalGet();
@@ -186,11 +216,23 @@ class Webpages
 
     private function formatDetail(array $item): array
     {
+        // Extract the WEBPAGE pagelink from iconfig (attached by fetch_post_tags / xchan_query)
+        $pagelink = '';
+        if (!empty($item['iconfig']) && is_array($item['iconfig'])) {
+            foreach ($item['iconfig'] as $cfg) {
+                if (($cfg['cat'] ?? '') === 'system' && ($cfg['k'] ?? '') === 'WEBPAGE') {
+                    $pagelink = urldecode($cfg['v']);
+                    break;
+                }
+            }
+        }
+
         return [
             'mid'      => $item['mid'],
             'title'    => $item['title'],
             'body'     => $item['body'],
             'mimetype' => $item['mimetype'],
+            'slug'     => $pagelink,
             'created'  => $item['created'],
             'edited'   => $item['edited'],
         ];

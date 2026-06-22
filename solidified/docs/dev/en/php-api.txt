@@ -28,6 +28,7 @@ Unknown resources return `404`. Unsupported HTTP methods return `405`. Path segm
 | `files` | `Handlers\Files` |
 | `articles` | `Handlers\Articles` |
 | `webpages` | `Handlers\Webpages` |
+| `notes` | `Handlers\Notes` |
 | `wiki` | `Handlers\Wiki` |
 | `chat` | `Handlers\Chat` |
 | `cal` | `Handlers\Cal` |
@@ -176,3 +177,34 @@ POST /api/item/:mid/reshare         reshare with optional text
 ```
 
 `:mid` may be a full zot6 URL, a short UUID, or a `b64.`-prefixed base64-encoded mid.
+
+## Notes Endpoint
+
+Personal notes are stored as `ITEM_TYPE_CUSTOM` (type 9) items. They never federate and never appear in any stream.
+
+```
+GET  /api/notes            list the authenticated user's notes (paginated)
+POST /api/notes            create a new note
+POST /api/item/:mid/edit   edit an existing note (shared with regular items)
+POST /api/item/:mid/delete delete a note
+```
+
+### GET /api/notes
+
+Query params: `start` (default 0), `limit` (default 20, max 50).
+
+Returns a paginated envelope. Each item:
+
+```
+id, mid, uuid, body, created, edited, mimetype
+```
+
+Only items with `verb = 'Create'` and `item_type = ITEM_TYPE_CUSTOM` are returned, which filters out any companion `Add` activities Hubzilla may have created via the legacy `/item` endpoint.
+
+### POST /api/notes
+
+Body (JSON): `{ "body": "...", "mimetype": "text/bbcode" }`
+
+Creates a note directly via `item_store()` (bypasses the legacy `/item` endpoint, so no companion `Add` activity is generated). Returns `{ "data": { "mid": "..." } }`.
+
+The note is stored with `item_private = 1`, `item_wall = 1`, `item_origin = 1`, and no ACL entries — visible only to the owner.

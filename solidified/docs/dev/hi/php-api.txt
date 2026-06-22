@@ -28,6 +28,7 @@ URL: /api/settings/display (POST) → Handlers\Settings::post()
 | `files` | `Handlers\Files` |
 | `articles` | `Handlers\Articles` |
 | `webpages` | `Handlers\Webpages` |
+| `notes` | `Handlers\Notes` |
 | `wiki` | `Handlers\Wiki` |
 | `chat` | `Handlers\Chat` |
 | `cal` | `Handlers\Cal` |
@@ -176,3 +177,34 @@ POST /api/item/:mid/reshare         optional text के साथ reshare
 ```
 
 `:mid` एक पूरा zot6 URL, short UUID, या `b64.`-prefixed base64-encoded mid हो सकता है।
+
+## Notes एंडपॉइंट
+
+Personal notes `ITEM_TYPE_CUSTOM` (type 9) items के रूप में store होते हैं। ये कभी federate नहीं होते और किसी भी stream में नहीं दिखते।
+
+```
+GET  /api/notes            authenticated user के notes की सूची (paginated)
+POST /api/notes            नया note बनाएं
+POST /api/item/:mid/edit   मौजूदा note edit करें (regular items के साथ shared)
+POST /api/item/:mid/delete note delete करें
+```
+
+### GET /api/notes
+
+Query params: `start` (default 0), `limit` (default 20, max 50)।
+
+Paginated envelope लौटाता है। प्रत्येक item:
+
+```
+id, mid, uuid, body, created, edited, mimetype
+```
+
+केवल `verb = 'Create'` और `item_type = ITEM_TYPE_CUSTOM` वाले items लौटाए जाते हैं — यह legacy `/item` endpoint के किसी भी companion `Add` activity को filter करता है।
+
+### POST /api/notes
+
+Body (JSON): `{ "body": "...", "mimetype": "text/bbcode" }`
+
+`item_store()` के ज़रिए सीधे note बनाता है (legacy `/item` endpoint bypass होता है, इसलिए कोई companion `Add` activity नहीं बनती)। `{ "data": { "mid": "..." } }` लौटाता है।
+
+Note `item_private = 1`, `item_wall = 1`, `item_origin = 1` के साथ store होता है और कोई ACL entries नहीं होतीं — केवल owner को दिखता है।
