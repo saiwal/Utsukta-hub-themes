@@ -25,6 +25,8 @@ class Connections
             $sub_action = \App::$argv[3] ?? '';
             if ($sub_action === 'perms') {
                 $this->getPerms($uid, intval($sub));
+            } elseif ($sub_action === 'groups') {
+                $this->getConnectionGroups($uid, intval($sub));
             }
         }
 
@@ -317,6 +319,28 @@ class Connections
             'excl'  => $abook['abook_excl'] ?? '',
             'perms' => $perms,
         ]);
+    }
+
+    private function getConnectionGroups(int $uid, int $abook_id): never
+    {
+        $row = q(
+            "SELECT abook_xchan FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$row) Response::error(404, 'Connection not found');
+
+        $xchan_hash = $row[0]['abook_xchan'];
+
+        $rows = q(
+            "SELECT pgrp.id FROM pgrp
+             INNER JOIN pgrp_member ON pgrp_member.gid = pgrp.id
+             WHERE pgrp.uid = %d AND pgrp.deleted = 0 AND pgrp_member.xchan = '%s'",
+            intval($uid),
+            dbesc($xchan_hash)
+        );
+
+        Response::send(array_map(fn($g) => intval($g['id']), $rows ?? []));
     }
 
     private function filterClause(string $filter): string

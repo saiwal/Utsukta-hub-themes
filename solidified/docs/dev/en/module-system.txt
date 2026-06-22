@@ -110,6 +110,31 @@ src/modules/myfeature/
     └── MySidebarWidget.tsx
 ```
 
+## In-Component App Gating
+
+`appName` gates an entire module. To gate only a **section within a component** based on a Hubzilla app, use `useInstalledApps()` directly:
+
+```typescript
+import { useInstalledApps } from "@/shared/store/nav-store";
+
+const installedApps = useInstalledApps();
+const affinityInstalled = () => installedApps().has("Affinity Tool");
+```
+
+Then wrap the conditional UI in a `<Show>`:
+
+```tsx
+<Show when={affinityInstalled()}>
+  <AffinitySlider ... />
+</Show>
+```
+
+**Where this is used:**
+- `StreamFiltersWidget.tsx` — the Closeness / Affinity slider is hidden unless the "Affinity Tool" app is installed.
+- `StreamFiltersWidget.tsx` — Privacy Groups picker is hidden unless "Privacy Groups" is installed.
+
+The same empty-set pass-through rule applies here: `useInstalledApps()` returns an empty `Set` until `/api/nav` responds, so the section is visible during the initial render. If you want to hide-by-default instead, guard with `installedApps().size > 0 && affinityInstalled()`.
+
 ## Multiple Routes
 
 A module can register as many routes as needed. All share the same `moduleId`:
