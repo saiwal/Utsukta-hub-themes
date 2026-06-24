@@ -115,6 +115,9 @@ class Item
             case 'saveto':
                 $this->saveToFolder($mid);
                 break;
+            case 'vote':
+                $this->voteOnPoll($mid);
+                break;
             default:
                 // POST /api/item/:mid  with no verb → comment (convenience alias)
                 $this->createComment($mid);
@@ -943,7 +946,7 @@ class Item
         return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
                 (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
                 (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce')) AS comment_count,
+                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce') AND r.obj_type != 'Answer') AS comment_count,
                 (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
                  FROM item r
                  WHERE r.parent = item.parent
@@ -1038,7 +1041,159 @@ class Item
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            'poll'             => self::extractPoll($item, $ob_hash),
         ];
+    }
+
+    private static function extractPoll(array $item, string $observer_xchan): ?array
+    {
+        if (($item['obj_type'] ?? '') !== 'Question') return null;
+        $raw = $item['obj'] ?? '';
+        if (!$raw) return null;
+
+        $obj = is_array($raw) ? $raw : json_decode($raw, true);
+        if (!$obj || ($obj['type'] ?? '') !== 'Question') return null;
+
+        $multiple = false;
+        $choices  = $obj['oneOf'] ?? null;
+        if (empty($choices)) {
+            $choices  = $obj['anyOf'] ?? [];
+            $multiple = true;
+        }
+
+        $options = [];
+        foreach ($choices as $opt) {
+            $options[] = [
+                'name'  => htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5),
+                'votes' => intval($opt['replies']['totalItems'] ?? 0),
+            ];
+        }
+
+        $viewer_votes = [];
+        if ($observer_xchan && !empty($item['id'])) {
+            $iid   = intval($item['id']);
+            $obEsc = dbesc($observer_xchan);
+            $rows  = dbq("SELECT title FROM item
+                          WHERE parent = $iid
+                            AND author_xchan = '$obEsc'
+                            AND obj_type = 'Answer'
+                            AND item_deleted = 0");
+            if ($rows) {
+                $viewer_votes = array_column($rows, 'title');
+            }
+        }
+
+        return [
+            'multiple'     => $multiple,
+            'end_time'     => $obj['endTime'] ?? null,
+            'closed'       => $obj['closed']  ?? null,
+            'options'      => $options,
+            'viewer_votes' => $viewer_votes,
+        ];
+    }
+
+    // POST /api/item/:mid/vote
+    // Body: { "answer": "Option name" } or { "answer": ["Option A", "Option B"] } for multi-choice
+    private function voteOnPoll(string $mid): void
+    {
+        Auth::requireLocalJson();
+
+        $uid     = local_channel();
+        $channel = App::get_channel();
+        $ob_hash = $channel['channel_hash'];
+
+        $answer = Auth::$parsedBody['answer'] ?? null;
+
+        if ($answer === null) {
+            json_return_and_die(['error' => 'answer is required']);
+        }
+
+        $poll = $this->resolveItem($mid, $ob_hash);
+        if (!$poll || ($poll['obj_type'] ?? '') !== 'Question') {
+            json_return_and_die(['error' => 'Poll not found']);
+        }
+
+        $iid   = intval($poll['id']);
+        $obEsc = dbesc($ob_hash);
+
+        $existing = dbq("SELECT id FROM item
+                         WHERE parent = $iid
+                           AND author_xchan = '$obEsc'
+                           AND obj_type = 'Answer'
+                           AND item_deleted = 0
+                         LIMIT 1");
+        if ($existing) {
+            json_return_and_die(['error' => 'Already voted']);
+        }
+
+        $raw = $poll['obj'] ?? '';
+        $obj = is_array($raw) ? $raw : json_decode($raw, true);
+        if (!$obj) {
+            json_return_and_die(['error' => 'Invalid poll data']);
+        }
+
+        $multiple   = !empty($obj['anyOf']);
+        $optionsKey = $multiple ? 'anyOf' : 'oneOf';
+        $validNames = array_map(
+            fn($o) => htmlspecialchars_decode($o['name'] ?? '', ENT_QUOTES | ENT_HTML5),
+            $obj[$optionsKey] ?? []
+        );
+
+        $responses = is_array($answer) ? $answer : [$answer];
+        foreach ($responses as $res) {
+            if (!in_array($res, $validNames, true)) {
+                json_return_and_die(['error' => 'Invalid answer: ' . $res]);
+            }
+        }
+
+        if (!$multiple) {
+            $responses = [$responses[0]];
+        }
+
+        foreach ($responses as $res) {
+            $uuid      = item_message_id();
+            $answerMid = z_root() . '/item/' . $uuid;
+            $now       = datetime_convert();
+
+            $datarray = [
+                'aid'             => $channel['channel_account_id'],
+                'uid'             => intval($poll['uid']),
+                'uuid'            => $uuid,
+                'mid'             => $answerMid,
+                'parent_mid'      => $poll['mid'],
+                'thr_parent'      => $poll['mid'],
+                'owner_xchan'     => $poll['author_xchan'],
+                'author_xchan'    => $ob_hash,
+                'created'         => $now,
+                'edited'          => $now,
+                'commented'       => $now,
+                'received'        => $now,
+                'changed'         => $now,
+                'verb'            => 'Create',
+                'obj_type'        => 'Answer',
+                'title'           => $res,
+                'body'            => '',
+                'mimetype'        => 'text/bbcode',
+                'allow_cid'       => '<' . $poll['author_xchan'] . '>',
+                'allow_gid'       => '',
+                'deny_cid'        => '',
+                'deny_gid'        => '',
+                'item_private'    => 1,
+                'item_unseen'     => 0,
+                'item_wall'       => 0,
+                'item_origin'     => 1,
+                'item_thread_top' => 0,
+                'plink'           => $answerMid,
+            ];
+
+            $post = item_store($datarray);
+            if ($post['success']) {
+                retain_item($iid);
+                Master::Summon(['Notifier', 'like', $post['item_id']]);
+            }
+        }
+
+        json_return_and_die(['success' => true]);
     }
 
     // POST /api/item/:mid/reshare
