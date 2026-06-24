@@ -26,7 +26,9 @@ class Auth
     {
         self::requireJson();
         Csrf::validate();
-        self::$parsedBody = json_decode(file_get_contents('php://input'), true) ?? [];
+        // WebServer::createRequest() already consumed php://input; read from the cached request.
+        $raw = \App::$request ? (string) \App::$request->getBody() : file_get_contents('php://input');
+        self::$parsedBody = json_decode($raw, true) ?? [];
         return self::requireLocal();
     }
 

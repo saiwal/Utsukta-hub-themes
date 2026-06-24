@@ -65,8 +65,9 @@ class Pconfig
                 'uid'      => $uid,
                 'channel'  => $nick,
                 'is_admin' => is_site_admin(),
-                'system'   => $config['system'] ?? [],
-                'spa'      => $config['spa']    ?? [],
+                'system'   => $config['system']  ?? [],
+                'spa'      => $config['spa']     ?? [],
+                'features' => array_map('boolval', $config['feature'] ?? []),
             ];
 
             // Include the visited channel's display prefs so the SPA can theme per-channel

@@ -75,6 +75,53 @@ trait FormatsItems
         }, $items);
     }
 
+    private static function extractPoll(array $item, string $observer_xchan): ?array
+    {
+        if (($item['obj_type'] ?? '') !== 'Question') return null;
+        $raw = $item['obj'] ?? '';
+        if (!$raw) return null;
+
+        $obj = is_array($raw) ? $raw : json_decode($raw, true);
+        if (!$obj || ($obj['type'] ?? '') !== 'Question') return null;
+
+        $multiple = false;
+        $choices  = $obj['oneOf'] ?? null;
+        if (empty($choices)) {
+            $choices  = $obj['anyOf'] ?? [];
+            $multiple = true;
+        }
+
+        $options = [];
+        foreach ($choices as $opt) {
+            $options[] = [
+                'name'  => htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5),
+                'votes' => intval($opt['replies']['totalItems'] ?? 0),
+            ];
+        }
+
+        $viewer_votes = [];
+        if ($observer_xchan && !empty($item['id'])) {
+            $iid   = intval($item['id']);
+            $obEsc = dbesc($observer_xchan);
+            $rows  = dbq("SELECT title FROM item
+                          WHERE parent = $iid
+                            AND author_xchan = '$obEsc'
+                            AND obj_type = 'Answer'
+                            AND item_deleted = 0");
+            if ($rows) {
+                $viewer_votes = array_column($rows, 'title');
+            }
+        }
+
+        return [
+            'multiple'     => $multiple,
+            'end_time'     => $obj['endTime'] ?? null,
+            'closed'       => $obj['closed']  ?? null,
+            'options'      => $options,
+            'viewer_votes' => $viewer_votes,
+        ];
+    }
+
     private function formatItem(array $item, string $observer_xchan): array
     {
         $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
@@ -123,7 +170,9 @@ trait FormatsItems
                 intval($item['item_thread_top']) ? 'thread_parent' : null,
                 intval($item['item_private']) ? 'private' : null,
                 intval($item['item_starred']) ? 'starred' : null,
-                intval($item['item_notshown']) ? 'notshown' : null,
+                intval($item['item_notshown'])
+                    ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
+                    : null,
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
@@ -175,6 +224,7 @@ trait FormatsItems
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
             'attach' => self::normalizeAttach($item['attach'] ? json_decode($item['attach'], true) : []),
+            'poll'   => self::extractPoll($item, $observer_xchan),
         ];
     }
 }
