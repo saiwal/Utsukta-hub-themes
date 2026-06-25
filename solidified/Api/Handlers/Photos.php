@@ -3,6 +3,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Zotlabs\Lib\Libsync;
 
 class Photos
 {
@@ -25,7 +26,15 @@ class Photos
         }
 
         $datatype = \App::$argv[3] ?? 'summary';
-        $datum = \App::$argv[4] ?? '';
+        $datum    = \App::$argv[4] ?? '';
+
+        // GET /api/photos/:nick/(image|album)/:id/acl
+        if ((\App::$argv[5] ?? '') === 'acl') {
+            if (!local_channel() || local_channel() != $owner_uid)
+                Response::error(403, 'Owner access required');
+            $this->getAcl($channel, $datatype, $datum);
+            return;
+        }
 
         switch ($datatype) {
             case 'albums':
@@ -132,11 +141,14 @@ class Photos
 
     private function getAlbum(array $channel, string $ob_hash, string $albumHash): void
     {
-        if (!$albumHash)
-            Response::error(400, 'Album hash required');
-
         require_once 'include/photos.php';
         require_once 'include/attach.php';
+
+        // Empty hash → root-level photos (not inside any folder)
+        if ($albumHash === '') {
+            $this->getRootPhotos($channel, $ob_hash);
+            return;
+        }
 
         // Verify album exists and observer can see it
         $album_row = photos_album_exists($channel['channel_id'], $ob_hash, $albumHash);
@@ -353,9 +365,31 @@ class Photos
         require_once 'include/photos.php';
         require_once 'include/security.php';
 
+        $datatype = \App::$argv[3] ?? '';
+
+        // POST /api/photos/:nick/albums — create a new album (JSON)
+        if ($datatype === 'albums') {
+            Auth::requireLocalJson();
+            $this->createAlbum();
+            return;
+        }
+
+        // POST /api/photos/:nick/image/:id/rename — rename photo (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'rename') {
+            Auth::requireLocalJson();
+            $this->renamePhoto(\App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /api/photos/:nick/(image|album)/:id/acl — save privacy ACL (JSON)
+        if (in_array($datatype, ['image', 'album']) && (\App::$argv[5] ?? '') === 'acl') {
+            Auth::requireLocalJson();
+            $this->postAcl($datatype, \App::$argv[4] ?? '');
+            return;
+        }
+
         $uid      = Auth::requireLocalMultipart();
         $channel  = \App::get_channel();
-        $datatype = \App::$argv[3] ?? '';
         $origId   = \App::$argv[4] ?? '';
         $action   = \App::$argv[5] ?? '';
 
@@ -370,7 +404,13 @@ class Photos
         // ── POST /api/photos/:nick/image/upload ─────────────────────────────────
         // Upload a new photo to the user's library (no original required).
         if ($origId === 'upload') {
-            $album   = trim($_POST['album'] ?? '');
+            $album = trim($_POST['album'] ?? '');
+            // If a folder hash is provided, look up the album display name from it
+            if (!$album && !empty($_POST['folder'])) {
+                $f = q("SELECT filename FROM attach WHERE hash = '%s' AND uid = %d AND is_dir = 1 LIMIT 1",
+                    dbesc($_POST['folder']), intval($uid));
+                if ($f) $album = $f[0]['filename'];
+            }
             $newHash = photo_new_resource();
 
             $_FILES['userfile'] = $_FILES['file'];
@@ -524,6 +564,270 @@ class Photos
             'resource_id' => $newHash,
             'src'         => z_root() . '/photo/' . $newHash . '-2.' . $ext . '?t=' . $t,
             'src_full'    => z_root() . '/photo/' . $newHash . '-' . $fullScale . '.' . $ext . '?t=' . $t,
+        ]);
+    }
+
+    // ── DELETE /api/photos/:nick/* ────────────────────────────────────────────
+
+    public function delete(): void
+    {
+        require_once 'include/photo/photo_driver.php';
+        require_once 'include/attach.php';
+        require_once 'include/photos.php';
+        require_once 'include/security.php';
+
+        $uid     = Auth::requireLocalJson();
+        $channel = \App::get_channel();
+        $dtype   = \App::$argv[3] ?? '';
+        $datum   = \App::$argv[4] ?? '';
+
+        if ($dtype === 'image' && $datum) { $this->deletePhoto($uid, $channel, $datum); return; }
+        if ($dtype === 'images') {
+            $ids = Auth::$parsedBody['resource_ids'] ?? [];
+            if (!is_array($ids) || empty($ids)) Response::error(400, 'resource_ids required');
+            $this->batchDeletePhotos($uid, $channel, $ids); return;
+        }
+        if ($dtype === 'album' && $datum) { $this->deleteAlbum($uid, $channel, $datum); return; }
+        Response::error(400, 'Invalid request');
+    }
+
+    private function deletePhoto(int $uid, array $channel, string $resourceId): void
+    {
+        $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+            intval($uid), dbesc($resourceId));
+        if (!$r) Response::error(404, 'Photo not found or not yours');
+        attach_delete($uid, $resourceId, true);
+        $sync = attach_export_data($channel, $resourceId, true);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+        Response::send(['deleted' => true]);
+    }
+
+    private function batchDeletePhotos(int $uid, array $channel, array $resourceIds): void
+    {
+        $deleted = [];
+        foreach ($resourceIds as $rid) {
+            $rid = strval($rid);
+            $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+                intval($uid), dbesc($rid));
+            if (!$r) continue;
+            attach_delete($uid, $rid, true);
+            $sync = attach_export_data($channel, $rid, true);
+            if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+            $deleted[] = $rid;
+        }
+        Response::send(['deleted' => $deleted]);
+    }
+
+    private function deleteAlbum(int $uid, array $channel, string $folderHash): void
+    {
+        $f = q("SELECT id FROM attach WHERE uid = %d AND hash = '%s' AND is_dir = 1 LIMIT 1",
+            intval($uid), dbesc($folderHash));
+        if (!$f) Response::error(404, 'Album not found or not yours');
+
+        $attachPhotos = q("SELECT hash FROM attach WHERE folder = '%s' AND uid = %d AND is_photo = 1",
+            dbesc($folderHash), intval($uid));
+
+        if ($attachPhotos) {
+            foreach ($attachPhotos as $p) {
+                $rid = $p['hash'];
+                $items = q("SELECT resource_id FROM item WHERE resource_id = '%s' AND resource_type = 'photo' AND uid = %d LIMIT 1",
+                    dbesc($rid), intval($uid));
+                if ($items) attach_delete($uid, $rid, true);
+            }
+            $str = implode("','", array_map(fn($p) => dbesc($p['hash']), $attachPhotos));
+            q("DELETE FROM photo WHERE resource_id IN ('$str') AND uid = %d", intval($uid));
+        }
+
+        attach_delete($uid, $folderHash);
+        $sync = attach_export_data($channel, $folderHash, true);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+
+        Response::send(['deleted' => true]);
+    }
+
+    // ── Root photos (folder = '') ─────────────────────────────────────────────
+
+    private function getRootPhotos(array $channel, string $ob_hash): void
+    {
+        require_once 'include/photo/photo_driver.php';
+
+        $sql_extra  = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
+        $ph_drv     = photo_factory('');
+        $phototypes = $ph_drv->supportedTypes();
+
+        $r = dbq("SELECT p.resource_id, p.filename, p.mimetype, p.imgscale,
+                         p.description, p.album, p.created
+                  FROM photo p
+                  INNER JOIN attach a ON a.hash = p.resource_id
+                  WHERE a.folder = ''
+                    AND p.uid = " . intval($channel['channel_id']) . '
+                    AND p.imgscale = 2
+                    AND p.photo_usage IN (' . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
+                    $sql_extra
+                  ORDER BY p.created DESC");
+
+        $out = [];
+        foreach (($r ?: []) as $row) {
+            $ext    = $phototypes[$row['mimetype']] ?? 'jpg';
+            $out[]  = [
+                'resource_id' => $row['resource_id'],
+                'filename'    => $row['filename'],
+                'description' => $row['description'] ?? '',
+                'album'       => $row['album'],
+                'created'     => $row['created'],
+                'src'         => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
+                'link'        => z_root() . '/photos/' . $channel['channel_address'] . '/image/' . $row['resource_id'],
+            ];
+        }
+
+        Response::send($out, ['album_name' => '']);
+    }
+
+    // ── ACL helpers ───────────────────────────────────────────────────────────
+
+    private function parseAclField(string $field): array
+    {
+        if (!$field) return [];
+        preg_match_all('/<([^>]+)>/', $field, $m);
+        return $m[1] ?? [];
+    }
+
+    private function buildAclField(array $ids): string
+    {
+        $ids = array_filter(array_map('strval', $ids));
+        return $ids ? '<' . implode('><', $ids) . '>' : '';
+    }
+
+    // ── GET /api/photos/:nick/(image|album)/:id/acl ───────────────────────────
+
+    private function getAcl(array $channel, string $type, string $datum): void
+    {
+        $uid = local_channel();
+
+        $gRows  = q("SELECT id, gname FROM `groups` WHERE uid = %d AND deleted = 0 ORDER BY gname ASC",
+            intval($uid));
+        $groups = array_map(fn($g) => ['id' => strval($g['id']), 'name' => $g['gname']], $gRows ?: []);
+
+        if ($type === 'image') {
+            $r = q("SELECT allow_cid, allow_gid, deny_cid, deny_gid FROM photo
+                    WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+                intval($uid), dbesc($datum));
+            if (!$r) Response::error(404, 'Photo not found');
+        } else {
+            $r = q("SELECT allow_cid, allow_gid, deny_cid, deny_gid FROM attach
+                    WHERE uid = %d AND hash = '%s' AND is_dir = 1 LIMIT 1",
+                intval($uid), dbesc($datum));
+            if (!$r) Response::error(404, 'Album not found');
+        }
+
+        $row = $r[0];
+        Response::send([
+            'allow_cid' => $this->parseAclField($row['allow_cid']),
+            'allow_gid' => $this->parseAclField($row['allow_gid']),
+            'deny_cid'  => $this->parseAclField($row['deny_cid']),
+            'deny_gid'  => $this->parseAclField($row['deny_gid']),
+            'groups'    => $groups,
+        ]);
+    }
+
+    // ── POST /api/photos/:nick/(image|album)/:id/acl ──────────────────────────
+
+    private function postAcl(string $type, string $datum): void
+    {
+        require_once 'include/attach.php';
+
+        $uid     = local_channel();
+        $channel = \App::get_channel();
+        $body    = Auth::$parsedBody;
+
+        $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
+        $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
+        $deny_gid  = $this->buildAclField($body['deny_gid']  ?? []);
+        $deny_cid  = $this->buildAclField($body['deny_cid']  ?? []);
+
+        if ($type === 'image') {
+            if (!$datum) Response::error(400, 'resource_id required');
+            q("UPDATE photo SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
+               WHERE uid = %d AND resource_id = '%s'",
+                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
+                intval($uid), dbesc($datum));
+            q("UPDATE attach SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
+               WHERE uid = %d AND hash = '%s'",
+                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
+                intval($uid), dbesc($datum));
+        } else {
+            if (!$datum) Response::error(400, 'folder hash required');
+            q("UPDATE attach SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
+               WHERE uid = %d AND hash = '%s' AND is_dir = 1",
+                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
+                intval($uid), dbesc($datum));
+        }
+
+        $sync = attach_export_data($channel, $datum, false);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+
+        Response::send(['ok' => true]);
+    }
+
+    // ── POST /api/photos/:nick/image/:id/rename ───────────────────────────────
+
+    private function renamePhoto(string $resourceId): void
+    {
+        require_once 'include/attach.php';
+
+        $uid     = local_channel();
+        $channel = \App::get_channel();
+        $newName = trim(Auth::$parsedBody['filename'] ?? '');
+
+        if (!$newName)
+            Response::error(400, 'filename required');
+
+        $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+            intval($uid), dbesc($resourceId));
+
+        if (!$r)
+            Response::error(404, 'Photo not found or not yours');
+
+        q("UPDATE photo SET filename = '%s' WHERE uid = %d AND resource_id = '%s'",
+            dbesc($newName), intval($uid), dbesc($resourceId));
+
+        q("UPDATE attach SET filename = '%s' WHERE uid = %d AND hash = '%s'",
+            dbesc($newName), intval($uid), dbesc($resourceId));
+
+        $sync = attach_export_data($channel, $resourceId, false);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+
+        Response::send(['filename' => $newName]);
+    }
+
+    // ── POST /api/photos/:nick/albums — create album ──────────────────────────
+
+    private function createAlbum(): void
+    {
+        $channel = \App::get_channel();
+        $data    = Auth::$parsedBody;
+        $name    = trim($data['name'] ?? '');
+
+        if (!$name) {
+            Response::error(400, 'Album name required');
+        }
+
+        $res = attach_mkdir($channel, get_observer_hash(), [
+            'filename' => $name,
+            'folder'   => '',
+        ]);
+
+        if (empty($res['success'])) {
+            Response::error(422, $res['message'] ?? 'Could not create album');
+        }
+
+        $folder_hash = $res['data']['hash'] ?? '';
+        Response::send([
+            'album'  => $name,
+            'folder' => $folder_hash,
+            'total'  => 0,
+            'url'    => '',
+            'thumb'  => null,
         ]);
     }
 
