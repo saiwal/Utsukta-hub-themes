@@ -144,7 +144,8 @@ class Webpages
             "SELECT iconfig.iid, iconfig.v AS pagelink,
                     item.mid, item.title, item.mimetype,
                     item.created, item.edited,
-                    item.allow_cid, item.allow_gid, item.deny_cid, item.deny_gid
+                    item.allow_cid, item.allow_gid, item.deny_cid, item.deny_gid,
+                    item.item_private, item.public_policy
              FROM iconfig
              LEFT JOIN item ON iconfig.iid = item.id
              WHERE item.uid = %d
@@ -164,7 +165,8 @@ class Webpages
                 strlen($row['allow_cid']) ||
                 strlen($row['allow_gid']) ||
                 strlen($row['deny_cid'])  ||
-                strlen($row['deny_gid'])
+                strlen($row['deny_gid'])  ||
+                intval($row['item_private'])
             );
             $pages[] = [
                 'iid'        => intval($row['iid']),
@@ -184,11 +186,22 @@ class Webpages
     }
 
     // POST /api/webpages
+    // Body (JSON): { "action": "create", title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
     // Body (JSON): { "action": "delete", "iid": 123 }
     public function post(): void
     {
         $uid  = Auth::requireLocalJson();
         $body = \Theme\Solidified\Api\Auth::$parsedBody;
+
+        if (($body['action'] ?? '') === 'create') {
+            $this->createWebpage($uid, $body);
+            return;
+        }
+
+        if (($body['action'] ?? '') === 'update') {
+            $this->updateWebpage($uid, $body);
+            return;
+        }
 
         if (($body['action'] ?? '') === 'delete') {
             $iid = intval($body['iid'] ?? 0);
@@ -209,9 +222,195 @@ class Webpages
             drop_item($iid, false);
 
             Response::send(['status' => 'ok']);
+            return;
         }
 
         Response::error(400, 'Unknown action');
+    }
+
+    private function createWebpage(int $uid, array $body): void
+    {
+        require_once 'include/items.php';
+
+        $channel  = \App::get_channel();
+        $observer = \App::get_observer();
+
+        if (!$channel || !$observer) {
+            Response::error(403, 'Authentication required');
+        }
+
+        if (!perm_is_allowed($uid, $observer['xchan_hash'], 'write_pages')) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $title     = trim($body['title']     ?? '');
+        $summary   = trim($body['summary']   ?? '');
+        $content   = trim($body['body']      ?? '');
+        $mimetype  = $body['mimetype']        ?? 'text/bbcode';
+        $pagetitle = trim($body['pagetitle'] ?? '');
+        $scope     = $body['scope']           ?? 'public';
+
+        if (!$content) {
+            Response::error(400, 'body is required');
+        }
+
+        [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
+            $this->resolveWebpageAcl($scope, $body);
+
+        $uuid = item_message_id();
+        $mid  = z_root() . '/item/' . $uuid;
+        $now  = datetime_convert();
+
+        $datarray = [
+            'aid'             => $channel['channel_account_id'],
+            'uid'             => $uid,
+            'uuid'            => $uuid,
+            'mid'             => $mid,
+            'parent_mid'      => $mid,
+            'thr_parent'      => $mid,
+            'owner_xchan'     => $channel['channel_hash'],
+            'author_xchan'    => $observer['xchan_hash'],
+            'created'         => $now,
+            'edited'          => $now,
+            'commented'       => $now,
+            'received'        => $now,
+            'changed'         => $now,
+            'verb'            => 'Create',
+            'obj_type'        => 'Note',
+            'item_type'       => ITEM_TYPE_WEBPAGE,
+            'mimetype'        => $mimetype,
+            'title'           => $title,
+            'summary'         => $summary,
+            'body'            => $content,
+            'allow_cid'       => $allow_cid,
+            'allow_gid'       => $allow_gid,
+            'deny_cid'        => $deny_cid,
+            'deny_gid'        => $deny_gid,
+            'item_wall'       => 1,
+            'item_origin'     => 1,
+            'item_thread_top' => 1,
+            'item_unseen'     => 0,
+            'item_private'    => $item_private,
+            'public_policy'   => $public_policy,
+            'plink'           => $mid,
+        ];
+
+        // Register the WEBPAGE slug in iconfig (read by the page router and listing)
+        \Zotlabs\Lib\IConfig::Set($datarray, 'system', 'WEBPAGE',
+            ($pagetitle ?: basename($mid)), true);
+
+        $post = item_store($datarray);
+
+        if (!$post['success']) {
+            Response::error(500, 'Failed to create webpage');
+        }
+
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+
+        Response::send([
+            'iid'  => $post['item_id'],
+            'uuid' => $uuid,
+            'mid'  => $mid,
+        ]);
+    }
+
+    private function updateWebpage(int $uid, array $body): void
+    {
+        require_once 'include/items.php';
+
+        $uuid      = trim($body['uuid']      ?? '');
+        $content   = trim($body['body']      ?? '');
+        $title     = trim($body['title']     ?? '');
+        $summary   = trim($body['summary']   ?? '');
+        $mimetype  = $body['mimetype']        ?? 'text/bbcode';
+        $pagetitle = trim($body['pagetitle'] ?? '');
+        $scope     = $body['scope']           ?? null;
+
+        if (!$uuid) {
+            Response::error(400, 'uuid is required');
+        }
+        if (!$content) {
+            Response::error(400, 'body is required');
+        }
+
+        $item = q(
+            "SELECT * FROM item WHERE uuid = '%s' AND uid = %d AND item_deleted = 0 LIMIT 1",
+            dbesc($uuid), $uid
+        );
+        if (!$item) {
+            Response::error(404, 'Webpage not found or permission denied');
+        }
+
+        $iid = intval($item[0]['id']);
+        $now = datetime_convert();
+
+        if ($scope !== null) {
+            [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
+                $this->resolveWebpageAcl($scope, $body);
+
+            q("UPDATE item
+               SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
+                   allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s',
+                   item_private = %d, public_policy = '%s',
+                   edited = '%s', changed = '%s'
+               WHERE id = %d AND uid = %d",
+                dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
+                dbesc($allow_cid), dbesc($allow_gid), dbesc($deny_cid), dbesc($deny_gid),
+                $item_private, dbesc($public_policy),
+                dbesc($now), dbesc($now), $iid, $uid);
+        } else {
+            q("UPDATE item
+               SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
+                   edited = '%s', changed = '%s'
+               WHERE id = %d AND uid = %d",
+                dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
+                dbesc($now), dbesc($now), $iid, $uid);
+        }
+
+        if ($pagetitle) {
+            q("UPDATE iconfig SET v = '%s' WHERE iid = %d AND cat = 'system' AND k = 'WEBPAGE'",
+                dbesc($pagetitle), $iid);
+        }
+
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $iid]);
+
+        Response::send(['success' => true]);
+    }
+
+    // Returns [allow_cid, allow_gid, deny_cid, deny_gid, item_private, public_policy]
+    private function resolveWebpageAcl(string $scope, array $body): array
+    {
+        if ($scope === 'connections') {
+            // item_private=1 + public_policy='contacts' is the mechanism
+            // item_permissions_sql() checks this via scopes_sql()
+            return ['', '', '', '', 1, 'contacts'];
+        }
+
+        if ($scope === 'custom') {
+            $allow_cid = '';
+            $allow_gid = '';
+            $deny_cid  = '';
+            $deny_gid  = '';
+
+            foreach ((array) ($body['allow_cid'] ?? []) as $h) {
+                $allow_cid .= '<' . $h . '>';
+            }
+            foreach ((array) ($body['allow_gid'] ?? []) as $g) {
+                $allow_gid .= '<' . $g . '>';
+            }
+            foreach ((array) ($body['deny_cid'] ?? []) as $h) {
+                $deny_cid .= '<' . $h . '>';
+            }
+            foreach ((array) ($body['deny_gid'] ?? []) as $g) {
+                $deny_gid .= '<' . $g . '>';
+            }
+
+            $item_private = ($allow_cid || $allow_gid) ? 1 : 0;
+            return [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, ''];
+        }
+
+        // public — no ACL restrictions
+        return ['', '', '', '', 0, ''];
     }
 
     private function formatDetail(array $item): array
@@ -228,13 +427,29 @@ class Webpages
         }
 
         return [
-            'mid'      => $item['mid'],
-            'title'    => $item['title'],
-            'body'     => $item['body'],
-            'mimetype' => $item['mimetype'],
-            'slug'     => $pagelink,
-            'created'  => $item['created'],
-            'edited'   => $item['edited'],
+            'uuid'          => $item['uuid'],
+            'mid'           => $item['mid'],
+            'title'         => $item['title'],
+            'summary'       => $item['summary'] ?? '',
+            'body'          => $item['body'],
+            'mimetype'      => $item['mimetype'],
+            'slug'          => $pagelink,
+            'created'       => $item['created'],
+            'edited'        => $item['edited'],
+            'item_private'  => intval($item['item_private']),
+            'public_policy' => $item['public_policy'] ?? '',
+            'allow_cid'     => self::parseHashList($item['allow_cid'] ?? ''),
+            'allow_gid'     => self::parseHashList($item['allow_gid'] ?? ''),
+            'deny_cid'      => self::parseHashList($item['deny_cid']  ?? ''),
+            'deny_gid'      => self::parseHashList($item['deny_gid']  ?? ''),
         ];
+    }
+
+    // Hubzilla stores ACL as "<hash1><hash2>..." — extract the bare hashes.
+    private static function parseHashList(string $str): array
+    {
+        if (!$str) return [];
+        preg_match_all('/<([^>]+)>/', $str, $m);
+        return $m[1] ?? [];
     }
 }
