@@ -12,6 +12,7 @@ use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
 use App;
 use Theme\Solidified\Api\Auth;
+use Theme\Solidified\Api\Response;
 
 class Item
 {
@@ -37,8 +38,29 @@ class Item
 
     public function get(): void
     {
-        $mid = App::$argv[2] ?? '';
-        $verb = App::$argv[3] ?? '';
+        // Hubzilla message IDs are full URLs (e.g. https://host/item/uuid) that
+        // contain "/" characters. When not percent-encoded by the caller, the path
+        // is split across multiple argv segments. Reconstruct the mid by detecting
+        // the known verb at the end; for comments the optional count sits after it.
+        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders'];
+        $segs  = array_slice(App::$argv, 2);
+        $n     = count($segs);
+        $verb  = '';
+        $extra = 'all';
+
+        if ($n >= 2 && in_array($segs[$n - 1], $GET_VERBS, true)) {
+            $verb = $segs[$n - 1];
+            $mid  = implode('/', array_slice($segs, 0, $n - 1));
+        } elseif ($n >= 3 && in_array($segs[$n - 2], $GET_VERBS, true)) {
+            // e.g. .../comments/5
+            $verb  = $segs[$n - 2];
+            $extra = $segs[$n - 1];
+            $mid   = implode('/', array_slice($segs, 0, $n - 2));
+        } else {
+            $mid = implode('/', $segs);
+        }
+
+        $mid = self::fixProtocolSlashes($mid);
 
         if (!$mid) {
             json_return_and_die(['error' => 'mid required']);
@@ -46,8 +68,7 @@ class Item
 
         switch ($verb) {
             case 'comments':
-                $count = App::$argv[4] ?? 'all';
-                $this->getComments($mid, $count);
+                $this->getComments($mid, $extra);
                 break;
             case 'likes':
                 $this->getReactions($mid, 'Like');
@@ -69,10 +90,26 @@ class Item
 
     public function post(): void
     {
-        $mid = App::$argv[2] ?? '';
-        $verb = App::$argv[3] ?? '';
+        // Reconstruct mid from all argv segments after "item", accounting for
+        // message IDs that contain "/" (full zot6 URLs like https://host/item/uuid).
+        // The action verb is always the last segment for POST requests.
+        $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
+                       'tentativeaccept', 'star', 'comment', 'delete',
+                       'edit', 'reshare', 'saveto', 'vote'];
 
-        // POST /api/item  (no mid) → create top-level post
+        $segs = array_slice(App::$argv, 2);
+        $last = count($segs) ? $segs[count($segs) - 1] : '';
+
+        if (in_array($last, $POST_VERBS, true)) {
+            $verb = $last;
+            $mid  = implode('/', array_slice($segs, 0, -1));
+        } else {
+            $verb = '';
+            $mid  = implode('/', $segs);
+        }
+
+        $mid = self::fixProtocolSlashes($mid);
+
         if (!$mid) {
             $this->createPost();
             return;
@@ -119,7 +156,7 @@ class Item
                 $this->voteOnPoll($mid);
                 break;
             default:
-                // POST /api/item/:mid  with no verb → comment (convenience alias)
+                // POST /api/item/:mid with no verb → comment (convenience alias)
                 $this->createComment($mid);
                 break;
         }
@@ -275,11 +312,8 @@ class Item
     // scope: "public" | "contacts" | "private"
     private function createPost(): void
     {
-        $this->requireLocalChannel();
-        $this->requireCsrf();
-
-        $body = Auth::$parsedBody ?? [];
-        $uid = local_channel();
+        $uid = Auth::requireLocalJson();
+        $body = Auth::$parsedBody;
 
         $content = trim($body['body'] ?? '');
         $title = trim($body['title'] ?? '');
@@ -322,10 +356,8 @@ class Item
     // Body: { body, title? }
     private function createComment(string $parentMid): void
     {
-        $this->requireLocalChannel();
-        $this->requireCsrf();
-
-        $body = Auth::$parsedBody ?? [];
+        Auth::requireLocalJson();
+        $body = Auth::$parsedBody;
         $content = trim($body['body'] ?? '');
 
         if (!$content) {
@@ -582,44 +614,54 @@ class Item
     }
 
     // POST /api/item/:mid/edit
-    // Body: { body, title? }
+    // FormData: { body, title?, summary?, mimetype?, pagetitle? }
     // Only the item owner can edit.
     private function editItem(string $mid): void
     {
-        $this->requireLocalChannel();
-        $this->requireCsrf();
-
-        $uid = local_channel();
-        $body = Auth::$parsedBody ?? [];
-        $content = trim($body['body'] ?? '');
-        $title = trim($body['title'] ?? '');
-        $summary = trim($body['summary'] ?? '');
+        $uid      = Auth::requireLocalMultipart();
+        $content  = trim($_POST['body']      ?? '');
+        $title    = trim($_POST['title']     ?? '');
+        $summary  = trim($_POST['summary']   ?? '');
+        $mimetype = trim($_POST['mimetype']  ?? 'text/bbcode');
+        $slug     = trim($_POST['pagetitle'] ?? '');
 
         if (!$content) {
-            json_return_and_die(['error' => 'body is required']);
+            Response::error(400, 'body is required');
         }
 
-        $item_normal = item_normal();
+        // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
+        // Use the right column: uuid for bare identifiers, mid for full URLs.
+        $col    = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
         $midEsc = dbesc($mid);
 
+        // Do NOT use item_normal() here — it restricts to item_type = ITEM_TYPE_POST (0),
+        // which would exclude webpages, articles, wiki pages, etc.
         $item = dbq("SELECT * FROM item
-                     WHERE mid = '$midEsc' AND uid = $uid
-                     $item_normal LIMIT 1");
+                     WHERE $col = '$midEsc' AND uid = $uid
+                     AND item_deleted = 0 LIMIT 1");
 
         if (!$item) {
-            json_return_and_die(['error' => 'Item not found or permission denied']);
+            Response::error(404, 'Item not found or permission denied');
         }
 
         $iid = intval($item[0]['id']);
         $now = datetime_convert();
 
-        q("UPDATE item SET body = '%s', title = '%s', summary = '%s', edited = '%s', changed = '%s'
+        q("UPDATE item SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
+                           edited = '%s', changed = '%s'
            WHERE id = %d AND uid = %d",
-            dbesc($content), dbesc($title), dbesc($summary), dbesc($now), dbesc($now), $iid, $uid);
+            dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
+            dbesc($now), dbesc($now), $iid, $uid);
+
+        // Update the WEBPAGE slug (stored in iconfig) if one was provided
+        if ($slug) {
+            q("UPDATE iconfig SET v = '%s' WHERE iid = %d AND cat = 'system' AND k = 'WEBPAGE'",
+                dbesc($slug), $iid);
+        }
 
         Master::Summon(['Notifier', 'edit_post', $iid]);
 
-        json_return_and_die(['success' => true]);
+        Response::send(['success' => true]);
     }
 
     // POST /api/item/:mid/delete
@@ -1200,14 +1242,10 @@ class Item
     // Body: { body? }  (optional additional text above the share block)
     private function createReshare(string $mid): void
     {
-        $this->requireLocalChannel();
-        $this->requireCsrf();
-
-        $uid = local_channel();
+        $uid = Auth::requireLocalJson();
         $ob_hash = get_observer_hash();
 
-        $requestBody = json_decode(file_get_contents('php://input'), true) ?? [];
-        $extraContent = trim($requestBody['body'] ?? '');
+        $extraContent = trim(Auth::$parsedBody['body'] ?? '');
 
         $item = $this->resolveItem($mid, $ob_hash);
         if (!$item) {
@@ -1306,5 +1344,19 @@ class Item
     private function requireCsrf(): void
     {
         Csrf::validate();
+    }
+
+    // Nginx normalises "https://" to "https:/" in URL paths before passing the
+    // request to PHP via $_GET['q']. After explode/implode the reconstructed mid
+    // ends up with only one slash after the protocol colon. Restore the missing slash.
+    private static function fixProtocolSlashes(string $mid): string
+    {
+        if (str_starts_with($mid, 'https:/') && !str_starts_with($mid, 'https://')) {
+            return 'https://' . substr($mid, 7);
+        }
+        if (str_starts_with($mid, 'http:/') && !str_starts_with($mid, 'http://')) {
+            return 'http://' . substr($mid, 6);
+        }
+        return $mid;
     }
 }

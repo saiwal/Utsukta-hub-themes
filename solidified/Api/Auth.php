@@ -21,14 +21,26 @@ class Auth
         return self::requireLocal();
     }
 
-    // For POST/DELETE — auth + content-type + CSRF token
+    // For POST/DELETE — auth + CSRF token + body parsing (JSON or form-data)
     public static function requireLocalJson(): int
     {
-        self::requireJson();
         Csrf::validate();
-        // WebServer::createRequest() already consumed php://input; read from the cached request.
-        $raw = \App::$request ? (string) \App::$request->getBody() : file_get_contents('php://input');
-        self::$parsedBody = json_decode($raw, true) ?? [];
+        $ct = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (str_contains($ct, 'multipart/form-data') || str_contains($ct, 'application/x-www-form-urlencoded')) {
+            // Form submission — PHP populates $_POST automatically.
+            self::$parsedBody = $_POST;
+        } else {
+            // JSON body — try php://input, then the PSR-7 stream buffered by Hubzilla.
+            $raw = file_get_contents('php://input');
+            if (empty($raw) && \App::$request) {
+                $stream = \App::$request->getBody();
+                if ($stream->isSeekable()) {
+                    $stream->rewind();
+                }
+                $raw = (string) $stream;
+            }
+            self::$parsedBody = json_decode($raw ?: '', true) ?? [];
+        }
         return self::requireLocal();
     }
 
