@@ -113,6 +113,82 @@ class Wiki
         ];
     }
 
+    private function parseAclField(string $field): array
+    {
+        if (!$field) return [];
+        preg_match_all('/<([^>]+)>/', $field, $m);
+        return $m[1] ?? [];
+    }
+
+    private function buildAclField(array $ids): string
+    {
+        $ids = array_filter(array_map('strval', $ids));
+        return $ids ? '<' . implode('><', $ids) . '>' : '';
+    }
+
+    private function getAcl(array $owner, string $rid): void
+    {
+        $uid = intval($owner['channel_id']);
+        $r = q("SELECT allow_cid, allow_gid, deny_cid, deny_gid FROM item
+                WHERE resource_type = 'nwiki' AND resource_id = '%s' AND uid = %d LIMIT 1",
+               dbesc($rid), $uid);
+        if (!$r) {
+            Response::error(404, 'Wiki item not found');
+        }
+        $row = $r[0];
+        Response::send([
+            'allow_cid' => $this->parseAclField($row['allow_cid']),
+            'allow_gid' => $this->parseAclField($row['allow_gid']),
+            'deny_cid'  => $this->parseAclField($row['deny_cid']),
+            'deny_gid'  => $this->parseAclField($row['deny_gid']),
+        ]);
+    }
+
+    private function postAcl(array $owner, string $rid): void
+    {
+        $uid  = intval($owner['channel_id']);
+        $body = Auth::$parsedBody;
+
+        $allow_cid  = $this->buildAclField($body['allow_cid'] ?? []);
+        $allow_gid  = $this->buildAclField($body['allow_gid'] ?? []);
+        $deny_cid   = $this->buildAclField($body['deny_cid']  ?? []);
+        $deny_gid   = $this->buildAclField($body['deny_gid']  ?? []);
+        $is_private = ($allow_cid || $allow_gid || $deny_cid || $deny_gid) ? 1 : 0;
+
+        q("UPDATE item SET allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s', item_private = %d
+           WHERE resource_type = 'nwiki' AND resource_id = '%s' AND uid = %d",
+           dbesc($allow_cid), dbesc($allow_gid), dbesc($deny_cid), dbesc($deny_gid),
+           $is_private, dbesc($rid), $uid);
+
+        q("UPDATE item SET allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s', item_private = %d
+           WHERE resource_type = 'nwikipage' AND resource_id = '%s' AND uid = %d",
+           dbesc($allow_cid), dbesc($allow_gid), dbesc($deny_cid), dbesc($deny_gid),
+           $is_private, dbesc($rid), $uid);
+
+        Response::send(['ok' => true]);
+    }
+
+    /**
+     * True when the last URL segment matches $keyword (used to detect
+     * sub-actions like …/history, …/revert, …/rename).
+     */
+    private function lastArgIs(string $keyword): bool
+    {
+        $argc = count(\App::$argv);
+        return $argc >= 6 && (\App::$argv[$argc - 1] === $keyword);
+    }
+
+    /**
+     * Return the page URL-name parts excluding a trailing action keyword.
+     * e.g. for argv = [..., 'MyPage', 'history']  →  ['MyPage']
+     */
+    private function pagePartsWithout(string $keyword): array
+    {
+        $argc  = count(\App::$argv);
+        $parts = array_slice(\App::$argv, 4, $argc - 5);
+        return $parts;
+    }
+
     // ── GET ───────────────────────────────────────────────────────────────────
 
     public function get(): void
@@ -139,10 +215,26 @@ class Wiki
                     $wikis[] = $this->formatWiki($w);
                 }
             }
+
+            // Attach is_private flag from the item table in one query
+            if (!empty($wikis)) {
+                $privRows = q("SELECT resource_id, item_private FROM item
+                               WHERE resource_type = 'nwiki' AND uid = %d",
+                               intval($uid));
+                $privMap = [];
+                foreach ($privRows as $row) {
+                    $privMap[$row['resource_id']] = (bool) $row['item_private'];
+                }
+                foreach ($wikis as &$w) {
+                    $w['is_private'] = $privMap[$w['resource_id']] ?? false;
+                }
+                unset($w);
+            }
+
             $is_owner = (local_channel() && local_channel() === intval($uid));
             Response::send([
-                'wikis'    => $wikis,
-                'is_owner' => $is_owner,
+                'wikis'      => $wikis,
+                'is_owner'   => $is_owner,
                 'can_create' => perm_is_allowed($uid, $obs_hash, 'write_wiki'),
             ]);
         }
@@ -174,18 +266,53 @@ class Wiki
             ]);
         }
 
+        // ── GET /api/wiki/:nick/:wikiName/acl  →  wiki ACL ───────────────────
+        if ($argc === 5 && \App::$argv[4] === 'acl') {
+            if (!local_channel() || local_channel() !== intval($uid)) {
+                Response::error(403, 'Owner access required');
+            }
+            $this->getAcl($owner, $rid);
+            return;
+        }
+
+        // ── GET /api/wiki/:nick/:wikiName/:pageName/history  →  page history ───
+        if ($this->lastArgIs('history')) {
+            $pageParts   = $this->pagePartsWithout('history');
+            $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
+
+            $result = \NativeWikiPage::page_history([
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'resource_id'   => $rid,
+                'pageUrlName'   => $pageUrlName,
+            ]);
+
+            if (!$result['success']) {
+                Response::send(['history' => []]);
+            }
+
+            Response::send(['history' => $result['history'] ?? []]);
+        }
+
         // ── GET /api/wiki/:nick/:wikiName/:pageName  →  page content ──────────
-        // Build page name from all remaining argv segments (supports sub-paths)
-        $pageParts = array_slice(\App::$argv, 4);
+        // Optional ?revision=N returns a specific historical revision.
+        $pageParts   = array_slice(\App::$argv, 4);
         $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
         $wikiPath    = 'wiki/' . $owner['channel_address'] . '/' . \NativeWiki::name_encode($wikiName);
 
-        $p = \NativeWikiPage::get_page_content([
-            'channel_id'   => $uid,
+        $revisionParam = isset($_GET['revision']) ? intval($_GET['revision']) : null;
+
+        $pageArgs = [
+            'channel_id'    => $uid,
             'observer_hash' => $obs_hash,
-            'resource_id'  => $rid,
-            'pageUrlName'  => $pageUrlName,
-        ]);
+            'resource_id'   => $rid,
+            'pageUrlName'   => $pageUrlName,
+        ];
+        if ($revisionParam !== null) {
+            $pageArgs['revision'] = $revisionParam;
+        }
+
+        $p = \NativeWikiPage::get_page_content($pageArgs);
 
         if (!$p || !$p['success']) {
             // Page missing — return a 404 with enough info for the frontend to offer creation
@@ -212,6 +339,7 @@ class Wiki
             'html'         => $rendered,
             'can_write'    => (bool) $perms['write'],
             'commit'       => $p['commit'] ?? 'HEAD',
+            'revision'     => $revisionParam,
         ]);
     }
 
@@ -235,14 +363,27 @@ class Wiki
         // ── POST /api/wiki/:nick  →  create wiki ──────────────────────────────
         if ($argc === 3) {
             $wiki_name = trim($data['name'] ?? '');
-            $mime_type = $data['mime_type'] ?? 'text/markdown';
+            $mime_type = 'text/bbcode';
             $type_lock = (bool) ($data['type_lock'] ?? false);
 
             if (!$wiki_name) {
                 Response::error(400, 'Wiki name required');
             }
 
-            // AccessList will apply channel defaults; custom ACL can be added later via update_wiki
+            $acl = new \Zotlabs\Access\AccessList($owner);
+            $allow_cid_raw = $this->buildAclField($data['allow_cid'] ?? []);
+            $allow_gid_raw = $this->buildAclField($data['allow_gid'] ?? []);
+            $deny_cid_raw  = $this->buildAclField($data['deny_cid']  ?? []);
+            $deny_gid_raw  = $this->buildAclField($data['deny_gid']  ?? []);
+            if ($allow_cid_raw || $allow_gid_raw || $deny_cid_raw || $deny_gid_raw) {
+                $acl->set([
+                    'allow_cid' => $allow_cid_raw,
+                    'allow_gid' => $allow_gid_raw,
+                    'deny_cid'  => $deny_cid_raw,
+                    'deny_gid'  => $deny_gid_raw,
+                ]);
+            }
+
             $created = \NativeWiki::create_wiki(
                 $owner,
                 $obs_hash,
@@ -254,21 +395,28 @@ class Wiki
                     'typelock'     => $type_lock ? '1' : '0',
                     'postVisible'  => 1,
                 ],
-                new \Zotlabs\Access\AccessList($owner)
+                $acl
             );
 
             if (!$created['success']) {
                 Response::error(500, $created['message'] ?? 'Error creating wiki');
             }
 
+            $rid = $created['item']['resource_id'] ?? null;
+            if ($rid) {
+                \NativeWikiPage::create_page($owner, $obs_hash, 'Home', $rid, $mime_type);
+            }
+
             Response::send([
                 'success'     => true,
-                'resource_id' => $created['resource_id'] ?? '',
+                'resource_id' => $rid ?? '',
                 'url_name'    => \NativeWiki::name_encode($wiki_name),
             ], [], 201);
         }
 
-        // ── POST /api/wiki/:nick/:wikiName/:pageName  →  save page ────────────
+        // ── POST /api/wiki/:nick/:wikiName/:pageName/revert  →  revert page ────
+        // ── POST /api/wiki/:nick/:wikiName/:pageName/rename  →  rename page ───
+        // ── POST /api/wiki/:nick/:wikiName/:pageName         →  save page  ────
         $wikiName    = \NativeWiki::name_decode(\App::$argv[3] ?? '');
         $w           = $this->resolveWiki($owner, $wikiName);
         $rid         = $w['resource_id'];
@@ -278,21 +426,117 @@ class Wiki
             Response::error(403, 'Permission denied');
         }
 
+        // ── POST /api/wiki/:nick/:wikiName/acl  →  save wiki ACL ─────────────
+        if ($argc === 5 && \App::$argv[4] === 'acl') {
+            $this->postAcl($owner, $rid);
+            return;
+        }
+
+        // Revert
+        if ($this->lastArgIs('revert')) {
+            $pageParts   = $this->pagePartsWithout('revert');
+            $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
+            $revision    = intval($data['revision'] ?? 0);
+
+            if ($revision <= 0) {
+                Response::error(400, 'revision required');
+            }
+
+            $reverted = \NativeWikiPage::revert_page([
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'resource_id'   => $rid,
+                'pageUrlName'   => $pageUrlName,
+                'commitHash'    => $revision,
+            ]);
+
+            if (!$reverted['success']) {
+                Response::error(500, $reverted['message'] ?? 'Error reverting page');
+            }
+
+            $saved = \NativeWikiPage::save_page([
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'resource_id'   => $rid,
+                'pageUrlName'   => $pageUrlName,
+                'content'       => $reverted['content'],
+                'mimeType'      => $w['mimeType'] ?? 'text/markdown',
+            ]);
+
+            if (!$saved['success']) {
+                Response::error(500, $saved['message'] ?? 'Error saving reverted content');
+            }
+
+            $commit = \NativeWikiPage::commit([
+                'commit_msg'    => 'Reverted to revision ' . $revision,
+                'pageUrlName'   => $pageUrlName,
+                'resource_id'   => $rid,
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'revision'      => -1,
+            ]);
+
+            if ($commit['success']) {
+                \NativeWiki::sync_a_wiki_item($uid, $commit['item_id'], $rid);
+            }
+
+            Response::send(['success' => true]);
+        }
+
+        // Rename
+        if ($this->lastArgIs('rename')) {
+            $pageParts   = $this->pagePartsWithout('rename');
+            $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
+            $newName     = trim($data['new_name'] ?? '');
+
+            if (!$newName) {
+                Response::error(400, 'new_name required');
+            }
+
+            $result = \NativeWikiPage::rename_page([
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'resource_id'   => $rid,
+                'pageUrlName'   => $pageUrlName,
+                'pageNewName'   => $newName,
+            ]);
+
+            if (!$result['success']) {
+                Response::error(422, $result['message'] ?? 'Error renaming page');
+            }
+
+            Response::send([
+                'success'  => true,
+                'url_name' => $result['page']['urlName'] ?? \NativeWiki::name_encode($newName),
+            ]);
+        }
+
         $pageParts   = array_slice(\App::$argv, 4);
         $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
         $content     = $data['content']    ?? '';
         $commit_msg  = $data['commit_msg'] ?? '';
-        $mime_type   = $data['mime_type']  ?? ($w['mimeType'] ?? 'text/markdown');
+        $mime_type   = $data['mime_type']  ?? ($w['mimeType'] ?? 'text/bbcode');
 
-        // Save
-        $saved = \NativeWikiPage::save_page([
+        $pageArgs = [
             'channel_id'    => $uid,
             'observer_hash' => $obs_hash,
             'resource_id'   => $rid,
             'pageUrlName'   => $pageUrlName,
             'content'       => $content,
             'mimeType'      => $mime_type,
-        ]);
+        ];
+
+        // save_page only works on existing pages; if the page doesn't exist yet
+        // (new page flow) we must create the page item first.
+        $saved = \NativeWikiPage::save_page($pageArgs);
+
+        if (!$saved['success'] && str_contains($saved['message'] ?? '', 'Page not found')) {
+            $created = \NativeWikiPage::create_page($owner, $obs_hash, $pageUrlName, $rid, $mime_type);
+            if (!$created['success']) {
+                Response::error(500, $created['message'] ?? 'Error creating page');
+            }
+            $saved = \NativeWikiPage::save_page($pageArgs);
+        }
 
         if (!$saved['success']) {
             Response::error(500, $saved['message'] ?? 'Error saving page');
@@ -326,11 +570,26 @@ class Wiki
         $owner = $this->resolveOwner();
 
         if (intval($owner['channel_id']) !== $uid) {
-            Response::error(403, 'Only the channel owner can delete pages');
+            Response::error(403, 'Only the channel owner can delete');
         }
 
         $this->requireAddon($uid);
-        $obs_hash    = get_observer_hash();
+        $obs_hash = get_observer_hash();
+        $argc     = count(\App::$argv);
+
+        // ── DELETE /api/wiki/:nick/:wikiName  →  delete entire wiki ──────────
+        if ($argc === 4) {
+            $wikiName = \NativeWiki::name_decode(\App::$argv[3] ?? '');
+            $w        = $this->resolveWiki($owner, $wikiName);
+            $rid      = $w['resource_id'];
+
+            $result = \NativeWiki::delete_wiki($uid, $obs_hash, $rid);
+            if (!$result['success']) {
+                Response::error(500, 'Error deleting wiki');
+            }
+            Response::send(['success' => true]);
+        }
+
         $wikiName    = \NativeWiki::name_decode(\App::$argv[3] ?? '');
         $w           = $this->resolveWiki($owner, $wikiName);
         $rid         = $w['resource_id'];
