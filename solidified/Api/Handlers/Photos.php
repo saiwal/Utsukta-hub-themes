@@ -708,6 +708,22 @@ class Photos
             intval($uid));
         $groups = array_map(fn($g) => ['id' => strval($g['id']), 'name' => $g['gname']], $gRows ?: []);
 
+        $cRows = q("SELECT x.xchan_hash, x.xchan_name, x.xchan_photo_m
+                    FROM abook a
+                    JOIN xchan x ON x.xchan_hash = a.abook_xchan
+                    WHERE a.abook_channel = %d
+                      AND a.abook_self = 0
+                      AND a.abook_pending = 0
+                      AND a.abook_archived = 0
+                      AND a.abook_deleted = 0
+                    ORDER BY x.xchan_name ASC",
+            intval($uid));
+        $connections = array_map(fn($c) => [
+            'hash'  => $c['xchan_hash'],
+            'name'  => $c['xchan_name'],
+            'photo' => $c['xchan_photo_m'] ?? '',
+        ], $cRows ?: []);
+
         if ($type === 'image') {
             $r = q("SELECT allow_cid, allow_gid, deny_cid, deny_gid FROM photo
                     WHERE uid = %d AND resource_id = '%s' LIMIT 1",
@@ -722,11 +738,12 @@ class Photos
 
         $row = $r[0];
         Response::send([
-            'allow_cid' => $this->parseAclField($row['allow_cid']),
-            'allow_gid' => $this->parseAclField($row['allow_gid']),
-            'deny_cid'  => $this->parseAclField($row['deny_cid']),
-            'deny_gid'  => $this->parseAclField($row['deny_gid']),
-            'groups'    => $groups,
+            'allow_cid'   => $this->parseAclField($row['allow_cid']),
+            'allow_gid'   => $this->parseAclField($row['allow_gid']),
+            'deny_cid'    => $this->parseAclField($row['deny_cid']),
+            'deny_gid'    => $this->parseAclField($row['deny_gid']),
+            'groups'      => $groups,
+            'connections' => $connections,
         ]);
     }
 
