@@ -13,10 +13,11 @@ class Pconfig
         $cuid = intval($ch['channel_id']);
 
         $valid_fits    = ['tile', 'cover'];
-        $valid_sizes   = ['small', 'medium', 'large'];
+        $valid_sizes   = ['small', 'medium', 'large', 'xl'];
         $valid_families = [
-            'system','serif','monospace','nunito','playfair','comfortaa',
-            'space-mono','pacifico','righteous','comic','opendyslexic',
+            'system','serif','monospace','nunito','saira','share-tech',
+            'playfair','libre-baskerville','comfortaa','space-mono','iosevka',
+            'righteous','playwrite-england','comic','opendyslexic',
         ];
         $valid_schemes = [
             'light','pastel-soft','warm-paper','mint','sakura','latte-cream',
