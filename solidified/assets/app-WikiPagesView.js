@@ -1,1 +1,1 @@
-import{h as i,i as t,r}from"./app.js";import"./app-vendor-dompurify.js";function o(){const a=i(),e=t();return r(()=>{e(`/wiki/${a.nick}/${a.wikiName}/Home`,{replace:!0})}),null}export{o as default};
+import{U as e}from"./app-web.js";import{f as t,p as n}from"./app-routing.js";function r(){let r=n(),i=t();return e(()=>{i(`/wiki/${r.nick}/${r.wikiName}/Home`,{replace:!0})}),null}export{r as default};

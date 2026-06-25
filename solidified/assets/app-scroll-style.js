@@ -1,1 +1,1 @@
-import{j as t}from"./app.js";const[e,s]=t(localStorage.getItem("hz-scroll-style")??"endless");function r(){return e}function c(l){s(l),localStorage.setItem("hz-scroll-style",l)}export{c as s,r as u};
+import{I as e}from"./app-web.js";var[t,n]=e(localStorage.getItem(`hz-scroll-style`)??`endless`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-scroll-style`,e)}export{r as n,i as t};
