@@ -96,7 +96,7 @@ class Settings
             'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
             'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
             'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-            'custom',
+            'high-contrast', 'high-contrast-light', 'custom',
         ];
         $color_scheme = get_pconfig($uid, 'spa', 'color_scheme', 'light');
         if (!in_array($color_scheme, $valid_color_schemes, true)) $color_scheme = 'light';
@@ -747,7 +747,7 @@ class Settings
             'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
             'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
             'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-            'custom',
+            'high-contrast', 'high-contrast-light', 'custom',
         ];
         if (isset($data['color_scheme']) && in_array($data['color_scheme'], $valid_color_schemes_post, true))
             set_pconfig($uid, 'spa', 'color_scheme', $data['color_scheme']);
