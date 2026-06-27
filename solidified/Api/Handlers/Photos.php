@@ -59,7 +59,7 @@ class Photos
         $ph_drv = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
-        $r = dbq('SELECT resource_id, filename, mimetype, imgscale, description, album, created
+        $r = dbq('SELECT resource_id, filename, mimetype, imgscale, title, description, is_nsfw, album, created
               FROM photo
               WHERE uid = ' . intval($channel['channel_id']) . '
                 AND photo_usage IN (' . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
@@ -74,7 +74,9 @@ class Photos
             $out[] = [
                 'resource_id' => $row['resource_id'],
                 'filename' => $row['filename'],
+                'title' => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
+                'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
                 'album' => $row['album'],
                 'created' => $row['created'],
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -161,7 +163,7 @@ class Photos
         $phototypes = $ph_drv->supportedTypes();
 
         $r = dbq("SELECT p.resource_id, p.filename, p.mimetype, p.imgscale,
-                     p.description, p.album, p.created
+                     p.title, p.description, p.is_nsfw, p.album, p.created
               FROM photo p
               INNER JOIN attach a ON a.hash = p.resource_id
               WHERE a.folder = '" . dbesc($albumHash) . "'
@@ -177,7 +179,9 @@ class Photos
             $out[] = [
                 'resource_id' => $row['resource_id'],
                 'filename' => $row['filename'],
+                'title' => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
+                'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
                 'album' => $row['album'],
                 'created' => $row['created'],
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -333,6 +337,7 @@ class Photos
         Response::send([
             'resource_id' => $ph[0]['resource_id'],
             'filename' => $ph[0]['filename'],
+            'title' => $ph[0]['title'] ?? '',
             'description' => $ph[0]['description'],
             'album' => $ph[0]['album'],
             'album_link' => $x ? z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $x[0]['folder'] : null,
@@ -378,6 +383,27 @@ class Photos
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'rename') {
             Auth::requireLocalJson();
             $this->renamePhoto(\App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /api/photos/:nick/image/:id/title — update title (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'title') {
+            Auth::requireLocalJson();
+            $this->updateTitle(\App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /api/photos/:nick/image/:id/description — update description (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'description') {
+            Auth::requireLocalJson();
+            $this->updateDescription(\App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /api/photos/:nick/image/:id/nsfw — toggle NSFW flag (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'nsfw') {
+            Auth::requireLocalJson();
+            $this->updateNsfw(\App::$argv[4] ?? '');
             return;
         }
 
@@ -656,7 +682,7 @@ class Photos
         $phototypes = $ph_drv->supportedTypes();
 
         $r = dbq("SELECT p.resource_id, p.filename, p.mimetype, p.imgscale,
-                         p.description, p.album, p.created
+                         p.title, p.description, p.is_nsfw, p.album, p.created
                   FROM photo p
                   INNER JOIN attach a ON a.hash = p.resource_id
                   WHERE a.folder = ''
@@ -672,7 +698,9 @@ class Photos
             $out[]  = [
                 'resource_id' => $row['resource_id'],
                 'filename'    => $row['filename'],
+                'title'       => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
+                'is_nsfw'     => (bool) intval($row['is_nsfw'] ?? 0),
                 'album'       => $row['album'],
                 'created'     => $row['created'],
                 'src'         => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -784,6 +812,63 @@ class Photos
         if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
 
         Response::send(['ok' => true]);
+    }
+
+    // ── POST /api/photos/:nick/image/:id/title ────────────────────────────────
+
+    private function updateTitle(string $resourceId): void
+    {
+        $uid   = local_channel();
+        $title = trim(Auth::$parsedBody['title'] ?? '');
+
+        $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+            intval($uid), dbesc($resourceId));
+
+        if (!$r)
+            Response::error(404, 'Photo not found or not yours');
+
+        q("UPDATE photo SET title = '%s' WHERE uid = %d AND resource_id = '%s'",
+            dbesc($title), intval($uid), dbesc($resourceId));
+
+        Response::send(['title' => $title]);
+    }
+
+    // ── POST /api/photos/:nick/image/:id/description ──────────────────────────
+
+    private function updateDescription(string $resourceId): void
+    {
+        $uid  = local_channel();
+        $desc = trim(Auth::$parsedBody['description'] ?? '');
+
+        $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+            intval($uid), dbesc($resourceId));
+
+        if (!$r)
+            Response::error(404, 'Photo not found or not yours');
+
+        q("UPDATE photo SET description = '%s' WHERE uid = %d AND resource_id = '%s'",
+            dbesc($desc), intval($uid), dbesc($resourceId));
+
+        Response::send(['description' => $desc]);
+    }
+
+    // ── POST /api/photos/:nick/image/:id/nsfw ────────────────────────────────
+
+    private function updateNsfw(string $resourceId): void
+    {
+        $uid      = local_channel();
+        $is_nsfw  = !empty(Auth::$parsedBody['is_nsfw']) ? 1 : 0;
+
+        $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
+            intval($uid), dbesc($resourceId));
+
+        if (!$r)
+            Response::error(404, 'Photo not found or not yours');
+
+        q("UPDATE photo SET is_nsfw = %d WHERE uid = %d AND resource_id = '%s'",
+            intval($is_nsfw), intval($uid), dbesc($resourceId));
+
+        Response::send(['is_nsfw' => (bool) $is_nsfw]);
     }
 
     // ── POST /api/photos/:nick/image/:id/rename ───────────────────────────────
