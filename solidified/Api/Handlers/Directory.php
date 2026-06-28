@@ -10,7 +10,8 @@ use Theme\Solidified\Api\Response;
  * giving consistent sorted results across all pages.
  *
  * Params: search, keywords, order (date|rdate|alphabetic|ralpha),
- *         global (1|0), start, suggest (1|0)
+ *         global (1|0), network (zot6|activitypub), safe (1|0),
+ *         pubforums (1|0), start, suggest (1|0)
  */
 class Directory
 {
@@ -30,6 +31,9 @@ class Directory
         $start     = max(0, intval($_GET['start'] ?? 0));
         $globaldir = array_key_exists('global', $_GET) ? intval($_GET['global']) : 1;
         $suggest   = $local_channel && !empty($_GET['suggest']);
+        $network   = in_array($_GET['network'] ?? '', ['zot6', 'activitypub']) ? $_GET['network'] : '';
+        $safe      = !empty($_GET['safe']) ? 1 : 0;
+        $pubforums = !empty($_GET['pubforums']) ? 1 : 0;
 
         if ($suggest) {
             require_once 'include/socgraph.php';
@@ -62,6 +66,20 @@ class Directory
         if ($keywords !== '') {
             $k       = protect_sprintf(dbesc($keywords));
             $conds[] = "p.xprof_keywords LIKE '%$k%'";
+        }
+
+        if ($network !== '') {
+            $n       = protect_sprintf(dbesc($network));
+            $conds[] = "x.xchan_network = '$n'";
+        }
+
+        if ($safe) {
+            $conds[] = 'x.xchan_censored = 0';
+            $conds[] = 'x.xchan_selfcensored = 0';
+        }
+
+        if ($pubforums) {
+            $conds[] = 'x.xchan_pubforum = 1';
         }
 
         $where = 'WHERE ' . implode(' AND ', $conds);
@@ -175,6 +193,7 @@ class Directory
                 'hash'         => $hash,
                 'name'         => $rr['xchan_name']   ?? '',
                 'address'      => $addr,
+                'network'      => $rr['xchan_network'] ?? '',
                 'photo'        => $rr['xchan_photo_m'] ?? '',
                 'description'  => $rr['xprof_desc']   ?? '',
                 'about'        => $about,
