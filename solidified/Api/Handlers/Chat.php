@@ -174,6 +174,9 @@ class Chat
             case 'drop':
                 $this->dropRoom();
                 break;
+            case 'update':
+                $this->updateRoom();
+                break;
             default:
                 Response::error(400, 'Unknown action');
         }
@@ -318,6 +321,37 @@ class Chat
         ]);
     }
 
+    private function updateRoom(): void
+    {
+        $uid = Auth::requireLocalJson();
+        if ($uid !== $this->subjectUid)
+            Response::error(403, 'Not your channel');
+
+        $room = q(
+            "SELECT * FROM chatroom WHERE cr_id = %d AND cr_uid = %d LIMIT 1",
+            intval($this->roomId),
+            intval($uid)
+        );
+        if (!$room)
+            Response::error(404, 'Room not found');
+
+        $data   = Auth::$parsedBody;
+        $expire = isset($data['expire']) ? max(0, intval($data['expire'])) : intval($room[0]['cr_expire']);
+        $name   = isset($data['name']) ? notags(trim($data['name'])) : $room[0]['cr_name'];
+        if (!$name)
+            Response::error(400, 'Room name required');
+
+        q(
+            "UPDATE chatroom SET cr_name = '%s', cr_expire = %d WHERE cr_id = %d AND cr_uid = %d",
+            dbesc($name),
+            intval($expire),
+            intval($this->roomId),
+            intval($uid)
+        );
+
+        Response::send(['id' => $this->roomId, 'name' => $name, 'expire' => $expire]);
+    }
+
     private function dropRoom(): void
     {
         $uid = Auth::requireLocalJson();
@@ -458,11 +492,13 @@ class Chat
         $viewer_hash = $observer ? $observer['xchan_hash'] : '';
 
         Response::send([
-            'messages'    => $messages,
-            'presence'    => $present,
-            'viewer_hash' => $viewer_hash,
-            'room_name'   => $room[0]['cr_name'],
-            'room_acl'    => [
+            'messages'      => $messages,
+            'presence'      => $present,
+            'viewer_hash'   => $viewer_hash,
+            'room_name'     => $room[0]['cr_name'],
+            'room_expire'   => intval($room[0]['cr_expire']),
+            'is_room_owner' => (bool)(local_channel() && local_channel() == $this->subjectUid),
+            'room_acl'      => [
                 'allow_cid' => $this->expandAclString($room[0]['allow_cid'] ?? ''),
                 'allow_gid' => $this->expandAclString($room[0]['allow_gid'] ?? ''),
                 'deny_cid'  => $this->expandAclString($room[0]['deny_cid']  ?? ''),
