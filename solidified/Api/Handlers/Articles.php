@@ -116,6 +116,8 @@ if ($slug) {
         $search   = $_GET['search'] ?? '';
         $hashtags = $_GET['tag']    ?? '';
         $category = $_GET['cat']    ?? '';
+        $dbegin   = $_GET['dbegin'] ?? '';
+        $dend     = $_GET['dend']   ?? '';
 
         if ($search && str_starts_with($search, '#')) {
             $hashtags = substr($search, 1);
@@ -140,6 +142,12 @@ if ($slug) {
                 dbesc(protect_sprintf('%' . $search . '%')),
                 dbesc(protect_sprintf('%' . $search . '%'))
             );
+        }
+        if ($dbegin) {
+            $sql_extra .= " AND item.created >= '" . dbesc($dbegin) . "' ";
+        }
+        if ($dend) {
+            $sql_extra .= " AND item.created < '"  . dbesc($dend)   . "' ";
         }
 
         $r = dbq("SELECT item.id AS item_id FROM item
