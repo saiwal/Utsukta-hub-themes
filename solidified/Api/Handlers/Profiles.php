@@ -13,10 +13,15 @@ class Profiles
         require_once('include/features.php');
 
         $multi_enabled = (bool) feature_enabled($uid, 'multi_profiles');
-        $id = \App::$argv[2] ?? null;
+        $id  = \App::$argv[2] ?? null;
+        $sub = \App::$argv[3] ?? null;
 
         if ($id && ctype_digit((string) $id)) {
-            $this->getProfile($uid, intval($id));
+            if ($sub === 'contacts') {
+                $this->getProfileContacts($uid, intval($id));
+            } else {
+                $this->getProfile($uid, intval($id));
+            }
         } else {
             $this->listProfiles($uid, $multi_enabled);
         }
@@ -140,6 +145,8 @@ class Profiles
             if (!$multi_enabled)
                 Response::error(403, 'Multiple profiles feature is not enabled');
             $this->deleteProfile($uid, intval($segment));
+        } elseif ($segment && ctype_digit((string) $segment) && $action === 'contacts') {
+            $this->toggleProfileContact($uid, intval($segment), $data);
         } elseif ($segment && ctype_digit((string) $segment)) {
             $this->updateProfile($uid, intval($segment), $data);
         } else {
@@ -276,6 +283,77 @@ class Profiles
         }
 
         Response::send(['status' => 'ok']);
+    }
+
+    private function getProfileContacts(int $uid, int $profile_id): void
+    {
+        $profile = q(
+            "SELECT id FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            intval($profile_id),
+            intval($uid)
+        );
+        if (!$profile) Response::error(404, 'Profile not found');
+
+        $rows = q(
+            "SELECT abook.abook_id, xchan.xchan_hash, xchan.xchan_name,
+                    xchan.xchan_addr, xchan.xchan_photo_m
+             FROM abook
+             LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             WHERE abook.abook_channel = %d
+               AND abook.abook_profile = %d
+               AND abook.abook_self    = 0
+               AND xchan.xchan_deleted = 0
+             ORDER BY xchan.xchan_name ASC",
+            intval($uid),
+            intval($profile_id)
+        );
+
+        Response::send(array_map(fn($r) => [
+            'abook_id' => intval($r['abook_id']),
+            'xchan_hash' => $r['xchan_hash'],
+            'name'       => $r['xchan_name'] ?? '',
+            'address'    => $r['xchan_addr'] ?? '',
+            'photo'      => $r['xchan_photo_m'] ?? '',
+        ], $rows ?? []));
+    }
+
+    private function toggleProfileContact(int $uid, int $profile_id, array $data): void
+    {
+        $profile = q(
+            "SELECT id, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            intval($profile_id),
+            intval($uid)
+        );
+        if (!$profile) Response::error(404, 'Profile not found');
+        if ($profile[0]['is_default']) Response::error(400, 'Cannot assign contacts to the default profile');
+
+        $abook_id = intval($data['abook_id'] ?? 0);
+        if (!$abook_id) Response::error(400, 'abook_id required');
+
+        $abook = q(
+            "SELECT abook_id, abook_profile FROM abook
+             WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$abook) Response::error(404, 'Connection not found');
+
+        // Toggle: clear if already assigned to this profile, otherwise assign
+        $currently = intval($abook[0]['abook_profile']) === $profile_id;
+        $new_id    = $currently ? 0 : $profile_id;
+
+        q(
+            "UPDATE abook SET abook_profile = %d WHERE abook_id = %d AND abook_channel = %d",
+            intval($new_id),
+            intval($abook_id),
+            intval($uid)
+        );
+
+        Response::send([
+            'abook_id'   => $abook_id,
+            'profile_id' => $new_id > 0 ? $new_id : null,
+            'assigned'   => $new_id > 0,
+        ]);
     }
 
     private function deleteProfile(int $uid, int $id): void

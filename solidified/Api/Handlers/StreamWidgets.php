@@ -24,6 +24,7 @@ class StreamWidgets
             'tags'       => $this->getTags(),
             'categories' => $this->getCategories(),
             'popular'    => $this->getPopular(),
+            'archive'    => $this->getArchive(),
             default      => Response::error(404, "Unknown sub-resource: {$sub}"),
         };
     }
@@ -152,6 +153,44 @@ class StreamWidgets
         ], $items);
 
         Response::send(['popular' => $popular]);
+    }
+
+    // ── /api/stream-widgets/archive ──────────────────────────────────────────
+
+    private function getArchive(): void
+    {
+        $uid           = $this->resolveUid();
+        $type          = $this->itemType();
+        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $perm_sql      = item_permissions_sql($uid);
+
+        $rows = dbq(
+            "SELECT YEAR(item.created) AS yr, MONTH(item.created) AS mo, COUNT(*) AS total
+             FROM item
+             WHERE item.uid             = " . intval($uid) . "
+               AND item.item_thread_top = 1
+               AND item.item_wall       = 1
+               AND item.item_deleted    = 0
+               AND item.verb           != 'Add'
+               $perm_sql $item_normal
+             GROUP BY yr, mo
+             ORDER BY yr DESC, mo DESC"
+        );
+
+        $years = [];
+        foreach ($rows ?: [] as $row) {
+            $yr = (int) $row['yr'];
+            $mo = (int) $row['mo'];
+            $n  = (int) $row['total'];
+            if (!isset($years[$yr])) {
+                $years[$yr] = ['year' => $yr, 'count' => 0, 'months' => []];
+            }
+            $years[$yr]['count']    += $n;
+            $years[$yr]['months'][]  = ['month' => $mo, 'count' => $n];
+        }
+
+        Response::send(['archive' => array_values($years)]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

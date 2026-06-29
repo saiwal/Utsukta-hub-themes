@@ -11,6 +11,8 @@ class Connections
     // GET /api/connections?address=<xchan_addr>  — exact single-connection lookup
     // GET /api/connections/permcats              — list available permission roles
     // GET /api/connections/:id/perms             — bidirectional perms + incl/excl filters
+    // GET /api/connections/:id/groups            — privacy group IDs for a connection
+    // GET /api/connections/:id/profile           — assigned profile id for a connection
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -27,6 +29,8 @@ class Connections
                 $this->getPerms($uid, intval($sub));
             } elseif ($sub_action === 'groups') {
                 $this->getConnectionGroups($uid, intval($sub));
+            } elseif ($sub_action === 'profile') {
+                $this->getConnectionProfile($uid, intval($sub));
             }
         }
 
@@ -37,7 +41,7 @@ class Connections
                 "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
                         abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                         abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
-                        abook.abook_role,
+                        abook.abook_role, abook.abook_profile,
                         xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                         xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                         xchan.xchan_pubforum
@@ -99,7 +103,7 @@ class Connections
             "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
                     abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                     abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
-                    abook.abook_role,
+                    abook.abook_role, abook.abook_profile,
                     xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                     xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                     xchan.xchan_pubforum, xchan.xchan_updated
@@ -197,15 +201,17 @@ class Connections
 
     private function update(int $uid, int $abook_id, array $abook): never
     {
-        $body      = Auth::$parsedBody;
-        $role      = array_key_exists('role',      $body) ? trim((string) $body['role'])   : null;
-        $closeness = array_key_exists('closeness', $body) ? intval($body['closeness'])     : null;
-        $blocked   = array_key_exists('blocked',   $body) ? (bool) $body['blocked']        : null;
-        $ignored   = array_key_exists('ignored',   $body) ? (bool) $body['ignored']        : null;
-        $archived  = array_key_exists('archived',  $body) ? (bool) $body['archived']       : null;
-        $hidden    = array_key_exists('hidden',    $body) ? (bool) $body['hidden']         : null;
-        $incl      = array_key_exists('incl',      $body) ? trim((string) $body['incl'])   : null;
-        $excl      = array_key_exists('excl',      $body) ? trim((string) $body['excl'])   : null;
+        $body       = Auth::$parsedBody;
+        $role       = array_key_exists('role',       $body) ? trim((string) $body['role'])   : null;
+        $closeness  = array_key_exists('closeness',  $body) ? intval($body['closeness'])     : null;
+        $blocked    = array_key_exists('blocked',    $body) ? (bool) $body['blocked']        : null;
+        $ignored    = array_key_exists('ignored',    $body) ? (bool) $body['ignored']        : null;
+        $archived   = array_key_exists('archived',   $body) ? (bool) $body['archived']       : null;
+        $hidden     = array_key_exists('hidden',     $body) ? (bool) $body['hidden']         : null;
+        $incl       = array_key_exists('incl',       $body) ? trim((string) $body['incl'])   : null;
+        $excl       = array_key_exists('excl',       $body) ? trim((string) $body['excl'])   : null;
+        // null means "leave unchanged"; 0 means "clear to default profile"
+        $profile_id = array_key_exists('profile_id', $body) ? ($body['profile_id'] !== null ? intval($body['profile_id']) : 0) : null;
 
         $channel = channelx_by_n($uid);
         if (!$channel) Response::error(500, 'Channel not found');
@@ -233,12 +239,13 @@ class Connections
 
         // Direct flag updates (blocked, ignored, archived, hidden, filters)
         $flag_sets = [];
-        if ($blocked  !== null) $flag_sets[] = sprintf("abook_blocked = %d",  intval($blocked));
-        if ($ignored  !== null) $flag_sets[] = sprintf("abook_ignored = %d",  intval($ignored));
-        if ($archived !== null) $flag_sets[] = sprintf("abook_archived = %d", intval($archived));
-        if ($hidden   !== null) $flag_sets[] = sprintf("abook_hidden = %d",   intval($hidden));
-        if ($incl     !== null) $flag_sets[] = sprintf("abook_incl = '%s'",   dbesc($incl));
-        if ($excl     !== null) $flag_sets[] = sprintf("abook_excl = '%s'",   dbesc($excl));
+        if ($blocked    !== null) $flag_sets[] = sprintf("abook_blocked = %d",  intval($blocked));
+        if ($ignored    !== null) $flag_sets[] = sprintf("abook_ignored = %d",  intval($ignored));
+        if ($archived   !== null) $flag_sets[] = sprintf("abook_archived = %d", intval($archived));
+        if ($hidden     !== null) $flag_sets[] = sprintf("abook_hidden = %d",   intval($hidden));
+        if ($incl       !== null) $flag_sets[] = sprintf("abook_incl = '%s'",   dbesc($incl));
+        if ($excl       !== null) $flag_sets[] = sprintf("abook_excl = '%s'",   dbesc($excl));
+        if ($profile_id !== null) $flag_sets[] = sprintf("abook_profile = %d",  intval($profile_id));
         if ($flag_sets) {
             q(
                 "UPDATE abook SET " . implode(', ', $flag_sets) . " WHERE abook_id = %d AND abook_channel = %d",
@@ -343,6 +350,19 @@ class Connections
         Response::send(array_map(fn($g) => intval($g['id']), $rows ?? []));
     }
 
+    private function getConnectionProfile(int $uid, int $abook_id): never
+    {
+        $row = q(
+            "SELECT abook_profile FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$row) Response::error(404, 'Connection not found');
+
+        $profile_id = intval($row[0]['abook_profile'] ?? 0);
+        Response::send(['profile_id' => $profile_id > 0 ? $profile_id : null]);
+    }
+
     private function filterClause(string $filter): string
     {
         return match ($filter) {
@@ -373,6 +393,7 @@ class Connections
             intval($row['abook_not_here']) ? 'not_here' : null,
         ]));
 
+        $raw_profile = intval($row['abook_profile'] ?? 0);
         return [
             'id'         => intval($row['abook_id']),
             'xchan_hash' => $row['xchan_hash'],
@@ -387,6 +408,7 @@ class Connections
             'role'       => $row['abook_role'] ?? '',
             'status'     => $status,
             'pending'    => (bool) intval($row['abook_pending']),
+            'profile_id' => $raw_profile > 0 ? $raw_profile : null,
         ];
     }
 }
