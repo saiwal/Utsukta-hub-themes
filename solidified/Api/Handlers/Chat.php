@@ -209,22 +209,23 @@ class Chat
             if ($default_group) {
                 $allow_gid = '<' . $default_group . '>';
             }
-        } elseif ($visibility === 'private') {
-            // Specific contacts passed as array of xchan hashes
-            $allow_hashes = $data['allow_cid'] ?? [];
-            if (!is_array($allow_hashes))
-                $allow_hashes = [];
-            foreach ($allow_hashes as $h) {
+        } elseif ($visibility === 'custom' || $visibility === 'private') {
+            // Granular allow/deny per contact and group
+            foreach ((array)($data['allow_cid'] ?? []) as $h) {
                 $h = notags(trim($h));
                 if ($h) $allow_cid .= '<' . $h . '>';
             }
-            // Optional group hashes
-            $allow_group_hashes = $data['allow_gid'] ?? [];
-            if (!is_array($allow_group_hashes))
-                $allow_group_hashes = [];
-            foreach ($allow_group_hashes as $h) {
+            foreach ((array)($data['allow_gid'] ?? []) as $h) {
                 $h = notags(trim($h));
                 if ($h) $allow_gid .= '<' . $h . '>';
+            }
+            foreach ((array)($data['deny_cid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $deny_cid .= '<' . $h . '>';
+            }
+            foreach ((array)($data['deny_gid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $deny_gid .= '<' . $h . '>';
             }
         }
         // 'public' → all four remain empty strings
@@ -461,7 +462,20 @@ class Chat
             'presence'    => $present,
             'viewer_hash' => $viewer_hash,
             'room_name'   => $room[0]['cr_name'],
+            'room_acl'    => [
+                'allow_cid' => $this->expandAclString($room[0]['allow_cid'] ?? ''),
+                'allow_gid' => $this->expandAclString($room[0]['allow_gid'] ?? ''),
+                'deny_cid'  => $this->expandAclString($room[0]['deny_cid']  ?? ''),
+                'deny_gid'  => $this->expandAclString($room[0]['deny_gid']  ?? ''),
+            ],
         ]);
+    }
+
+    private function expandAclString(string $s): array
+    {
+        if (!$s) return [];
+        $parts = explode('>', str_replace('<', '', $s));
+        return array_values(array_filter(array_map('trim', $parts)));
     }
 
     private function sendMessage(): void
