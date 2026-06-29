@@ -52,6 +52,8 @@ class Directory
         $conds = [
             'x.xchan_deleted = 0',
             'x.xchan_orphan  = 0',
+            'x.xchan_hidden  = 0',
+            'x.xchan_system  = 0',
         ];
 
         if (!$globaldir) {

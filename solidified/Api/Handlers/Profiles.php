@@ -101,6 +101,7 @@ class Profiles
             'about'        => $p['about'] ?? '',
             'keywords'     => $p['keywords'] ?? '',
             'hide_friends' => intval($p['hide_friends'] ?? 0),
+            'publish'      => intval($p['publish'] ?? 0),
             'marital'      => $p['marital'] ?? '',
             'sexual'       => $p['sexual'] ?? '',
             'politic'      => $p['politic'] ?? '',
@@ -230,6 +231,7 @@ class Profiles
             'about'        => escape_tags($data['about']        ?? $p['about']),
             'keywords'     => notags(trim($data['keywords']     ?? $p['keywords'])),
             'hide_friends' => intval($data['hide_friends']      ?? $p['hide_friends']),
+            'publish'      => intval($data['publish']           ?? $p['publish']),
             'marital'      => notags(trim($data['marital']      ?? $p['marital'])),
             'sexual'       => notags(trim($data['sexual']       ?? $p['sexual'])),
             'politic'      => notags(trim($data['politic']      ?? $p['politic'])),
@@ -252,7 +254,7 @@ class Profiles
             "UPDATE profile SET
              profile_name = '%s', fullname = '%s', pdesc = '%s',
              homepage = '%s', hometown = '%s', gender = '%s', dob = '%s',
-             about = '%s', keywords = '%s', hide_friends = %d,
+             about = '%s', keywords = '%s', hide_friends = %d, publish = %d,
              marital = '%s', sexual = '%s', politic = '%s', religion = '%s',
              music = '%s', book = '%s', tv = '%s', film = '%s',
              interest = '%s', romance = '%s', employment = '%s', education = '%s',
@@ -261,7 +263,7 @@ class Profiles
             dbesc($f['profile_name']),  dbesc($f['fullname']),   dbesc($f['pdesc']),
             dbesc($f['homepage']),      dbesc($f['hometown']),   dbesc($f['gender']),
             dbesc($f['dob']),           dbesc($f['about']),      dbesc($f['keywords']),
-            intval($f['hide_friends']),
+            intval($f['hide_friends']),   intval($f['publish']),
             dbesc($f['marital']),       dbesc($f['sexual']),     dbesc($f['politic']),
             dbesc($f['religion']),
             dbesc($f['music']),         dbesc($f['book']),       dbesc($f['tv']),
@@ -280,6 +282,18 @@ class Profiles
                 dbesc($f['fullname']),
                 intval($uid)
             );
+        }
+
+        // Sync xchan_hidden immediately when publish changes on the default profile
+        if ($is_default) {
+            $channel = q("SELECT channel_hash FROM channel WHERE channel_id = %d LIMIT 1", intval($uid));
+            if ($channel) {
+                $hidden = 1 - $f['publish'];
+                q("UPDATE xchan SET xchan_hidden = %d WHERE xchan_hash = '%s'",
+                    intval($hidden),
+                    dbesc($channel[0]['channel_hash'])
+                );
+            }
         }
 
         Response::send(['status' => 'ok']);
