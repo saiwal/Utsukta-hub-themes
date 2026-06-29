@@ -171,6 +171,8 @@ class StreamWidgets
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
                AND item.item_wall       = 1
+               AND item.item_deleted    = 0
+               AND item.verb           != 'Add'
                $perm_sql $item_normal
              GROUP BY yr, mo
              ORDER BY yr DESC, mo DESC"
