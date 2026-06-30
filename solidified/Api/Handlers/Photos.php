@@ -89,52 +89,64 @@ class Photos
 
     private function getAlbumsSummary(array $channel, string $ob_hash): void
     {
-        require_once 'include/attach.php';
-        require_once 'include/photos.php';
+        $uid        = intval($channel['channel_id']);
+        $ph_drv     = photo_factory('');
+        $phototypes = $ph_drv->supportedTypes();
 
-        $result = photos_albums_list($channel, \App::get_observer());
+        // 'p' matches the alias in the query below — permissions_sql prefixes column names
+        $sql_photo = permissions_sql($uid, $ob_hash, 'p');
 
-        if (empty($result['success'])) {
+        // Count visible photos per folder.
+        // LEFT JOIN so photos without an attach record still appear (grouped under root '').
+        // Album name comes from p.album (the photo record's own field) — no attach ACL check.
+        $counts_raw = dbq(
+            "SELECT COALESCE(a.folder, '') AS fhash, p.album AS album_name,
+                    COUNT(DISTINCT p.resource_id) AS cnt
+             FROM photo p
+             LEFT JOIN attach a ON a.hash = p.resource_id AND a.uid = $uid
+             WHERE p.uid = $uid
+               AND p.imgscale = 2
+               AND p.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
+               $sql_photo
+             GROUP BY fhash, album_name"
+        ) ?: [];
+
+        if (!$counts_raw) {
             Response::send([]);
             return;
         }
 
-        // photos_albums_list returns entries with bin2hex (folder hash) and text (display name)
-        // Fetch a thumbnail for each album from the first photo in that folder
-        $ph_drv = photo_factory('');
-        $phototypes = $ph_drv->supportedTypes();
-        $sql_extra = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
-
         $albums = [];
-        foreach (($result['albums'] ?? []) as $album) {
-            $folder = $album['bin2hex'];  // folder hash
-            $name = $album['text'];
-            $total = intval($album['total']);
+        foreach ($counts_raw as $row) {
+            $fhash = (string) $row['fhash'];
+            $total = intval($row['cnt']);
+            if ($total === 0) continue;
 
-            // Fetch one thumbnail photo from this folder
             $thumb = null;
-            if ($folder) {
-                $t = dbq("SELECT p.resource_id, p.mimetype, p.imgscale
-                      FROM photo p
-                      INNER JOIN attach a ON a.hash = p.resource_id
-                      WHERE a.folder = '" . dbesc($folder) . "'
-                        AND p.uid = " . intval($channel['channel_id']) . '
-                        AND p.imgscale = 2
-                        AND p.photo_usage IN (' . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
-                        $sql_extra
-                      LIMIT 1");
+            if ($fhash !== '') {
+                $t = dbq(
+                    "SELECT p.resource_id, p.mimetype, p.imgscale
+                     FROM photo p
+                     INNER JOIN attach a ON a.hash = p.resource_id
+                     WHERE a.folder = '" . dbesc($fhash) . "'
+                       AND p.uid = $uid
+                       AND p.imgscale = 2
+                       AND p.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
+                       $sql_photo
+                     LIMIT 1"
+                );
                 if ($t) {
-                    $ext = $phototypes[$t[0]['mimetype']] ?? 'jpg';
+                    $ext   = $phototypes[$t[0]['mimetype']] ?? 'jpg';
                     $thumb = z_root() . '/photo/' . $t[0]['resource_id'] . '-' . $t[0]['imgscale'] . '.' . $ext;
                 }
             }
 
             $albums[] = [
-                'album' => $name,
-                'folder' => $folder,
-                'total' => $total,
-                'url' => $album['url'],
-                'thumb' => $thumb,
+                'album'  => (string) $row['album_name'],
+                'folder' => $fhash,
+                'total'  => $total,
+                'url'    => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $fhash,
+                'thumb'  => $thumb,
             ];
         }
 
@@ -158,7 +170,7 @@ class Photos
             Response::error(404, 'Album not found');
 
         $display_path = $album_row['display_path'];
-        $sql_extra = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
+        $sql_extra = permissions_sql($channel['channel_id'], $ob_hash, 'p');
         $ph_drv = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
@@ -677,7 +689,7 @@ class Photos
     {
         require_once 'include/photo/photo_driver.php';
 
-        $sql_extra  = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
+        $sql_extra  = permissions_sql($channel['channel_id'], $ob_hash, 'p');
         $ph_drv     = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
