@@ -93,6 +93,8 @@ class Directory
         $total = intval($cnt[0]['total'] ?? 0);
 
         // ── Paginated query with ORDER BY at query level ───────────────────────────
+        // Also JOIN channel + profile so local-channel profile fields are available
+        // as fallback when xprof hasn't been populated via federation.
         $rows = q("SELECT
                        x.xchan_hash, x.xchan_name, x.xchan_addr,
                        x.xchan_photo_m, x.xchan_url, x.xchan_network,
@@ -101,8 +103,23 @@ class Directory
                        p.xprof_gender, p.xprof_marital,
                        p.xprof_locale, p.xprof_region, p.xprof_country,
                        p.xprof_about, p.xprof_homepage,
-                       p.xprof_hometown, p.xprof_keywords
-                   FROM xchan x LEFT JOIN xprof p ON p.xprof_hash = x.xchan_hash
+                       p.xprof_hometown, p.xprof_keywords,
+                       ch.channel_address AS local_nick,
+                       pr.pdesc      AS local_pdesc,
+                       pr.dob        AS local_dob,
+                       pr.gender     AS local_gender,
+                       pr.marital    AS local_marital,
+                       pr.locality   AS local_locale,
+                       pr.region     AS local_region,
+                       pr.country_name AS local_country,
+                       pr.about      AS local_about,
+                       pr.homepage   AS local_homepage,
+                       pr.hometown   AS local_hometown,
+                       pr.keywords   AS local_keywords
+                   FROM xchan x
+                   LEFT JOIN xprof   p  ON p.xprof_hash    = x.xchan_hash
+                   LEFT JOIN channel ch ON ch.channel_hash  = x.xchan_hash AND ch.channel_removed = 0
+                   LEFT JOIN profile pr ON pr.uid           = ch.channel_id AND pr.is_default = 1
                    $where
                    ORDER BY $order_sql
                    LIMIT %d OFFSET %d",
@@ -167,29 +184,45 @@ class Directory
         foreach ($rows as $rr) {
             $hash         = $rr['xchan_hash'] ?? '';
             $addr         = $rr['xchan_addr'] ?? '';
+            $local_nick   = $rr['local_nick'] ?? '';
             $is_connected = in_array($hash, $my_contacts);
             $connect_url  = ($local_channel && !$is_connected)
                 ? z_root() . '/follow?f=&interactive=1&url=' . urlencode($addr)
                 : '';
 
-            $location_parts = array_filter([
-                $rr['xprof_locale']  ?? '',
-                $rr['xprof_region']  ?? '',
-                $rr['xprof_country'] ?? '',
-            ]);
+            // For local channels (present in the channel table), prefer the profile
+            // table which is always up-to-date over xprof (which is only populated
+            // when the channel is synced via federation or directory crawl).
+            $desc      = $rr['xprof_desc']      ?: ($rr['local_pdesc']    ?? '');
+            $about_raw = $rr['xprof_about']      ?: ($rr['local_about']    ?? '');
+            $gender    = $rr['xprof_gender']     ?: ($rr['local_gender']   ?? '');
+            $marital   = $rr['xprof_marital']    ?: ($rr['local_marital']  ?? '');
+            $locale    = $rr['xprof_locale']     ?: ($rr['local_locale']   ?? '');
+            $region    = $rr['xprof_region']     ?: ($rr['local_region']   ?? '');
+            $country   = $rr['xprof_country']    ?: ($rr['local_country']  ?? '');
+            $homepage  = $rr['xprof_homepage']   ?: ($rr['local_homepage'] ?? '');
+            $hometown  = $rr['xprof_hometown']   ?: ($rr['local_hometown'] ?? '');
+            $kw_src    = $rr['xprof_keywords']   ?: ($rr['local_keywords'] ?? '');
+            $dob_src   = $rr['xprof_dob']        ?: ($rr['local_dob']      ?? '');
+
+            $location_parts = array_filter([$locale, $region, $country]);
 
             $age = 0;
-            if (!empty($rr['xprof_dob']) && ($y = age($rr['xprof_dob'], 'UTC', '')) > 0)
+            if (!empty($dob_src) && ($y = age($dob_src, 'UTC', '')) > 0)
                 $age = $y;
 
             $about = '';
-            if (!empty($rr['xprof_about'])) {
-                $about = zidify_links(bbcode($rr['xprof_about'], ['tryoembed' => false]));
+            if (!empty($about_raw)) {
+                $about = zidify_links(bbcode($about_raw, ['tryoembed' => false]));
                 $about = strip_tags($about, '<br>');
             }
 
-            $kw_raw = str_replace([',', '  '], [' ', ' '], $rr['xprof_keywords'] ?? '');
+            $kw_raw = str_replace([',', '  '], [' ', ' '], $kw_src);
             $kw_arr = array_values(array_filter(explode(' ', $kw_raw)));
+
+            $profile_url = $local_nick
+                ? z_root() . '/channel/' . $local_nick
+                : chanlink_url($rr['xchan_url'] ?? '');
 
             $entries[] = [
                 'hash'         => $hash,
@@ -197,20 +230,20 @@ class Directory
                 'address'      => $addr,
                 'network'      => $rr['xchan_network'] ?? '',
                 'photo'        => $rr['xchan_photo_m'] ?? '',
-                'description'  => $rr['xprof_desc']   ?? '',
+                'description'  => $desc,
                 'about'        => $about,
                 'location'     => implode(', ', $location_parts),
                 'age'          => $age ?: null,
-                'gender'       => $rr['xprof_gender']  ?? '',
-                'marital'      => $rr['xprof_marital'] ?? '',
-                'homepage'     => html2plain($rr['xprof_homepage'] ?? ''),
-                'hometown'     => html2plain($rr['xprof_hometown'] ?? ''),
+                'gender'       => $gender,
+                'marital'      => $marital,
+                'homepage'     => html2plain($homepage),
+                'hometown'     => html2plain($hometown),
                 'keywords'     => $kw_arr,
                 'updated'      => $rr['xchan_updated'] ?? '',
                 'public_forum' => !empty($rr['xchan_pubforum']),
                 'is_connected' => $is_connected,
                 'connect_url'  => $connect_url,
-                'profile_url'  => chanlink_url($rr['xchan_url'] ?? ''),
+                'profile_url'  => $profile_url,
                 'common_count' => $suggest ? max(0, intval($rr['total'] ?? 0) - 1) : null,
                 'ignore_url'   => $suggest ? z_root() . '/directory?ignore=' . $hash : null,
             ];
