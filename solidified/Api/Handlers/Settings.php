@@ -149,6 +149,7 @@ class Settings
             'about' => $profile['about'] ?? '',
             'keywords' => $profile['keywords'] ?? '',
             'hide_friends' => intval($profile['hide_friends'] ?? 0),
+            'publish' => intval($profile['publish'] ?? 0),
         ]);
     }
 
@@ -874,6 +875,7 @@ class Settings
             'about' => escape_tags($data['about'] ?? ''),
             'keywords' => notags(trim($data['keywords'] ?? '')),
             'hide_friends' => intval($data['hide_friends'] ?? 0),
+            'publish' => intval($data['publish'] ?? 0),
         ];
 
         $profile = \Zotlabs\Lib\Profile::load($uid, 'default');
@@ -882,7 +884,7 @@ class Settings
 
         q("UPDATE profile SET
         fullname = '%s', pdesc = '%s', homepage = '%s', hometown = '%s',
-        gender = '%s', dob = '%s', about = '%s', keywords = '%s', hide_friends = %d
+        gender = '%s', dob = '%s', about = '%s', keywords = '%s', hide_friends = %d, publish = %d
         WHERE uid = %d AND is_default = 1",
             dbesc($fields['fullname']),
             dbesc($fields['pdesc']),
@@ -893,7 +895,17 @@ class Settings
             dbesc($fields['about']),
             dbesc($fields['keywords']),
             intval($fields['hide_friends']),
+            intval($fields['publish']),
             intval($uid));
+
+        // Sync xchan_hidden immediately so directory listing takes effect without waiting for the daemon
+        $channel = \App::get_channel();
+        if ($channel) {
+            $hidden = 1 - $fields['publish'];
+            q("UPDATE xchan SET xchan_hidden = %d WHERE xchan_hash = '%s'",
+                intval($hidden),
+                dbesc($channel['channel_hash']));
+        }
 
         // Propagate name change to channel table
         if ($fields['fullname'])
