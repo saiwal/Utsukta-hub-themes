@@ -105,6 +105,10 @@ class Directory
                        p.xprof_about, p.xprof_homepage,
                        p.xprof_hometown, p.xprof_keywords,
                        ch.channel_address AS local_nick,
+                       ch.channel_id AS local_uid,
+                       (SELECT resource_id FROM photo
+                        WHERE uid = ch.channel_id AND imgscale = 7 AND photo_usage = 16
+                        LIMIT 1) AS cover_resource_id,
                        pr.pdesc      AS local_pdesc,
                        pr.dob        AS local_dob,
                        pr.gender     AS local_gender,
@@ -224,6 +228,10 @@ class Directory
                 ? z_root() . '/channel/' . $local_nick
                 : chanlink_url($rr['xchan_url'] ?? '');
 
+            $cover = !empty($rr['cover_resource_id'])
+                ? z_root() . '/photo/' . $rr['cover_resource_id'] . '-7'
+                : null;
+
             $entries[] = [
                 'hash'         => $hash,
                 'name'         => $rr['xchan_name']   ?? '',
@@ -244,6 +252,7 @@ class Directory
                 'is_connected' => $is_connected,
                 'connect_url'  => $connect_url,
                 'profile_url'  => $profile_url,
+                'cover'        => $cover,
                 'common_count' => $suggest ? max(0, intval($rr['total'] ?? 0) - 1) : null,
                 'ignore_url'   => $suggest ? z_root() . '/directory?ignore=' . $hash : null,
             ];
