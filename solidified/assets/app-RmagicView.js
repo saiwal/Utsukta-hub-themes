@@ -1,1 +1,1 @@
-import{O as e}from"./app-web.js";import{Ln as t}from"./app.js";function n(){return e(t,{href:`/login`})}export{n as default};
+import{O as e}from"./app-web.js";import{Nn as t}from"./app.js";function n(){return e(t,{href:`/login`})}export{n as default};
