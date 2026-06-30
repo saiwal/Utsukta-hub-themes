@@ -6,21 +6,33 @@ use Theme\Solidified\Api\Response;
 /**
  * GET /api/directory
  *
- * Queries xchan + xprof directly so ORDER BY is applied before pagination,
- * giving consistent sorted results across all pages.
+ * Delegates to /dirsearch — the same endpoint the core Directory module uses —
+ * so remote-channel profile data comes from the federated directory rather than
+ * the local xchan/xprof cache (which may be stale or empty).
+ *
+ * For local channels the response is supplemented with profile-table data
+ * (always current) and cover-photo URLs, both via batched queries.
  *
  * Params: search, keywords, order (date|rdate|alphabetic|ralpha),
- *         global (1|0), network (zot6|activitypub), safe (1|0),
- *         pubforums (1|0), start, suggest (1|0)
+ *         global (1|0), safe (1|0), pubforums (1|0), start, suggest (1|0)
  */
 class Directory
 {
     private const LIMIT = 30;
 
+    // Our order keys → dirsearch order keys
+    private const ORDER_MAP = [
+        'alphabetic' => 'normal',
+        'ralpha'     => 'reverse',
+        'rdate'      => 'reversedate',
+        'date'       => '',          // default in dirsearch: xchan_name_date DESC
+    ];
+
     public function get(): void
     {
         require_once 'include/bbcode.php';
         require_once 'include/html2plain.php';
+        require_once 'include/socgraph.php';
 
         $local_channel = local_channel();
         $observer      = get_observer_hash();
@@ -31,92 +43,82 @@ class Directory
         $start     = max(0, intval($_GET['start'] ?? 0));
         $globaldir = array_key_exists('global', $_GET) ? intval($_GET['global']) : 1;
         $suggest   = $local_channel && !empty($_GET['suggest']);
-        $network   = in_array($_GET['network'] ?? '', ['zot6', 'activitypub']) ? $_GET['network'] : '';
         $safe      = !empty($_GET['safe']) ? 1 : 0;
         $pubforums = !empty($_GET['pubforums']) ? 1 : 0;
 
         if ($suggest) {
-            require_once 'include/socgraph.php';
-            $this->suggest($local_channel, $observer, $order);
+            $this->suggest($local_channel, $observer, $order, $safe);
         }
 
-        // ── ORDER BY ──────────────────────────────────────────────────────────────
-        $order_sql = match ($order) {
-            'alphabetic' => 'x.xchan_name ASC',
-            'ralpha'     => 'x.xchan_name DESC',
-            'rdate'      => 'x.xchan_updated ASC',
-            default      => 'x.xchan_updated DESC',   // 'date'
-        };
+        // ── Resolve /dirsearch URL ─────────────────────────────────────────────
+        $dirmode = intval(\Zotlabs\Lib\Config::Get('system', 'directory_mode'));
 
-        // ── WHERE conditions ──────────────────────────────────────────────────────
-        $conds = [
-            'x.xchan_deleted = 0',
-            'x.xchan_orphan  = 0',
-            'x.xchan_hidden  = 0',
-            'x.xchan_system  = 0',
+        if (in_array($dirmode, [DIRECTORY_MODE_PRIMARY, DIRECTORY_MODE_SECONDARY, DIRECTORY_MODE_STANDALONE])) {
+            $base_url = z_root() . '/dirsearch';
+        } else {
+            $dir      = \Zotlabs\Lib\Libzotdir::find_upstream_directory($dirmode);
+            $base_url = rtrim($dir['url'] ?? z_root(), '/') . '/dirsearch';
+        }
+
+        // ── Build query params ─────────────────────────────────────────────────
+        $page     = intval($start / self::LIMIT) + 1;
+        $ds_order = self::ORDER_MAP[$order] ?? '';
+
+        $params = [
+            'f'            => '',
+            'return_total' => 1,
+            'n'            => self::LIMIT,
+            'p'            => $page,
         ];
 
-        if (!$globaldir) {
-            $conds[] = "x.xchan_hash IN (SELECT channel_hash FROM channel WHERE channel_removed = 0)";
+        if ($safe)      $params['safe']      = 1;
+        if ($pubforums) $params['pubforums'] = 1;
+        if (!$globaldir) $params['hub']      = \App::get_hostname();
+        if ($ds_order)  $params['order']     = $ds_order;
+
+        if ($search) {
+            $params['name']     = $search;
+            $params['keywords'] = $search;
+        }
+        if ($keywords) {
+            $params['keywords'] = $keywords;
         }
 
-        if ($search !== '') {
-            $s       = protect_sprintf(dbesc($search));
-            $conds[] = "(x.xchan_name LIKE '%$s%' OR x.xchan_addr LIKE '%$s%')";
+        $token = \Zotlabs\Lib\Config::Get('system', 'realm_token');
+        if ($token) $params['t'] = $token;
+
+        $query_url = $base_url . '?' . http_build_query($params);
+        logger('Directory API: dirsearch → ' . $query_url, LOGGER_DEBUG);
+
+        // ── Call /dirsearch ───────────────────────────────────────────────────
+        $x = z_fetch_url($query_url);
+
+        if (!$x['success']) {
+            Response::error(502, 'Directory service unavailable');
         }
 
-        if ($keywords !== '') {
-            $k       = protect_sprintf(dbesc($keywords));
-            $conds[] = "p.xprof_keywords LIKE '%$k%'";
+        $j = json_decode($x['body'], true);
+
+        if (empty($j['success'])) {
+            Response::send([], [
+                'total' => 0, 'page' => $page, 'start' => $start, 'limit' => self::LIMIT,
+                'globaldir' => (bool) $globaldir, 'safe_mode' => $safe,
+                'suggest' => false, 'order' => $order,
+            ]);
         }
 
-        if ($network !== '') {
-            $n       = protect_sprintf(dbesc($network));
-            $conds[] = "x.xchan_network = '$n'";
-        }
-
-        if ($safe) {
-            $conds[] = 'x.xchan_censored = 0';
-            $conds[] = 'x.xchan_selfcensored = 0';
-        }
-
-        if ($pubforums) {
-            $conds[] = 'x.xchan_pubforum = 1';
-        }
-
-        $where = 'WHERE ' . implode(' AND ', $conds);
-
-        // ── Count ─────────────────────────────────────────────────────────────────
-        $cnt   = q("SELECT COUNT(x.xchan_hash) AS total
-                    FROM xchan x LEFT JOIN xprof p ON p.xprof_hash = x.xchan_hash
-                    $where");
-        $total = intval($cnt[0]['total'] ?? 0);
-
-        // ── Paginated query with ORDER BY at query level ───────────────────────────
-        $rows = q("SELECT
-                       x.xchan_hash, x.xchan_name, x.xchan_addr,
-                       x.xchan_photo_m, x.xchan_url, x.xchan_network,
-                       x.xchan_pubforum, x.xchan_updated,
-                       p.xprof_desc, p.xprof_dob,
-                       p.xprof_gender, p.xprof_marital,
-                       p.xprof_locale, p.xprof_region, p.xprof_country,
-                       p.xprof_about, p.xprof_homepage,
-                       p.xprof_hometown, p.xprof_keywords
-                   FROM xchan x LEFT JOIN xprof p ON p.xprof_hash = x.xchan_hash
-                   $where
-                   ORDER BY $order_sql
-                   LIMIT %d OFFSET %d",
-                  self::LIMIT, $start);
+        $results = $j['results'] ?? [];
+        $total   = intval($j['total_items'] ?? $j['records'] ?? count($results));
 
         Response::send(
-            $this->formatRows($rows ?: [], $local_channel),
+            $this->formatResults($results, $local_channel, $safe),
             [
                 'total'     => $total,
-                'page'      => intval($start / self::LIMIT) + 1,
+                'page'      => intval($j['page'] ?? $page),
                 'start'     => $start,
                 'limit'     => self::LIMIT,
                 'globaldir' => (bool) $globaldir,
-                'safe_mode' => 0,
+                'safe_mode' => $safe,
                 'suggest'   => false,
                 'order'     => $order,
             ]
@@ -124,8 +126,10 @@ class Directory
     }
 
     // ── Suggest ───────────────────────────────────────────────────────────────────
+    // Mirrors the core Directory module: get suggestion addresses, then query
+    // /dirsearch with an advanced address query so profile data is federated.
 
-    private function suggest(int $local_channel, string $observer, string $order): never
+    private function suggest(int $local_channel, string $observer, string $order, int $safe): never
     {
         require_once 'include/bbcode.php';
         require_once 'include/html2plain.php';
@@ -134,11 +138,65 @@ class Directory
         if (!$r) {
             Response::send([], [
                 'total' => 0, 'page' => 1, 'start' => 0, 'limit' => self::LIMIT,
-                'globaldir' => true, 'safe_mode' => 0, 'suggest' => true, 'order' => $order,
+                'globaldir' => true, 'safe_mode' => 1, 'suggest' => true, 'order' => $order,
             ]);
         }
 
-        $entries = $this->formatRows($r, $local_channel, true);
+        // Build address→common_count and address→sort-index maps (core pattern)
+        $common    = [];
+        $addresses = [];
+        $index     = 0;
+        foreach ($r as $rr) {
+            $addr              = $rr['xchan_addr'];
+            $common[$addr]     = max(0, intval($rr['total'] ?? 0) - 1);
+            $addresses[$addr]  = $index++;
+        }
+
+        // Build advanced dirsearch query: address="addr1" address="addr2" …
+        $advanced = '';
+        foreach (array_keys($addresses) as $addr) {
+            $advanced .= 'address="' . dbesc($addr) . '" ';
+        }
+        $advanced = rtrim($advanced);
+
+        $dirmode  = intval(\Zotlabs\Lib\Config::Get('system', 'directory_mode'));
+        if (in_array($dirmode, [DIRECTORY_MODE_PRIMARY, DIRECTORY_MODE_SECONDARY, DIRECTORY_MODE_STANDALONE])) {
+            $base_url = z_root() . '/dirsearch';
+        } else {
+            $dir      = \Zotlabs\Lib\Libzotdir::find_upstream_directory($dirmode);
+            $base_url = rtrim($dir['url'] ?? z_root(), '/') . '/dirsearch';
+        }
+
+        $params = ['f' => '', 'safe' => 1, 'n' => self::LIMIT, 'query' => $advanced];
+        $token  = \Zotlabs\Lib\Config::Get('system', 'realm_token');
+        if ($token) $params['t'] = $token;
+
+        $x = z_fetch_url($base_url . '?' . http_build_query($params));
+
+        if (!$x['success']) {
+            Response::send([], [
+                'total' => 0, 'page' => 1, 'start' => 0, 'limit' => self::LIMIT,
+                'globaldir' => true, 'safe_mode' => 1, 'suggest' => true, 'order' => $order,
+            ]);
+        }
+
+        $j       = json_decode($x['body'], true);
+        $results = $j['results'] ?? [];
+
+        // Restore original suggestion order and attach common_count
+        $ordered = [];
+        foreach ($results as $rr) {
+            $addr = $rr['address'] ?? '';
+            if (isset($addresses[$addr])) {
+                $ordered[$addresses[$addr]] = array_merge($rr, [
+                    '_common_count' => $common[$addr] ?? 0,
+                    '_ignore_hash'  => $rr['hash'],
+                ]);
+            }
+        }
+        ksort($ordered);
+
+        $entries = $this->formatResults(array_values($ordered), local_channel(), $safe, true);
 
         Response::send($entries, [
             'total'     => count($entries),
@@ -152,10 +210,65 @@ class Directory
         ]);
     }
 
-    // ── Shared row formatter ───────────────────────────────────────────────────────
+    // ── Format /dirsearch results ──────────────────────────────────────────────────
 
-    private function formatRows(array $rows, int|false $local_channel, bool $suggest = false): array
-    {
+    private function formatResults(
+        array      $results,
+        int|false  $local_channel,
+        int        $safe,
+        bool       $suggest = false
+    ): array {
+        if (!$results) return [];
+
+        require_once 'include/bbcode.php';
+        require_once 'include/html2plain.php';
+
+        // ── Batch-load supplemental local data ────────────────────────────────
+        $hashes     = array_filter(array_column($results, 'hash'));
+        $hashes_sql = implode("','", array_map('dbesc', $hashes));
+
+        // Local channels: get nick + channel_id
+        $local_map = [];
+        if ($hashes) {
+            $chan_rows = q("SELECT channel_hash, channel_address, channel_id
+                            FROM channel
+                            WHERE channel_hash IN ('$hashes_sql') AND channel_removed = 0");
+            foreach ($chan_rows ?: [] as $cr) {
+                $local_map[$cr['channel_hash']] = [
+                    'nick' => $cr['channel_address'],
+                    'uid'  => intval($cr['channel_id']),
+                ];
+            }
+        }
+
+        // Local profile data (supplemental when dirsearch fields are empty)
+        $profile_map = [];
+        if ($local_map) {
+            $uids_sql = implode(',', array_map('intval', array_column($local_map, 'uid')));
+            $prof_rows = q("SELECT uid, pdesc, dob, gender, marital, locality, region, country_name,
+                                   about, homepage, hometown, keywords
+                            FROM profile
+                            WHERE uid IN ($uids_sql) AND is_default = 1");
+            foreach ($prof_rows ?: [] as $pr) {
+                $profile_map[intval($pr['uid'])] = $pr;
+            }
+        }
+
+        // Cover photos for local channels (batched)
+        $cover_map = [];
+        if ($local_map) {
+            $uids_sql  = implode(',', array_map('intval', array_column($local_map, 'uid')));
+            $cover_rows = q("SELECT uid, resource_id FROM photo
+                             WHERE uid IN ($uids_sql)
+                               AND imgscale = %d AND photo_usage = %d",
+                            intval(PHOTO_RES_COVER_1200),
+                            intval(PHOTO_COVER));
+            foreach ($cover_rows ?: [] as $cvr) {
+                $cover_map[intval($cvr['uid'])] = $cvr['resource_id'];
+            }
+        }
+
+        // Connected contacts for the viewing user
         $my_contacts = [];
         if ($local_channel) {
             $cx = q('SELECT abook_xchan FROM abook WHERE abook_channel = %d', intval($local_channel));
@@ -163,55 +276,82 @@ class Directory
                 $my_contacts[] = $c['abook_xchan'];
         }
 
+        // ── Build entries ──────────────────────────────────────────────────────
         $entries = [];
-        foreach ($rows as $rr) {
-            $hash         = $rr['xchan_hash'] ?? '';
-            $addr         = $rr['xchan_addr'] ?? '';
+        foreach ($results as $rr) {
+            $hash       = $rr['hash']    ?? '';
+            $addr       = $rr['address'] ?? '';
+            $local_info = $local_map[$hash] ?? null;
+            $local_nick = $local_info['nick'] ?? '';
+            $local_uid  = $local_info ? intval($local_info['uid']) : 0;
+            $prof       = $local_uid ? ($profile_map[$local_uid] ?? []) : [];
+
             $is_connected = in_array($hash, $my_contacts);
             $connect_url  = ($local_channel && !$is_connected)
                 ? z_root() . '/follow?f=&interactive=1&url=' . urlencode($addr)
                 : '';
 
-            $location_parts = array_filter([
-                $rr['xprof_locale']  ?? '',
-                $rr['xprof_region']  ?? '',
-                $rr['xprof_country'] ?? '',
-            ]);
+            // dirsearch fields first; local profile table as fallback for local channels
+            $desc      = ($rr['description'] ?? '') ?: ($prof['pdesc']       ?? '');
+            $about_raw = ($rr['about']       ?? '') ?: ($prof['about']        ?? '');
+            $gender    = ($rr['gender']      ?? '') ?: ($prof['gender']       ?? '');
+            $marital   = ($rr['marital']     ?? '') ?: ($prof['marital']      ?? '');
+            $locale    = ($rr['locale']      ?? '') ?: ($prof['locality']     ?? '');
+            $region    = ($rr['region']      ?? '') ?: ($prof['region']       ?? '');
+            $country   = ($rr['country']     ?? '') ?: ($prof['country_name'] ?? '');
+            $homepage  = ($rr['homepage']    ?? '') ?: ($prof['homepage']     ?? '');
+            $hometown  = ($rr['hometown']    ?? '') ?: ($prof['hometown']     ?? '');
+            $kw_src    = ($rr['keywords']    ?? '') ?: ($prof['keywords']     ?? '');
+            $dob_src   = ($rr['birthday']    ?? '') ?: ($prof['dob']          ?? '');
+
+            $location_parts = array_filter([$locale, $region, $country]);
 
             $age = 0;
-            if (!empty($rr['xprof_dob']) && ($y = age($rr['xprof_dob'], 'UTC', '')) > 0)
+            if (!empty($dob_src) && ($y = age($dob_src, 'UTC', '')) > 0)
                 $age = $y;
+            elseif (($age_raw = intval($rr['age'] ?? 0)) > 0)
+                $age = $age_raw;
 
             $about = '';
-            if (!empty($rr['xprof_about'])) {
-                $about = zidify_links(bbcode($rr['xprof_about'], ['tryoembed' => false]));
-                $about = strip_tags($about, '<br>');
+            if (!empty($about_raw)) {
+                $about = zidify_links(bbcode($about_raw, ['tryoembed' => false]));
+                if ($safe > 0) $about = strip_tags($about, '<br>');
             }
 
-            $kw_raw = str_replace([',', '  '], [' ', ' '], $rr['xprof_keywords'] ?? '');
+            $kw_raw = str_replace([',', '  '], [' ', ' '], $kw_src);
             $kw_arr = array_values(array_filter(explode(' ', $kw_raw)));
+
+            $profile_url = $local_nick
+                ? z_root() . '/channel/' . $local_nick
+                : ($rr['url'] ?? '');
+
+            $cover_rid = $local_uid ? ($cover_map[$local_uid] ?? null) : null;
+            $cover     = $cover_rid
+                ? z_root() . '/photo/' . $cover_rid . '-' . PHOTO_RES_COVER_1200
+                : null;
 
             $entries[] = [
                 'hash'         => $hash,
-                'name'         => $rr['xchan_name']   ?? '',
+                'name'         => $rr['name']        ?? '',
                 'address'      => $addr,
-                'network'      => $rr['xchan_network'] ?? '',
-                'photo'        => $rr['xchan_photo_m'] ?? '',
-                'description'  => $rr['xprof_desc']   ?? '',
+                'network'      => 'zot6',
+                'photo'        => $rr['photo']        ?? '',
+                'description'  => $desc,
                 'about'        => $about,
                 'location'     => implode(', ', $location_parts),
                 'age'          => $age ?: null,
-                'gender'       => $rr['xprof_gender']  ?? '',
-                'marital'      => $rr['xprof_marital'] ?? '',
-                'homepage'     => html2plain($rr['xprof_homepage'] ?? ''),
-                'hometown'     => html2plain($rr['xprof_hometown'] ?? ''),
+                'gender'       => $gender,
+                'marital'      => $marital,
+                'homepage'     => html2plain($homepage),
+                'hometown'     => html2plain($hometown),
                 'keywords'     => $kw_arr,
-                'updated'      => $rr['xchan_updated'] ?? '',
-                'public_forum' => !empty($rr['xchan_pubforum']),
+                'updated'      => '',
+                'public_forum' => !empty($rr['public_forum']),
                 'is_connected' => $is_connected,
                 'connect_url'  => $connect_url,
-                'profile_url'  => chanlink_url($rr['xchan_url'] ?? ''),
-                'common_count' => $suggest ? max(0, intval($rr['total'] ?? 0) - 1) : null,
+                'profile_url'  => $profile_url,
+                'cover'        => $cover,
+                'common_count' => $suggest ? ($rr['_common_count'] ?? null) : null,
                 'ignore_url'   => $suggest ? z_root() . '/directory?ignore=' . $hash : null,
             ];
         }
