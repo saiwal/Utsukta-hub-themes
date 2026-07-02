@@ -8,6 +8,7 @@ use Theme\Solidified\Api\Response;
  * Cart JSON API — direct DB/pconfig implementation.
  *
  * GET  /api/cart/:nick/catalog
+ * GET  /api/cart/:nick/catalog?all=1           (seller — includes inactive)
  * GET  /api/cart/:nick/order
  * GET  /api/cart/:nick/payment-config
  * GET  /api/cart/:nick/payment-settings        (seller)
@@ -40,7 +41,12 @@ class Cart
 
         switch ($action) {
             case 'catalog':
-                $this->getCatalog($channel);
+                $isOwner = local_channel() && local_channel() == intval($channel['channel_id']);
+                if (!empty($_GET['all']) && $isOwner) {
+                    $this->getCatalogAll($channel);
+                } else {
+                    $this->getCatalog($channel);
+                }
                 break;
             case 'payment-config':
                 $this->getPaymentConfig($channel);
@@ -70,6 +76,17 @@ class Cart
         $body    = Auth::$parsedBody ?? [];
 
         switch ($action) {
+            case 'catalog':
+                $this->requireSeller($channel);
+                $sub = \App::$argv[4] ?? '';
+                if ($sub === 'delete') {
+                    $this->deleteCatalogItem($channel, $body['sku'] ?? '');
+                } elseif ($sub === 'toggle') {
+                    $this->toggleCatalogItem($channel, $body['sku'] ?? '');
+                } else {
+                    $this->saveCatalogItem($channel, $body);
+                }
+                break;
             case 'item':
                 $sub = \App::$argv[4] ?? '';
                 if ($sub === 'remove') {
@@ -202,6 +219,7 @@ class Cart
             'price'     => $this->fmtPrice($price),
             'photo_url' => $photoUrl ?: null,
             'type'      => $d['item_type'] ?? 'manual',
+            'active'    => !empty($d['item_active']),
         ];
     }
 
@@ -1051,13 +1069,119 @@ class Cart
             dbesc(json_encode($meta)), dbesc($hash), $itemId);
     }
 
+    // ── Catalog management (seller) ───────────────────────────────────────────
+
+    private function saveCatalogItem(array $channel, array $body): void
+    {
+        $uid   = intval($channel['channel_id']);
+        $sku   = trim($body['sku'] ?? '');
+        $desc  = trim(strip_tags($body['description'] ?? ''));
+        $price = max(0.0, floatval($body['price'] ?? 0));
+        $photo = trim($body['photo_url'] ?? '');
+        $active = !isset($body['active']) || (bool) $body['active'];
+
+        if (!$desc) Response::error(400, 'Description required');
+
+        $skulist = $this->pget($uid, 'cart-manualcat', 'skulist') ?? [];
+        if (!is_array($skulist)) $skulist = [];
+
+        if (!$sku) {
+            $base = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $desc));
+            $sku  = trim(substr($base, 0, 32), '-');
+            $orig = $sku;
+            $n    = 1;
+            while (in_array($sku, $skulist)) {
+                $sku = $orig . '-' . $n++;
+            }
+        }
+
+        $data = [
+            'item_active'      => $active ? 1 : 0,
+            'item_description' => $desc,
+            'item_price'       => $price,
+            'item_photo_url'   => $photo,
+            'item_type'        => 'manual',
+        ];
+
+        q("INSERT INTO pconfig (uid, cat, k, v) VALUES (%d,'cart-manualcat','%s','%s')
+           ON DUPLICATE KEY UPDATE v='%s'",
+            $uid,
+            dbesc('sku-' . $sku),
+            dbesc(json_encode($data)),
+            dbesc(json_encode($data))
+        );
+
+        if (!in_array($sku, $skulist)) {
+            $skulist[] = $sku;
+            q("INSERT INTO pconfig (uid, cat, k, v) VALUES (%d,'cart-manualcat','skulist','%s')
+               ON DUPLICATE KEY UPDATE v='%s'",
+                $uid,
+                dbesc(json_encode($skulist)),
+                dbesc(json_encode($skulist))
+            );
+        }
+
+        $this->getCatalogAll($channel);
+    }
+
+    private function deleteCatalogItem(array $channel, string $sku): void
+    {
+        if (!$sku) Response::error(400, 'sku required');
+        $uid     = intval($channel['channel_id']);
+        $skulist = $this->pget($uid, 'cart-manualcat', 'skulist') ?? [];
+        if (!is_array($skulist)) $skulist = [];
+
+        $skulist = array_values(array_filter($skulist, fn($s) => $s !== $sku));
+        q("INSERT INTO pconfig (uid, cat, k, v) VALUES (%d,'cart-manualcat','skulist','%s')
+           ON DUPLICATE KEY UPDATE v='%s'",
+            $uid,
+            dbesc(json_encode($skulist)),
+            dbesc(json_encode($skulist))
+        );
+        q("DELETE FROM pconfig WHERE uid = %d AND cat = 'cart-manualcat' AND k = '%s'",
+            $uid, dbesc('sku-' . $sku));
+
+        $this->getCatalogAll($channel);
+    }
+
+    private function toggleCatalogItem(array $channel, string $sku): void
+    {
+        if (!$sku) Response::error(400, 'sku required');
+        $uid  = intval($channel['channel_id']);
+        $data = $this->pget($uid, 'cart-manualcat', 'sku-' . $sku);
+        if (!is_array($data)) Response::error(404, 'Item not found');
+
+        $data['item_active'] = empty($data['item_active']) ? 1 : 0;
+        q("UPDATE pconfig SET v='%s' WHERE uid = %d AND cat = 'cart-manualcat' AND k = '%s'",
+            dbesc(json_encode($data)), $uid, dbesc('sku-' . $sku));
+
+        $this->getCatalogAll($channel);
+    }
+
+    private function getCatalogAll(array $channel): void
+    {
+        $uid  = intval($channel['channel_id']);
+        $out  = [];
+
+        $skulist = $this->pget($uid, 'cart-manualcat', 'skulist');
+        if (is_array($skulist)) {
+            foreach ($skulist as $sku) {
+                $d = $this->pget($uid, 'cart-manualcat', 'sku-' . $sku);
+                if (!is_array($d)) continue;
+                $out[] = $this->formatCatalogItem((string) $sku, $d);
+            }
+        }
+
+        Response::send($out);
+    }
+
     // ── Catalog helpers ───────────────────────────────────────────────────────
 
     private function findCatalogItem(array $channel, string $sku): ?array
     {
         $uid     = intval($channel['channel_id']);
         $skulist = $this->pget($uid, 'cart-manualcat', 'skulist');
-        if (is_array($skulist) && isset($skulist[$sku])) {
+        if (is_array($skulist) && in_array($sku, $skulist)) {
             $d = $this->pget($uid, 'cart-manualcat', 'sku-' . $sku);
             if (is_array($d) && !empty($d['item_active'])) return $this->formatCatalogItem($sku, $d);
         }
