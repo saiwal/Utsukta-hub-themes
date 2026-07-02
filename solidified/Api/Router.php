@@ -49,6 +49,7 @@ class Router
         'xchan'          => Handlers\Xchan::class,
         'connections'    => Handlers\Connections::class,
         'directory'      => Handlers\Directory::class,
+        'cart'           => Handlers\Cart::class,
     ];
 
     public static function dispatch(string $method): void

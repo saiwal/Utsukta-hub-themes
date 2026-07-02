@@ -296,6 +296,15 @@ class Nav
                         'url' => z_root() . '/wiki/' . $subject_nick,
                         'icon' => 'wiki',
                     ];
+
+                $skulist = get_pconfig($puid, 'cart-manualcat', 'skulist') ?: [];
+                if (!empty($skulist))
+                    $channel_tabs[] = [
+                        'id'    => 'shop',
+                        'label' => t('Shop'),
+                        'url'   => z_root() . '/cart/' . $subject_nick,
+                        'icon'  => 'cart',
+                    ];
             }
         }
 
