@@ -42,7 +42,7 @@ class Item
         // contain "/" characters. When not percent-encoded by the caller, the path
         // is split across multiple argv segments. Reconstruct the mid by detecting
         // the known verb at the end; for comments the optional count sits after it.
-        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders'];
+        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery'];
         $segs  = array_slice(App::$argv, 2);
         $n     = count($segs);
         $verb  = '';
@@ -81,6 +81,9 @@ class Item
                 break;
             case 'folders':
                 $this->getItemFolders($mid);
+                break;
+            case 'delivery':
+                $this->getDeliveryReport($mid);
                 break;
             default:
                 $this->getItem($mid);
@@ -308,8 +311,11 @@ class Item
     // =========================================================================
 
     // POST /api/item
-    // Body: { profile_uid, body, title?, scope? }
-    // scope: "public" | "contacts" | "private"
+    // Body: { profile_uid, body, title?, scope?, summary?, category?, expire?,
+    //         contact_allow?, group_allow?, contact_deny?, group_deny?,
+    //         poll_answers?, poll_expire_value?, poll_expire_unit? }
+    // scope: "public" | "contacts" | "private" | "custom"
+    // For scope="custom" supply contact_allow/group_allow arrays of xchan hashes/group ids.
     private function createPost(): void
     {
         $uid = Auth::requireLocalJson();
@@ -317,15 +323,35 @@ class Item
 
         $content = trim($body['body'] ?? '');
         $title = trim($body['title'] ?? '');
+        $summary = trim($body['summary'] ?? '');
+        $category = trim($body['category'] ?? '');
         $profileUid = intval($body['profile_uid'] ?? $uid);
         $scope = $body['scope'] ?? 'public';
         $mimetype = $body['mimetype'] ?? 'text/bbcode';
+        $expire = trim($body['expire'] ?? '');
 
         if (!$content) {
             json_return_and_die(['error' => 'body is required']);
         }
 
-        $acl = self::scopeToAcl($scope, $profileUid);
+        if ($scope === 'custom') {
+            $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
+            $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];
+            $contactDeny  = is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [];
+            $groupDeny    = is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [];
+            $allowCid = '';
+            foreach ($contactAllow as $h) $allowCid .= '<' . $h . '>';
+            $allowGid = '';
+            foreach ($groupAllow  as $g) $allowGid .= '<' . $g . '>';
+            $denyCid  = '';
+            foreach ($contactDeny as $h) $denyCid  .= '<' . $h . '>';
+            $denyGid  = '';
+            foreach ($groupDeny   as $g) $denyGid  .= '<' . $g . '>';
+            $acl = ['allow_cid' => $allowCid, 'allow_gid' => $allowGid,
+                    'deny_cid'  => $denyCid,  'deny_gid'  => $denyGid];
+        } else {
+            $acl = self::scopeToAcl($scope, $profileUid);
+        }
 
         $datarray = self::buildItemArray(
             profileUid: $profileUid,
@@ -336,10 +362,63 @@ class Item
             isWall: true,
         );
 
+        if ($summary) {
+            $datarray['summary'] = $summary;
+        }
+
+        if ($expire) {
+            $expires = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
+            if ($expires > datetime_convert()) {
+                $datarray['expires'] = $expires;
+            }
+        }
+
+        // Polls
+        $pollAnswers = $body['poll_answers'] ?? null;
+        if (is_array($pollAnswers)) {
+            $answers = array_values(array_filter(array_map(fn($a) => escape_tags(trim($a)), $pollAnswers)));
+            if (count($answers) >= 2) {
+                $expireValue = max(1, intval($body['poll_expire_value'] ?? 1));
+                $expireUnit  = in_array($body['poll_expire_unit'] ?? 'Days', ['Minutes','Hours','Days','Weeks'], true)
+                    ? $body['poll_expire_unit']
+                    : 'Days';
+                $opts = array_map(
+                    fn($a) => ['name' => $a, 'type' => 'Note', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
+                    $answers
+                );
+                $pollEndTime = datetime_convert(date_default_timezone_get(), 'UTC',
+                    'now + ' . $expireValue . ' ' . $expireUnit, ATOM_TIME);
+                $channel = App::get_channel();
+                $pollObj = [
+                    'type'         => 'Question',
+                    'id'           => $datarray['mid'],
+                    'url'          => $datarray['mid'],
+                    'attributedTo' => channel_url($channel),
+                    'content'      => bbcode($content),
+                    'name'         => $title ?: '',
+                    'oneOf'        => $opts,
+                    'endTime'      => $pollEndTime,
+                    'to'           => [ACTIVITY_PUBLIC_INBOX],
+                ];
+                $datarray['obj_type'] = 'Question';
+                $datarray['obj']      = $pollObj;
+                if (empty($datarray['expires'])) {
+                    $datarray['expires'] = datetime_convert('UTC', 'UTC', $pollEndTime);
+                }
+            }
+        }
+
         $post = item_store($datarray);
 
         if (!$post['success']) {
             json_return_and_die(['error' => 'Failed to create post']);
+        }
+
+        if ($category) {
+            $cats = array_filter(array_map('trim', explode(',', $category)));
+            foreach ($cats as $cat) {
+                store_item_tag($profileUid, $post['item_id'], TERM_OBJ_POST, TERM_CATEGORY, $cat, '');
+            }
         }
 
         Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
@@ -800,6 +879,47 @@ class Item
         );
 
         json_return_and_die(['data' => ['folders' => $rows ? array_column($rows, 'term') : []]]);
+    }
+
+    // GET /api/item/:mid/delivery
+    // Returns delivery report entries for a post authored by the logged-in user.
+    private function getDeliveryReport(string $mid): void
+    {
+        Auth::requireLocalGet();
+        $channel = \App::get_channel();
+        $channelHash = $channel['channel_hash'];
+
+        $item = $this->resolveItem($mid, $channelHash);
+        if (!$item) {
+            Response::error(404, 'Item not found or permission denied');
+        }
+
+        $isAuthor    = $item['author_xchan'] === $channelHash;
+        $isWallOwner = $item['owner_xchan'] === $channelHash && intval($item['item_wall']) === 1;
+        if (!$isAuthor && !$isWallOwner) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $itemMid     = dbesc($item['mid']);
+        $activityMid = dbesc(str_replace('/item/', '/activity/', $item['mid']));
+        $hashEsc     = dbesc($channelHash);
+
+        $rows = dbq("SELECT dreport_name, dreport_recip, dreport_result, dreport_time
+                     FROM dreport
+                     WHERE dreport_xchan = '$hashEsc'
+                       AND (dreport_mid = '$itemMid' OR dreport_mid = '$activityMid')
+                     ORDER BY dreport_time ASC");
+
+        $entries = [];
+        foreach ($rows ?: [] as $r) {
+            $entries[] = [
+                'name'   => $r['dreport_name'] ?: $r['dreport_recip'],
+                'result' => $r['dreport_result'],
+                'time'   => $r['dreport_time'],
+            ];
+        }
+
+        Response::send($entries);
     }
 
     private function resolveItem(string $mid, string $ob_hash): ?array
