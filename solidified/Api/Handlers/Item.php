@@ -660,6 +660,10 @@ class Item
         }
         Master::Summon(['Notifier', 'like', $post['item_id']]);
 
+        if (in_array($activityVerb, ['Accept', 'TentativeAccept']) && $target['obj_type'] === 'Event') {
+            event_addtocal($target['id'], $uid);
+        }
+
         $counts = $this->fetchReactionCounts($target['mid']);
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
     }
@@ -1108,7 +1112,7 @@ class Item
         return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
                 (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
                 (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce') AND r.obj_type != 'Answer') AS comment_count,
+                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept') AND r.obj_type != 'Answer') AS comment_count,
                 (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
                  FROM item r
                  WHERE r.parent = item.parent
