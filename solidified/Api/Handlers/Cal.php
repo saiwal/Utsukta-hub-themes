@@ -118,8 +118,8 @@ class Cal
                             item.owner_xchan, item.id as item_id
                      FROM event
                      LEFT JOIN item ON item.resource_id = event.event_hash
-                     WHERE item.resource_type = 'event'
-                       AND event.uid = %d
+                                   AND item.resource_type = 'event'
+                     WHERE event.uid = %d
                        AND event.id = %d
                      $sql_extra
                      LIMIT 1",
@@ -132,9 +132,9 @@ class Cal
                             item.owner_xchan, item.id as item_id
                      FROM event
                      LEFT JOIN item ON event.event_hash = item.resource_id
-                     WHERE item.resource_type = 'event'
-                       AND event.uid = %d
-                       AND event.uid = item.uid
+                                   AND item.resource_type = 'event'
+                                   AND event.uid = item.uid
+                     WHERE event.uid = %d
                        AND ((  event.adjust = 0
                                AND ( event.dtend >= '%s' OR event.nofinish = 1 )
                                AND event.dtstart <= '%s' )

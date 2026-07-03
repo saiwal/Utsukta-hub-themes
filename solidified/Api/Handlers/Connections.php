@@ -128,12 +128,19 @@ class Connections
         ]);
     }
 
+    // POST /api/connections/permcats      — create a custom permission role
     // POST /api/connections/:id/approve  — approve a pending connection
     // POST /api/connections/:id          — update role / closeness
     public function post(): void
     {
-        $uid      = Auth::requireLocalJson();
-        $abook_id = intval(\App::$argv[2] ?? 0);
+        $uid = Auth::requireLocalJson();
+        $sub = \App::$argv[2] ?? '';
+
+        if ($sub === 'permcats') {
+            $this->createPermcat($uid);
+        }
+
+        $abook_id = intval($sub);
         $action   = \App::$argv[3] ?? '';
 
         if (!$abook_id) Response::error(400, 'abook_id required');
@@ -154,11 +161,20 @@ class Connections
         }
     }
 
-    // DELETE /api/connections/:id
+    // DELETE /api/connections/permcats/:name  — delete a custom permission role
+    // DELETE /api/connections/:id             — remove a connection
     public function delete(): void
     {
+        $sub = \App::$argv[2] ?? '';
+
+        if ($sub === 'permcats') {
+            $uid  = Auth::requireLocalJson();
+            $name = \App::$argv[3] ?? '';
+            $this->deletePermcat($uid, $name);
+        }
+
         $uid      = Auth::requireLocal();
-        $abook_id = intval(\App::$argv[2] ?? 0);
+        $abook_id = intval($sub);
         if (!$abook_id) Response::error(400, 'abook_id required');
 
         require_once 'include/connections.php';
@@ -275,13 +291,47 @@ class Connections
     private function getPermcats(int $uid): never
     {
         require_once 'include/channel.php';
-        $pcat = new \Zotlabs\Lib\Permcat($uid);
-        $list = $pcat->listing();
+        $pcat   = new \Zotlabs\Lib\Permcat($uid);
+        $list   = $pcat->listing();
         $result = array_map(fn($pc) => [
-            'name'  => $pc['name'],
-            'label' => $pc['localname'],
+            'name'   => $pc['name'],
+            'label'  => $pc['localname'],
+            'system' => (bool) intval($pc['system']),
         ], $list);
         Response::send($result);
+    }
+
+    private function createPermcat(int $uid): never
+    {
+        $body = Auth::$parsedBody;
+        $name = notags(trim($body['name'] ?? ''));
+
+        if (!$name) Response::error(400, 'Role name is required');
+        if (strtolower($name) === 'default') Response::error(400, 'That name is reserved');
+
+        require_once 'include/channel.php';
+        $pcat    = new \Zotlabs\Lib\Permcat($uid);
+        $default = $pcat->fetch('default');
+        $permarr = $default['raw_perms'] ?? \Zotlabs\Access\Permissions::FilledPerms([]);
+
+        \Zotlabs\Lib\Permcat::update($uid, $name, $permarr);
+
+        Response::send(['name' => $name, 'label' => $name, 'system' => false]);
+    }
+
+    private function deletePermcat(int $uid, string $name): never
+    {
+        if (!$name) Response::error(400, 'Role name is required');
+        if ($name === 'default') Response::error(400, 'Cannot delete the default role');
+
+        require_once 'include/channel.php';
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+        if (intval($pc['system'] ?? 0)) Response::error(403, 'Cannot delete a built-in role');
+
+        \Zotlabs\Lib\Permcat::delete($uid, $name);
+        Response::send(['deleted' => true, 'name' => $name]);
     }
 
     private function getPerms(int $uid, int $abook_id): never

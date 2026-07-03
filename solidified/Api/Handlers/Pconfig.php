@@ -82,6 +82,21 @@ class Pconfig
             Response::send($response);
         }
 
+        // Remote-authenticated visitor
+        $observer = \App::get_observer();
+        if ($observer && !empty($observer['xchan_hash'])) {
+            $base = [
+                'uid'       => 0,
+                'channel'   => '',
+                'is_remote' => true,
+            ];
+            if ($channel_param !== '') {
+                $page_spa = self::channelSpa($channel_param);
+                if ($page_spa !== null) $base['spa'] = $page_spa;
+            }
+            Response::send($base);
+        }
+
         // Anonymous visitor on a channel page — expose only public spa display prefs
         if ($channel_param !== '') {
             $page_spa = self::channelSpa($channel_param);
