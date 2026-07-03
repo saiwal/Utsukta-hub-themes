@@ -161,15 +161,16 @@ class Connections
         }
     }
 
-    // DELETE /api/connections/permcats/:name  — delete a custom permission role
-    // DELETE /api/connections/:id             — remove a connection
+    // DELETE /api/connections/permcats?name=<role>  — delete a custom permission role
+    // DELETE /api/connections/:id                   — remove a connection
     public function delete(): void
     {
         $sub = \App::$argv[2] ?? '';
 
         if ($sub === 'permcats') {
             $uid  = Auth::requireLocalJson();
-            $name = \App::$argv[3] ?? '';
+            // Use query string, not argv[3]: escape_tags() mangles & → &amp; in path segments
+            $name = trim($_GET['name'] ?? '');
             $this->deletePermcat($uid, $name);
         }
 
@@ -330,8 +331,28 @@ class Connections
         if (isset($pc['error'])) Response::error(404, 'Role not found');
         if (intval($pc['system'] ?? 0)) Response::error(403, 'Cannot delete a built-in role');
 
-        \Zotlabs\Lib\Permcat::delete($uid, $name);
-        Response::send(['deleted' => true, 'name' => $name]);
+        $exact_name = $pc['name'];
+
+        // Reassign contacts that had this role to 'default' before deleting
+        $affected = q(
+            "SELECT abook_xchan FROM abook WHERE abook_channel = %d AND abook_role = '%s'",
+            intval($uid),
+            dbesc($exact_name)
+        );
+        if ($affected) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                \Zotlabs\Lib\Permcat::assign($channel, 'default', array_column($affected, 'abook_xchan'));
+            }
+            q(
+                "UPDATE abook SET abook_role = 'default' WHERE abook_channel = %d AND abook_role = '%s'",
+                intval($uid),
+                dbesc($exact_name)
+            );
+        }
+
+        \Zotlabs\Lib\Permcat::delete($uid, $exact_name);
+        Response::send(['deleted' => true, 'name' => $exact_name]);
     }
 
     private function getPerms(int $uid, int $abook_id): never
