@@ -315,6 +315,9 @@ class Cal
         if (!empty($post['item_id'])) {
             \Zotlabs\Daemon\Master::Summon(['Notifier', 'event', $post['item_id']]);
         }
+        if (!empty($post['approval_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'event', $post['approval_id']]);
+        }
 
         Response::send([
             'id'  => intval($event['id']),
