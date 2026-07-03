@@ -10,7 +10,10 @@ class Response
         $envelope = ['data' => $data];
         if ($meta)
             $envelope['meta'] = $meta;
-        echo json_encode($envelope);
+        $json = json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false)
+            $json = json_encode(['error' => ['status' => 500, 'message' => 'JSON encode failed: ' . json_last_error_msg()]]);
+        echo $json;
         exit;
     }
 

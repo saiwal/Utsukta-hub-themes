@@ -8,6 +8,32 @@ use App;
 
 class Admin
 {
+    private static function cfgStr(string $k, string $default = ''): string
+    {
+        $v = Config::Get('system', $k);
+        if ($v === false || $v === null || is_array($v)) return $default;
+        return (string) $v;
+    }
+
+    private static function cfgInt(string $k, int $default = 0): int
+    {
+        $v = Config::Get('system', $k);
+        if ($v === false || $v === null || is_array($v)) return $default;
+        return intval($v);
+    }
+
+    private static function argv(int $n): string
+    {
+        return (string) (App::$argv[$n] ?? '');
+    }
+
+    private static function cfgBool(string $k, bool $default = false): bool
+    {
+        $v = Config::Get('system', $k);
+        if ($v === false || $v === null || is_array($v)) return $default;
+        return (bool) intval($v);
+    }
+
     private function requireAdmin(): void
     {
         if (!local_channel() || !is_site_admin()) {
@@ -29,7 +55,13 @@ class Admin
             case 'security':       $this->getSecurity();      break;
             case 'features':       $this->getFeatures();      break;
             case 'addons':         $this->getAddons();        break;
-            case 'themes':         $this->getThemes();        break;
+            case 'themes':
+                if (($this->argv(3)) === 'options') {
+                    $this->getThemeOptions();
+                } else {
+                    $this->getThemes();
+                }
+                break;
             case 'inspect-queue':  $this->getQueue();         break;
             case 'queueworker':    $this->getQueueworker();   break;
             case 'profile-fields': $this->getProfileFields(); break;
@@ -50,8 +82,12 @@ class Admin
         switch ($section) {
             case 'site':      $this->postSite();     break;
             case 'accounts':  $this->postAccounts(); break;
+            case 'channels':  $this->postChannels(); break;
             case 'security':  $this->postSecurity(); break;
-            case 'features':  $this->postFeatures(); break;
+            case 'features':        $this->postFeatures();       break;
+            case 'themes':          $this->postThemes();         break;
+            case 'profile-fields':  $this->postProfileFields();  break;
+            case 'logs':            $this->postLogs();           break;
             default:
                 Response::error(404, "Unknown admin section: {$section}");
         }
@@ -107,26 +143,71 @@ class Admin
     private function getSite(): void
     {
         Response::send([
-            'sitename'            => (string) Config::Get('system', 'sitename', ''),
-            'banner'              => (string) Config::Get('system', 'banner', ''),
-            'admininfo'           => (string) Config::Get('system', 'admininfo', ''),
-            'siteinfo'            => (string) Config::Get('system', 'siteinfo', ''),
-            'register_policy'     => intval(Config::Get('system', 'register_policy', REGISTER_CLOSED)),
-            'access_policy'       => intval(Config::Get('system', 'access_policy', ACCESS_FREE)),
-            'max_daily_registrations' => intval(Config::Get('system', 'max_daily_registrations', 50)),
-            'abandon_days'        => intval(Config::Get('system', 'abandon_days', 0)),
-            'login_on_homepage'   => (bool) Config::Get('system', 'login_on_homepage', false),
-            'disable_discover_tab'=> (bool) intval(Config::Get('system', 'disable_discover_tab', 1)),
-            'site_firehose'       => (bool) intval(Config::Get('system', 'site_firehose', 0)),
-            'open_pubstream'      => (bool) intval(Config::Get('system', 'open_pubstream', 0)),
-            'language'            => (string) Config::Get('system', 'language', 'en'),
-            'theme'               => (string) Config::Get('system', 'theme', 'redbasic'),
-            'directory_server'    => (string) Config::Get('system', 'directory_server', ''),
-            'from_email'          => (string) Config::Get('system', 'from_email', ''),
-            'from_email_name'     => (string) Config::Get('system', 'from_email_name', ''),
-            'reply_address'       => (string) Config::Get('system', 'reply_address', ''),
-            'maximagesize'        => intval(Config::Get('system', 'maximagesize', 0)),
-            'site_location'       => (string) Config::Get('system', 'site_location', ''),
+            // Basic identity
+            'sitename'                 => self::cfgStr('sitename'),
+            'banner'                   => self::cfgStr('banner'),
+            'admininfo'                => self::cfgStr('admininfo'),
+            'siteinfo'                 => self::cfgStr('siteinfo'),
+            'site_location'            => self::cfgStr('site_location'),
+            'language'                 => self::cfgStr('language', 'en'),
+            'theme'                    => self::cfgStr('theme', 'redbasic'),
+            'default_permissions_role' => self::cfgStr('default_permissions_role', 'personal'),
+
+            // Registration
+            'register_policy'          => self::cfgInt('register_policy', REGISTER_CLOSED),
+            'access_policy'            => self::cfgInt('access_policy', ACCESS_FREE),
+            'max_daily_registrations'  => self::cfgInt('max_daily_registrations', 50),
+            'register_text'            => self::cfgStr('register_text'),
+            'minimum_age'              => self::cfgInt('minimum_age', 13),
+            'verify_email'             => self::cfgBool('verify_email'),
+            'register_wo_email'        => self::cfgBool('register_wo_email'),
+            'register_sameip'          => self::cfgInt('register_sameip', 3),
+            'auto_channel_create'      => self::cfgBool('auto_channel_create', true),
+            'invitation_only'          => self::cfgBool('invitation_only'),
+            'invitation_also'          => self::cfgBool('invitation_also'),
+            'abandon_days'             => self::cfgInt('account_abandon_days'),
+
+            // Content & visibility
+            'login_on_homepage'        => self::cfgBool('login_on_homepage'),
+            'disable_discover_tab'     => self::cfgBool('disable_discover_tab', true),
+            'site_firehose'            => self::cfgBool('site_firehose'),
+            'open_pubstream'           => self::cfgBool('open_pubstream'),
+            'publish_all'              => self::cfgBool('publish_all'),
+            'no_community_page'        => self::cfgBool('no_community_page'),
+            'frontpage'                => self::cfgStr('frontpage'),
+            'site_sellpage'            => self::cfgStr('sellpage'),
+            'first_page'               => self::cfgStr('workflow_channel_next', 'profiles'),
+            'mirror_frontpage'         => self::cfgBool('mirror_frontpage'),
+            'allowed_sites'            => self::cfgStr('allowed_sites'),
+            'pubstream_incl'           => self::cfgStr('pubstream_incl'),
+            'pubstream_excl'           => self::cfgStr('pubstream_excl'),
+
+            // Email
+            'directory_server'         => self::cfgStr('directory_server'),
+            'from_email'               => self::cfgStr('from_email'),
+            'from_email_name'          => self::cfgStr('from_email_name'),
+            'reply_address'            => self::cfgStr('reply_address'),
+
+            // Upload limits
+            'maximagesize'             => self::cfgInt('maximagesize'),
+
+            // Behavior
+            'enable_context_help'      => self::cfgBool('enable_context_help'),
+            'sse_enabled'              => self::cfgBool('sse_enabled'),
+            'feed_contacts'            => self::cfgBool('feed_contacts'),
+
+            // Advanced / technical
+            'verifyssl'                => self::cfgBool('verifyssl', true),
+            'proxyuser'                => self::cfgStr('proxyuser'),
+            'proxy'                    => self::cfgStr('proxy'),
+            'curl_timeout'             => self::cfgInt('curl_timeout', 60),
+            'delivery_interval'        => self::cfgInt('delivery_interval', 2),
+            'delivery_batch_count'     => self::cfgInt('delivery_batch_count', 1),
+            'poll_interval'            => self::cfgInt('poll_interval', 2),
+            'imagick_path'             => self::cfgStr('imagick_convert_path'),
+            'maxloadavg'               => self::cfgInt('maxloadavg', 50),
+            'default_expire_days'      => self::cfgInt('default_expire_days', 30),
+            'active_expire_days'       => self::cfgInt('active_expire_days', 7),
         ]);
     }
 
@@ -134,10 +215,28 @@ class Admin
     {
         $data = Auth::$parsedBody;
 
-        $str_fields  = ['sitename', 'banner', 'admininfo', 'siteinfo', 'language', 'theme',
-                         'directory_server', 'from_email', 'from_email_name', 'reply_address', 'site_location'];
-        $int_fields  = ['register_policy', 'access_policy', 'max_daily_registrations', 'abandon_days', 'maximagesize'];
-        $bool_fields = ['login_on_homepage', 'disable_discover_tab', 'site_firehose', 'open_pubstream'];
+        $str_fields  = [
+            'sitename', 'banner', 'admininfo', 'siteinfo', 'site_location',
+            'language', 'theme', 'default_permissions_role',
+            'register_text', 'directory_server',
+            'from_email', 'from_email_name', 'reply_address',
+            'allowed_sites', 'pubstream_incl', 'pubstream_excl',
+            'proxyuser', 'proxy',
+        ];
+        $int_fields  = [
+            'register_policy', 'access_policy', 'max_daily_registrations',
+            'minimum_age', 'register_sameip',
+            'maximagesize', 'curl_timeout', 'delivery_interval',
+            'delivery_batch_count', 'poll_interval', 'maxloadavg',
+            'default_expire_days', 'active_expire_days',
+        ];
+        $bool_fields = [
+            'login_on_homepage', 'disable_discover_tab', 'site_firehose', 'open_pubstream',
+            'publish_all', 'no_community_page', 'mirror_frontpage',
+            'verify_email', 'register_wo_email', 'auto_channel_create',
+            'invitation_only', 'invitation_also',
+            'enable_context_help', 'sse_enabled', 'feed_contacts', 'verifyssl',
+        ];
 
         foreach ($str_fields as $k)
             if (isset($data[$k]))
@@ -150,6 +249,18 @@ class Admin
         foreach ($bool_fields as $k)
             if (isset($data[$k]))
                 Config::Set('system', $k, intval((bool) $data[$k]));
+
+        // Fields where API name differs from config key
+        if (isset($data['abandon_days']))
+            Config::Set('system', 'account_abandon_days', intval($data['abandon_days']));
+        if (isset($data['site_sellpage']))
+            Config::Set('system', 'sellpage', notags(trim((string) $data['site_sellpage'])));
+        if (isset($data['first_page']))
+            Config::Set('system', 'workflow_channel_next', notags(trim((string) $data['first_page'])));
+        if (isset($data['frontpage']))
+            Config::Set('system', 'frontpage', notags(trim((string) $data['frontpage'])));
+        if (isset($data['imagick_path']))
+            Config::Set('system', 'imagick_convert_path', trim((string) $data['imagick_path']));
 
         Response::send(['status' => 'ok']);
     }
@@ -177,24 +288,40 @@ class Admin
             FROM account AS ac
             WHERE account_flags != %d
             ORDER BY account_id DESC
-            LIMIT %d OFFSET %d",
+            LIMIT " . intval($limit) . " OFFSET " . intval($offset),
             intval(ACCOUNT_BLOCKED),
             db_concat('ch.channel_address', ' '),
-            intval(ACCOUNT_BLOCKED | ACCOUNT_PENDING),
-            $limit,
-            $offset
+            intval(ACCOUNT_BLOCKED | ACCOUNT_PENDING)
         );
 
-        $pending_r = q("SELECT COUNT(*) AS pdg FROM register WHERE reg_vital = 1 AND reg_expires > '%s'",
-            dbesc(date('Y-m-d H:i:s'))
-        );
+        $raw_pending = get_pending_accounts(true);
+        $pending = [];
+        foreach ($raw_pending ?: [] as $p) {
+            $stuff = json_decode($p['reg_stuff'] ?? '', true) ?: [];
+            $pending[] = [
+                'reg_id'      => intval($p['reg_id']),
+                'reg_hash'    => (string) $p['reg_hash'],
+                'reg_email'   => (string) $p['reg_email'],
+                'reg_created' => (string) $p['reg_created'],
+                'reg_expires' => (string) $p['reg_expires'],
+                'reg_atip'    => (string) $p['reg_atip'],
+                'msg'         => (string) ($stuff['msg'] ?? ''),
+                'unverified'  => (bool) ($p['reg_flags'] & ACCOUNT_UNVERIFIED),
+                'expired'     => $p['reg_expires'] < datetime_convert(),
+            ];
+        }
 
-        Response::paginate(
-            $users ?: [],
-            $offset,
-            $limit,
-            $total,
-        );
+        Response::send([
+            'data'    => $users ?: [],
+            'meta'    => [
+                'offset'     => $offset,
+                'limit'      => $limit,
+                'count'      => count($users ?: []),
+                'root_count' => $total,
+                'has_more'   => ($offset + $limit) < $total,
+            ],
+            'pending' => $pending,
+        ]);
     }
 
     private function postAccounts(): void
@@ -203,23 +330,75 @@ class Admin
 
         $data   = Auth::$parsedBody;
         $action = $data['action'] ?? '';
-        $uid    = intval($data['account_id'] ?? 0);
-
-        if (!$uid)
-            Response::error(400, 'account_id required');
 
         switch ($action) {
             case 'block':
-                q("UPDATE account SET account_flags = (account_flags | %d) WHERE account_id = %d",
-                    intval(ACCOUNT_BLOCKED), $uid);
-                break;
             case 'unblock':
-                q("UPDATE account SET account_flags = (account_flags & ~%d) WHERE account_id = %d",
-                    intval(ACCOUNT_BLOCKED), $uid);
-                break;
             case 'delete':
-                account_remove($uid, true, false);
+                $uid = intval($data['account_id'] ?? 0);
+                if (!$uid)
+                    Response::error(400, 'account_id required');
+                if ($action === 'block')
+                    q("UPDATE account SET account_flags = (account_flags | %d) WHERE account_id = %d",
+                        intval(ACCOUNT_BLOCKED), $uid);
+                elseif ($action === 'unblock')
+                    q("UPDATE account SET account_flags = (account_flags & ~%d) WHERE account_id = %d",
+                        intval(ACCOUNT_BLOCKED), $uid);
+                else
+                    account_remove($uid, true, false);
                 break;
+
+            case 'approve':
+                $reg_id = intval($data['reg_id'] ?? 0);
+                if (!$reg_id)
+                    Response::error(400, 'reg_id required');
+
+                // Clear unverified (0x01) and pending-review (0x10) flags; admin approval overrides email verification
+                q("UPDATE register SET reg_flags = (reg_flags & ~17),
+                    reg_vital = (CASE (reg_flags & ~48) WHEN 0 THEN 0 ELSE 1 END)
+                    WHERE reg_vital = 1 AND reg_id = %d",
+                    $reg_id
+                );
+
+                $rs = q("SELECT * FROM register WHERE reg_id = %d", $reg_id);
+                if (!$rs)
+                    Response::error(404, 'Registration not found');
+
+                if (($rs[0]['reg_flags'] & ~48) == 0) {
+                    $ac = create_account_from_register($rs[0]);
+                    if (!$ac['success'])
+                        Response::error(500, 'Account creation failed: ' . ($ac['message'] ?? ''));
+
+                    $auto_create = Config::Get('system', 'auto_channel_create', 1);
+                    if ($auto_create) {
+                        $stuff = json_decode($rs[0]['reg_stuff'] ?? '', true) ?: [];
+                        if (!empty($stuff['chan.name']))
+                            set_aconfig($ac['account']['account_id'], 'register', 'channel_name', $stuff['chan.name']);
+                        if (!empty($stuff['chan.did1']))
+                            set_aconfig($ac['account']['account_id'], 'register', 'channel_address', $stuff['chan.did1']);
+                        $role = Config::Get('system', 'default_permissions_role');
+                        if ($role)
+                            set_aconfig($ac['account']['account_id'], 'register', 'permissions_role', $role);
+                        auto_channel_create($ac['account']['account_id']);
+                    }
+                }
+                break;
+
+            case 'deny':
+                $reg_id = intval($data['reg_id'] ?? 0);
+                if (!$reg_id)
+                    Response::error(400, 'reg_id required');
+
+                $rs = q("SELECT * FROM register WHERE reg_id = %d AND reg_vital = 1", $reg_id);
+                if (!$rs)
+                    Response::error(404, 'Registration not found');
+
+                if (intval($rs[0]['reg_uid'])) {
+                    q("DELETE FROM account WHERE account_id = %d", intval($rs[0]['reg_uid']));
+                }
+                q("UPDATE register SET reg_vital = 0 WHERE reg_id = %d AND reg_vital = 1", $reg_id);
+                break;
+
             default:
                 Response::error(400, "Unknown action: {$action}");
         }
@@ -235,18 +414,82 @@ class Admin
         $limit  = 50;
         $offset = $page * $limit;
 
-        $total_r = q("SELECT COUNT(*) AS total FROM channel WHERE channel_removed = 0 AND channel_system = 0");
+        $total_r = q("select count(*) as total from channel where channel_removed = 0 and channel_system = 0");
         $total   = intval($total_r[0]['total'] ?? 0);
 
-        $channels = q("SELECT channel_id, channel_name, channel_address, channel_created, channel_lastpost
-            FROM channel
-            WHERE channel_removed = 0 AND channel_system = 0
-            ORDER BY channel_id DESC
-            LIMIT %d OFFSET %d",
-            $limit, $offset
+        $rows = q("select * from channel where channel_removed = 0 and channel_system = 0 order by channel_id desc limit %d offset %d",
+            intval($limit),
+            intval($offset)
         );
 
-        Response::paginate($channels ?: [], $offset, $limit, $total);
+        $result = [];
+        foreach ($rows ?: [] as $ch) {
+            $result[] = [
+                'channel_id'         => intval($ch['channel_id']),
+                'channel_name'       => (string) $ch['channel_name'],
+                'channel_address'    => (string) $ch['channel_address'],
+                'channel_created'    => (string) ($ch['channel_active'] ?? ''),
+                'channel_lastpost'   => (string) $ch['channel_lastpost'],
+                'channel_account_id' => intval($ch['channel_account_id']),
+                'blocked'            => (bool) (intval($ch['channel_pageflags']) & PAGE_CENSORED),
+                'allowcode'          => (bool) (intval($ch['channel_pageflags']) & PAGE_ALLOWCODE),
+            ];
+        }
+
+        Response::paginate($result, $offset, $limit, $total);
+    }
+
+    private function postChannels(): void
+    {
+        require_once('include/channel.php');
+
+        $data   = Auth::$parsedBody;
+        $action = $data['action'] ?? '';
+        $uid    = intval($data['channel_id'] ?? 0);
+
+        if (!$uid)
+            Response::error(400, 'channel_id required');
+
+        $channel = channelx_by_n($uid);
+        if (!$channel)
+            Response::error(404, 'Channel not found');
+
+        switch ($action) {
+            case 'block':
+                $pflags = intval($channel['channel_pageflags']) | PAGE_CENSORED;
+                q("UPDATE channel SET channel_pageflags = %d WHERE channel_id = %d", $pflags, $uid);
+                q("UPDATE xchan SET xchan_censored = 1 WHERE xchan_hash = '%s'",
+                    dbesc($channel['channel_hash']));
+                \Zotlabs\Daemon\Master::Summon(['Directory', $uid, 'nopush']);
+                break;
+
+            case 'unblock':
+                $pflags = intval($channel['channel_pageflags']) & ~PAGE_CENSORED;
+                q("UPDATE channel SET channel_pageflags = %d WHERE channel_id = %d", $pflags, $uid);
+                q("UPDATE xchan SET xchan_censored = 0 WHERE xchan_hash = '%s'",
+                    dbesc($channel['channel_hash']));
+                \Zotlabs\Daemon\Master::Summon(['Directory', $uid, 'nopush']);
+                break;
+
+            case 'allowcode':
+                $pflags = intval($channel['channel_pageflags']) | PAGE_ALLOWCODE;
+                q("UPDATE channel SET channel_pageflags = %d WHERE channel_id = %d", $pflags, $uid);
+                break;
+
+            case 'disallowcode':
+                $pflags = intval($channel['channel_pageflags']) & ~PAGE_ALLOWCODE;
+                q("UPDATE channel SET channel_pageflags = %d WHERE channel_id = %d", $pflags, $uid);
+                break;
+
+            case 'delete':
+                channel_remove($uid, true);
+                break;
+
+            default:
+                Response::error(400, "Unknown action: {$action}");
+        }
+
+        Response::send(['status' => 'ok']);
     }
 
     // ── Security ──────────────────────────────────────────────────────────────
@@ -254,21 +497,21 @@ class Admin
     private function getSecurity(): void
     {
         Response::send([
-            'block_public'              => (bool) Config::Get('system', 'block_public', false),
-            'cloud_disable_siteroot'    => (bool) Config::Get('system', 'cloud_disable_siteroot', false),
-            'cloud_report_disksize'     => (bool) intval(Config::Get('system', 'cloud_report_disksize', 0)),
-            'allowed_email'             => (string) Config::Get('system', 'allowed_email', ''),
-            'not_allowed_email'         => (string) Config::Get('system', 'not_allowed_email', ''),
-            'whitelisted_sites'         => (string) Config::Get('system', 'whitelisted_sites', ''),
-            'blacklisted_sites'         => (string) Config::Get('system', 'blacklisted_sites', ''),
-            'whitelisted_channels'      => (string) Config::Get('system', 'whitelisted_channels', ''),
-            'blacklisted_channels'      => (string) Config::Get('system', 'blacklisted_channels', ''),
-            'embed_allow'               => (string) Config::Get('system', 'embed_allow', ''),
-            'embed_deny'                => (string) Config::Get('system', 'embed_deny', ''),
-            'embed_sslonly'             => (bool) intval(Config::Get('system', 'embed_sslonly', 0)),
-            'transport_security_header' => (bool) intval(Config::Get('system', 'transport_security_header', 0)),
-            'content_security_policy'   => (bool) intval(Config::Get('system', 'content_security_policy', 0)),
-            'trusted_directory_servers' => (string) Config::Get('system', 'trusted_directory_servers', ''),
+            'block_public'              => self::cfgBool('block_public'),
+            'cloud_disable_siteroot'    => self::cfgBool('cloud_disable_siteroot'),
+            'cloud_report_disksize'     => self::cfgBool('cloud_report_disksize'),
+            'allowed_email'             => self::cfgStr('allowed_email'),
+            'not_allowed_email'         => self::cfgStr('not_allowed_email'),
+            'whitelisted_sites'         => self::cfgStr('whitelisted_sites'),
+            'blacklisted_sites'         => self::cfgStr('blacklisted_sites'),
+            'whitelisted_channels'      => self::cfgStr('whitelisted_channels'),
+            'blacklisted_channels'      => self::cfgStr('blacklisted_channels'),
+            'embed_allow'               => self::cfgStr('embed_allow'),
+            'embed_deny'                => self::cfgStr('embed_deny'),
+            'embed_sslonly'             => self::cfgBool('embed_sslonly'),
+            'transport_security_header' => self::cfgBool('transport_security_header'),
+            'content_security_policy'   => self::cfgBool('content_security_policy'),
+            'trusted_directory_servers' => self::cfgStr('trusted_directory_servers'),
         ]);
     }
 
@@ -387,15 +630,17 @@ class Admin
 
     private function getThemes(): void
     {
-        $current = Config::Get('system', 'theme', 'redbasic');
-        $themes  = [];
-        $files   = glob('view/theme/*');
+        $current       = self::cfgStr('theme', 'redbasic');
+        $allowed_str   = self::cfgStr('allowed_themes', '');
+        $allowed_list  = array_filter(array_map('trim', explode(',', $allowed_str)));
+        $themes        = [];
+        $files         = glob('view/theme/*');
 
         if ($files) {
             foreach ($files as $file) {
                 if (!is_dir($file)) continue;
-                $name = basename($file);
-                $info = get_theme_info($name);
+                $name   = basename($file);
+                $info   = get_theme_info($name);
                 $themes[] = [
                     'name'         => $name,
                     'description'  => $info['description'] ?? '',
@@ -404,11 +649,127 @@ class Admin
                     'mobile'       => file_exists($file . '/mobile'),
                     'experimental' => file_exists($file . '/experimental'),
                     'current'      => ($name === $current),
+                    'allowed'      => in_array($name, $allowed_list),
+                    'has_config'   => is_file("view/theme/$name/php/config.php"),
                 ];
             }
         }
 
         Response::send(['themes' => $themes, 'current' => $current]);
+    }
+
+    // ── Theme Options ─────────────────────────────────────────────────────────
+    //
+    // Reads keys registered by the theme in the config table (cat='theme_X').
+    // Themes populate these in their {theme}_theme_admin_enable() function via
+    // Config::Set defaults. No theme file modifications required.
+
+    private function getThemeOptions(): void
+    {
+        $theme    = basename($_GET['theme'] ?? self::cfgStr('theme', 'redbasic'));
+        $category = 'theme_' . $theme;
+
+        $rows = q("SELECT k, v FROM config WHERE cat = '%s' ORDER BY k", dbesc($category));
+
+        if (!$rows) {
+            Response::send(['theme' => $theme, 'fields' => []]);
+            return;
+        }
+
+        $schema_files = glob("view/theme/$theme/schema/*.css") ?: [];
+        $schema_opts  = ['---' => 'default'];
+        foreach ($schema_files as $f) {
+            $n = basename($f, '.css');
+            $schema_opts[$n] = $n;
+        }
+
+        $fields = [];
+        foreach ($rows as $row) {
+            $key   = $row['k'];
+            $value = (string) $row['v'];
+
+            if ($key === 'schema') {
+                $type  = 'select';
+                $extra = ['options' => $schema_opts];
+            } elseif (strpos($key, 'color') !== false) {
+                $type  = 'color';
+                $extra = [];
+            } else {
+                $type  = 'text';
+                $extra = [];
+            }
+
+            $field = [
+                'key'   => $key,
+                'type'  => $type,
+                'label' => ucwords(str_replace('_', ' ', $key)),
+                'hint'  => '',
+                'group' => 'Options',
+                'value' => $value,
+            ];
+            if ($extra) $field = array_merge($field, $extra);
+            $fields[] = $field;
+        }
+
+        Response::send(['theme' => $theme, 'fields' => $fields]);
+    }
+
+    private function postThemes(): void
+    {
+        $data   = Auth::$parsedBody;
+        $action = $data['action'] ?? '';
+
+        if ($action === 'toggle') {
+            $name = basename($data['theme'] ?? '');
+            if (!$name || !is_dir("view/theme/$name")) {
+                Response::error(400, 'Invalid theme');
+            }
+            $allowed_str  = self::cfgStr('allowed_themes', '');
+            $allowed_list = array_filter(array_map('trim', explode(',', $allowed_str)));
+
+            if (in_array($name, $allowed_list)) {
+                $allowed_list = array_values(array_filter($allowed_list, fn($t) => $t !== $name));
+            } else {
+                $allowed_list[] = $name;
+            }
+
+            Config::Set('system', 'allowed_themes', implode(',', $allowed_list));
+            Response::send(['allowed' => $allowed_list]);
+            return;
+        }
+
+        if ($action === 'options') {
+            $theme     = basename($data['theme'] ?? '');
+            $form_data = $data['form_data'] ?? [];
+
+            if (!$theme || !is_array($form_data)) {
+                Response::error(400, 'theme and form_data required');
+            }
+
+            $category = 'theme_' . $theme;
+            $rows     = q("SELECT k FROM config WHERE cat = '%s'", dbesc($category));
+            $db_keys  = array_column($rows ?: [], 'k');
+
+            if (empty($db_keys)) {
+                Response::error(400, 'Theme has no registered config keys');
+            }
+
+            foreach ($form_data as $k => $v) {
+                $k = (string) $k;
+                if (!in_array($k, $db_keys, true)) continue;
+                if (strpos($k, 'color') !== false) {
+                    $v = preg_match('/^#([A-Fa-f0-9]{3}){1,2}$|^$/', (string) $v) ? (string) $v : '';
+                } else {
+                    $v = (string) $v;
+                }
+                Config::Set($category, $k, $v);
+            }
+
+            Response::send(['status' => 'ok']);
+            return;
+        }
+
+        Response::error(400, 'Unknown action');
     }
 
     // ── Inspect Queue ─────────────────────────────────────────────────────────
@@ -446,8 +807,88 @@ class Admin
 
     private function getProfileFields(): void
     {
-        $fields = q("SELECT * FROM profdef ORDER BY id");
-        Response::send(['fields' => $fields ?: []]);
+        require_once('include/channel.php');
+
+        // Basic fields (configured or system defaults)
+        $basic_map  = get_profile_fields_basic();
+        if (!$basic_map) $basic_map = get_profile_fields_basic(1);
+        $basic_keys = array_keys($basic_map ?: []);
+
+        // Advanced-only fields (full advanced list minus basic)
+        $adv_full = get_profile_fields_advanced();
+        if (!$adv_full) $adv_full = get_profile_fields_advanced(1);
+        $adv_only = array_diff(array_keys($adv_full ?: []), $basic_keys);
+
+        // All built-in field names
+        $all_builtin = array_keys(get_profile_fields_advanced(1) ?: []);
+
+        // Custom fields from profdef
+        $custom = q("SELECT id, field_name, field_type, field_desc, field_help FROM profdef ORDER BY id");
+        $custom_names = array_column($custom ?: [], 'field_name');
+
+        Response::send([
+            'basic'         => implode(', ', $basic_keys),
+            'advanced'      => implode(', ', array_values($adv_only)),
+            'all_available' => array_values(array_unique(array_merge($all_builtin, $custom_names))),
+            'custom_fields' => $custom ?: [],
+        ]);
+    }
+
+    private function postProfileFields(): void
+    {
+        require_once('include/channel.php');
+        $data   = Auth::$parsedBody;
+        $action = $data['action'] ?? '';
+
+        if ($action === 'save_layout') {
+            $parse = function (string $s): array {
+                return array_values(array_filter(array_map('trim', explode(',', $s))));
+            };
+            $basic = $parse($data['basic'] ?? '');
+            $adv   = $parse($data['advanced'] ?? '');
+            if ($basic) Config::Set('system', 'profile_fields_basic', $basic);
+            else        Config::Delete('system', 'profile_fields_basic');
+            if ($adv)   Config::Set('system', 'profile_fields_advanced', $adv);
+            else        Config::Delete('system', 'profile_fields_advanced');
+            Response::send(['status' => 'ok']);
+            return;
+        }
+
+        if ($action === 'create') {
+            $name = trim($data['field_name'] ?? '');
+            $type = trim($data['field_type'] ?? 'text');
+            $desc = trim($data['field_desc'] ?? '');
+            $help = trim($data['field_help'] ?? '');
+            if (!$name) Response::error(400, 'field_name required');
+            q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','%s','%s','%s','')",
+                dbesc($name), dbesc($type), dbesc($desc), dbesc($help));
+            $row = q("SELECT id, field_name, field_type, field_desc, field_help FROM profdef WHERE field_name = '%s' ORDER BY id DESC LIMIT 1", dbesc($name));
+            Response::send(['field' => $row ? $row[0] : null]);
+            return;
+        }
+
+        if ($action === 'update') {
+            $id   = intval($data['id'] ?? 0);
+            $name = trim($data['field_name'] ?? '');
+            $type = trim($data['field_type'] ?? 'text');
+            $desc = trim($data['field_desc'] ?? '');
+            $help = trim($data['field_help'] ?? '');
+            if (!$id || !$name) Response::error(400, 'id and field_name required');
+            q("UPDATE profdef SET field_name='%s', field_type='%s', field_desc='%s', field_help='%s' WHERE id=%d",
+                dbesc($name), dbesc($type), dbesc($desc), dbesc($help), $id);
+            Response::send(['status' => 'ok']);
+            return;
+        }
+
+        if ($action === 'delete') {
+            $id = intval($data['id'] ?? 0);
+            if (!$id) Response::error(400, 'id required');
+            q("DELETE FROM profdef WHERE id = %d", $id);
+            Response::send(['status' => 'ok']);
+            return;
+        }
+
+        Response::error(400, 'Unknown action');
     }
 
     // ── DB updates ────────────────────────────────────────────────────────────
@@ -510,8 +951,25 @@ class Admin
         }
 
         Response::send([
-            'logfile' => $logfile ?: null,
-            'entries' => $entries,
+            'logfile'    => $logfile ?: null,
+            'debugging'  => (bool) Config::Get('system', 'debugging'),
+            'loglevel'   => intval(Config::Get('system', 'loglevel', 0)),
+            'entries'    => $entries,
         ]);
+    }
+
+    private function postLogs(): void
+    {
+        $data = Auth::$parsedBody;
+
+        $logfile   = trim($data['logfile']   ?? Config::Get('system', 'logfile', ''));
+        $debugging = isset($data['debugging']) ? (bool) $data['debugging'] : (bool) Config::Get('system', 'debugging');
+        $loglevel  = isset($data['loglevel'])  ? intval($data['loglevel'])  : intval(Config::Get('system', 'loglevel', 0));
+
+        Config::Set('system', 'logfile',   $logfile);
+        Config::Set('system', 'debugging', $debugging);
+        Config::Set('system', 'loglevel',  $loglevel);
+
+        Response::send(['status' => 'ok', 'debugging' => $debugging, 'logfile' => $logfile, 'loglevel' => $loglevel]);
     }
 }
