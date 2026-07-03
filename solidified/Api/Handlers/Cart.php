@@ -382,6 +382,7 @@ class Cart
     {
         $uid      = intval($channel['channel_id']);
         $settings = $this->loadPaymentSettingsRaw($uid);
+        $settings['currency'] = $this->pget($uid, 'cart', 'currency') ?? 'USD';
         Response::send($settings);
     }
 
@@ -421,6 +422,17 @@ class Cart
             ],
         ];
 
+        // Save top-level currency
+        $currency = strtoupper(trim($body['currency'] ?? 'USD'));
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) $currency = 'USD';
+        q("INSERT INTO pconfig (uid, cat, k, v) VALUES (%d,'cart','currency','%s')
+           ON DUPLICATE KEY UPDATE v='%s'",
+            $uid,
+            dbesc(json_encode($currency)),
+            dbesc(json_encode($currency))
+        );
+        $settings['currency'] = $currency;
+
         // Preserve secrets when client sends masked placeholder
         foreach (['paypal' => 'secret', 'razorpay' => 'key_secret', 'cashfree' => 'secret_key'] as $provider => $field) {
             $v = $settings[$provider][$field];
@@ -440,6 +452,7 @@ class Cart
         $settings['paypal']['secret']        = $settings['paypal']['secret']        ? '••••••••' : '';
         $settings['razorpay']['key_secret']  = $settings['razorpay']['key_secret']  ? '••••••••' : '';
         $settings['cashfree']['secret_key']  = $settings['cashfree']['secret_key']  ? '••••••••' : '';
+        // currency already included in $settings via the block above
         Response::send($settings);
     }
 
