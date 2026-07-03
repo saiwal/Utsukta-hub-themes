@@ -660,6 +660,10 @@ class Item
         }
         Master::Summon(['Notifier', 'like', $post['item_id']]);
 
+        if (in_array($activityVerb, ['Accept', 'TentativeAccept']) && $target['obj_type'] === 'Event') {
+            event_addtocal($target['id'], $uid);
+        }
+
         $counts = $this->fetchReactionCounts($target['mid']);
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
     }
