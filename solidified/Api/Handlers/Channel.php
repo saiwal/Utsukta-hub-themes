@@ -56,7 +56,7 @@ class Channel
         $sql_extra       = ' AND item.item_wall = 1 ';
 
         // Verb whitelist — exclude reactions and federation noise
-        $sql_extra .= " AND item.verb IN ('Create', 'Update', 'EmojiReact') ";
+				$sql_extra .= " AND item.verb IN ('Create', 'Update', 'EmojiReact', 'Invite') ";
 
         if ($category) {
             $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));

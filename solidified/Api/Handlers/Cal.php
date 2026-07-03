@@ -256,6 +256,18 @@ class Cal
             Response::error(400, 'Unknown calendar action');
         }
 
+        // Edit event
+        if ($idStr === 'edit') {
+            $this->editEvent($uid, $channel, intval($sub));
+            return;
+        }
+
+        // Delete event
+        if ($idStr === 'delete') {
+            $this->deleteEvent($uid, $channel, intval($sub));
+            return;
+        }
+
         // Create event
         $body = Auth::$parsedBody;
 
@@ -315,11 +327,259 @@ class Cal
         if (!empty($post['item_id'])) {
             \Zotlabs\Daemon\Master::Summon(['Notifier', 'event', $post['item_id']]);
         }
+        if (!empty($post['approval_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'event', $post['approval_id']]);
+        }
 
         Response::send([
             'id'  => intval($event['id']),
             'uri' => $event['event_hash'] ?? '',
         ]);
+    }
+
+    // ── Edit event ───────────────────────────────────────────────────────────
+
+    private function editEvent(int $uid, array $channel, int $eventId): void
+    {
+        $body = Auth::$parsedBody;
+
+        // CalDAV event path: calendarId + uri present in body
+        $calendarId = $body['calendarId'] ?? null;
+        if ($calendarId !== null && $calendarId !== 'channel_calendar') {
+            $this->editCalDavEvent($uid, $channel, intval($calendarId), (string)($body['uri'] ?? ''));
+            return;
+        }
+
+        // Channel calendar event
+        $r = q("SELECT * FROM event WHERE id = %d AND uid = %d LIMIT 1",
+            $eventId, intval($uid));
+        if (!$r) {
+            Response::error(404, 'Event not found');
+        }
+        $existing = $r[0];
+
+        $title       = trim($body['title'] ?? '');
+        $description = trim($body['description'] ?? '');
+        $location    = trim($body['location'] ?? '');
+        $startIso    = $body['start'] ?? '';
+        $endIso      = $body['end'] ?? null;
+        $allDay      = (bool)($body['allDay'] ?? false);
+        $nofinish    = (bool)($body['nofinish'] ?? false);
+
+        if (!$title) {
+            Response::error(400, 'Title is required');
+        }
+        if (!$startIso) {
+            Response::error(400, 'Start time is required');
+        }
+
+        $adjust  = $allDay ? 0 : 1;
+        $dtstart = datetime_convert('UTC', 'UTC', $startIso);
+        $dtend   = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
+
+        $datarray = [
+            'id'               => $eventId,
+            'uid'              => intval($uid),
+            'event_xchan'      => $channel['channel_hash'],
+            'etype'            => $existing['etype'],
+            'event_hash'       => $existing['event_hash'],
+            'summary'          => $title,
+            'description'      => $description,
+            'location'         => $location,
+            'dtstart'          => $dtstart,
+            'dtend'            => $dtend,
+            'nofinish'         => ($nofinish || !$endIso) ? 1 : 0,
+            'adjust'           => $adjust,
+            'timezone'         => $existing['timezone'] ?: 'UTC',
+            'edited'           => datetime_convert(),
+            'allow_cid'        => $existing['allow_cid'],
+            'allow_gid'        => $existing['allow_gid'],
+            'deny_cid'         => $existing['deny_cid'],
+            'deny_gid'         => $existing['deny_gid'],
+            'event_status'     => $existing['event_status'],
+            'event_percent'    => intval($existing['event_percent']),
+            'event_repeat'     => $existing['event_repeat'],
+            'event_sequence'   => intval($existing['event_sequence']),
+            'event_priority'   => intval($existing['event_priority']),
+            'event_vdata'      => $existing['event_vdata'],
+        ];
+
+        $event = event_store_event($datarray);
+        if (!$event) {
+            Response::error(500, 'Failed to update event');
+        }
+
+        $post = event_store_item($datarray, $event);
+
+        if (!empty($post['item_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $post['item_id']]);
+        }
+
+        Response::send(['success' => true]);
+    }
+
+    private function editCalDavEvent(int $uid, array $channel, int $calId, string $uri): void
+    {
+        require_once 'vendor/autoload.php';
+
+        $principalUri = 'principals/' . $channel['channel_address'];
+        if (!cdav_principal($principalUri)) {
+            Response::error(403, 'CalDAV not available');
+        }
+
+        $pdo           = \DBA::$dba->db;
+        $caldavBackend = new \Sabre\CalDAV\Backend\PDO($pdo);
+
+        $cals = $caldavBackend->getCalendarsForUser($principalUri);
+        if (!cdav_perms($calId, $cals)) {
+            Response::error(403, 'Permission denied');
+        }
+
+        // Resolve instanceId from calendar list
+        $calInstanceId = 0;
+        foreach ($cals as $cal) {
+            if (intval($cal['id'][0]) === $calId) {
+                $calInstanceId = intval($cal['id'][1]);
+                break;
+            }
+        }
+
+        $body        = Auth::$parsedBody;
+        $title       = trim(escape_tags($body['title'] ?? ''));
+        $description = escape_tags($body['description'] ?? '');
+        $location    = escape_tags($body['location'] ?? '');
+        $startIso    = $body['start'] ?? '';
+        $endIso      = $body['end'] ?? null;
+        $allDay      = !empty($body['allDay']);
+        $nofinish    = !empty($body['nofinish']);
+
+        if (!$title || !$startIso) {
+            Response::error(400, 'Title and start are required');
+        }
+
+        // Preserve the existing UID
+        $uid_str = '';
+        try {
+            $existing = $caldavBackend->getCalendarObject([$calId, $calInstanceId], $uri);
+            if (!empty($existing['calendardata']) &&
+                preg_match('/^UID:(.+)$/m', (string)$existing['calendardata'], $m)) {
+                $uid_str = trim($m[1]);
+            }
+        } catch (\Exception $e) {
+            // fall through — generate a new UID
+        }
+        if (!$uid_str) {
+            $uid_str = strtoupper(random_string(32));
+        }
+
+        $now = gmdate('Ymd\THis\Z');
+
+        $lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//Hubzilla SPA//Calendar//EN",
+            "BEGIN:VEVENT",
+            "UID:" . $uid_str,
+            "DTSTAMP:" . $now,
+            "LAST-MODIFIED:" . $now,
+        ];
+
+        if ($allDay) {
+            $sd = str_replace('-', '', substr($startIso, 0, 10));
+            $lines[] = "DTSTART;VALUE=DATE:" . $sd;
+            if (!$nofinish && $endIso) {
+                $ed = str_replace('-', '', substr($endIso, 0, 10));
+                $lines[] = "DTEND;VALUE=DATE:" . $ed;
+            }
+        } else {
+            $lines[] = "DTSTART:" . gmdate('Ymd\THis\Z', strtotime($startIso));
+            if (!$nofinish && $endIso) {
+                $lines[] = "DTEND:" . gmdate('Ymd\THis\Z', strtotime($endIso));
+            }
+        }
+
+        $lines[] = "SUMMARY:" . $this->icalEscape($title);
+        if ($description) $lines[] = "DESCRIPTION:" . $this->icalEscape($description);
+        if ($location)    $lines[] = "LOCATION:"    . $this->icalEscape($location);
+
+        $lines[] = "END:VEVENT";
+        $lines[] = "END:VCALENDAR";
+
+        $icalContent = implode("\r\n", $lines) . "\r\n";
+
+        $caldavBackend->updateCalendarObject([$calId, $calInstanceId], $uri, $icalContent);
+
+        Response::send(['success' => true]);
+    }
+
+    // ── Delete event ─────────────────────────────────────────────────────────
+
+    private function deleteEvent(int $uid, array $channel, int $eventId): void
+    {
+        $body = Auth::$parsedBody;
+
+        // CalDAV event path
+        $calendarId = $body['calendarId'] ?? null;
+        if ($calendarId !== null && $calendarId !== 'channel_calendar') {
+            $this->deleteCalDavEvent($uid, $channel, intval($calendarId), (string)($body['uri'] ?? ''));
+            return;
+        }
+
+        // Channel calendar event — verify ownership
+        $r = q("SELECT * FROM event WHERE id = %d AND uid = %d LIMIT 1",
+            $eventId, intval($uid));
+        if (!$r) {
+            Response::error(404, 'Event not found');
+        }
+        $existing = $r[0];
+
+        // Find and drop the associated item (handles federation)
+        $item = q("SELECT * FROM item
+                   WHERE resource_id = '%s' AND resource_type = 'event'
+                     AND uid = %d AND item_deleted = 0 LIMIT 1",
+            dbesc($existing['event_hash']),
+            intval($uid)
+        );
+
+        if ($item) {
+            drop_item($item[0]['id'], DROPITEM_PHASE1);
+        }
+
+        // Remove the event record
+        q("DELETE FROM event WHERE id = %d AND uid = %d",
+            $eventId, intval($uid));
+
+        Response::send(['deleted' => true]);
+    }
+
+    private function deleteCalDavEvent(int $uid, array $channel, int $calId, string $uri): void
+    {
+        require_once 'vendor/autoload.php';
+
+        $principalUri = 'principals/' . $channel['channel_address'];
+        if (!cdav_principal($principalUri)) {
+            Response::error(403, 'CalDAV not available');
+        }
+
+        $pdo           = \DBA::$dba->db;
+        $caldavBackend = new \Sabre\CalDAV\Backend\PDO($pdo);
+
+        $cals = $caldavBackend->getCalendarsForUser($principalUri);
+        if (!cdav_perms($calId, $cals)) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $calInstanceId = 0;
+        foreach ($cals as $cal) {
+            if (intval($cal['id'][0]) === $calId) {
+                $calInstanceId = intval($cal['id'][1]);
+                break;
+            }
+        }
+
+        $caldavBackend->deleteCalendarObject([$calId, $calInstanceId], $uri);
+
+        Response::send(['deleted' => true]);
     }
 
     // ── iCal export ───────────────────────────────────────────────────────────
