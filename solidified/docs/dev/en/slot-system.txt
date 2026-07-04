@@ -1,6 +1,8 @@
-# Slot System
+# Slot & Widget System
 
 Modules inject UI widgets into named **slots** — predefined layout regions that the shell (`Layout.tsx`) renders. This keeps feature code decoupled from the layout.
+
+Every widget is registered with a **stable id** in a central widget registry (`module-registry.ts`). Ids are the addressable unit for user-configurable widget layouts, so they must never be renamed once shipped.
 
 ## Available Slots
 
@@ -10,55 +12,86 @@ Modules inject UI widgets into named **slots** — predefined layout regions tha
 | `leftBottom` | Bottom of left sidebar |
 | `mainTop` | Top of main content area |
 | `rightVisitor` | Right sidebar shown to visitors |
-| `help` | Help overlay content |
 
-## Declaring Slot Widgets in a Module
-
-```typescript
-// A single widget
-slots: {
-  right: () => import("./widgets/MySidebarWidget"),
-}
-
-// Multiple widgets (rendered in order)
-slots: {
-  right: [
-    () => import("./widgets/WidgetA"),
-    () => import("./widgets/WidgetB"),
-  ],
-}
-```
-
-Each entry is a **slot loader** — a function that returns `Promise<{ default: Component }>`.
-
-## Global vs Module-Local Slots
-
-By default, slot widgets are **module-local**: they are rendered only while that module's route is active. When the user navigates away, the widget unmounts.
-
-**Global slots** stay mounted for the entire session — they survive navigation. Mark a loader as global with `globalSlot()`:
+## Declaring Widgets in a Module
 
 ```typescript
-// shared/slots.ts
-import { globalSlot } from "./lib/module-registry";
-
-export const notificationSlot = globalSlot(
-  () => import("./widgets/notifications/NotificationsAside")
-);
-```
-
-Then reference it from any module's `slots` definition:
-
-```typescript
-import { notificationSlot } from "@/shared/slots";
-
 registerModule({
-  id: "hq",
-  slots: { right: [notificationSlot] },
+  id: "network",
   // …
+  widgets: [
+    {
+      id: "network.filters",            // stable, persisted — never rename
+      label: "Stream Filters",          // shown in the widget picker UI
+      loader: () => import("./widgets/StreamFiltersWidget"),
+      slot: "right",
+    },
+  ],
 });
 ```
 
-Global loaders are deduplicated by reference — registering the same loader from multiple modules only mounts it once.
+`WidgetDef` fields (see `shared/types/module.types.ts`):
+
+- `id` — stable identifier, convention `"<moduleId>.<name>"`.
+- `label` — human-readable name (string or `() => string` for i18n).
+- `loader` — `() => Promise<{ default: Component }>`.
+- `slot` — which layout region the widget renders in.
+- `defaultModules` — module ids where the widget appears out of the box. Defaults to the registering module. Example: the channel widgets declare `["channel", "profile"]` so they also appear on profile pages.
+- `contexts` — module ids where a user may place the widget, or `"any"`. Defaults to `defaultModules`.
+- `global` — always mounted on every page, never torn down on navigation.
+- `visitorVisible` — `false` means only authenticated local users see the widget; set it on widgets showing viewer-private data (drafts, bookmarks) so visitors to public pages never mount them. Default `true`.
+
+## Global vs Module-Local Widgets
+
+By default widgets are **module-local**: rendered only while a module listed in `defaultModules` is active, and unmounted on navigation away.
+
+**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. The shared ones live in `shared/slots.ts`:
+
+```typescript
+// shared/slots.ts
+export const notificationsWidget: WidgetDef = {
+  id: "shared.notifications",
+  label: "Notifications",
+  loader: () => import("./widgets/notifications/NotificationsAside"),
+  slot: "right",
+  contexts: "any",
+  global: true,
+};
+```
+
+A widget id can only be registered once — duplicate registrations are ignored with a console warning.
+
+## User Layouts
+
+Users can override which widgets appear on which pages. The layout lives in pconfig (cat `spa`, key `widget_layout`) as JSON:
+
+```json
+{
+  "version": 1,
+  "modules": {
+    "hq":      { "right": ["shared.notifications", "network.savedSearch"] },
+    "channel": { "right": ["channel.archive", "channel.connections"] }
+  }
+}
+```
+
+- Absence of a module/slot entry → registry defaults apply.
+- An explicit empty array → the user removed every widget from that slot.
+- Saved via `POST /api/widget-layout` (`{ layout: … }`, `{ layout: null }` resets everything); loaded at boot from `GET /api/pconfig`.
+
+Client state is in `src/shared/store/widget-layout.ts`: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`. Saves are optimistic with rollback; localStorage (`hz-widget-layout`) caches the layout so sidebars don't flash defaults while pconfig loads. The server value — including its absence — always wins for local users.
+
+Stored ids that point at unknown, global, context-disallowed, or uninstalled-app widgets are silently dropped at render time: layouts outlive code changes.
+
+### Visitors see the owner's arrangement
+
+`widget_layout` is included in the per-channel prefs that `GET /api/pconfig?channel=<nick>` exposes (`channelSpa()` in `Pconfig.php`), the same payload that carries the channel's theme. `useChannelTheme` feeds it into a separate `pageLayout` signal (`initPageWidgetLayout` / `pageLayoutFor`), cleared when leaving channel pages. `Slot` picks the source by viewer role: on your own pages (`viewerRole() === "owner"`) your layout applies; on anyone else's channel-scoped pages — including for logged-in local users — the page owner's layout applies. The page-owner layout is never persisted on the visitor's device.
+
+## Edit Mode
+
+Local users get a pencil toggle in the right-sidebar header (visible on all breakpoints — the sidebar is a drawer on mobile, a column on `xl`). While editing, each widget shows a header with move-up / move-down / remove controls and an inert, dimmed preview; below the list sit an "Add widget" picker (widgets allowed in the current module whose backing app is installed) and a "Reset to defaults" button (shown only when the page is customised). Every action saves immediately and optimistically via `saveSlotLayout`; failures roll back and raise an error toast.
+
+State: `editingWidgets` / `setEditingWidgets` in `widget-layout.ts`; only `<Slot>` instances rendered with the `editable` prop show edit chrome. Global widgets are not editable. The pencil and the edit chrome only appear on pages you own (`viewerRole() === "owner"`) — editing always targets your own layout, and edit mode auto-exits when navigating to someone else's page.
 
 ## The Slot Component
 
@@ -74,9 +107,16 @@ If `moduleId` is omitted, the active module is inferred from the current URL pat
 Internally, `Slot` renders:
 
 1. All **global** widgets for the slot (always mounted, never torn down).
-2. **Local** widgets for the active module (swapped on navigation).
+2. **Local** widgets: the user's saved layout for the active module when one exists, otherwise widgets whose `defaultModules` include the active module (swapped on navigation).
 
-Local widgets are skipped when the module's `appName` app is not installed.
+Local widgets are skipped when the active module's `appName` app is not installed; each widget is additionally gated by its *owning* module's app, and `visitorVisible: false` widgets are skipped for non-local viewers (this filter applies to global widgets too).
+
+## Registry Lookups
+
+- `getWidget(id)` — a single registered widget, or `null`.
+- `getAllWidgets()` — every registered widget in registration order (picker UI, layout validation).
+- `resolveGlobalSlots(slot)` / `resolveModuleSlot(slot, moduleId)` — the `RegisteredWidget` lists `Slot` renders by default.
+- `widgetAllowedIn(widget, moduleId)` — whether a user may place the widget on that module's pages (`contexts` check).
 
 ## Lazy Caching
 
@@ -90,14 +130,18 @@ export function getLazy(loader: SlotLoader): Component {
 }
 ```
 
-## Reactivity: globalVersion
+## Reactivity: widgetVersion
 
-`globalVersion` is a signal that increments whenever a new global loader is registered. The `Slot` component tracks it so that widgets registered after async module import are immediately reflected:
+`widgetVersion` is a signal that increments whenever a module registers widgets. The `Slot` component tracks it so that widgets registered after async module import are immediately reflected:
 
 ```typescript
-const globalVersion = getGlobalVersion();
+const widgetVersion = getWidgetVersion();
 const globalWidgets = createMemo(() => {
-  globalVersion(); // subscribe
+  widgetVersion(); // subscribe
   return resolveGlobalSlots(props.name).map(getLazy);
 });
 ```
+
+## Legacy: `slots`
+
+The old `slots: { right: [loader] }` module field is deprecated and **ignored** by the registry (a console warning fires if non-empty). Migrate to `widgets`.
