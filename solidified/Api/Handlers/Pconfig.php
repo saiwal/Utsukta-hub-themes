@@ -44,6 +44,10 @@ class Pconfig
             if ($stored) $result['custom_theme_colors'] = $stored;
         }
 
+        // The owner's widget arrangement also applies to visitors of their pages
+        $widget_layout = get_pconfig($cuid, 'spa', 'widget_layout', '');
+        if ($widget_layout) $result['widget_layout'] = (string) $widget_layout;
+
         return $result;
     }
 

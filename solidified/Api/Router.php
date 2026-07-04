@@ -20,6 +20,7 @@ class Router
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
+        'widget-layout' => Handlers\WidgetLayout::class,
         'drafts' => Handlers\Drafts::class,
         'item' => Handlers\Item::class,
         'item-source' => Handlers\Itemsrc::class,
