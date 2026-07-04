@@ -132,19 +132,84 @@ trait FetchesRemoteActor
     protected function fetchRemoteUrl(string $url, array $headers = []): ?string
     {
         if (!function_exists('curl_init')) return null;
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_TIMEOUT        => 8,
-            CURLOPT_USERAGENT      => 'Hubzilla/1.0 (+https://hubzilla.org)',
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_SSL_VERIFYPEER => true,
-        ]);
-        $body   = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        return ($body !== false && $status >= 200 && $status < 300) ? $body : null;
+
+        // These URLs (webfinger, actor, outbox, collection pages) come from
+        // remote/attacker-influenced responses, so guard against SSRF: only
+        // http(s), and every hop must resolve to a public IP. We follow
+        // redirects manually because CURLOPT_FOLLOWLOCATION would bypass the
+        // per-hop check, and we pin the validated IP with CURLOPT_RESOLVE to
+        // defeat DNS-rebinding between validation and connection.
+        $maxRedirects = 3;
+
+        for ($hop = 0; $hop <= $maxRedirects; $hop++) {
+            $pin = $this->pinPublicHost($url);
+            if ($pin === null) return null;
+
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_TIMEOUT        => 8,
+                CURLOPT_USERAGENT      => 'Hubzilla/1.0 (+https://hubzilla.org)',
+                CURLOPT_HTTPHEADER     => $headers,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_RESOLVE        => $pin,
+            ]);
+            $body     = curl_exec($ch);
+            $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $redirect = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
+            curl_close($ch);
+
+            if ($body === false) return null;
+
+            if ($status >= 300 && $status < 400 && $redirect) {
+                $url = $redirect;
+                continue; // re-validate the redirect target on the next iteration
+            }
+
+            return ($status >= 200 && $status < 300) ? $body : null;
+        }
+
+        return null; // exceeded redirect limit
+    }
+
+    /**
+     * Validate that $url is http(s) and resolves only to public IP addresses.
+     * Returns a CURLOPT_RESOLVE entry ["host:port:ip"] pinning the connection
+     * to a validated IP, or null if the URL is unsafe / unresolvable.
+     */
+    private function pinPublicHost(string $url): ?array
+    {
+        $parts = parse_url($url);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) return null;
+
+        $scheme = strtolower($parts['scheme']);
+        if ($scheme !== 'http' && $scheme !== 'https') return null;
+
+        $host = $parts['host'];
+        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            $ips = [$host];
+        } else {
+            $ips = @gethostbynamel($host) ?: [];
+            foreach ((@dns_get_record($host, DNS_AAAA) ?: []) as $rec) {
+                if (!empty($rec['ipv6'])) $ips[] = $rec['ipv6'];
+            }
+            if (!$ips) return null;
+        }
+
+        // Refuse if *any* resolved address is private/reserved.
+        $publicIp = null;
+        foreach ($ips as $ip) {
+            $ok = filter_var($ip, FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+            if ($ok === false) return null;
+            $publicIp ??= $ip;
+        }
+        if ($publicIp === null) return null;
+
+        return ["{$host}:{$port}:{$publicIp}"];
     }
 }

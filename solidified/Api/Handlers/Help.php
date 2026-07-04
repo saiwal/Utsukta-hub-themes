@@ -29,8 +29,8 @@ class Help {
     // GET /api/help/nav?section=user&lang=en
 
     private function handleNav(): void {
-        $section = $this->param('section', 'user');
-        $lang    = $this->param('lang',    'en');
+        $section = $this->slugParam('section', 'user');
+        $lang    = $this->slugParam('lang',    'en');
 
         $base = $this->docsBase() . '/' . $section . '/' . $lang;
 
@@ -57,8 +57,8 @@ class Help {
     // GET /api/help/topic?section=user&lang=en&topic=network
 
     private function handleTopic(): void {
-        $section = $this->param('section', 'user');
-        $lang    = $this->param('lang',    'en');
+        $section = $this->slugParam('section', 'user');
+        $lang    = $this->slugParam('lang',    'en');
         $topic   = trim($this->param('topic', ''), '/');
 
         // Sanitise topic path — only safe chars
@@ -184,6 +184,15 @@ class Help {
 
     private function param(string $key, string $default = ''): string {
         return isset($_GET[$key]) ? trim($_GET[$key]) : $default;
+    }
+
+    // Section/lang become filesystem path segments, so restrict them to a safe
+    // slug charset. This blocks path traversal (e.g. section=../../..) — unlike
+    // `topic`, these were previously used raw. Empty/invalid input falls back.
+    private function slugParam(string $key, string $default): string {
+        $val = $this->param($key, $default);
+        $val = preg_replace('/[^a-zA-Z0-9_\-]/', '', $val);
+        return $val !== '' ? $val : $default;
     }
 
     private function availableLangs(string $section): array {

@@ -620,6 +620,13 @@ class Item
             json_return_and_die(['error' => 'Parent item not found or permission denied']);
         }
 
+        // resolveItem only proves the observer can *view* the parent. Commenting
+        // is a separate permission — enforce the channel's comment policy /
+        // post_comments grant and closed-comment state, as core Item.php does.
+        if (!can_comment_on_post($ob_hash, $parent)) {
+            json_return_and_die(['error' => 'Commenting is not permitted on this post']);
+        }
+
         // Inherit ACL and privacy from parent
         $datarray = self::buildItemArray(
             profileUid: intval($parent['uid']),

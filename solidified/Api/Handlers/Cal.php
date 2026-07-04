@@ -84,9 +84,10 @@ class Cal
             }
         }
 
-        // iCal export
+        // iCal export — use the validated channel address (not the raw URL
+        // segment) since it lands in a Content-Disposition header downstream.
         if (isset($_GET['export']) && $_GET['export'] === 'ical') {
-            $this->exportIcal($channel_id, $nick, $sql_extra);
+            $this->exportIcal($channel_id, $channelx['channel_address'], $sql_extra);
             return;
         }
 

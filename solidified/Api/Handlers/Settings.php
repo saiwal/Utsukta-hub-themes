@@ -925,6 +925,21 @@ class Settings
             if (!$account_id)
                 Response::error(403, 'Permission denied');
 
+            // Channel removal is irreversible — require the account password as a
+            // confirmation step (defence-in-depth beyond the CSRF-protected session).
+            $password = (string) ($data['password'] ?? '');
+            if ($password === '')
+                Response::error(400, 'Password confirmation is required');
+
+            $acct = q("SELECT account_salt, account_password FROM account WHERE account_id = %d LIMIT 1",
+                intval($account_id));
+            if (!$acct)
+                Response::error(403, 'Permission denied');
+
+            $hash = hash('whirlpool', $acct[0]['account_salt'] . $password);
+            if (!hash_equals($acct[0]['account_password'], $hash))
+                Response::error(403, 'Incorrect password');
+
             \Zotlabs\Lib\Channel::channel_remove($uid, $account_id, true);
             Response::send(['status' => 'ok', 'redirect' => z_root()]);
         }

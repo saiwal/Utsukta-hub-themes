@@ -2,9 +2,34 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Response;
+use Zotlabs\Lib\Cache;
 
 class Login
 {
+    // Max failed credential attempts per client IP within the window below.
+    private const MAX_FAILS   = 10;
+    private const FAIL_WINDOW = '15 MINUTE';
+
+    private function throttleKey(): string
+    {
+        return 'spa_login_fail:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    }
+
+    private function failCount(): int
+    {
+        return (int) Cache::get($this->throttleKey(), self::FAIL_WINDOW);
+    }
+
+    // Record a failed credential attempt, feed the auth log (for fail2ban et al),
+    // then reject. Never reveals whether the username or the password was wrong.
+    private function failLogin(string $reason): never
+    {
+        Cache::set($this->throttleKey(), (string) ($this->failCount() + 1));
+        if (function_exists('log_failed_login')) {
+            log_failed_login('SPA login failure: ' . $reason);
+        }
+        Response::error(401, 'Invalid username or password');
+    }
     public function get(): void
     {
         if (empty($_SESSION['solidified_login_token'])) {
@@ -27,6 +52,10 @@ class Login
 
         if (!$username || !$password) {
             Response::error(400, 'Email and password are required');
+        }
+
+        if ($this->failCount() >= self::MAX_FAILS) {
+            Response::error(429, 'Too many failed login attempts. Please try again later.');
         }
 
         $expected = $_SESSION['solidified_login_token'] ?? '';
@@ -58,13 +87,13 @@ class Login
         }
 
         if (!$account) {
-            Response::error(401, 'Invalid username or password');
+            $this->failLogin('unknown user');
         }
 
         // Hubzilla stores passwords as hash('whirlpool', salt . password)
         $hash = \hash('whirlpool', $account['account_salt'] . $password);
         if (!\hash_equals($account['account_password'], $hash)) {
-            Response::error(401, 'Invalid username or password');
+            $this->failLogin('bad password');
         }
 
         if ($account['account_flags'] !== 0) {
@@ -73,6 +102,8 @@ class Login
 
         // $return=true prevents authenticate_success from calling goaway()
         \authenticate_success($account, $channel, true, true, true);
+
+        Cache::set($this->throttleKey(), '0');
 
         $ch = \App::get_channel();
         Response::send(['nick' => $ch['channel_address'] ?? '']);
