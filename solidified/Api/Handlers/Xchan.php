@@ -98,10 +98,11 @@ class Xchan
                 if (preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $domain)) {
                     $enriched = $this->fetchActorEnrichment($addr, $domain);
                     if ($enriched) {
-                        $profile_data['about']    = $enriched['about'];
-                        $profile_data['cover']    = $enriched['cover'];
-                        $profile_data['homepage'] = $enriched['url'] ?: ($xchan['xchan_url'] ?? '');
-                        $actor_fields             = $enriched['actor_fields'];
+                        $profile_data['about']        = $enriched['about'];
+                        $profile_data['cover']        = $enriched['cover'];
+                        $profile_data['homepage']     = $enriched['url'] ?: ($xchan['xchan_url'] ?? '');
+                        $actor_fields                 = $enriched['actor_fields'];
+                        $profile_data['remote_posts'] = $enriched['remote_posts'] ?? [];
                         if (!empty($enriched['photo'])) {
                             $xchan['xchan_photo_l'] = $enriched['photo'];
                         }

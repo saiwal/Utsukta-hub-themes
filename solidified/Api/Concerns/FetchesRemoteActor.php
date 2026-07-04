@@ -50,6 +50,8 @@ trait FetchesRemoteActor
             }
         }
 
+        $outbox_url = $actor['outbox'] ?? null;
+
         return [
             'name'         => $actor['name']         ?? '',
             'about'        => isset($actor['summary'])
@@ -59,7 +61,72 @@ trait FetchesRemoteActor
             'photo'        => $actor['icon']['url']   ?? '',
             'cover'        => $actor['image']['url']  ?? '',
             'actor_fields' => $fields,
+            'remote_posts' => $outbox_url ? $this->fetchRemotePosts($outbox_url) : [],
         ];
+    }
+
+    protected function fetchRemotePosts(string $outbox_url, int $limit = 5): array
+    {
+        $ap_accept = ['Accept: application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"'];
+
+        $body = $this->fetchRemoteUrl($outbox_url, $ap_accept);
+        if (!$body) return [];
+
+        $col = json_decode($body, true);
+        if (!$col) return [];
+
+        $items = $col['orderedItems'] ?? null;
+
+        // OrderedCollection without inline items — follow the first page link
+        if ($items === null && !empty($col['first'])) {
+            $first_url = is_string($col['first']) ? $col['first'] : ($col['first']['id'] ?? null);
+            if ($first_url && $first_url !== $outbox_url) {
+                $page_body = $this->fetchRemoteUrl($first_url, $ap_accept);
+                if ($page_body) {
+                    $page  = json_decode($page_body, true);
+                    $items = $page['orderedItems'] ?? [];
+                }
+            }
+        }
+
+        if (empty($items) || !is_array($items)) return [];
+
+        $public = 'https://www.w3.org/ns/activitystreams#Public';
+        $safe   = '<p><br><strong><em><b><i><a><ul><ol><li><blockquote>';
+        $posts  = [];
+
+        foreach ($items as $item) {
+            if (count($posts) >= $limit) break;
+
+            // Unwrap Create/Update activity; skip Announce and others
+            $type = $item['type'] ?? '';
+            if ($type === 'Announce') continue;
+
+            $object = (isset($item['object']) && is_array($item['object']))
+                ? $item['object']
+                : $item;
+
+            $obj_type = $object['type'] ?? '';
+            if (!in_array($obj_type, ['Note', 'Article', 'Page', 'Question'], true)) continue;
+
+            // Skip non-public
+            $to = (array) ($object['to'] ?? []);
+            $cc = (array) ($object['cc'] ?? []);
+            if (!in_array($public, $to, true) && !in_array($public, $cc, true)) continue;
+
+            $content = trim(strip_tags($object['content'] ?? '', $safe));
+            if (!$content) continue;
+
+            $posts[] = [
+                'id'        => $object['id']       ?? '',
+                'url'       => is_string($object['url'] ?? null) ? $object['url'] : ($object['id'] ?? ''),
+                'content'   => $content,
+                'published' => $object['published'] ?? ($item['published'] ?? ''),
+                'summary'   => is_string($object['summary'] ?? null) ? $object['summary'] : null,
+            ];
+        }
+
+        return $posts;
     }
 
     protected function fetchRemoteUrl(string $url, array $headers = []): ?string
