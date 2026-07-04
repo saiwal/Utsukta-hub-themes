@@ -4,9 +4,11 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\FetchesRemoteActor;
 
 class Profile
 {
+    use FetchesRemoteActor;
     public function get(): void {
         $sub = \App::$argv[3] ?? null;
         if ($sub === 'connections') {
@@ -27,7 +29,13 @@ class Profile
 
         profile_load($nick);
 
-        if (\App::$error === 404) Response::error(404, 'Channel not found');
+        if (\App::$error === 404) {
+            if (str_contains($nick, '@')) {
+                $this->getRemoteProfile($nick);
+                return;
+            }
+            Response::error(404, 'Channel not found');
+        }
 
         $profile = \App::$profile;
         if (!$profile) Response::error(404, 'Profile not found');
@@ -153,6 +161,85 @@ class Profile
             'is_connected'    => $is_connected,
             'viewer_xchan'    => $ob_hash,
             'viewer_is_local' => (bool) local_channel(),
+        ]);
+    }
+
+    // ── Remote channel profile via WebFinger + AP actor ─────────────────────
+
+    private function getRemoteProfile(string $nick): void
+    {
+        [$user, $domain] = explode('@', $nick, 2);
+
+        // Validate domain to prevent SSRF
+        if (!preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $domain)) {
+            Response::error(404, 'Channel not found');
+        }
+
+        $ob_hash   = get_observer_hash();
+        $local_uid = local_channel();
+
+        // xchan cache — this server may already know this actor
+        $xchan = q("SELECT * FROM xchan WHERE xchan_addr = '%s' LIMIT 1", dbesc($nick));
+        $xrow  = $xchan ? $xchan[0] : null;
+
+        $name   = $xrow['xchan_name']    ?? '';
+        $photo  = $xrow['xchan_photo_l'] ?? '';
+        $url    = $xrow['xchan_url']     ?? '';
+        $about  = '';
+        $cover  = '';
+        $fields = [];
+
+        $enriched = $this->fetchActorEnrichment($nick, $domain);
+        if ($enriched) {
+            $name   = $enriched['name']  ?: $name;
+            $photo  = $enriched['photo'] ?: $photo;
+            $url    = $enriched['url']   ?: $url;
+            $about  = $enriched['about'];
+            $cover  = $enriched['cover'];
+            $fields = $enriched['actor_fields'];
+        }
+
+        if (!$name && !$photo) {
+            Response::error(404, 'Channel not found');
+        }
+
+        // Connection status
+        $is_connected = false;
+        if ($local_uid && $xrow && !empty($xrow['xchan_hash'])) {
+            $ab = q(
+                "SELECT abook_id FROM abook WHERE abook_channel = %d AND abook_xchan = '%s' LIMIT 1",
+                intval($local_uid),
+                dbesc($xrow['xchan_hash'])
+            );
+            $is_connected = !empty($ab);
+        }
+
+        Response::send([
+            'channel_name'    => $name,
+            'channel_address' => $user,
+            'xchan_addr'      => $nick,
+            'channel_photo_l' => $photo,
+            'channel_cover'   => $cover,
+            'pdesc'           => '',
+            'about'           => $about,
+            'location'        => '',
+            'address'         => '',
+            'hometown'        => '',
+            'homepage'        => $url,
+            'keywords'        => [],
+            'gender'          => '', 'marital'   => '', 'sexual'    => '',
+            'politic'         => '', 'religion'  => '', 'dob'       => '',
+            'music'           => '', 'book'      => '', 'tv'        => '',
+            'film'            => '', 'interest'  => '', 'romance'   => '',
+            'work'            => '', 'education' => '', 'likes'     => '',
+            'dislikes'        => '', 'contact'   => '', 'channels'  => '',
+            'hide_friends'    => false,
+            'connections'     => 0,
+            'is_connected'    => $is_connected,
+            'viewer_xchan'    => $ob_hash,
+            'viewer_is_local' => (bool) $local_uid,
+            'is_remote'       => true,
+            'actor_fields'    => $fields,
         ]);
     }
 
