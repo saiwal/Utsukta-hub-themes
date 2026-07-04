@@ -63,7 +63,7 @@ class Admin
                 }
                 break;
             case 'inspect-queue':  $this->getQueue();         break;
-            case 'queueworker':    $this->getQueueworker();   break;
+            case 'queueworker':    $this->getQueueworker();    break;
             case 'profile-fields': $this->getProfileFields(); break;
             case 'db-updates':     $this->getDbUpdates();     break;
             case 'logs':           $this->getLogs();          break;
@@ -88,6 +88,7 @@ class Admin
             case 'themes':          $this->postThemes();         break;
             case 'profile-fields':  $this->postProfileFields();  break;
             case 'logs':            $this->postLogs();           break;
+            case 'queueworker':     $this->postQueueworker();    break;
             default:
                 Response::error(404, "Unknown admin section: {$section}");
         }
@@ -796,11 +797,50 @@ class Admin
 
     private function getQueueworker(): void
     {
-        $jobs = q("SELECT id, priority, created, pid, argc, argv
-            FROM workerqueue
-            ORDER BY created DESC LIMIT 100");
+        $total_r  = q("SELECT COUNT(*) AS total FROM workerq");
+        $active_r = q("SELECT COUNT(*) AS active FROM workerq WHERE workerq_reservationid IS NOT NULL");
+        $cmds_r   = q("SELECT workerq_cmd AS cmd, COUNT(*) AS total FROM workerq GROUP BY workerq_cmd ORDER BY total DESC");
 
-        Response::send(['jobs' => $jobs ?: []]);
+        $jobs_r = q("SELECT workerq_id AS id, workerq_priority AS priority,
+                            workerq_cmd AS cmd, workerq_reservationid AS reservation_id,
+                            workerq_processtimeout AS timeout
+                     FROM workerq ORDER BY workerq_priority DESC, workerq_id ASC LIMIT 100");
+
+        $cfg = function (string $k, int $default): int {
+            $v = Config::Get('queueworker', $k);
+            return ($v !== false && $v !== null) ? intval($v) : $default;
+        };
+
+        Response::send([
+            'total'          => intval($total_r[0]['total']  ?? 0),
+            'active_workers' => intval($active_r[0]['active'] ?? 0),
+            'by_command'     => $cmds_r ?: [],
+            'jobs'           => $jobs_r  ?: [],
+            'settings'       => [
+                'max_queueworkers'       => $cfg('max_queueworkers',     4),
+                'queueworker_max_age'    => $cfg('queueworker_max_age',  300),
+                'queue_worker_sleep'     => $cfg('queue_worker_sleep',   100),
+                'auto_queue_worker_sleep'=> $cfg('auto_queue_worker_sleep', 0),
+            ],
+        ]);
+    }
+
+    private function postQueueworker(): void
+    {
+        $d = Auth::$parsedBody;
+
+        $max  = max(4,   intval($d['max_queueworkers']        ?? 4));
+        $age  = max(120, intval($d['queueworker_max_age']      ?? 300));
+        $sleep = max(100, intval($d['queue_worker_sleep']      ?? 100));
+        $auto = intval((bool)($d['auto_queue_worker_sleep']    ?? false));
+
+        Config::Set('queueworker', 'max_queueworkers',        $max);
+        Config::Set('queueworker', 'queueworker_max_age',     $age);
+        Config::Set('queueworker', 'queue_worker_sleep',      $sleep);
+        Config::Set('queueworker', 'auto_queue_worker_sleep', $auto);
+
+        Response::send(['status' => 'ok',
+            'settings' => compact('max', 'age', 'sleep', 'auto')]);
     }
 
     // ── Profile fields ────────────────────────────────────────────────────────

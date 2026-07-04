@@ -117,6 +117,7 @@ class Profile
         Response::send([
             'channel_name'    => $profile['channel_name'],
             'channel_address' => $profile['channel_address'],
+            'xchan_addr'      => $channel['xchan_addr'] ?? '',
             'channel_photo_l' => $channel['xchan_photo_l'] ?? '',
             'channel_cover'   => $cover_url,
             'profile_name'    => $profile['profile_name'],
