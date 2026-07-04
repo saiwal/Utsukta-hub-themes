@@ -3,9 +3,11 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\FetchesRemoteActor;
 
 class Xchan
 {
+    use FetchesRemoteActor;
     public function get(): void
     {
         $hash = $_GET['hash'] ?? null;
@@ -87,6 +89,27 @@ class Xchan
             }
         }
 
+        // For remote channels enrich with WebFinger + AP actor data
+        $actor_fields = [];
+        if (!$local_nick) {
+            $addr = $xchan['xchan_addr'] ?? '';
+            if (str_contains($addr, '@')) {
+                [, $domain] = explode('@', $addr, 2);
+                if (preg_match('/^[a-zA-Z0-9.\-]+(:\d+)?$/', $domain)) {
+                    $enriched = $this->fetchActorEnrichment($addr, $domain);
+                    if ($enriched) {
+                        $profile_data['about']    = $enriched['about'];
+                        $profile_data['cover']    = $enriched['cover'];
+                        $profile_data['homepage'] = $enriched['url'] ?: ($xchan['xchan_url'] ?? '');
+                        $actor_fields             = $enriched['actor_fields'];
+                        if (!empty($enriched['photo'])) {
+                            $xchan['xchan_photo_l'] = $enriched['photo'];
+                        }
+                    }
+                }
+            }
+        }
+
         Response::send(array_merge([
             'xchan_hash'   => $xchan['xchan_hash'],
             'name'         => $xchan['xchan_name'],
@@ -98,6 +121,7 @@ class Xchan
             'is_connected' => $is_connected,
             'abook_id'     => $abook_id,
             'local_nick'   => $local_nick,
+            'actor_fields' => $actor_fields,
         ], $profile_data));
     }
 }
