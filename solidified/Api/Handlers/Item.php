@@ -423,12 +423,18 @@ class Item
 
         Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
 
-        json_return_and_die([
-            'success' => true,
-            'iid' => $post['item_id'],
-            'mid' => $datarray['mid'],
-            'uuid' => $datarray['uuid'],
-        ]);
+        $iid = intval($post['item_id']);
+        $ob_hash = get_observer_hash();
+        $rows = dbq('SELECT item.*, ' . self::reactionSubqueries() . " FROM item WHERE item.id = $iid LIMIT 1");
+        if ($rows) {
+            xchan_query($rows, true);
+            $rows = fetch_post_tags($rows, true);
+            $formattedPost = self::formatItem($rows[0], $ob_hash);
+        } else {
+            $formattedPost = ['iid' => $iid, 'mid' => $datarray['mid'], 'uuid' => $datarray['uuid']];
+        }
+
+        Response::send(['post' => $formattedPost, 'comments' => []]);
     }
 
     // POST /api/item/:mid/comment  (or POST /api/item/:mid with no verb)
@@ -1164,13 +1170,40 @@ class Item
             }
         }
 
+        $owner = null;
+        if (($item['owner_xchan'] ?? '') !== ($item['author_xchan'] ?? '') && !empty($item['owner'])) {
+            $x = $item['owner'];
+            $owner = [
+                'name'    => $x['xchan_name']            ?? '',
+                'address' => $x['xchan_addr']            ?? '',
+                'url'     => $x['xchan_url']             ?? '',
+                'photo'   => [
+                    'src'      => $x['xchan_photo_m']        ?? '',
+                    'mimetype' => $x['xchan_photo_mimetype'] ?? '',
+                ],
+            ];
+        }
+
+        $attachRaw = $item['attach'] ?? '';
+        $root = z_root();
+        $attach = array_map(function (array $a) use ($root): array {
+            if (isset($a['href']) && str_starts_with($a['href'], '/')) {
+                $a['href'] = $root . $a['href'];
+            }
+            return $a;
+        }, $attachRaw ? (json_decode($attachRaw, true) ?: []) : []);
+
         return [
             'uuid' => $item['uuid'],
             'mid' => $item['mid'],
             'parent_mid' => $item['parent_mid'],
             'thr_parent' => $item['thr_parent'],
+            'message_top' => intval($item['item_thread_top'])
+                ? $item['mid']
+                : ($item['thr_parent'] ?? $item['mid']),
             'created' => $item['created'],
             'edited' => $item['edited'],
+            'commented' => $item['commented'] ?? $item['created'],
             'title' => $item['title'],
             'body' => $item['body'],
             'verb' => $item['verb'],
@@ -1191,22 +1224,25 @@ class Item
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name' => $item['author']['xchan_name'] ?? '',
-                'address' => $item['author']['xchan_addr'] ?? '',
-                'url' => $item['author']['xchan_url'] ?? '',
-                'photo' => [
-                    'src' => $item['author']['xchan_photo_m'] ?? '',
+                'name'    => $item['author']['xchan_name']            ?? '',
+                'address' => $item['author']['xchan_addr']            ?? '',
+                'url'     => $item['author']['xchan_url']             ?? '',
+                'network' => $item['author']['xchan_network']         ?? '',
+                'photo'   => [
+                    'src'      => $item['author']['xchan_photo_m']        ?? '',
                     'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
                 ],
             ],
-            'permalink' => $item['plink'] ?? '',
-            'viewer_liked' => $liked,
-            'viewer_disliked' => $disliked,
-            'viewer_repeated' => $repeated,
+            'owner'            => $owner,
+            'permalink'        => $item['plink'] ?? '',
+            'viewer_liked'     => $liked,
+            'viewer_disliked'  => $disliked,
+            'viewer_repeated'  => $repeated,
             'viewer_attending' => $attending,
             'viewer_declining' => $declining,
-            'viewer_maybe' => $maybe,
+            'viewer_maybe'     => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            'attach'           => $attach,
             'poll'             => self::extractPoll($item, $ob_hash),
         ];
     }
