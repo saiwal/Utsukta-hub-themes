@@ -10,6 +10,8 @@ require_once ('include/crypto.php');
 
 use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
+use Zotlabs\Lib\Enotify;
+use Zotlabs\Access\PermissionLimits;
 use App;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
@@ -318,58 +320,201 @@ class Item
     // For scope="custom" supply contact_allow/group_allow arrays of xchan hashes/group ids.
     private function createPost(): void
     {
-        $uid = Auth::requireLocalJson();
+        $uid  = Auth::requireLocalJson();
         $body = Auth::$parsedBody;
 
-        $content = trim($body['body'] ?? '');
-        $title = trim($body['title'] ?? '');
-        $summary = trim($body['summary'] ?? '');
-        $category = trim($body['category'] ?? '');
+        $content    = trim($body['body']        ?? '');
+        $title      = trim($body['title']       ?? '');
+        $summary    = trim($body['summary']     ?? '');
+        $category   = trim($body['category']    ?? '');
         $profileUid = intval($body['profile_uid'] ?? $uid);
-        $scope = $body['scope'] ?? 'public';
-        $mimetype = $body['mimetype'] ?? 'text/bbcode';
-        $expire = trim($body['expire'] ?? '');
+        $scope      = $body['scope']    ?? 'contacts';
+        $mimetype   = $body['mimetype'] ?? 'text/bbcode';
+        $expire     = trim($body['expire']      ?? '');
 
         if (!$content) {
-            json_return_and_die(['error' => 'body is required']);
+            Response::error(400, 'body is required');
         }
 
-        if ($scope === 'custom') {
-            $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
-            $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];
-            $contactDeny  = is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [];
-            $groupDeny    = is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [];
-            $allowCid = '';
-            foreach ($contactAllow as $h) $allowCid .= '<' . $h . '>';
-            $allowGid = '';
-            foreach ($groupAllow  as $g) $allowGid .= '<' . $g . '>';
-            $denyCid  = '';
-            foreach ($contactDeny as $h) $denyCid  .= '<' . $h . '>';
-            $denyGid  = '';
-            foreach ($groupDeny   as $g) $denyGid  .= '<' . $g . '>';
-            $acl = ['allow_cid' => $allowCid, 'allow_gid' => $allowGid,
-                    'deny_cid'  => $denyCid,  'deny_gid'  => $denyGid];
-        } else {
-            $acl = self::scopeToAcl($scope, $profileUid);
+        $observer = App::get_observer();
+        if (!$observer) {
+            Response::error(403, 'Authentication required');
+        }
+        $ob_hash = $observer['xchan_hash'];
+
+        if (!perm_is_allowed($profileUid, $ob_hash, 'post_wall')) {
+            Response::error(403, 'Permission denied');
         }
 
-        $datarray = self::buildItemArray(
-            profileUid: $profileUid,
-            content: $content,
-            title: $title,
-            mimetype: $mimetype,
-            acl: $acl,
-            isWall: true,
-        );
-
-        if ($summary) {
-            $datarray['summary'] = $summary;
+        // Load wall owner's channel record (may differ from the logged-in channel)
+        require_once('include/channel.php');
+        $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', $profileUid);
+        if (!$r) {
+            Response::error(404, 'Channel not found');
         }
+        $ownerChannel = $r[0];
+
+        // Wall-to-wall: author differs from wall owner
+        $wallToWall = ($ownerChannel['channel_hash'] !== $ob_hash);
+
+        // ACL: W2W always uses the wall owner's channel defaults.
+        // For owner posts, apply the scope the client requested.
+        $acl = new \Zotlabs\Access\AccessList($ownerChannel);
+
+        if (!$wallToWall) {
+            if ($scope === 'public') {
+                $acl->set(['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => '']);
+            } elseif ($scope === 'custom') {
+                $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
+                $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];
+                $contactDeny  = is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [];
+                $groupDeny    = is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [];
+                if (!$contactAllow && !$groupAllow) {
+                    Response::error(400, 'Select at least one connection or group to allow.');
+                }
+                $acl->set([
+                    'allow_cid' => implode('', array_map(fn($h) => '<' . $h . '>', $contactAllow)),
+                    'allow_gid' => implode('', array_map(fn($g) => '<' . $g . '>', $groupAllow)),
+                    'deny_cid'  => implode('', array_map(fn($h) => '<' . $h . '>', $contactDeny)),
+                    'deny_gid'  => implode('', array_map(fn($g) => '<' . $g . '>', $groupDeny)),
+                ]);
+            }
+            // 'contacts': keep the channel's default ACL from the AccessList constructor
+        }
+
+        // Derive public_policy and comment_policy from the wall owner's permission limits
+        $viewPolicy    = PermissionLimits::Get($profileUid, 'view_stream');
+        $commentPolicy = PermissionLimits::Get($profileUid, 'post_comments');
+        $publicPolicy  = map_scope($viewPolicy, true);
+
+        $gacl            = $acl->get();
+        $strContactAllow = $gacl['allow_cid'];
+        $strGroupAllow   = $gacl['allow_gid'];
+        $strContactDeny  = $gacl['deny_cid'];
+        $strGroupDeny    = $gacl['deny_gid'];
+
+        $private = intval($acl->is_private() || $publicPolicy);
+
+        // A specific ACL overrides public_policy (same logic as core Item::post)
+        if (!empty_acl(['allow_cid' => $strContactAllow, 'allow_gid' => $strGroupAllow,
+                        'deny_cid'  => $strContactDeny,  'deny_gid'  => $strGroupDeny])) {
+            $publicPolicy = '';
+        }
+
+        $postTags    = [];
+        $attachments = [];
+
+        if ($mimetype === 'text/bbcode') {
+            require_once('include/text.php');
+
+            $content = cleanup_bbcode($content);
+
+            // Linkify @mentions, #tags, !groups — modifies $content in place
+            $results = linkify_tags($content, $profileUid);
+            if ($results) {
+                set_linkified_perms($results, $strContactAllow, $strGroupAllow, $profileUid, $private, false);
+                foreach ($results as $result) {
+                    $s = $result['success'];
+                    if ($s['replaced']) {
+                        $postTags[] = [
+                            'uid'   => $profileUid,
+                            'ttype' => $s['termtype'],
+                            'otype' => TERM_OBJ_POST,
+                            'term'  => $s['term'],
+                            'url'   => $s['url'],
+                        ];
+                    }
+                }
+            }
+
+            // Contact-allow without group-allow → direct message between individuals
+            if ($strContactAllow && !$strGroupAllow) {
+                $private = 2;
+            }
+
+            // Sync file/photo ACL to match the post's final ACL
+            fix_attached_permissions($profileUid, $content, $strContactAllow, $strGroupAllow, $strContactDeny, $strGroupDeny);
+
+            // Extract [attachment] tags → attach array, strip them from body
+            if (preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
+                require_once('include/attach.php');
+                foreach ($match[2] as $i => $mtch) {
+                    $hash = substr($mtch, 0, strpos($mtch, ','));
+                    $rev  = intval(substr($mtch, strpos($mtch, ',')));
+                    $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
+                    if ($r['success']) {
+                        $attachments[] = [
+                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'length'   => $r['data']['filesize'],
+                            'type'     => $r['data']['filetype'],
+                            'title'    => urlencode($r['data']['filename']),
+                            'revision' => $r['data']['revision'],
+                        ];
+                    }
+                    $content = str_replace($match[1][$i], '', $content);
+                }
+            }
+        }
+
+        // Categories → term records (federate correctly via datarray['term'])
+        if ($category) {
+            foreach (array_filter(array_map('trim', explode(',', $category))) as $cat) {
+                $postTags[] = [
+                    'uid'   => $profileUid,
+                    'ttype' => TERM_CATEGORY,
+                    'otype' => TERM_OBJ_POST,
+                    'term'  => $cat,
+                    'url'   => channel_url($ownerChannel) . '?cat=' . urlencode($cat),
+                ];
+            }
+        }
+
+        $channel = App::get_channel();
+        $uuid    = item_message_id();
+        $mid     = z_root() . '/item/' . $uuid;
+        $now     = datetime_convert();
+
+        $datarray = [
+            'aid'             => $channel['channel_account_id'],
+            'uid'             => $profileUid,
+            'uuid'            => $uuid,
+            'mid'             => $mid,
+            'parent_mid'      => $mid,
+            'thr_parent'      => $mid,
+            'owner_xchan'     => $ownerChannel['channel_hash'],
+            'author_xchan'    => $ob_hash,
+            'created'         => $now,
+            'edited'          => $now,
+            'commented'       => $now,
+            'received'        => $now,
+            'changed'         => $now,
+            'verb'            => 'Create',
+            'obj_type'        => 'Note',
+            'mimetype'        => $mimetype,
+            'title'           => $title,
+            'summary'         => $summary,
+            'body'            => $content,
+            'allow_cid'       => $strContactAllow,
+            'allow_gid'       => $strGroupAllow,
+            'deny_cid'        => $strContactDeny,
+            'deny_gid'        => $strGroupDeny,
+            'attach'          => $attachments,
+            'term'            => array_unique($postTags, SORT_REGULAR),
+            'item_wall'       => 1,
+            'item_origin'     => 1,
+            'item_thread_top' => 1,
+            'item_unseen'     => ($wallToWall ? 1 : 0),
+            'item_private'    => $private,
+            'public_policy'   => $publicPolicy,
+            'comment_policy'  => map_scope($commentPolicy),
+            'plink'           => $mid,
+            'route'           => '',
+        ];
 
         if ($expire) {
-            $expires = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
-            if ($expires > datetime_convert()) {
-                $datarray['expires'] = $expires;
+            $exp = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
+            if ($exp > $now) {
+                $datarray['expires'] = $exp;
             }
         }
 
@@ -379,59 +524,76 @@ class Item
             $answers = array_values(array_filter(array_map(fn($a) => escape_tags(trim($a)), $pollAnswers)));
             if (count($answers) >= 2) {
                 $expireValue = max(1, intval($body['poll_expire_value'] ?? 1));
-                $expireUnit  = in_array($body['poll_expire_unit'] ?? 'Days', ['Minutes','Hours','Days','Weeks'], true)
+                $expireUnit  = in_array($body['poll_expire_unit'] ?? 'Days', ['Minutes', 'Hours', 'Days', 'Weeks'], true)
                     ? $body['poll_expire_unit']
                     : 'Days';
-                $opts = array_map(
+                $opts        = array_map(
                     fn($a) => ['name' => $a, 'type' => 'Note', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
                     $answers
                 );
                 $pollEndTime = datetime_convert(date_default_timezone_get(), 'UTC',
                     'now + ' . $expireValue . ' ' . $expireUnit, ATOM_TIME);
-                $channel = App::get_channel();
-                $pollObj = [
+                $datarray['obj_type'] = 'Question';
+                $datarray['obj']      = [
                     'type'         => 'Question',
-                    'id'           => $datarray['mid'],
-                    'url'          => $datarray['mid'],
-                    'attributedTo' => channel_url($channel),
+                    'id'           => $mid,
+                    'url'          => $mid,
+                    'attributedTo' => channel_url($ownerChannel),
                     'content'      => bbcode($content),
                     'name'         => $title ?: '',
                     'oneOf'        => $opts,
                     'endTime'      => $pollEndTime,
                     'to'           => [ACTIVITY_PUBLIC_INBOX],
                 ];
-                $datarray['obj_type'] = 'Question';
-                $datarray['obj']      = $pollObj;
                 if (empty($datarray['expires'])) {
                     $datarray['expires'] = datetime_convert('UTC', 'UTC', $pollEndTime);
                 }
             }
         }
 
+        call_hooks('post_local', $datarray);
+
+        if (!empty($datarray['cancel'])) {
+            Response::error(400, 'Post cancelled');
+        }
+
         $post = item_store($datarray);
 
         if (!$post['success']) {
-            json_return_and_die(['error' => 'Failed to create post']);
+            Response::error(500, 'Failed to create post');
         }
 
-        if ($category) {
-            $cats = array_filter(array_map('trim', explode(',', $category)));
-            foreach ($cats as $cat) {
-                store_item_tag($profileUid, $post['item_id'], TERM_OBJ_POST, TERM_CATEGORY, $cat, '');
-            }
+        // Notify wall owner when someone posts on their wall (wall-to-wall)
+        if ($wallToWall) {
+            Enotify::submit([
+                'type'       => NOTIFY_WALL,
+                'from_xchan' => $ob_hash,
+                'to_xchan'   => $ownerChannel['channel_hash'],
+                'item'       => $datarray,
+                'link'       => z_root() . '/display/' . $uuid,
+                'verb'       => 'Create',
+                'otype'      => 'item',
+            ]);
+        } else {
+            // Update owner's last-post timestamp
+            q("UPDATE channel SET channel_lastpost = '%s' WHERE channel_id = %d",
+                dbesc($now), $profileUid);
         }
+
+        $datarray['id'] = $post['item_id'];
+        call_hooks('post_local_end', $datarray);
 
         Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
 
-        $iid = intval($post['item_id']);
-        $ob_hash = get_observer_hash();
+        // Fetch the stored item back fully formatted and return it
+        $iid  = intval($post['item_id']);
         $rows = dbq('SELECT item.*, ' . self::reactionSubqueries() . " FROM item WHERE item.id = $iid LIMIT 1");
         if ($rows) {
             xchan_query($rows, true);
-            $rows = fetch_post_tags($rows, true);
+            $rows          = fetch_post_tags($rows, true);
             $formattedPost = self::formatItem($rows[0], $ob_hash);
         } else {
-            $formattedPost = ['iid' => $iid, 'mid' => $datarray['mid'], 'uuid' => $datarray['uuid']];
+            $formattedPost = ['iid' => $iid, 'mid' => $mid, 'uuid' => $uuid];
         }
 
         Response::send(['post' => $formattedPost, 'comments' => []]);

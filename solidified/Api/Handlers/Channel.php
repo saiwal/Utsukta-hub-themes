@@ -155,14 +155,17 @@ class Channel
             $items ?: []
         );
 
+        $can_post_wall = perm_is_allowed($channel_uid, $observer_xchan, 'post_wall');
+
         Response::send($out, [
-            'offset'     => $offset,
-            'limit'      => $itemspage,
-            'count'      => count($out),
-            'root_count' => $rootCount,
-            'has_more'   => $rootCount >= $itemspage,
-            'nouveau'    => $nouveau,
-            'ordering'   => $ordering,
+            'offset'        => $offset,
+            'limit'         => $itemspage,
+            'count'         => count($out),
+            'root_count'    => $rootCount,
+            'has_more'      => $rootCount >= $itemspage,
+            'nouveau'       => $nouveau,
+            'ordering'      => $ordering,
+            'can_post_wall' => $can_post_wall,
         ]);
     }
 
