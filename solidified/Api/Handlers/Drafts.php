@@ -9,7 +9,7 @@ use Theme\Solidified\Api\Response;
 
 class Drafts
 {
-    // GET  /api/drafts               → list all drafts for the local channel
+    // GET  /api/drafts[?type=post,article]  → list drafts for the local channel by content type
     // POST /api/drafts               → create a new draft
     // POST /api/drafts/:mid          → update an existing draft
     // POST /api/drafts/:mid/delete   → delete a draft
@@ -19,12 +19,30 @@ class Drafts
         Auth::requireLocalGet();
         $uid = local_channel();
 
+        // Comma-separated scope prefixes ("post", "article", …); default keeps
+        // original behaviour. Tokens are whitelisted to [a-z]+ so they can be
+        // embedded directly in the LIKE conditions below.
+        $types = array_filter(
+            array_map('trim', explode(',', $_GET['type'] ?? 'post')),
+            fn($t) => preg_match('/^[a-z]+$/', $t)
+        );
+        if (!$types) {
+            $types = ['post'];
+        }
+
+        $conds = [];
+        foreach ($types as $t) {
+            // %% survives q()'s sprintf pass as a literal %
+            $conds[] = "route LIKE '%%\"scope\":\"" . $t . ":%%'";
+        }
+        $typeSql = '(' . implode(' OR ', $conds) . ')';
+
         $rows = q(
             "SELECT * FROM item
              WHERE uid = %d
                AND item_unpublished = 1
                AND item_deleted = 0
-               AND route LIKE '%%\"scope\":\"post:%%'
+               AND $typeSql
              ORDER BY edited DESC",
             intval($uid)
         );
