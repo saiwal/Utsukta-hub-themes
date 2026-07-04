@@ -38,6 +38,7 @@ class Router
         'nav' => Handlers\Nav::class,
         'admin' => Handlers\Admin::class,
         'login'    => Handlers\Login::class,
+        'rmagic'   => Handlers\Rmagic::class,
         'logout'   => Handlers\Logout::class,
         'register' => Handlers\Register::class,
         'regate'   => Handlers\Regate::class,
