@@ -1,1 +1,0 @@
-import{O as e}from"./app-web.js";import{h as t}from"./app-routing.js";import{Vn as n}from"./app.js";import{t as r}from"./app-TagWidget.js";function i(){let[i,a]=t(),o=()=>String(i.tag??``);return e(r,{get channelNick(){return n()()},type:`posts`,get activeTag(){return o()},onTagClick:e=>{a({tag:o()===e?void 0:e,cat:void 0})}})}export{i as default};

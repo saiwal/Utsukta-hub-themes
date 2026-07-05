@@ -10,6 +10,9 @@
  *   * ContentRegion: right_aside, left_aside_wrapper
  *   * ContentRegion: content, region_2
  */
+
+require_once __DIR__ . '/manifest.php';
+$solidified_assets = solidified_assets();
 ?>
 
 <!DOCTYPE html>
@@ -19,7 +22,9 @@
 	<script>
     var baseurl = "<?php echo z_root() ?>";
   </script>
-  <link rel="stylesheet" href="/view/theme/solidified/assets/app.css">
+  <?php foreach ($solidified_assets['css'] as $solidified_css): ?>
+  <link rel="stylesheet" href="<?php echo $solidified_css ?>">
+  <?php endforeach; ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
@@ -37,11 +42,11 @@
 
 <div id="root"></div>
 
-<script type="module" src="/view/theme/solidified/assets/app.js"></script>
+<script type="module" src="<?php echo $solidified_assets['js'] ?>"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/api/sw', { scope: '/' })
+      navigator.serviceWorker.register('/api/sw', { scope: '/', updateViaCache: 'none' })
         .then(function (reg) {
           console.log('[PWA] SW registered, scope:', reg.scope);
           reg.addEventListener('updatefound', function () {
@@ -51,6 +56,13 @@
                 window.dispatchEvent(new CustomEvent('pwa-update-available'));
               }
             });
+          });
+          // SPAs rarely hard-navigate, so poll for a new SW hourly and
+          // whenever the (installed) app returns to the foreground.
+          var checkForUpdate = function () { reg.update().catch(function () {}); };
+          setInterval(checkForUpdate, 60 * 60 * 1000);
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkForUpdate();
           });
         })
         .catch(function (err) {
