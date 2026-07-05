@@ -1,1 +1,0 @@
-import{I as e}from"./app-web.js";var[t,n]=e(localStorage.getItem(`hz-scroll-style`)??`endless`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-scroll-style`,e)}var[a,o]=e(localStorage.getItem(`hz-list-behavior`)??`list`);function s(){return a}function c(e){o(e),localStorage.setItem(`hz-list-behavior`,e)}export{r as i,s as n,i as r,c as t};
