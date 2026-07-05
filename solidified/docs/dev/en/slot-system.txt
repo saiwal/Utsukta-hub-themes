@@ -142,6 +142,51 @@ const globalWidgets = createMemo(() => {
 });
 ```
 
+## Widget Instances (multiInstance)
+
+Widgets registered with `multiInstance: true` may be placed several times in
+the same slot, each placement carrying its own configuration:
+
+```typescript
+{
+  id: "cart.item_card",
+  label: () => useI18n().t("widgets.item_card"),
+  loader: () => import("./widgets/ItemCardWidget"),
+  slot: "right",
+  multiInstance: true,
+  configComponent: () => import("./widgets/ItemCardConfig"),
+}
+```
+
+In the saved layout, a slot entry is either a plain widget id (singletons) or
+an instance object:
+
+```json
+{ "id": "cart.item_card", "key": "cart.item_card#a1b2c3", "config": { "sku": "mug-01" } }
+```
+
+`key` is a unique instance key generated when the widget is added
+(`makeInstanceKey` in `widget-layout.ts`); `config` is an opaque JSON object
+(max 2 KB) handed to the widget component as its `config` prop:
+
+```typescript
+export default function ItemCardWidget(props: WidgetProps) {
+  const sku = () => String(props.config?.sku ?? "");
+  ...
+}
+```
+
+The picker keeps offering a `multiInstance` widget when instances are already
+present — each add creates a new instance. In edit mode, instances with a
+`configComponent` show a gear button that opens the settings form inline; the
+form receives `WidgetConfigProps` (`config`, `onSave`) and persisting closes
+the panel. Since layouts ride pconfig to visitors, instance config reaches
+visitors automatically.
+
+Singleton entries remain plain strings, so layouts saved before this feature
+parse unchanged; older clients simply drop instance entries they don't
+understand.
+
 ## Legacy: `slots`
 
 The old `slots: { right: [loader] }` module field is deprecated and **ignored** by the registry (a console warning fires if non-empty). Migrate to `widgets`.

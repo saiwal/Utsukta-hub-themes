@@ -52,6 +52,7 @@ class Router
         'connections'    => Handlers\Connections::class,
         'directory'      => Handlers\Directory::class,
         'cart'           => Handlers\Cart::class,
+        'rss-feed'       => Handlers\Rss::class,
     ];
 
     public static function dispatch(string $method): void
