@@ -541,126 +541,155 @@ class Settings
         Response::send(['apps' => $apps, 'nav_order' => array_values((array) $nav_order)]);
     }
 
-    private function getNotificationSettings(): void
+    // Maps the SPA's notifyN / vnotifyN field names to the bitmask constants
+    // used by channel_notifyflags and pconfig system.vnotify.
+    private function notifyBits(): array
     {
-        load_pconfig(local_channel());
+        return [
+            'notify1' => NOTIFY_INTRO,
+            'notify2' => NOTIFY_CONFIRM,
+            'notify3' => NOTIFY_WALL,
+            'notify4' => NOTIFY_COMMENT,
+            'notify5' => NOTIFY_MAIL,
+            'notify6' => NOTIFY_SUGGEST,
+            'notify7' => NOTIFY_TAGSELF,
+            'notify8' => NOTIFY_POKE,
+            'notify9' => NOTIFY_LIKE,
+        ];
+    }
 
-        $channel = App::get_channel();
-        $nickname = $channel['channel_address'];
-        $timezone = $channel['channel_timezone'];
-        $notify = $channel['channel_notifyflags'];
-        $defloc = $channel['channel_location'];
-        $adult_flag = intval($channel['channel_pageflags'] & PAGE_ADULT);
-        $post_newfriend = get_pconfig(local_channel(), 'system', 'post_newfriend');
-        $post_newfriend = (($post_newfriend === false) ? '0' : $post_newfriend);  // default if not set: 0
-        $post_joingroup = get_pconfig(local_channel(), 'system', 'post_joingroup');
-        $post_joingroup = (($post_joingroup === false) ? '0' : $post_joingroup);  // default if not set: 0
-        $post_profilechange = get_pconfig(local_channel(), 'system', 'post_profilechange');
-        $post_profilechange = (($post_profilechange === false) ? '0' : $post_profilechange);  // default if not set: 0
-        $subdir = ((strlen(App::get_path())) ? '<br />' . t('or') . ' ' . z_root() . '/channel/' . $nickname : '');
-        $webbie = $nickname . '@' . App::get_hostname();
-        $intl_nickname = unpunify($nickname) . '@' . unpunify(App::get_hostname());
+    private function vnotifyBits(): array
+    {
+        return [
+            'vnotify1' => VNOTIFY_NETWORK,
+            'vnotify2' => VNOTIFY_CHANNEL,
+            'vnotify3' => VNOTIFY_MAIL,
+            'vnotify4' => VNOTIFY_EVENT,
+            'vnotify5' => VNOTIFY_EVENTTODAY,
+            'vnotify6' => VNOTIFY_BIRTHDAY,
+            'vnotify7' => VNOTIFY_SYSTEM,
+            'vnotify8' => VNOTIFY_INFO,
+            'vnotify9' => VNOTIFY_ALERT,
+            'vnotify10' => VNOTIFY_INTRO,
+            'vnotify11' => VNOTIFY_REGISTER,
+            'vnotify12' => VNOTIFY_FILES,
+            'vnotify13' => VNOTIFY_PUBS,
+            'vnotify14' => VNOTIFY_LIKE,
+            'vnotify15' => VNOTIFY_FORUMS,
+        ];
+    }
+
+    // Public-stream notifications are only meaningful when the discover tab /
+    // firehose is enabled and the Public Stream app is installed.
+    private function pubstreamNotifyAvailable(int $uid): bool
+    {
         $disable_discover_tab = intval(Config::Get('system', 'disable_discover_tab', 1)) == 1;
         $site_firehose = intval(Config::Get('system', 'site_firehose', 0)) == 1;
+        if ($disable_discover_tab && !$site_firehose)
+            return false;
+        return Apps::system_app_installed($uid, 'Public Stream');
+    }
 
-        $expire = $channel['channel_expire_days'];
-        $sys_expire = Config::Get('system', 'default_expire_days');
+    private function getNotificationSettings(): void
+    {
+        $uid = local_channel();
+        load_pconfig($uid);
 
-        $tpl_addr = get_markup_template('settings_nick_set.tpl');
-        $prof_addr = replace_macros($tpl_addr, [
-            '$desc' => t('Your channel address is'),
-            '$nickname' => (($intl_nickname === $webbie) ? $webbie : $intl_nickname . '&nbsp;(' . $webbie . ')'),
-            '$subdir' => $subdir,
-            '$davdesc' => t('Your files/photos are accessible via WebDAV at'),
-            '$davpath' => z_root() . '/dav/' . $nickname,
-            '$basepath' => App::get_hostname()
-        ]);
+        $channel = App::get_channel();
+        $notify = intval($channel['channel_notifyflags']);
 
-        $evdays = get_pconfig(local_channel(), 'system', 'evdays');
-        if (!$evdays)
-            $evdays = 3;
-
-        $always_show_in_notices = get_pconfig(local_channel(), 'system', 'always_show_in_notices');
-        $update_notices_per_parent = get_pconfig(local_channel(), 'system', 'update_notices_per_parent', 1);
-
-        $vnotify = get_pconfig(local_channel(), 'system', 'vnotify');
+        $vnotify = get_pconfig($uid, 'system', 'vnotify');
         if ($vnotify === false)
             $vnotify = (-1);
+        $vnotify = intval($vnotify);
 
-        $perm_roles = PermissionRoles::channel_roles();
-        $permissions_role = get_pconfig(local_channel(), 'system', 'permissions_role');
+        $evdays = intval(get_pconfig($uid, 'system', 'evdays'));
+        if ($evdays < 1)
+            $evdays = 3;
 
-        if (!in_array($permissions_role, ['public', 'personal', 'group', 'custom'])) {
-            notice(t('Please select a channel role') . EOL);
-            array_unshift($perm_roles, '');
+        $data = [
+            'evdays' => $evdays,
+            'always_show_in_notices' => intval(get_pconfig($uid, 'system', 'always_show_in_notices', 0)),
+            'update_notices_per_parent' => intval(get_pconfig($uid, 'system', 'update_notices_per_parent', 1)),
+            'post_newfriend' => intval(get_pconfig($uid, 'system', 'post_newfriend', 0)),
+            'post_joingroup' => intval(get_pconfig($uid, 'system', 'post_joingroup', 0)),
+            'post_profilechange' => intval(get_pconfig($uid, 'system', 'post_profilechange', 0)),
+            'mailhost' => get_pconfig($uid, 'system', 'email_notify_host', App::get_hostname()),
+            'photo_path' => get_pconfig($uid, 'system', 'photo_path', ''),
+            'attach_path' => get_pconfig($uid, 'system', 'attach_path', ''),
+            'expire' => intval($channel['channel_expire_days']),
+        ];
+
+        foreach ($this->notifyBits() as $k => $bit)
+            $data[$k] = (($notify & $bit) ? 1 : 0);
+        foreach ($this->vnotifyBits() as $k => $bit)
+            $data[$k] = (($vnotify & $bit) ? 1 : 0);
+
+        // Omitted fields hide the corresponding toggles in the UI
+        if (!is_site_admin())
+            unset($data['vnotify11']);
+        if (!$this->pubstreamNotifyAvailable($uid))
+            unset($data['vnotify13']);
+
+        Response::send($data);
+    }
+
+    private function postNotificationSettings(int $uid, array $data): void
+    {
+        $channel = App::get_channel();
+
+        $notify = intval($channel['channel_notifyflags']);
+        foreach ($this->notifyBits() as $k => $bit) {
+            if (isset($data[$k]))
+                $notify = (intval($data[$k]) ? ($notify | $bit) : ($notify & ~$bit));
         }
 
-        $plugin = ['basic' => '', 'notify' => ''];
-        call_hooks('channel_settings', $plugin);
+        $vnotify = get_pconfig($uid, 'system', 'vnotify');
+        if ($vnotify === false)
+            $vnotify = (-1);
+        $vnotify = intval($vnotify);
 
-        $yes_no = [t('No'), t('Yes')];
+        $pubs_available = $this->pubstreamNotifyAvailable($uid);
+        foreach ($this->vnotifyBits() as $k => $bit) {
+            if (!isset($data[$k]))
+                continue;
+            // Toggles hidden from this user always arrive as 0 — keep their stored bits
+            if ($k === 'vnotify11' && !is_site_admin())
+                continue;
+            if ($k === 'vnotify13' && !$pubs_available)
+                continue;
+            $vnotify = (intval($data[$k]) ? ($vnotify | $bit) : ($vnotify & ~$bit));
+        }
+        set_pconfig($uid, 'system', 'vnotify', $vnotify);
 
-        Response::send([
-            '$ptitle' => t('Channel Settings'),
-            '$submit' => t('Submit'),
-            '$baseurl' => z_root(),
-            '$uid' => local_channel(),
-            '$form_security_token' => get_form_security_token('settings'),
-            '$role' => ['permissions_role', t('Channel role'), $permissions_role, '', $perm_roles],
-            '$nickname_block' => $prof_addr,
-            '$h_basic' => t('Basic Settings'),
-            '$timezone' => ['timezone_select', t('Channel timezone:'), $timezone, '', get_timezones()],
-            '$defloc' => ['defloc', t('Default post location:'), $defloc, t('Geographical location to display on your posts')],
-            '$allowloc' => ['allow_location', t('Use browser location'), ((get_pconfig(local_channel(), 'system', 'use_browser_location')) ? 1 : ''), '', $yes_no],
-            '$adult' => ['adult', t('Adult content'), $adult_flag, t('This channel frequently or regularly publishes adult content'), $yes_no],
-            '$maxreq' => ['maxreq', t('Maximum Friend Requests/Day:'), intval($channel['channel_max_friend_req']), t('May reduce spam activity')],
-            '$h_not' => t('Notification Settings'),
-            '$activity_options' => t('By default post a status message when:'),
-            '$post_newfriend' => ['post_newfriend', t('accepting a friend request'), $post_newfriend, '', $yes_no],
-            '$post_joingroup' => ['post_joingroup', t('joining a forum/community'), $post_joingroup, '', $yes_no],
-            '$post_profilechange' => ['post_profilechange', t('making an <em>interesting</em> profile change'), $post_profilechange, '', $yes_no],
-            '$lbl_not' => t('Send a notification email when:'),
-            '$notify1' => ['notify1', t('You receive a connection request'), ($notify & NOTIFY_INTRO), NOTIFY_INTRO, '', $yes_no],
-            '$notify2' => ['notify2', t('Your connections are confirmed'), ($notify & NOTIFY_CONFIRM), NOTIFY_CONFIRM, '', $yes_no],
-            '$notify3' => ['notify3', t('Someone writes on your profile wall'), ($notify & NOTIFY_WALL), NOTIFY_WALL, '', $yes_no],
-            '$notify4' => ['notify4', t('Someone writes a followup comment'), ($notify & NOTIFY_COMMENT), NOTIFY_COMMENT, '', $yes_no],
-            '$notify5' => ['notify5', t('You receive a private message'), ($notify & NOTIFY_MAIL), NOTIFY_MAIL, '', $yes_no],
-            '$notify6' => ['notify6', t('You receive a friend suggestion'), ($notify & NOTIFY_SUGGEST), NOTIFY_SUGGEST, '', $yes_no],
-            '$notify7' => ['notify7', t('You are tagged in a post'), ($notify & NOTIFY_TAGSELF), NOTIFY_TAGSELF, '', $yes_no],
-            '$notify8' => ['notify8', t('You are poked/prodded/etc. in a post'), ($notify & NOTIFY_POKE), NOTIFY_POKE, '', $yes_no],
-            '$notify9' => ['notify9', t('Someone likes your post/comment'), ($notify & NOTIFY_LIKE), NOTIFY_LIKE, '', $yes_no],
-            '$lbl_vnot' => t('Show visual notifications including:'),
-            '$vnotify1' => ['vnotify1', t('Unseen stream activity'), ($vnotify & VNOTIFY_NETWORK), VNOTIFY_NETWORK, '', $yes_no],
-            '$vnotify2' => ['vnotify2', t('Unseen channel activity'), ($vnotify & VNOTIFY_CHANNEL), VNOTIFY_CHANNEL, '', $yes_no],
-            '$vnotify3' => ['vnotify3', t('Unseen private messages'), ($vnotify & VNOTIFY_MAIL), VNOTIFY_MAIL, t('Recommended'), $yes_no],
-            '$vnotify4' => ['vnotify4', t('Upcoming events'), ($vnotify & VNOTIFY_EVENT), VNOTIFY_EVENT, '', $yes_no],
-            '$vnotify5' => ['vnotify5', t('Events today'), ($vnotify & VNOTIFY_EVENTTODAY), VNOTIFY_EVENTTODAY, '', $yes_no],
-            '$vnotify6' => ['vnotify6', t('Upcoming birthdays'), ($vnotify & VNOTIFY_BIRTHDAY), VNOTIFY_BIRTHDAY, t('Not available in all themes'), $yes_no],
-            '$vnotify7' => ['vnotify7', t('System (personal) notifications'), ($vnotify & VNOTIFY_SYSTEM), VNOTIFY_SYSTEM, '', $yes_no],
-            '$vnotify8' => ['vnotify8', t('System info messages'), ($vnotify & VNOTIFY_INFO), VNOTIFY_INFO, t('Recommended'), $yes_no],
-            '$vnotify9' => ['vnotify9', t('System critical alerts'), ($vnotify & VNOTIFY_ALERT), VNOTIFY_ALERT, t('Recommended'), $yes_no],
-            '$vnotify10' => ['vnotify10', t('New connections'), ($vnotify & VNOTIFY_INTRO), VNOTIFY_INTRO, t('Recommended'), $yes_no],
-            '$vnotify11' => ((is_site_admin()) ? ['vnotify11', t('System Registrations'), ($vnotify & VNOTIFY_REGISTER), VNOTIFY_REGISTER, '', $yes_no] : []),
-            '$vnotify12' => ['vnotify12', t('Unseen shared files'), ($vnotify & VNOTIFY_FILES), VNOTIFY_FILES, '', $yes_no],
-            '$vnotify13' => ((($disable_discover_tab && !$site_firehose) || !Apps::system_app_installed(local_channel(), 'Public Stream')) ? [] : ['vnotify13', t('Unseen public stream activity'), ($vnotify & VNOTIFY_PUBS), VNOTIFY_PUBS, '', $yes_no]),
-            '$vnotify14' => ['vnotify14', t('Unseen likes and dislikes'), ($vnotify & VNOTIFY_LIKE), VNOTIFY_LIKE, '', $yes_no],
-            '$vnotify15' => ['vnotify15', t('Unseen forum posts'), ($vnotify & VNOTIFY_FORUMS), VNOTIFY_FORUMS, '', $yes_no],
-            '$mailhost' => ['mailhost', t('Email notification hub (hostname)'), get_pconfig(local_channel(), 'system', 'email_notify_host', App::get_hostname()), sprintf(t('If your channel is mirrored to multiple hubs, set this to your preferred location. This will prevent duplicate email notifications. Example: %s'), App::get_hostname())],
-            '$always_show_in_notices' => ['always_show_in_notices', t('Show new wall posts, private messages and connections under Notices'), $always_show_in_notices, 1, '', $yes_no],
-            '$update_notices_per_parent' => ['update_notices_per_parent', t('Mark all notices of the thread read if a notice is clicked'), $update_notices_per_parent, 1, t('If no, only the clicked notice will be marked read'), $yes_no],
-            '$desktop_notifications_info' => t('Desktop notifications are unavailable because the required browser permission has not been granted'),
-            '$desktop_notifications_request' => t('Grant permission'),
-            '$evdays' => ['evdays', t('Notify me of events this many days in advance'), $evdays, t('Must be greater than 0')],
-            '$basic_addon' => $plugin['basic'],
-            '$notify_addon' => $plugin['notify'],
-            '$photo_path' => ['photo_path', t('Default photo upload folder'), get_pconfig(local_channel(), 'system', 'photo_path'), t('%Y - current year, %m -  current month')],
-            '$attach_path' => ['attach_path', t('Default file upload folder'), get_pconfig(local_channel(), 'system', 'attach_path'), t('%Y - current year, %m -  current month')],
-            '$removeme' => t('Remove Channel'),
-            '$removechannel' => t('Remove this channel.'),
-            '$expire' => ['expire', t('Expire other channel content after this many days'), $expire, t('0 or blank to use the website limit.') . ' ' . ((intval($sys_expire)) ? sprintf(t('This website expires after %d days.'), intval($sys_expire)) : t('This website does not expire imported content.')) . ' ' . t('The website limit takes precedence if lower than your limit.')],
-            '$message_filter_excl' => ['message_filter_excl', t('Do not import posts with this text'), get_pconfig(local_channel(), 'system', 'message_filter_excl', ''), t('Words one per line or #tags, $categories, /patterns/, lang=xx, lang!=xx - leave blank to import all posts')],
-            '$message_filter_incl' => ['message_filter_incl', t('Only import posts with this text'), get_pconfig(local_channel(), 'system', 'message_filter_incl', ''), t('Words one per line or #tags, $categories, /patterns/, lang=xx, lang!=xx - leave blank to import all posts')]
-        ]);
+        $toggles = [
+            'post_newfriend',
+            'post_joingroup',
+            'post_profilechange',
+            'always_show_in_notices',
+            'update_notices_per_parent',
+        ];
+        foreach ($toggles as $k) {
+            if (isset($data[$k]))
+                set_pconfig($uid, 'system', $k, (intval($data[$k]) ? 1 : 0));
+        }
+
+        if (isset($data['evdays'])) {
+            $evdays = intval($data['evdays']);
+            if ($evdays < 1)
+                $evdays = 3;
+            set_pconfig($uid, 'system', 'evdays', $evdays);
+        }
+
+        if (array_key_exists('mailhost', $data))
+            set_pconfig($uid, 'system', 'email_notify_host', notags(trim((string) $data['mailhost'])));
+
+        q("UPDATE channel SET channel_notifyflags = %d WHERE channel_id = %d",
+            intval($notify), intval($uid));
+
+        \Zotlabs\Lib\Libsync::build_sync_packet();
+
+        Response::send(['status' => 'ok']);
     }
 
     private function getDangerSettings(): void
