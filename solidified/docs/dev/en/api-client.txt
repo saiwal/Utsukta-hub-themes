@@ -9,6 +9,8 @@ All API communication goes through thin fetch wrappers. There are two sets:
 
 File: `src/shared/lib/api.ts`
 
+These wrappers are the raw network layer. Most component code should not call them directly for GETs — reads go through the TanStack Query cache instead; see [data-fetching.txt](data-fetching.txt).
+
 ## apiGet
 
 ```typescript
