@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-9kNHfgxH.js";import{Hn as t}from"./app-DTHRm4gO.js";import{t as n,u as r}from"./app-store-DgJmeWpN.js";import{t as i}from"./app-CategoryWidget-DErzPTHR.js";function a(){return e(i,{get channelNick(){return t()()},type:`articles`,get activeSlug(){return n()},onCategoryClick:e=>r(`cat`,e)})}export{a as default};
