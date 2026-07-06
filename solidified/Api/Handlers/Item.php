@@ -35,6 +35,8 @@ class Item
     // POST /api/item/:mid/comment            -> post a comment
     // POST /api/item/:mid/delete             -> delete item
     // POST /api/item/:mid/edit               -> edit item body/title
+    // POST /api/item/:mid/follow             -> follow thread (core: subthread/sub)
+    // POST /api/item/:mid/unfollow           -> unfollow thread (core: subthread/unsub)
     // POST /api/item                         -> create new top-level post
     // POST /api/item/:mid                    -> (same as comment — alias)
 
@@ -100,7 +102,8 @@ class Item
         // The action verb is always the last segment for POST requests.
         $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
                        'tentativeaccept', 'star', 'comment', 'delete',
-                       'edit', 'reshare', 'saveto', 'vote'];
+                       'edit', 'reshare', 'saveto', 'vote',
+                       'follow', 'unfollow'];
 
         $segs = array_slice(App::$argv, 2);
         $last = count($segs) ? $segs[count($segs) - 1] : '';
@@ -160,6 +163,12 @@ class Item
             case 'vote':
                 $this->voteOnPoll($mid);
                 break;
+            case 'follow':
+                $this->toggleThreadFollow($mid, true);
+                break;
+            case 'unfollow':
+                $this->toggleThreadFollow($mid, false);
+                break;
             default:
                 // POST /api/item/:mid with no verb → comment (convenience alias)
                 $this->createComment($mid);
@@ -200,16 +209,20 @@ class Item
         $rows = fetch_post_tags($rows, true);
 
         $row = $rows[0];
-        if ($ob_hash) {
-            $pid = intval($row['parent']);
-            $obs = dbesc($ob_hash);
+        // Follow/Ignore activities live in the *viewer's* channel copy of the
+        // thread (core Mod_Subthread), so match by parent_mid within their uid.
+        $luid = intval(local_channel());
+        if ($luid && $ob_hash) {
+            $pmid = dbesc($row['parent_mid']);
+            $obs  = dbesc($ob_hash);
             $fr = dbq(
                 "SELECT verb FROM item
-                 WHERE parent = $pid
+                 WHERE uid = $luid
+                   AND parent_mid = '$pmid'
                    AND author_xchan = '$obs'
                    AND verb IN ('Follow', 'Ignore')
                    AND item_deleted = 0
-                 ORDER BY created DESC LIMIT 1"
+                 ORDER BY created DESC, id DESC LIMIT 1"
             );
             $row['viewer_following'] = !empty($fr) && $fr[0]['verb'] === 'Follow';
         }
@@ -869,6 +882,120 @@ class Item
             $newState, $iid, $uid);
 
         json_return_and_die(['success' => true, 'starred' => (bool) $newState]);
+    }
+
+    // POST /api/item/:mid/follow | /api/item/:mid/unfollow
+    // Mirrors core Mod_Subthread: records a Follow (sub) or Ignore (unsub)
+    // activity authored by the viewer on the thread top of their own copy of
+    // the thread. The activity is local-only (no delivery), and the latest
+    // Follow/Ignore wins — the same convention the stream queries and the
+    // pf (followed threads) filter rely on. Items that exist only in the sys
+    // channel (pubstream) are copied into the viewer's channel first, exactly
+    // like core's copy_of_pubitem() fallback.
+    private function toggleThreadFollow(string $mid, bool $follow): void
+    {
+        require_once('include/channel.php');
+
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $uid         = local_channel();
+        $channel     = App::get_channel();
+        $observer    = App::get_observer();
+        $ob_hash     = $channel['channel_hash'];
+        $item_normal = item_normal();
+
+        $target = $this->resolveItem($mid, $ob_hash);
+        if (!$target) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        // The follow state lives on the viewer's copy of the thread.
+        // resolveItem() already prefers it; anything else means the viewer
+        // has no copy — pull pubstream items in, refuse the rest.
+        if (intval($target['uid']) !== $uid) {
+            $sys = get_sys_channel();
+            if (intval($target['uid']) === intval($sys['channel_id'])) {
+                $copy = copy_of_pubitem($channel, $target['mid']);
+                if (!$copy) {
+                    json_return_and_die(['error' => 'Unable to copy item to your stream']);
+                }
+                $target = $copy;
+            } else {
+                json_return_and_die(['error' => 'This conversation is not in your stream']);
+            }
+        }
+
+        // Follow state always attaches to the thread top (like core subthread)
+        if (!intval($target['item_thread_top'])) {
+            $pid = intval($target['parent']);
+            $r = dbq("SELECT * FROM item WHERE id = $pid $item_normal LIMIT 1");
+            if (!$r) {
+                json_return_and_die(['error' => 'Thread not found']);
+            }
+            $target = $r[0];
+        }
+
+        // No-op when the latest Follow/Ignore already matches the request
+        $tid    = intval($target['id']);
+        $obsEsc = dbesc($ob_hash);
+        $cur = dbq("SELECT verb FROM item
+                    WHERE parent = $tid
+                      AND author_xchan = '$obsEsc'
+                      AND verb IN ('Follow', 'Ignore')
+                      AND item_deleted = 0
+                    ORDER BY created DESC LIMIT 1");
+        $currently = !empty($cur) && $cur[0]['verb'] === 'Follow';
+        if ($currently === $follow) {
+            json_return_and_die(['success' => true, 'following' => $follow]);
+        }
+
+        $author = q("SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
+            dbesc($target['author_xchan']));
+        if (!$author) {
+            json_return_and_die(['error' => 'Item author not found']);
+        }
+
+        $uuid      = item_message_id();
+        $post_type = (($target['resource_type'] ?? '') === 'photo') ? t('photo') : t('status');
+        $ulink     = '[zrl=' . $author[0]['xchan_url'] . ']' . $author[0]['xchan_name'] . '[/zrl]';
+        $alink     = '[zrl=' . $observer['xchan_url'] . ']' . $observer['xchan_name'] . '[/zrl]';
+        $plink     = '[zrl=' . z_root() . '/display/' . $target['uuid'] . ']' . $post_type . '[/zrl]';
+        $bodyverb  = $follow
+            ? t('%1$s is following %2$s\'s %3$s')
+            : t('%1$s stopped following %2$s\'s %3$s');
+
+        $arr = [
+            'uuid'          => $uuid,
+            'mid'           => z_root() . '/item/' . $uuid,
+            'aid'           => $target['aid'],
+            'uid'           => intval($target['uid']),
+            'parent'        => $tid,
+            'parent_mid'    => $target['mid'],
+            'thr_parent'    => $target['mid'],
+            'owner_xchan'   => $target['owner_xchan'],
+            'author_xchan'  => $ob_hash,
+            'item_origin'   => 1,
+            'item_notshown' => 1,
+            'item_wall'     => intval($target['item_wall']),
+            'verb'          => $follow ? 'Follow' : 'Ignore',
+            'obj_type'      => (($target['resource_type'] ?? '') === 'photo') ? 'Image' : 'Note',
+            'body'          => sprintf($bodyverb, $alink, $ulink, $plink),
+            'allow_cid'     => $target['allow_cid'],
+            'allow_gid'     => $target['allow_gid'],
+            'deny_cid'      => $target['deny_cid'],
+            'deny_gid'      => $target['deny_gid'],
+        ];
+
+        $post = item_store($arr, false, false, false);
+        if (empty($post['item_id'])) {
+            json_return_and_die(['error' => 'Failed to store activity']);
+        }
+
+        $arr['id'] = $post['item_id'];
+        call_hooks('post_local_end', $arr);
+
+        json_return_and_die(['success' => true, 'following' => $follow]);
     }
 
     // POST /api/item/:mid/edit

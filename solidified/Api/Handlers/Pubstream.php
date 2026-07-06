@@ -104,6 +104,7 @@ class Pubstream {
 
         // --- Format ----------------------------------------------------------
         $observer_xchan = get_observer_hash();
+        $this->applyViewerFollowing($items, $observer_xchan);
         $posts = [];
         foreach ($items as $item) {
             if (!intval($item['item_thread_top'] ?? 0)) continue;

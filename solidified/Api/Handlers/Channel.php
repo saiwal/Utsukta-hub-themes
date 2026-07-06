@@ -149,10 +149,14 @@ class Channel
             }
         }
 
+        // ── Viewer following state ────────────────────────────────────────────
+        $items = $items ?: [];
+        $this->applyViewerFollowing($items, $observer_xchan);
+
         // ── Format and respond ────────────────────────────────────────────────
         $out = array_map(
             fn($item) => $this->formatItem($item, $observer_xchan),
-            $items ?: []
+            $items
         );
 
         $can_post_wall = perm_is_allowed($channel_uid, $observer_xchan, 'post_wall');

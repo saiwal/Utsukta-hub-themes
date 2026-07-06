@@ -64,6 +64,48 @@ trait FormatsItems
         ], $deleted ?: []);
     }
 
+    // Stamp viewer_following on each item. Follow/Ignore activities are stored
+    // local-only in the *viewer's* channel (core Mod_Subthread semantics), so
+    // they must be matched by parent_mid within the viewer's uid — the parent
+    // item *id* differs between the viewer's copy and the copy being displayed
+    // (channel pages, pubstream, display). Latest activity wins.
+    protected function applyViewerFollowing(array &$items, string $observer_xchan): void
+    {
+        $uid = intval(local_channel());
+        if (!$uid || !$observer_xchan || empty($items)) {
+            return;
+        }
+
+        $mids = array_unique(array_filter(array_column($items, 'parent_mid')));
+        if (empty($mids)) {
+            return;
+        }
+
+        $inList = implode("','", array_map('dbesc', $mids));
+        $obs    = dbesc($observer_xchan);
+        $frows  = dbq(
+            "SELECT parent_mid, verb FROM item
+             WHERE uid = $uid
+               AND parent_mid IN ('$inList')
+               AND author_xchan = '$obs'
+               AND verb IN ('Follow', 'Ignore')
+               AND item_deleted = 0
+             ORDER BY created DESC, id DESC"
+        );
+
+        $map = [];
+        foreach (($frows ?: []) as $fr) {
+            if (!isset($map[$fr['parent_mid']])) {
+                $map[$fr['parent_mid']] = ($fr['verb'] === 'Follow');
+            }
+        }
+
+        foreach ($items as &$item) {
+            $item['viewer_following'] = $map[$item['parent_mid']] ?? false;
+        }
+        unset($item);
+    }
+
     private static function normalizeAttach(array $items): array
     {
         $root = z_root();
