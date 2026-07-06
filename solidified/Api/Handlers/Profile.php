@@ -18,6 +18,26 @@ class Profile
         $this->getProfile();
     }
 
+    // Mirrors core rconnect_url(): the connect link lives on the *observer's*
+    // hub (their xchan_follow template), filled with the target's reddress.
+    // Empty when there is no authenticated observer.
+    private function connectUrlFor(string $ob_hash, string $target_addr): string {
+        if (!$ob_hash || !$target_addr) {
+            return '';
+        }
+        $r = q("SELECT xchan_follow FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
+            dbesc($ob_hash));
+        if ($r && $r[0]['xchan_follow']) {
+            return sprintf($r[0]['xchan_follow'], urlencode($target_addr));
+        }
+        $r = q("SELECT hubloc_url FROM hubloc WHERE hubloc_hash = '%s' AND hubloc_primary = 1 LIMIT 1",
+            dbesc($ob_hash));
+        if ($r) {
+            return $r[0]['hubloc_url'] . '/follow?f=&url=' . urlencode($target_addr);
+        }
+        return '';
+    }
+
     // ── /api/profile/:nick ───────────────────────────────────────────────────
 
     private function getProfile(): void {
@@ -159,6 +179,7 @@ class Profile
             'hide_friends'    => (bool) ($profile['hide_friends'] ?? false),
             'connections'     => intval($conn_count[0]['total']   ?? 0),
             'is_connected'    => $is_connected,
+            'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $channel['xchan_addr'] ?? ''),
             'viewer_xchan'    => $ob_hash,
             'viewer_is_local' => (bool) local_channel(),
         ]);
@@ -236,6 +257,7 @@ class Profile
             'hide_friends'    => false,
             'connections'     => 0,
             'is_connected'    => $is_connected,
+            'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $nick),
             'viewer_xchan'    => $ob_hash,
             'viewer_is_local' => (bool) $local_uid,
             'is_remote'       => true,
