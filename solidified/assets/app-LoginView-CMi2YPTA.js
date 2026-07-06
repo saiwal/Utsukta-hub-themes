@@ -1,0 +1,1 @@
+import{O as e,m as t,s as n}from"./app-web-9kNHfgxH.js";import r from"./app-LoginForm-CrXS2BYG.js";var i=t(`<div class="min-h-[60vh] flex items-center justify-center">`);function a(){return(()=>{var t=i();return n(t,e(r,{})),t})()}export{a as default};
