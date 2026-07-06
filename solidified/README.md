@@ -8,13 +8,13 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 
 ## Features at a Glance
 
-- **22 feature modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
+- **modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
 - **Rich text editor** — BBCode, HTML, and Markdown with WYSIWYG, Source, and Preview tabs
 - **Threaded feed** — like, dislike, repeat, comment, reshare, star, and delete with live state
 - **22 UI themes** — presets (Nord, Dracula, Catppuccin, Tokyo Night…) plus fully customizable
 - **Progressive Web App** — service worker caching, push notifications, background update detection
 - **Responsive layout** — desktop three-column, tablet collapsible sidebar, mobile bottom tab bar
-- **i18n** — English and Hindi; locale switcher with localStorage persistence
+- **i18n** — locale switcher with localStorage persistence
 - **Pluggable module system** — every feature self-registers routes, nav items, and sidebar slots
 
 ---
@@ -151,12 +151,8 @@ Themes are implemented as CSS custom properties on `data-theme` and integrate wi
 | Tablet (`768px – 1279px`) | Single column, collapsible right sidebar via FAB |
 | Desktop (`≥ 1280px`) | Three-column: left nav (fixed) · main content · right sidebar (fixed) |
 
-**Sidebar slots** — modules inject widgets into named regions:
+**Sidebar slot** — modules inject widgets into named region:
 - `right` — contextual right sidebar (per-module + global)
-- `rightVisitor` — visitor-only right sidebar
-- `leftBottom` — left sidebar footer area
-- `mainTop` — owner-only content above the main feed
-- `help` — help overlay integration
 
 ---
 
