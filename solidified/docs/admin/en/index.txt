@@ -4,18 +4,18 @@ This guide covers the Admin panel at `/admin`. It is visible only to accounts wi
 
 ## Contents
 
-- [summary.txt](summary.txt) — Site overview: user counts, queue, version, plugins
-- [site.txt](site.txt) — Site name, registration policy, access policy
-- [security.txt](security.txt) — Block lists, allowlists, HTTP security headers
-- [accounts.txt](accounts.txt) — Registered accounts: block, delete, paginate
-- [channels.txt](channels.txt) — All channels on this hub
-- [features.txt](features.txt) — Enable / disable optional site features
-- [addons.txt](addons.txt) — Install and manage plugins/addons
-- [logs.txt](logs.txt) — System log viewer with level filtering
-- [queue.txt](queue.txt) — Outbound message queue inspection
-- [themes.txt](themes.txt) — Installed themes management
-- [profile-fields.txt](profile-fields.txt) — Custom profile field definitions
-- [db-updates.txt](db-updates.txt) — Pending database schema updates
+- [Summary](summary) — Site overview: user counts, queue, version, plugins
+- [Site](site) — Site name, registration policy, access policy
+- [Security](security) — Block lists, allowlists, HTTP security headers
+- [Accounts](accounts) — Registered accounts: block, delete, paginate
+- [Channels](channels) — All channels on this hub
+- [Features](features) — Enable / disable optional site features
+- [Addons](addons) — Install and manage plugins/addons
+- [Logs](logs) — System log viewer with level filtering
+- [Queue](queue) — Outbound message queue inspection
+- [Themes](themes) — Installed themes management
+- [Profile-fields](profile-fields) — Custom profile field definitions
+- [Db-updates](db-updates) — Pending database schema updates
 
 ## Accessing the Admin Panel
 

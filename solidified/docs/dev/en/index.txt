@@ -4,16 +4,16 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 
 ## Contents
 
-- [overview.txt](overview.txt) — Architecture overview, tech stack, project layout
-- [module-system.txt](module-system.txt) — Creating, registering, and gating feature modules
-- [slot-system.txt](slot-system.txt) — Injecting widgets into layout regions
-- [routing.txt](routing.txt) — SPA routing, lazy loading, and the ModuleGuard
-- [stores.txt](stores.txt) — Reactive state: auth, nav, site-config
-- [nav-system.txt](nav-system.txt) — Navigation computation and viewer roles
-- [api-client.txt](api-client.txt) — Frontend API utilities and CSRF handling
-- [data-fetching.txt](data-fetching.txt) — TanStack Query caching, createQueryResource, mutations
-- [php-api.txt](php-api.txt) — Backend PHP API: router, auth, response, handlers
-- [i18n.txt](i18n.txt) — Internationalization (i18n) system
+- [Overview](overview) — Architecture overview, tech stack, project layout
+- [Module-system](module-system) — Creating, registering, and gating feature modules
+- [Slot-system](slot-system) — Injecting widgets into layout regions
+- [Routing](routing) — SPA routing, lazy loading, and the ModuleGuard
+- [Stores](stores) — Reactive state: auth, nav, site-config
+- [Nav-system](nav-system) — Navigation computation and viewer roles
+- [Api-client](api-client) — Frontend API utilities and CSRF handling
+- [Data-fetching](data-fetching) — TanStack Query caching, createQueryResource, mutations
+- [Php-api](php-api) — Backend PHP API: router, auth, response, handlers
+- [I18n](i18n) — Internationalization (i18n) system
 
 ## Quick Start
 

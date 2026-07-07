@@ -111,6 +111,33 @@ class Help {
             $html
         );
 
+        // Rewrite relative doc links (e.g. "./hq", "hq.txt", "connections.txt")
+        // to absolute SPA help routes, so they resolve against the app's URL
+        // scheme (/help/:section/:topic) instead of the browser's current
+        // location. Leaves absolute/external/anchor/mailto/tel links alone.
+        $html = preg_replace_callback(
+            '/(<a\s[^>]*href=")(?!https?:\/\/|mailto:|tel:|#|\/)(.*?)(")/i',
+            function ($m) use ($section, $topicDir) {
+                $target = $m[2];
+
+                $fragment = '';
+                $hashPos  = strpos($target, '#');
+                if ($hashPos !== false) {
+                    $fragment = substr($target, $hashPos);
+                    $target   = substr($target, 0, $hashPos);
+                }
+
+                $target = preg_replace('#^\./#', '', $target);
+                $target = preg_replace('/\.txt$/', '', $target);
+
+                $path = $topicDir !== '' ? $topicDir . '/' . $target : $target;
+                $href = '/help/' . $section . ($path !== '' ? '/' . $path : '') . $fragment;
+
+                return $m[1] . $href . $m[3];
+            },
+            $html
+        );
+
         // Extract plain-text title from first # heading
         $title = $this->extractTitle($raw);
 
