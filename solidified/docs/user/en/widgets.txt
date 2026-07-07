@@ -1,0 +1,47 @@
+# Customizing Sidebar Widgets
+
+The right sidebar (and a few other regions, like the bottom of the left nav) show **widgets** — small panels like Notifications, Connections, Categories, or Upcoming Events. Which widgets appear depends on the page you're on, but you can customize your own pages: add, remove, reorder, and configure widgets to suit you.
+
+[IMAGE: Right sidebar with several widgets stacked]
+
+## Entering Edit Mode
+
+On any page you own, look for the **pencil icon** in the right sidebar header and click it. Each widget now shows a small toolbar with move, remove, and (for some widgets) settings controls, plus an **Add widget** button at the bottom of the list.
+
+[IMAGE: Right sidebar in edit mode with per-widget toolbars and an Add widget button]
+
+Only the owner of a page can edit its widgets — visitors and other users always see the arrangement as you left it.
+
+## Adding a Widget
+
+Click **Add widget** to see every widget available on the current page. Click one to drop it in at the end of the list.
+
+[IMAGE: Add widget picker list]
+
+## Removing a Widget
+
+Click the **✕** on a widget's toolbar to take it off the page. It's not deleted — it just goes back into the Add widget list if you want it again later.
+
+## Reordering Widgets
+
+Use the **↑ / ↓** arrows on a widget's toolbar to move it up or down in the stack. The topmost widget renders first.
+
+## Widgets with Multiple Instances
+
+A few widgets can be added more than once on the same page, each with its own settings. For example, the Cart module's item card widget can be added several times, each showing a different product. When a widget supports this, it stays in the Add widget list even after you've added it once — click it again to add another copy.
+
+Widgets that support multiple instances show a **gear icon** in their toolbar. Click it to open that instance's settings (e.g. which item to show) without affecting any other copy of the same widget.
+
+[IMAGE: Widget toolbar with gear icon open showing a settings form]
+
+## Pinned Widgets
+
+A small number of widgets — like Notifications — are **pinned**: they appear on every page automatically and don't show a toolbar, since they can't be removed or reordered. Pinned widgets aren't included in the Add widget list.
+
+## Resetting to Defaults
+
+If you've customized a page, a **Reset to defaults** button appears below the widget list. Click it to discard your changes for that page and go back to the standard widget selection.
+
+## Saving & Syncing
+
+Every change (add, remove, reorder, or configure) saves immediately — there's no separate save button. Your layout is stored on the server, so it follows you across devices, and if you're viewing your own channel, visitors see the same arrangement you've set up.

@@ -45,7 +45,7 @@ registerModule({
 
 By default widgets are **module-local**: rendered only while a module listed in `defaultModules` is active, and unmounted on navigation away.
 
-**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. The shared ones live in `shared/slots.ts`:
+**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. In the user-facing edit UI these are described as "pinned": they render on every page, show no move/remove toolbar, and never appear in the Add-widget picker. The shared ones live in `shared/slots.ts`:
 
 ```typescript
 // shared/slots.ts

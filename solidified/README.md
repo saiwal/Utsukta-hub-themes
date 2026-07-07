@@ -9,12 +9,13 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 ## Features at a Glance
 
 - **modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
-- **Rich text editor** — BBCode, HTML, and Markdown with WYSIWYG, Source, and Preview tabs
+- **Rich text editor** — BBCode with WYSIWYG, Source, and Preview tabs
 - **Threaded feed** — like, dislike, repeat, comment, reshare, star, and delete with live state
-- **22 UI themes** — presets (Nord, Dracula, Catppuccin, Tokyo Night…) plus fully customizable
+- **24 UI themes** — presets (Nord, Dracula, Catppuccin, Tokyo Night…) plus fully customizable
 - **Cached data layer** — TanStack Query: instant back-navigation, request dedup, background revalidation
 - **Progressive Web App** — service worker caching, push notifications, background update detection
 - **Responsive layout** — desktop three-column, tablet collapsible sidebar, mobile bottom tab bar
+- **Customizable Widget layouts** — add, remove, and reorder sidebar widgets, configure widgets that support multiple instances, a few widgets are pinned on every page
 - **i18n** — locale switcher with localStorage persistence
 - **Pluggable module system** — every feature self-registers routes, nav items, and sidebar slots
 
@@ -76,7 +77,7 @@ The editor powers post, comment, article, and webpage composition. It shares a s
 
 **Three tabs:**
 - **WYSIWYG** — contenteditable with toolbar
-- **Source** — raw markup (BBCode, HTML, or Markdown)
+- **Source** — raw markup (BBCode)
 - **Preview** — rendered read-only output
 
 **Toolbar (full level — posts and articles):**
@@ -92,6 +93,7 @@ Bold, Italic, Underline, Strikethrough, Highlight, Link, Bullet list, Numbered l
 
 **Other editor features:**
 - `@`-mention autocomplete with live user search
+- `:`-emoji autocomplete
 - Draft auto-save to IndexedDB, keyed per composer scope — survives page refresh
 - Ctrl+Enter to submit
 - ACL picker for post-level access control (privacy groups, individual channels)
@@ -130,6 +132,21 @@ All stream views (network, channel, public, HQ) share the same underlying store 
 
 ---
 
+## Sidebar Widgets
+
+The right sidebar (and a few other layout regions) show context-aware widgets — Notifications, Connections, Categories, Upcoming Events, and more — with sensible per-module defaults. Owners can customize their own pages via a pencil toggle in the sidebar header:
+
+- **Add** — pick any widget allowed on the current page from an "Add widget" list
+- **Remove** — take a widget off the page (it isn't deleted, just returns to the picker)
+- **Reorder** — move-up / move-down controls on each widget
+- **Multiple instances** — some widgets (e.g. Cart's item card) can be placed more than once on the same page, each with its own settings via a gear-icon config panel
+- **Pinned widgets** — a small set (e.g. Notifications) are always mounted on every page and can't be removed or reordered
+- **Reset to defaults** — discards customization for that page
+
+Changes save immediately to the server (no separate save step), so the layout follows the user across devices, and visitors to a channel see the owner's arrangement rather than their own. See `src/docs/dev/en/slot-system.txt` for the implementation and `src/docs/user/en/widgets.txt` for the end-user guide.
+
+---
+
 ## Data Fetching & Caching
 
 Server reads go through [TanStack Solid Query](https://tanstack.com/query/latest/docs/framework/solid/overview). A shared client (`src/shared/lib/query-client.ts`) caches every GET response under a query key:
@@ -146,12 +163,12 @@ Component reads use `createQueryResource()` (`src/shared/lib/createQueryResource
 
 ## Theming
 
-22 built-in themes plus full custom mode. Theme preference is stored in both localStorage (instant restore, no flash on reload) and the server (`/api/settings/display`) so it follows the user across devices.
+24 built-in themes plus full custom mode. Theme preference is stored in both localStorage (instant restore, no flash on reload) and the server (`/api/settings/display`) so it follows the user across devices.
 
 | Category | Themes |
 |---|---|
-| Light | Light, Pastel Soft, Warm Paper, Mint Fresh, Sakura, Latte Cream, Gruvbox Light, Catppuccin Latte, Solarized Light |
-| Dark | Dark, Nord, Dracula, Monokai, One Dark, CyberPunk, Rose Pine, Gruvbox Dark, Catppuccin Mocha, Solarized Dark, Tokyo Night, Matrix |
+| Light | Light, Pastel Soft, Warm Paper, Mint Fresh, Sakura, Latte Cream, Gruvbox Light, Catppuccin Latte, Solarized Light, High Contrast Light |
+| Dark | Dark, Nord, Dracula, Monokai, One Dark, CyberPunk, Rose Pine, Gruvbox Dark, Catppuccin Mocha, Solarized Dark, Tokyo Night, Matrix, High Contrast |
 | Custom | User-defined CSS variables (base, text, accent, surfaces) stored as a JSON blob |
 
 Themes are implemented as CSS custom properties on `data-theme` and integrate with Tailwind CSS v4 utilities throughout.
