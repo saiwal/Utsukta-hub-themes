@@ -37,3 +37,15 @@ Navigate away from the chatroom page to leave. You can return at any time and re
 Navigate to `/chat/<their-nick>` to see the public chatrooms on another channel. You can join and participate if you have permission.
 
 > **Note:** The Chat app must be installed on the channel. The room owner can restrict access to specific connections or groups.
+
+## Bookmarked Rooms Widget
+
+Lists chatrooms you've bookmarked, with a quick link to jump back into any of them. Only visible to you, not visitors.
+
+## Room Card Widget
+
+An opt-in showcase card that highlights one specific chatroom you choose — its name and who's currently inside, with a join link. Add it from the widget picker, then use its gear icon to pick the room; add several copies to feature more than one room.
+
+## Pinned Rooms Widget
+
+A small, always-on widget that follows you to every page, not just Chat. Pin a room to keep it here as a collapsible mini-chat panel — expand it to read recent messages and send new ones without leaving the page you're on. It's pinned, so it has no toolbar and can't be removed or reordered from the widget picker.

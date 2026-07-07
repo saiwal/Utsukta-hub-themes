@@ -63,3 +63,39 @@ If you are logged in and visiting someone else's channel:
 - Once accepted, their posts will appear in your Network stream.
 
 Connections can be organised into **Privacy Groups** — see [connections.txt](./connections).
+
+## Connections Widget
+
+Shows a handful of the channel's connections as avatars, with a link to see the full list. Appears on both the Channel and Profile pages.
+
+## Popular Posts Widget
+
+A short list of the channel's most-liked or most-commented posts, so visitors can jump straight to the highlights.
+
+## Categories Widget
+
+Lists the categories used on this channel's posts. Click one to filter the post feed down to that category; click it again to clear the filter.
+
+## Tags Widget
+
+A tag cloud of hashtags used across this channel's posts — sized by how often each tag appears. Click a tag to filter the feed to it.
+
+## Archive Widget
+
+A collapsible year/month list of the channel's post history. Click a month to filter the feed to posts from that month.
+
+## Pinned Post Widget
+
+An opt-in showcase card that highlights one specific post you choose, with a link to view it. Not shown by default — add it from the widget picker, then use its gear icon to pick which post to feature. Add several copies to pin more than one post.
+
+## Tag List Widget
+
+An alternate, plain-list layout for the Tags widget, for pages where a cloud layout doesn't fit well. Opt-in only — not shown by default even where the regular Tags widget is.
+
+## Category Cloud Widget
+
+An alternate cloud layout for the Categories widget. Opt-in only, offered as a picker alternative to the default list layout.
+
+## Archive Grid Widget
+
+An alternate calendar-grid layout for the Archive widget, showing months as a grid instead of a collapsible list. Opt-in only.

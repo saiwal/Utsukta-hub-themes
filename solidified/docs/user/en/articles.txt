@@ -48,3 +48,23 @@ If you are the channel owner, look for a **New article** or **Write** button. Ar
 Navigate to `/articles/<their-nick>` to see their published articles. Only public articles are visible to visitors.
 
 > **Note:** The Articles app must be installed on the channel for the tab and `/articles/<nick>` route to be active.
+
+## Drafts Widget
+
+Shown only to you, on your own Articles page. Lists articles you've started but not published, so you can pick one up where you left off or discard it. Never shown to visitors.
+
+## Popular Articles Widget
+
+A list of the channel's most-read or most-liked articles, letting visitors jump straight to the highlights.
+
+## Categories Widget
+
+Lists the categories used across this channel's articles. Click one to filter the listing.
+
+## Tags Widget
+
+A tag cloud of hashtags used across this channel's articles, sized by frequency. Click a tag to filter the listing.
+
+## Teaser Widget
+
+An opt-in showcase card that highlights one specific article you choose — title and excerpt, with a link to read it in full. Add it from the widget picker, then use its gear icon to pick the article; add several copies to feature more than one.
