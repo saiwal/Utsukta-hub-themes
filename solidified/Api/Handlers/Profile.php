@@ -15,6 +15,10 @@ class Profile
             $this->getConnections();
             return;
         }
+        if ($sub === 'activity') {
+            $this->getActivity();
+            return;
+        }
         $this->getProfile();
     }
 
@@ -332,6 +336,60 @@ class Profile
             'connections' => $connections,
             'total'       => intval($total_row[0]['total'] ?? 0),
             'hidden'      => false,
+        ]);
+    }
+
+    // ── /api/profile/:nick/activity ──────────────────────────────────────────
+    //
+    // Per-day wall-post counts for the last DAYS days, for the Activity
+    // Heatmap widget. Respects the same visibility rules as the channel
+    // stream (item_permissions_sql), so visitors never see private posts.
+
+    private const ACTIVITY_DAYS = 371;
+
+    private function getActivity(): void {
+        $nick = \App::$argv[2] ?? null;
+        if (!$nick) Response::error(400, 'Nick required');
+
+        require_once 'include/items.php';
+        require_once 'include/security.php';
+
+        $channel = channelx_by_nick($nick);
+        if (!$channel || $channel['channel_removed']) Response::error(404, 'Channel not found');
+
+        $uid = intval($channel['channel_id']);
+        $observer_xchan = get_observer_hash();
+
+        $perms = get_all_perms($uid, $observer_xchan);
+        if (!$perms['view_stream']) Response::error(403, 'Permission denied');
+
+        $since = gmdate('Y-m-d H:i:s', time() - self::ACTIVITY_DAYS * 86400);
+
+        $sql_extra = item_normal($uid);
+        $sql_extra .= item_permissions_sql($uid, $observer_xchan);
+
+        $rows = q(
+            "SELECT DATE(item.created) AS d, COUNT(*) AS c
+               FROM item
+              WHERE item.uid = %d
+                AND item.item_wall = 1
+                AND item.item_thread_top = 1
+                AND item.created >= '%s'
+                $sql_extra
+              GROUP BY DATE(item.created)",
+            $uid,
+            dbesc($since)
+        );
+
+        $counts = [];
+        foreach ($rows ?: [] as $r) {
+            $counts[(string) $r['d']] = intval($r['c']);
+        }
+
+        Response::send([
+            'days'   => self::ACTIVITY_DAYS,
+            'since'  => $since,
+            'counts' => $counts,
         ]);
     }
 }
