@@ -111,6 +111,10 @@ class Settings
         $scroll_style = get_pconfig($uid, 'spa', 'scroll_style', 'endless');
         if (!in_array($scroll_style, $valid_scroll_styles, true)) $scroll_style = 'endless';
 
+        $valid_corner_radii = ['none', 'sm', 'default', 'lg', 'xl'];
+        $corner_radius = get_pconfig($uid, 'spa', 'corner_radius', 'default');
+        if (!in_array($corner_radius, $valid_corner_radii, true)) $corner_radius = 'default';
+
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
@@ -128,6 +132,7 @@ class Settings
             'color_scheme' => $color_scheme,
             'custom_theme_colors' => $custom_theme_colors,
             'scroll_style' => $scroll_style,
+            'corner_radius' => $corner_radius,
         ]);
     }
 
@@ -807,6 +812,9 @@ class Settings
 
         if (isset($data['scroll_style']) && in_array($data['scroll_style'], ['endless', 'load_more'], true))
             set_pconfig($uid, 'spa', 'scroll_style', $data['scroll_style']);
+
+        if (isset($data['corner_radius']) && in_array($data['corner_radius'], ['none', 'sm', 'default', 'lg', 'xl'], true))
+            set_pconfig($uid, 'spa', 'corner_radius', $data['corner_radius']);
 
         Response::send(['status' => 'ok']);
     }
