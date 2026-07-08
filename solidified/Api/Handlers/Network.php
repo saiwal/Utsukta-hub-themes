@@ -32,8 +32,11 @@ class Network
         $pager_sql = " LIMIT $itemspage OFFSET $offset ";
 
         // ── Ordering ──────────────────────────────────────────────────────────
-        $saved_order = get_pconfig($uid, 'mod_network', 'order', 'created');
-        $get_order = $_GET['order'] ?? $saved_order;
+        // Deliberately not falling back to the 'mod_network'/'order' pconfig here:
+        // that value is only ever written by classic Hubzilla's legacy Activity_order
+        // widget, which the SPA has no UI for — honoring it would silently apply a
+        // stale preference from a page the user can't see or change.
+        $get_order = $_GET['order'] ?? 'created';
 
         $nouveau = false;
         $ordering = 'created';
