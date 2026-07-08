@@ -1,1 +1,0 @@
-import{c as e,m as t,s as n}from"./app-web-9kNHfgxH.js";import{Zn as r,y as i}from"./app-CMlqnAAq.js";var a=t(`<h1 class="text-2xl font-bold">.`);function o(){let t=i(),{t:o}=r();return(()=>{var r=a(),i=r.firstChild;return n(r,()=>o(`hq.welcome`),i),n(r,(()=>{var n=e(()=>!!t()?.name);return()=>n()?`, ${t().name}`:``})(),i),r})()}export{o as default};
