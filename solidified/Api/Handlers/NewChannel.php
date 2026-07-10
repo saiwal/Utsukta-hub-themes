@@ -89,6 +89,7 @@ class NewChannel
         change_channel($newuid);
 
         $this->installProtocols($newuid, $body['protocols'] ?? []);
+        $this->installIntegrations($newuid, $body['integrations'] ?? []);
         $this->applyDisplaySettings($newuid, $body);
 
         Response::send([
@@ -142,6 +143,7 @@ class NewChannel
             'limit'          => $limit !== false ? intval($limit) : null,
             'canadd'         => $canadd,
             'protocols'      => $this->federationApps(),
+            'integrations'   => $this->curatedIntegrationApps(),
         ]);
     }
 
@@ -224,7 +226,57 @@ class NewChannel
         return $protocols;
     }
 
+    // A hand-picked subset of system apps offered at channel-creation time — the
+    // full app catalog stays in Settings › Integrations so this step doesn't
+    // overwhelm a brand-new user. Match by name case-insensitively since app
+    // names come from core and casing isn't guaranteed stable.
+    private const CURATED_INTEGRATIONS = [
+        'Articles', 'Cart', 'Calendar', 'Chatrooms', 'Privacy Groups', 'Public Stream', 'Webpages', 'Wiki',
+    ];
+
+    private function curatedIntegrationApps(): array
+    {
+        $wanted = array_map('mb_strtolower', self::CURATED_INTEGRATIONS);
+
+        // $sync=true — see federationApps() for why (requires: local_channel gating).
+        $system = Apps::get_system_apps(true, true);
+        $apps = [];
+        foreach ($system as $app) {
+            $name = $app['name'] ?? '';
+            if (!in_array(mb_strtolower($name), $wanted, true)) continue;
+            $apps[] = [
+                'name'        => $name,
+                'description' => $app['desc'] ?? '',
+                'photo'       => $app['photo'] ?? '',
+            ];
+        }
+
+        usort($apps, fn($a, $b) =>
+            array_search(mb_strtolower($a['name']), $wanted) <=> array_search(mb_strtolower($b['name']), $wanted)
+        );
+        return $apps;
+    }
+
     // ── POST helpers ──────────────────────────────────────────────────────────
+
+    private function installIntegrations(int $uid, mixed $names): void
+    {
+        if (!is_array($names) || !$names) return;
+
+        $wanted = array_map('mb_strtolower', self::CURATED_INTEGRATIONS);
+        $selected = array_map('mb_strtolower', array_filter($names, 'is_string'));
+
+        $system = Apps::get_system_apps(true, true);
+        foreach ($system as $app) {
+            $lname = mb_strtolower($app['name'] ?? '');
+            if (!in_array($lname, $wanted, true)) continue;
+            if (!in_array($lname, $selected, true)) continue;
+
+            $app['uid']    = $uid;
+            $app['system'] = 1;
+            Apps::app_install($uid, $app);
+        }
+    }
 
     private function installProtocols(int $uid, mixed $protocols): void
     {
