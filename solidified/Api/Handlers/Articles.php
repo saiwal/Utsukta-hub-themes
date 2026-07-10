@@ -244,6 +244,7 @@ if ($slug) {
                 'name'    => $item['author']['xchan_name']           ?? '',
                 'address' => $item['author']['xchan_addr']           ?? '',
                 'url'     => $item['author']['xchan_url']            ?? '',
+                'hash'    => $item['author']['xchan_hash']           ?? '',
                 'photo'   => [
                     'src'      => $item['author']['xchan_photo_m']        ?? '',
                     'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
