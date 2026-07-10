@@ -999,16 +999,16 @@ class Item
     }
 
     // POST /api/item/:mid/edit
-    // FormData: { body, title?, summary?, mimetype?, pagetitle? }
+    // JSON body: { body, title?, summary?, mimetype?, pagetitle? }
     // Only the item owner can edit.
     private function editItem(string $mid): void
     {
-        $uid      = Auth::requireLocalMultipart();
-        $content  = trim($_POST['body']      ?? '');
-        $title    = trim($_POST['title']     ?? '');
-        $summary  = trim($_POST['summary']   ?? '');
-        $mimetype = trim($_POST['mimetype']  ?? 'text/bbcode');
-        $slug     = trim($_POST['pagetitle'] ?? '');
+        $uid      = Auth::requireLocalJson();
+        $content  = trim(Auth::$parsedBody['body']      ?? '');
+        $title    = trim(Auth::$parsedBody['title']     ?? '');
+        $summary  = trim(Auth::$parsedBody['summary']   ?? '');
+        $mimetype = trim(Auth::$parsedBody['mimetype']  ?? 'text/bbcode');
+        $slug     = trim(Auth::$parsedBody['pagetitle'] ?? '');
 
         if (!$content) {
             Response::error(400, 'body is required');
