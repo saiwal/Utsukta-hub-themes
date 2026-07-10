@@ -23,7 +23,7 @@ class Manage
             'current_uid' => intval($current_uid),
             'total_channels' => $this->countChannels(),
             'limit' => $this->channelLimit(),
-            'create_url' => z_root() . '/new_channel',
+            'create_url' => '/new_channel',
         ]);
     }
 
