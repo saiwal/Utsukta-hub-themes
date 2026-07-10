@@ -85,6 +85,7 @@ class Admin
             case 'channels':  $this->postChannels(); break;
             case 'security':  $this->postSecurity(); break;
             case 'features':        $this->postFeatures();       break;
+            case 'addons':          $this->postAddons();         break;
             case 'themes':          $this->postThemes();         break;
             case 'profile-fields':  $this->postProfileFields();  break;
             case 'logs':            $this->postLogs();           break;
@@ -611,6 +612,7 @@ class Admin
 
                 $info     = get_plugin_info($name);
                 $addons[] = [
+                    'slug'        => $name,
                     'name'        => $info['name'] ?? $name,
                     'description' => $info['description'] ?? '',
                     'version'     => $info['version'] ?? '',
@@ -625,6 +627,42 @@ class Admin
 
         usort($addons, fn($a, $b) => strcasecmp($a['name'], $b['name']));
         Response::send(['addons' => $addons]);
+    }
+
+    // Mirrors Zotlabs\Module\Admin\Addons::get()'s "a=t" toggle branch —
+    // install_plugin()/uninstall_plugin() run the addon's own _install()/
+    // _uninstall() hook functions (hook table registration), not just a
+    // config flip, so we call them the same way core does rather than only
+    // touching the "system.addon" list ourselves.
+    private function postAddons(): void
+    {
+        $data   = Auth::$parsedBody;
+        $action = $data['action'] ?? '';
+
+        if ($action !== 'toggle') {
+            Response::error(400, 'Unknown action');
+        }
+
+        $name = basename($data['name'] ?? '');
+        if (!$name || !is_file("addon/$name/$name.php")) {
+            Response::error(400, 'Invalid addon');
+        }
+
+        require_once('include/plugin.php');
+
+        $idx = array_search($name, App::$plugins);
+        if ($idx !== false) {
+            unset(App::$plugins[$idx]);
+            uninstall_plugin($name);
+            $active = false;
+        } else {
+            App::$plugins[] = $name;
+            install_plugin($name);
+            $active = true;
+        }
+        Config::Set('system', 'addon', implode(', ', App::$plugins));
+
+        Response::send(['name' => $name, 'active' => $active]);
     }
 
     // ── Themes ────────────────────────────────────────────────────────────────

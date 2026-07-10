@@ -19,6 +19,7 @@ class Router
         'cal' => Handlers\Cal::class,
         'pubsites' => Handlers\Pubsites::class,
         'manage' => Handlers\Manage::class,
+        'new-channel' => Handlers\NewChannel::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
         'widget-layout' => Handlers\WidgetLayout::class,
         'drafts' => Handlers\Drafts::class,
