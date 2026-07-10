@@ -221,6 +221,7 @@ trait FormatsItems
                 'name'    => urldecode($item['author']['xchan_name']         ?? ''),
                 'address' => $item['author']['xchan_addr']         ?? '',
                 'url'     => $item['author']['xchan_url']          ?? '',
+                'hash'    => $item['author']['xchan_hash']         ?? '',
                 'network' => $item['author']['xchan_network']      ?? '',
                 'photo'   => [
                     'src'      => $item['author']['xchan_photo_m']        ?? '',
@@ -235,6 +236,7 @@ trait FormatsItems
                         'name'    => urldecode($x['xchan_name']            ?? ''),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
+                        'hash'    => $x['xchan_hash']            ?? '',
                         'photo'   => [
                             'src'      => $x['xchan_photo_m']        ?? '',
                             'mimetype' => $x['xchan_photo_mimetype'] ?? '',
@@ -249,6 +251,7 @@ trait FormatsItems
                         'name'    => urldecode($x['xchan_name']            ?? ''),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
+                        'hash'    => $x['xchan_hash']            ?? '',
                         'photo'   => [
                             'src'      => $x['xchan_photo_m']        ?? '',
                             'mimetype' => $x['xchan_photo_mimetype'] ?? '',

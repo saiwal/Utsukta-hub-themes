@@ -10,6 +10,7 @@ use Theme\Solidified\Api\Response;
  * GET  /api/files/:nick                  → list root folder
  * GET  /api/files/:nick/folder/:hash     → list folder by hash ('' = root)
  * GET  /api/files/:nick/meta/:hash       → single file metadata + ACL
+ * GET  /api/files/:nick/quota            → storage used/limit in bytes
  * POST /api/files/:nick/permissions      → update file ACL
  *
  * Register in Router.php $map:
@@ -40,11 +41,41 @@ class Files
             case 'meta':
                 $this->fileMeta($owner_uid, $ob_hash, $datum);
                 break;
+            case 'quota':
+                $this->quota($channel);
+                break;
             default:
                 // Root folder (folder hash = '')
                 $this->listFolder($owner_uid, $ob_hash, '');
                 break;
         }
+    }
+
+    // ── Storage quota ────────────────────────────────────────────────────────
+    //
+    // Mirrors Zotlabs\Storage\Browser::CloudDirectory()'s quota calculation:
+    // limit is the account's attach_upload_limit service-class setting (falls
+    // back to the site's free disk space if configured to report it), used is
+    // the sum of all attach rows for the channel's account (all its channels).
+
+    private function quota(array $channel): void
+    {
+        require_once 'include/text.php';
+
+        $limit = engr_units_to_bytes(service_class_fetch($channel['channel_id'], 'attach_upload_limit'));
+
+        if (!$limit && \Zotlabs\Lib\Config::Get('system', 'cloud_report_disksize')) {
+            $limit = intval(disk_free_space('store'));
+        }
+
+        $r = q("SELECT SUM(filesize) AS total FROM attach WHERE aid = %d",
+            intval($channel['channel_account_id'])
+        );
+
+        Response::send([
+            'used' => intval($r[0]['total'] ?? 0),
+            'limit' => intval($limit) ?: null,
+        ]);
     }
 
     public function post(): void

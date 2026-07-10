@@ -24,7 +24,7 @@ class WidgetLayout
 {
     private const SLOTS = ['right', 'leftBottom', 'mainTop', 'rightVisitor'];
     private const MAX_MODULES = 32;
-    private const MAX_WIDGETS_PER_SLOT = 16;
+    private const MAX_WIDGETS_PER_SLOT = 32;
     private const ID_PATTERN = '/^[a-zA-Z0-9._-]{1,64}$/';
     private const KEY_PATTERN = '/^[a-zA-Z0-9._-]{1,64}(#[a-zA-Z0-9_-]{1,16})?$/';
     private const CONFIG_MAX_BYTES = 2048;
