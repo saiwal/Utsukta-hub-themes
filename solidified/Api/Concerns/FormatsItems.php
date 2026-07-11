@@ -63,6 +63,7 @@ trait FormatsItems
             'viewer_declining' => false,
             'viewer_maybe'     => false,
             'viewer_following' => false,
+            'can_comment'      => false,
             'attach'           => [],
         ], $deleted ?: []);
     }
@@ -277,6 +278,9 @@ trait FormatsItems
             'viewer_declining' => $declining,
             'viewer_maybe' => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            // Same check core uses to decide whether to render a comment box
+            // (comment_policy, comments_closed, nocomment, owner perms).
+            'can_comment' => (bool) can_comment_on_post($observer_xchan, $item),
             'attach' => self::normalizeAttach($item['attach'] ? json_decode($item['attach'], true) : []),
             'poll'   => self::extractPoll($item, $observer_xchan),
         ];

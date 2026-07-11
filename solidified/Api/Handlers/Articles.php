@@ -150,7 +150,6 @@ if ($slug) {
         if ($dend) {
             $sql_extra .= " AND item.created < '"  . dbesc($dend)   . "' ";
         }
-
         $r = dbq("SELECT item.id AS item_id FROM item
             WHERE item.uid = $profile_uid
             AND item.item_type = " . ITEM_TYPE_ARTICLE . "
@@ -248,6 +247,7 @@ if ($slug) {
             'viewer_liked'    => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
+            'can_comment'     => (bool) can_comment_on_post($ob_hash, $item),
             'categories'      => array_values(array_map(
                 fn($t) => $t['term'],
                 array_filter($item['term'] ?? [], fn($t) => intval($t['ttype']) === TERM_CATEGORY)
