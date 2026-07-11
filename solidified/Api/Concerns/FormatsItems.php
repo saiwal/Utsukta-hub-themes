@@ -53,6 +53,9 @@ trait FormatsItems
             'author'           => ['name' => '', 'address' => '', 'url' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
             'owner'            => null,
             'permalink'        => '',
+            'location'         => '',
+            'coord'            => '',
+            'expires'          => null,
             'viewer_liked'     => false,
             'viewer_disliked'  => false,
             'viewer_repeated'  => false,
@@ -261,6 +264,11 @@ trait FormatsItems
                 return null;
             })(),
             'permalink' => $item['plink'] ?? '',
+            'location' => $item['location'] ?? '',
+            'coord' => $item['coord'] ?? '',
+            'expires' => (isset($item['expires']) && $item['expires'] > NULL_DATE)
+                ? $item['expires']
+                : null,
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,

@@ -23,6 +23,7 @@ class Router
         'stream-widgets' => Handlers\StreamWidgets::class,
         'widget-layout' => Handlers\WidgetLayout::class,
         'drafts' => Handlers\Drafts::class,
+        'scheduled' => Handlers\Scheduled::class,
         'item' => Handlers\Item::class,
         'item-source' => Handlers\Itemsrc::class,
         'privacy-groups' => Handlers\PrivacyGroups::class,
