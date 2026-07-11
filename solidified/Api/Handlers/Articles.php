@@ -1,6 +1,7 @@
 <?php
 namespace Theme\Solidified\Api\Handlers;
 
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 
 class Articles
@@ -189,14 +190,7 @@ if ($slug) {
 
     private function reactionSubqueries(): string
     {
-        return "
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce')) AS comment_count,
-            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-             FROM item r WHERE r.parent = item.parent AND r.thr_parent = item.mid
-               AND r.verb IN ('Like','Dislike','Announce') AND r.item_deleted = 0) AS reaction_verbs";
+        return ReactionCounts::subqueries();
     }
 
     private function formatItem(array $item, string $ob_hash): array

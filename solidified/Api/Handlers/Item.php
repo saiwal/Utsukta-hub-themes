@@ -14,6 +14,7 @@ use Zotlabs\Lib\Enotify;
 use Zotlabs\Access\PermissionLimits;
 use App;
 use Theme\Solidified\Api\Auth;
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 
 class Item
@@ -1533,16 +1534,7 @@ class Item
     // Shared reaction count subqueries string
     private static function reactionSubqueries(): string
     {
-        return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept') AND r.obj_type != 'Answer') AS comment_count,
-                (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-                 FROM item r
-                 WHERE r.parent = item.parent
-                   AND r.thr_parent = item.mid
-                   AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
-                   AND r.item_deleted = 0) AS reaction_verbs";
+        return ReactionCounts::subqueries();
     }
 
     // Fetch fresh counts after a toggle — avoids a full item re-fetch
@@ -1550,13 +1542,14 @@ class Item
     {
         $midEsc = dbesc($mid);
         $uid = intval(local_channel());
+        $normal = ReactionCounts::normalFlags();
         $r = dbq("SELECT
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Like'              AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Dislike'           AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Accept'            AND r.item_deleted = 0) AS attend_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Reject'            AND r.item_deleted = 0) AS decline_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'TentativeAccept'   AND r.item_deleted = 0) AS maybe_count");
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Like'              AND $normal) AS like_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Dislike'           AND $normal) AS dislike_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = '" . ACTIVITY_SHARE . "' AND $normal) AS announce_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Accept'            AND $normal) AS attend_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Reject'            AND $normal) AS decline_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'TentativeAccept'   AND $normal) AS maybe_count");
 
         return [
             'like_count'     => intval($r[0]['like_count'] ?? 0),
