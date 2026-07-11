@@ -25,11 +25,17 @@ class Scheduled
         Auth::requireLocalGet();
         $uid = local_channel();
 
+        // item_delayed has no index; without the created bound the optimizer can
+        // pick the bare `created` index and crawl the whole table. Delayed posts
+        // are future-dated, so a created floor (1 day of cron slack) lets the
+        // (uid, created) index cut the scan to a handful of rows.
         $rows = q(
             "SELECT id, uuid, mid, title, body, created FROM item
-             WHERE uid = %d AND item_delayed = 1 AND item_deleted = 0
-             ORDER BY created ASC",
-            intval($uid)
+             WHERE uid = %d AND created > '%s'
+               AND item_delayed = 1 AND item_deleted = 0
+             ORDER BY created ASC LIMIT 100",
+            intval($uid),
+            dbesc(datetime_convert('UTC', 'UTC', 'now - 1 day'))
         );
 
         Response::send(array_map(fn($r) => [
