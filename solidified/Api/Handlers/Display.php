@@ -57,17 +57,23 @@ class Display
         if ($owner_uid) {
             $perms = get_all_perms($owner_uid, $observer_hash);
             if ($perms['view_stream']) {
+                // item_normal($uid) relaxes item_delayed only when the viewer
+                // IS that channel — owners see their own scheduled posts.
+                $item_normal_owner = item_normal($owner_uid);
                 $r = q("SELECT item.id AS item_id FROM item
-                        WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+                        WHERE uid = %d AND mid = '%s' $item_normal_owner LIMIT 1",
                     $owner_uid,
                     dbesc($target_item['parent_mid']));
             }
         }
 
-        // 2. Fallback — check logged-in user's own stream copy
+        // 2. Fallback — check logged-in user's own stream copy. A delayed item
+        //    in one's own stream can only be one's own scheduled post (delayed
+        //    items never federate), so the relaxed filter is safe here.
         if (!$r && local_channel()) {
+            $item_normal_own = item_normal(local_channel());
             $r = q("SELECT item.id AS item_id FROM item
-                    WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+                    WHERE uid = %d AND mid = '%s' $item_normal_own LIMIT 1",
                 intval(local_channel()),
                 dbesc($target_item['parent_mid']));
         }
