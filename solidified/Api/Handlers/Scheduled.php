@@ -17,8 +17,8 @@ use Zotlabs\Daemon\Master;
 class Scheduled
 {
     // GET  /api/scheduled           → list the local channel's pending posts
-    // POST /api/scheduled/publish   → { mid } publish immediately
-    // POST /api/scheduled/delete    → { mid } cancel (delete) a pending post
+    // POST /api/scheduled/publish   → { uuid } publish immediately
+    // POST /api/scheduled/delete    → { uuid } cancel (delete) a pending post
 
     public function get(): void
     {
@@ -46,18 +46,18 @@ class Scheduled
     {
         $uid = Auth::requireLocalJson();
         $action = App::$argv[2] ?? '';
-        $mid = trim(Auth::$parsedBody['mid'] ?? '');
+        $uuid = trim(Auth::$parsedBody['uuid'] ?? '');
 
-        if (!$mid) {
-            Response::error(400, 'mid required');
+        if (!$uuid) {
+            Response::error(400, 'uuid required');
         }
 
         $rows = q(
             "SELECT * FROM item
-             WHERE uid = %d AND mid = '%s' AND item_delayed = 1 AND item_deleted = 0
+             WHERE uid = %d AND uuid = '%s' AND item_delayed = 1 AND item_deleted = 0
              LIMIT 1",
             intval($uid),
-            dbesc($mid)
+            dbesc($uuid)
         );
         if (!$rows) {
             Response::error(404, 'Scheduled post not found');

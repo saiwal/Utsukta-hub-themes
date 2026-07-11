@@ -50,7 +50,9 @@ class Channel
         }
 
         // ── SQL scaffolding ───────────────────────────────────────────────────
-        $item_normal     = item_normal();
+        // Passing the channel uid lets item_normal() include delayed
+        // (scheduled) posts when the viewer is the channel owner.
+        $item_normal     = item_normal($channel_uid);
         $uids            = ' AND item.uid = ' . $channel_uid . ' ';
         $item_thread_top = ' AND item_thread_top = 1 ';
         $sql_extra       = ' AND item.item_wall = 1 ';

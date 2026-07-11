@@ -219,6 +219,7 @@ trait FormatsItems
                     ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
                     : null,
                 intval($item['item_unseen']) ? 'unseen' : null,
+                intval($item['item_delayed'] ?? 0) ? 'scheduled' : null,
             ])),
             'author' => [
                 'name'    => urldecode($item['author']['xchan_name']         ?? ''),
