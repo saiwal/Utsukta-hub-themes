@@ -14,6 +14,7 @@ use Zotlabs\Lib\Enotify;
 use Zotlabs\Access\PermissionLimits;
 use App;
 use Theme\Solidified\Api\Auth;
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 
 class Item
@@ -46,7 +47,7 @@ class Item
         // contain "/" characters. When not percent-encoded by the caller, the path
         // is split across multiple argv segments. Reconstruct the mid by detecting
         // the known verb at the end; for comments the optional count sits after it.
-        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery'];
+        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery', 'compose', 'sharepreview'];
         $segs  = array_slice(App::$argv, 2);
         $n     = count($segs);
         $verb  = '';
@@ -88,6 +89,12 @@ class Item
                 break;
             case 'delivery':
                 $this->getDeliveryReport($mid);
+                break;
+            case 'compose':
+                $this->getComposeSource($mid);
+                break;
+            case 'sharepreview':
+                $this->getSharePreview($mid);
                 break;
             default:
                 $this->getItem($mid);
@@ -344,6 +351,10 @@ class Item
         $scope      = $body['scope']    ?? 'contacts';
         $mimetype   = $body['mimetype'] ?? 'text/bbcode';
         $expire     = trim($body['expire']      ?? '');
+        $location   = escape_tags(trim($body['location'] ?? ''));
+        $coord      = escape_tags(trim($body['coord']    ?? ''));
+        $nocomment  = !empty($body['nocomment']) ? 1 : 0;
+        $createdRaw = trim($body['created'] ?? '');
 
         if (!$content) {
             Response::error(400, 'body is required');
@@ -467,6 +478,8 @@ class Item
                     $content = str_replace($match[1][$i], '', $content);
                 }
             }
+
+            $content = $this->expandShareTags($content);
         }
 
         // Categories → term records (federate correctly via datarray['term'])
@@ -487,6 +500,20 @@ class Item
         $mid     = z_root() . '/item/' . $uuid;
         $now     = datetime_convert();
 
+        // Delayed publish ("time travel post", core feature delayed_posting):
+        // a future created date stores the item with item_delayed = 1, which
+        // hides it from all item_normal queries. Daemon\Cron flips the flag and
+        // summons the Notifier once the publish time arrives.
+        $created = $now;
+        $delayed = 0;
+        if ($createdRaw) {
+            $ts = datetime_convert(date_default_timezone_get(), 'UTC', $createdRaw);
+            if ($ts > $now) {
+                $created = $ts;
+                $delayed = 1;
+            }
+        }
+
         $datarray = [
             'aid'             => $channel['channel_account_id'],
             'uid'             => $profileUid,
@@ -496,7 +523,7 @@ class Item
             'thr_parent'      => $mid,
             'owner_xchan'     => $ownerChannel['channel_hash'],
             'author_xchan'    => $ob_hash,
-            'created'         => $now,
+            'created'         => $created,
             'edited'          => $now,
             'commented'       => $now,
             'received'        => $now,
@@ -507,6 +534,8 @@ class Item
             'title'           => $title,
             'summary'         => $summary,
             'body'            => $content,
+            'location'        => $location,
+            'coord'           => $coord,
             'allow_cid'       => $strContactAllow,
             'allow_gid'       => $strGroupAllow,
             'deny_cid'        => $strContactDeny,
@@ -518,11 +547,20 @@ class Item
             'item_thread_top' => 1,
             'item_unseen'     => ($wallToWall ? 1 : 0),
             'item_private'    => $private,
+            'item_delayed'    => $delayed,
+            'item_nocomment'  => $nocomment,
             'public_policy'   => $publicPolicy,
             'comment_policy'  => map_scope($commentPolicy),
             'plink'           => $mid,
             'route'           => '',
         ];
+
+        // Core closes comments from the moment of publication when nocomment
+        // is set (comments_closed = created); otherwise item_store leaves the
+        // column at the DB null date (comments stay open).
+        if ($nocomment) {
+            $datarray['comments_closed'] = $created;
+        }
 
         if ($expire) {
             $exp = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
@@ -596,7 +634,10 @@ class Item
         $datarray['id'] = $post['item_id'];
         call_hooks('post_local_end', $datarray);
 
-        Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+        // Delayed items are delivered by Daemon\Cron at publish time
+        if (!$delayed) {
+            Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+        }
 
         // Fetch the stored item back fully formatted and return it
         $iid  = intval($post['item_id']);
@@ -640,12 +681,71 @@ class Item
             json_return_and_die(['error' => 'Commenting is not permitted on this post']);
         }
 
+        $profileUid = intval($parent['uid']);
+        $mimetype   = $body['mimetype'] ?? 'text/bbcode';
+
+        $postTags    = [];
+        $attachments = [];
+
+        if ($mimetype === 'text/bbcode') {
+            require_once('include/text.php');
+
+            $content = cleanup_bbcode($content);
+
+            // Linkify @mentions, #tags, !groups. Unlike top-level posts the
+            // resulting tags never widen the thread ACL (core passes the
+            // parent item to set_linkified_perms, which makes it a no-op), so
+            // only the term records are collected here.
+            $results = linkify_tags($content, $profileUid);
+            if ($results) {
+                foreach ($results as $result) {
+                    $s = $result['success'];
+                    if ($s['replaced']) {
+                        $postTags[] = [
+                            'uid'   => $profileUid,
+                            'ttype' => $s['termtype'],
+                            'otype' => TERM_OBJ_POST,
+                            'term'  => $s['term'],
+                            'url'   => $s['url'],
+                        ];
+                    }
+                }
+            }
+
+            // Sync file/photo ACL to the thread's ACL so recipients can open them
+            fix_attached_permissions($profileUid, $content,
+                $parent['allow_cid'], $parent['allow_gid'],
+                $parent['deny_cid'], $parent['deny_gid']);
+
+            // Extract [attachment] tags → attach array, strip them from body
+            if (preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
+                require_once('include/attach.php');
+                foreach ($match[2] as $i => $mtch) {
+                    $hash = substr($mtch, 0, strpos($mtch, ','));
+                    $rev  = intval(substr($mtch, strpos($mtch, ',')));
+                    $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
+                    if ($r['success']) {
+                        $attachments[] = [
+                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'length'   => $r['data']['filesize'],
+                            'type'     => $r['data']['filetype'],
+                            'title'    => urlencode($r['data']['filename']),
+                            'revision' => $r['data']['revision'],
+                        ];
+                    }
+                    $content = str_replace($match[1][$i], '', $content);
+                }
+            }
+
+            $content = $this->expandShareTags($content);
+        }
+
         // Inherit ACL and privacy from parent
         $datarray = self::buildItemArray(
-            profileUid: intval($parent['uid']),
+            profileUid: $profileUid,
             content: $content,
             title: trim($body['title'] ?? ''),
-            mimetype: $body['mimetype'] ?? 'text/bbcode',
+            mimetype: $mimetype,
             acl: [
                 'allow_cid' => $parent['allow_cid'],
                 'allow_gid' => $parent['allow_gid'],
@@ -654,13 +754,24 @@ class Item
             ],
             isWall: intval($parent['item_wall']) === 1,
             parent: $parent,
+            term: $postTags,
+            attach: $attachments,
         );
+
+        call_hooks('post_local', $datarray);
+
+        if (!empty($datarray['cancel'])) {
+            json_return_and_die(['error' => 'Comment cancelled']);
+        }
 
         $post = item_store($datarray);
 
         if (!$post['success']) {
             json_return_and_die(['error' => 'Failed to post comment']);
         }
+
+        $datarray['id'] = $post['item_id'];
+        call_hooks('post_local_end', $datarray);
 
         Master::Summon(['Notifier', 'comment-new', $post['item_id']]);
 
@@ -999,19 +1110,23 @@ class Item
     }
 
     // POST /api/item/:mid/edit
-    // FormData: { body, title?, summary?, mimetype?, pagetitle? }
+    // JSON body: { body, title?, summary?, mimetype?, pagetitle? }
     // Only the item owner can edit.
     private function editItem(string $mid): void
     {
-        $uid      = Auth::requireLocalMultipart();
-        $content  = trim($_POST['body']      ?? '');
-        $title    = trim($_POST['title']     ?? '');
-        $summary  = trim($_POST['summary']   ?? '');
-        $mimetype = trim($_POST['mimetype']  ?? 'text/bbcode');
-        $slug     = trim($_POST['pagetitle'] ?? '');
+        $uid      = Auth::requireLocalJson();
+        $content  = trim(Auth::$parsedBody['body']      ?? '');
+        $title    = trim(Auth::$parsedBody['title']     ?? '');
+        $summary  = trim(Auth::$parsedBody['summary']   ?? '');
+        $mimetype = trim(Auth::$parsedBody['mimetype']  ?? 'text/bbcode');
+        $slug     = trim(Auth::$parsedBody['pagetitle'] ?? '');
 
         if (!$content) {
             Response::error(400, 'body is required');
+        }
+
+        if ($mimetype === 'text/bbcode') {
+            $content = $this->expandShareTags($content);
         }
 
         // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
@@ -1278,6 +1393,8 @@ class Item
         array $acl,
         bool $isWall,
         ?array $parent = null,
+        array $term = [],
+        array $attach = [],
     ): array {
         $channel = App::get_channel();
         $observer = App::get_observer();
@@ -1289,7 +1406,11 @@ class Item
         $parentMid = $isComment ? $parent['mid'] : $mid;
         $thrParent = $isComment ? $parent['mid'] : $mid;
         $ownerHash = $isComment ? $parent['owner_xchan'] : $channel['channel_hash'];
-        $private = !empty($acl['allow_cid']) || !empty($acl['allow_gid']) ? 1 : 0;
+        // Comments inherit the thread's privacy verbatim (core Item::post) —
+        // deriving it from the ACL would downgrade a DM (private=2) to 1.
+        $private = $isComment
+            ? intval($parent['item_private'])
+            : (!empty($acl['allow_cid']) || !empty($acl['allow_gid']) ? 1 : 0);
 
         return [
             'aid' => $channel['channel_account_id'],
@@ -1310,6 +1431,8 @@ class Item
             'mimetype' => $mimetype,
             'title' => $title,
             'body' => $content,
+            'term' => $term,
+            'attach' => $attach,
             'allow_cid' => $acl['allow_cid'] ?? '',
             'allow_gid' => $acl['allow_gid'] ?? '',
             'deny_cid' => $acl['deny_cid'] ?? '',
@@ -1411,16 +1534,7 @@ class Item
     // Shared reaction count subqueries string
     private static function reactionSubqueries(): string
     {
-        return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-                (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-                (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept') AND r.obj_type != 'Answer') AS comment_count,
-                (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-                 FROM item r
-                 WHERE r.parent = item.parent
-                   AND r.thr_parent = item.mid
-                   AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
-                   AND r.item_deleted = 0) AS reaction_verbs";
+        return ReactionCounts::subqueries();
     }
 
     // Fetch fresh counts after a toggle — avoids a full item re-fetch
@@ -1428,13 +1542,14 @@ class Item
     {
         $midEsc = dbesc($mid);
         $uid = intval(local_channel());
+        $normal = ReactionCounts::normalFlags();
         $r = dbq("SELECT
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Like'              AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = 'Dislike'           AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Accept'            AND r.item_deleted = 0) AS attend_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'Reject'            AND r.item_deleted = 0) AS decline_count,
-            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.verb = 'TentativeAccept'   AND r.item_deleted = 0) AS maybe_count");
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Like'              AND $normal) AS like_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Dislike'           AND $normal) AS dislike_count,
+            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = $uid AND r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = '" . ACTIVITY_SHARE . "' AND $normal) AS announce_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Accept'            AND $normal) AS attend_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'Reject'            AND $normal) AS decline_count,
+            (SELECT COUNT(*) FROM item r WHERE r.thr_parent = '$midEsc' AND r.item_thread_top = 0 AND r.obj_type != 'Answer' AND r.verb = 'TentativeAccept'   AND $normal) AS maybe_count");
 
         return [
             'like_count'     => intval($r[0]['like_count'] ?? 0),
@@ -1754,6 +1869,150 @@ class Item
             'mid'  => $datarray['mid'],
             'uuid' => $datarray['uuid'],
         ]);
+    }
+
+    // GET /api/item/:mid/compose
+    // Returns the item's source fields for the edit composer. Full
+    // [share …]…[/share] blocks are collapsed to compact [share=<id>][/share]
+    // tags (the form the composer works with, mirroring core jot) so the
+    // WYSIWYG never has to round-trip the attribute block.
+    private function getComposeSource(string $mid): void
+    {
+        Auth::requireLocalGet();
+        $ob_hash = get_observer_hash();
+
+        $item = $this->resolveItem($mid, $ob_hash);
+        if (!$item) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        $body = $item['body'];
+        if ($item['mimetype'] === 'text/bbcode') {
+            $body = $this->collapseShareTags($body, $ob_hash);
+        }
+
+        json_return_and_die([
+            'success'  => true,
+            'body'     => $body,
+            'title'    => $item['title'],
+            'summary'  => $item['summary'],
+            'mimetype' => $item['mimetype'],
+        ]);
+    }
+
+    // GET /api/item/:id/sharepreview   (:id = numeric item id)
+    // Returns the expanded [share …] block for a compact [share=<id>] tag so
+    // the composer can render the reshared content inside the WYSIWYG. Uses
+    // the same expansion (and permission rules) applied at save time.
+    private function getSharePreview(string $id): void
+    {
+        Auth::requireLocalGet();
+
+        $bb = $this->expandShareTags('[share=' . intval($id) . '][/share]');
+        if (!$bb) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        json_return_and_die(['success' => true, 'bbcode' => $bb]);
+    }
+
+    // Expand compact [share=<item id>][/share] tags into the canonical
+    // [share author=…]…[/share] block before storing — same mechanism as core
+    // Item::post. Lib\Share enforces visibility (item_permissions_sql, no
+    // private items), so a client-supplied id cannot leak restricted content.
+    // Any content inside the compact tag is discarded, as core does.
+    private function expandShareTags(string $body): string
+    {
+        if (!preg_match_all('/(\[share=(\d+)\](.*?)\[\/share\])/ism', $body, $match)) {
+            return $body;
+        }
+
+        foreach ($match[2] as $i => $id) {
+            $share = new \Zotlabs\Lib\Share(intval($id));
+            $bb = $share->bbcode();
+
+            if (!$bb) {
+                // Share::bbcode() refuses posts that already contain [/share]
+                // (nested reshares). Rebuild the block ourselves with the same
+                // visibility rules Lib\Share applies.
+                $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
+                if ($r && !intval($r[0]['item_private'])) {
+                    $sql_extra = item_permissions_sql($r[0]['uid']);
+                    $r = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
+                    if ($r) {
+                        $bb = $this->buildShareBlock($r[0]);
+                    }
+                }
+            }
+
+            $body = str_replace($match[1][$i], $bb ?: '', $body);
+        }
+
+        return $body;
+    }
+
+    // Inverse of expandShareTags for the edit composer: replace each stored
+    // top-level [share …message_id='…'…]…[/share] block with
+    // [share=<id>][/share], resolving the shared item through the
+    // permission-aware resolveItem. Blocks are located with a depth-aware
+    // scan — nested reshares contain inner [/share] closers, and a non-greedy
+    // regex would split the block and leave a stray outer [/share] behind.
+    // Blocks whose target cannot be resolved are left untouched.
+    private function collapseShareTags(string $body, string $ob_hash): string
+    {
+        $result = '';
+        $cursor = 0;
+
+        while (preg_match('/\[share\s/i', $body, $m, PREG_OFFSET_CAPTURE, $cursor)) {
+            $start = $m[0][1];
+            $end = self::findShareEnd($body, $start);
+            if ($end < 0) {
+                break; // unbalanced — leave the rest untouched
+            }
+
+            $result .= substr($body, $cursor, $start - $cursor);
+            $block = substr($body, $start, $end - $start);
+
+            // message_id must come from the outer block's attributes (before
+            // the first ']'), never from a nested block's attributes.
+            $collapsed = $block;
+            if (preg_match("/^\[share\s[^\]]*message_id='([^']+)'/is", $block, $mm)) {
+                $target = $this->resolveItem($mm[1], $ob_hash);
+                if ($target) {
+                    $collapsed = '[share=' . intval($target['id']) . '][/share]';
+                }
+            }
+
+            $result .= $collapsed;
+            $cursor = $end;
+        }
+
+        return $result . substr($body, $cursor);
+    }
+
+    // End offset (exclusive) of the balanced [share]…[/share] block that
+    // opens at $start, counting nested [share openings; -1 if unbalanced.
+    private static function findShareEnd(string $body, int $start): int
+    {
+        $depth = 0;
+        $pos = $start;
+
+        while (preg_match('/\[share[=\s]|\[\/share\]/i', $body, $t, PREG_OFFSET_CAPTURE, $pos)) {
+            $tok = $t[0][0];
+            $tokPos = $t[0][1];
+            $pos = $tokPos + strlen($tok);
+
+            if (strcasecmp($tok, '[/share]') === 0) {
+                $depth--;
+                if ($depth <= 0) {
+                    return $pos;
+                }
+            } else {
+                $depth++;
+            }
+        }
+
+        return -1;
     }
 
     private function buildShareBlock(array $item): string

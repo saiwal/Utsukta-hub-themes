@@ -2,6 +2,7 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Concerns\FormatsItems;
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 
 class Display
@@ -57,17 +58,23 @@ class Display
         if ($owner_uid) {
             $perms = get_all_perms($owner_uid, $observer_hash);
             if ($perms['view_stream']) {
+                // item_normal($uid) relaxes item_delayed only when the viewer
+                // IS that channel — owners see their own scheduled posts.
+                $item_normal_owner = item_normal($owner_uid);
                 $r = q("SELECT item.id AS item_id FROM item
-                        WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+                        WHERE uid = %d AND mid = '%s' $item_normal_owner LIMIT 1",
                     $owner_uid,
                     dbesc($target_item['parent_mid']));
             }
         }
 
-        // 2. Fallback — check logged-in user's own stream copy
+        // 2. Fallback — check logged-in user's own stream copy. A delayed item
+        //    in one's own stream can only be one's own scheduled post (delayed
+        //    items never federate), so the relaxed filter is safe here.
         if (!$r && local_channel()) {
+            $item_normal_own = item_normal(local_channel());
             $r = q("SELECT item.id AS item_id FROM item
-                    WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+                    WHERE uid = %d AND mid = '%s' $item_normal_own LIMIT 1",
                 intval(local_channel()),
                 dbesc($target_item['parent_mid']));
         }
@@ -104,17 +111,7 @@ class Display
         // ── Fetch thread ──────────────────────────────────────────────────────
         $ids = ids_to_querystr($r, 'item_id');
 
-        $items = dbq("SELECT item.*,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id     AND r.item_thread_top = 0   AND r.item_deleted = 0   AND r.verb NOT IN ('Like','Dislike','Announce')) AS comment_count,
-            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-             FROM item r
-             WHERE r.parent = item.parent
-               AND r.thr_parent = item.mid
-               AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
-               AND r.item_deleted = 0) AS reaction_verbs
+        $items = dbq("SELECT item.*, " . ReactionCounts::subqueries() . "
             FROM item
             WHERE item.id IN ($ids)
             OR (item.parent IN ($ids)

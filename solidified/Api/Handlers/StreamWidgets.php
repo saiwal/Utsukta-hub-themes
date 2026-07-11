@@ -1,6 +1,7 @@
 <?php
 namespace Theme\Solidified\Api\Handlers;
 
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 
 class StreamWidgets
@@ -118,12 +119,7 @@ class StreamWidgets
                     item.body,
                     item.created,
                     item.author_xchan,
-                    (SELECT COUNT(*)
-                     FROM item r
-                     WHERE r.parent       = item.id
-                       AND r.item_deleted  = 0
-                       AND r.item_thread_top = 0
-                       AND r.verb NOT IN ('Like','Dislike','Announce')) AS comment_count
+                    " . ReactionCounts::commentCountSubquery() . " AS comment_count
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1

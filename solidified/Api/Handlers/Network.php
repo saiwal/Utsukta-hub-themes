@@ -4,6 +4,7 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Concerns\FormatsItems;
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 
@@ -276,17 +277,7 @@ class Network
         $net_query2 = $net ? " and xchan_network = '" . protect_sprintf(dbesc($net)) . "' " : '';
 
         // ── Shared reaction subqueries ─────────────────────────────────────────
-        $reaction_subqueries = "
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Like'    AND r.item_deleted = 0) AS like_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = 'Dislike' AND r.item_deleted = 0) AS dislike_count,
-            (SELECT COUNT(DISTINCT r.author_xchan) FROM item r WHERE r.uid = item.uid AND r.thr_parent = item.mid AND r.verb = '" . ACTIVITY_SHARE . "' AND r.item_deleted = 0) AS announce_count,
-            (SELECT COUNT(*) FROM item r WHERE r.parent = item.id    AND r.item_thread_top = 0    AND r.item_deleted = 0    AND r.verb NOT IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept') AND r.obj_type != 'Answer') AS comment_count,
-            (SELECT GROUP_CONCAT(verb, ':', author_xchan SEPARATOR '|')
-             FROM item r
-             WHERE r.parent = item.parent
-               AND r.thr_parent = item.mid
-               AND r.verb IN ('Like','Dislike','Announce','Accept','Reject','TentativeAccept')
-               AND r.item_deleted = 0) AS reaction_verbs";
+        $reaction_subqueries = ReactionCounts::subqueries();
 
         // ── Fetch items ───────────────────────────────────────────────────────
         $items = [];

@@ -262,6 +262,7 @@ class Photos
         $viewer_disliked = false;
         $item_id = null;
         $item_mid = null;
+        $item_uuid = null;
         $comments = [];
 
         $linked = dbq("SELECT * FROM item
@@ -276,6 +277,7 @@ class Photos
             $link_item = $linked[0];
             $item_id = intval($link_item['id']);
             $item_mid = $link_item['mid'];
+            $item_uuid = $link_item['uuid'];
 
             $reactions = dbq("SELECT verb, author_xchan FROM item
                               WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
@@ -368,6 +370,7 @@ class Photos
             'viewer_disliked' => $viewer_disliked,
             'item_id' => $item_id,
             'item_mid' => $item_mid,
+            'item_uuid' => $item_uuid,
             'comments' => $comments,
         ]);
     }

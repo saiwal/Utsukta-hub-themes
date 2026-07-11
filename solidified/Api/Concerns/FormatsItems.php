@@ -53,6 +53,9 @@ trait FormatsItems
             'author'           => ['name' => '', 'address' => '', 'url' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
             'owner'            => null,
             'permalink'        => '',
+            'location'         => '',
+            'coord'            => '',
+            'expires'          => null,
             'viewer_liked'     => false,
             'viewer_disliked'  => false,
             'viewer_repeated'  => false,
@@ -216,6 +219,7 @@ trait FormatsItems
                     ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
                     : null,
                 intval($item['item_unseen']) ? 'unseen' : null,
+                intval($item['item_delayed'] ?? 0) ? 'scheduled' : null,
             ])),
             'author' => [
                 'name'    => urldecode($item['author']['xchan_name']         ?? ''),
@@ -261,6 +265,11 @@ trait FormatsItems
                 return null;
             })(),
             'permalink' => $item['plink'] ?? '',
+            'location' => $item['location'] ?? '',
+            'coord' => $item['coord'] ?? '',
+            'expires' => (isset($item['expires']) && $item['expires'] > NULL_DATE)
+                ? $item['expires']
+                : null,
             'viewer_liked' => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
