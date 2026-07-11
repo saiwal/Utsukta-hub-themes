@@ -45,6 +45,10 @@ class Channel
             ? notags($_GET['dend'])   : '';
         $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
             ? notags($_GET['dbegin']) : '';
+        // Activity cursor (stream polling): unlike dbegin, matches threads whose
+        // root was bumped by new child activity, not just newly created roots
+        $activityquery = (isset($_GET['abegin']) && is_a_date_arg($_GET['abegin']))
+            ? notags($_GET['abegin']) : '';
 
         if ($search || $hashtags || $category) {
             $nouveau = true;
@@ -91,6 +95,15 @@ class Channel
         if ($datequery2) {
             $sql_date .= " AND item.created >= '"
                 . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
+        }
+        if ($activityquery) {
+            // Flat items are never bumped, so created is the right cursor there
+            $col = $nouveau ? 'created' : 'commented';
+            $sql_date .= " AND item.$col >= '"
+                . dbesc(datetime_convert(date_default_timezone_get(), '', $activityquery)) . "' ";
+            // Order by the cursor column too, or bumped old threads sort below
+            // every newly created one and can fall off the page
+            $ordering = $col;
         }
         $sql_extra3 = $nouveau ? '' : $sql_date;
 

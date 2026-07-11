@@ -1528,6 +1528,7 @@ class Item
             'viewer_declining' => false,
             'viewer_maybe'     => false,
             'viewer_following' => false,
+            'can_comment'      => false,
         ], $deleted ?: []);
     }
 
@@ -1655,6 +1656,9 @@ class Item
             'viewer_declining' => $declining,
             'viewer_maybe'     => $maybe,
             'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            // Same check core uses to decide whether to render a comment box
+            // (comment_policy, comments_closed, nocomment, owner perms).
+            'can_comment'      => (bool) can_comment_on_post($ob_hash, $item),
             'attach'           => $attach,
             'poll'             => self::extractPoll($item, $ob_hash),
         ];
@@ -1902,13 +1906,25 @@ class Item
 
     // GET /api/item/:id/sharepreview   (:id = numeric item id)
     // Returns the expanded [share …] block for a compact [share=<id>] tag so
-    // the composer can render the reshared content inside the WYSIWYG. Uses
-    // the same expansion (and permission rules) applied at save time.
+    // the composer can render the reshared content inside the WYSIWYG.
+    // Display-only: unlike the save-time expandShareTags (which must refuse
+    // private items so they are never embedded into an outgoing body), the
+    // preview may render anything the viewer can already see — including
+    // their own or ACL-shared private posts.
     private function getSharePreview(string $id): void
     {
         Auth::requireLocalGet();
 
-        $bb = $this->expandShareTags('[share=' . intval($id) . '][/share]');
+        $bb = '';
+        $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
+        if ($r) {
+            $sql_extra = item_permissions_sql(intval($r[0]['uid']));
+            $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
+            if ($v) {
+                $bb = $this->buildShareBlock($v[0], forDisplay: true);
+            }
+        }
+
         if (!$bb) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
@@ -1945,7 +1961,13 @@ class Item
                 }
             }
 
-            $body = str_replace($match[1][$i], $bb ?: '', $body);
+            if (!$bb) {
+                // Silently dropping the tag would eat the reshared content on
+                // save; refuse instead so the composer keeps the user's draft.
+                Response::error(422, 'Shared post not found or cannot be reshared');
+            }
+
+            $body = str_replace($match[1][$i], $bb, $body);
         }
 
         return $body;
@@ -1975,10 +1997,14 @@ class Item
 
             // message_id must come from the outer block's attributes (before
             // the first ']'), never from a nested block's attributes.
+            // Only collapse when save-time expandShareTags could re-expand the
+            // tag (non-private bbcode target) — otherwise the stored block
+            // would be lost on the next save. Unresolvable blocks stay
+            // verbatim; the editor renders them from their own attributes.
             $collapsed = $block;
             if (preg_match("/^\[share\s[^\]]*message_id='([^']+)'/is", $block, $mm)) {
                 $target = $this->resolveItem($mm[1], $ob_hash);
-                if ($target) {
+                if ($target && !intval($target['item_private']) && $target['mimetype'] === 'text/bbcode') {
                     $collapsed = '[share=' . intval($target['id']) . '][/share]';
                 }
             }
@@ -2015,9 +2041,11 @@ class Item
         return -1;
     }
 
-    private function buildShareBlock(array $item): string
+    // $forDisplay: composer previews may include private items the viewer
+    // can already see; save-time expansion must never embed them.
+    private function buildShareBlock(array $item, bool $forDisplay = false): string
     {
-        if ($item['item_private'] || $item['mimetype'] !== 'text/bbcode') {
+        if (($item['item_private'] && !$forDisplay) || $item['mimetype'] !== 'text/bbcode') {
             return '';
         }
 

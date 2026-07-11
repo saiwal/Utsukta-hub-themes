@@ -119,6 +119,9 @@ if ($slug) {
         $category = $_GET['cat']    ?? '';
         $dbegin   = $_GET['dbegin'] ?? '';
         $dend     = $_GET['dend']   ?? '';
+        // Activity cursor (stream polling): matches articles bumped by new
+        // child activity, not just newly created ones
+        $abegin   = $_GET['abegin'] ?? '';
 
         if ($search && str_starts_with($search, '#')) {
             $hashtags = substr($search, 1);
@@ -150,6 +153,12 @@ if ($slug) {
         if ($dend) {
             $sql_extra .= " AND item.created < '"  . dbesc($dend)   . "' ";
         }
+        if ($abegin) {
+            $sql_extra .= " AND item.commented >= '" . dbesc($abegin) . "' ";
+        }
+        // With an activity cursor, order by it too, or bumped old articles
+        // sort below every newly created one and can fall off the page
+        $order_col = $abegin ? 'commented' : 'created';
 
         $r = dbq("SELECT item.id AS item_id FROM item
             WHERE item.uid = $profile_uid
@@ -158,7 +167,7 @@ if ($slug) {
             AND item.item_deleted = 0
             AND item.verb != 'Add'
             $permission_sql $sql_extra
-            ORDER BY item.created DESC
+            ORDER BY item.$order_col DESC
             $pager_sql");
 
         $root_count = count($r ?: []);
@@ -248,6 +257,7 @@ if ($slug) {
             'viewer_liked'    => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
+            'can_comment'     => (bool) can_comment_on_post($ob_hash, $item),
             'categories'      => array_values(array_map(
                 fn($t) => $t['term'],
                 array_filter($item['term'] ?? [], fn($t) => intval($t['ttype']) === TERM_CATEGORY)
