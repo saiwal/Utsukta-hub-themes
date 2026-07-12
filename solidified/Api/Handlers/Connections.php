@@ -8,11 +8,12 @@ use Theme\Solidified\Api\Response;
 class Connections
 {
     // GET /api/connections
-    // GET /api/connections?address=<xchan_addr>  — exact single-connection lookup
-    // GET /api/connections/permcats              — list available permission roles
-    // GET /api/connections/:id/perms             — bidirectional perms + incl/excl filters
-    // GET /api/connections/:id/groups            — privacy group IDs for a connection
-    // GET /api/connections/:id/profile           — assigned profile id for a connection
+    // GET /api/connections?address=<xchan_addr>       — exact single-connection lookup
+    // GET /api/connections/permcats                   — list available permission roles
+    // GET /api/connections/permcats?name=<role>        — a single role's permission grid
+    // GET /api/connections/:id/perms                  — bidirectional perms + incl/excl filters
+    // GET /api/connections/:id/groups                 — privacy group IDs for a connection
+    // GET /api/connections/:id/profile                — assigned profile id for a connection
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -20,6 +21,10 @@ class Connections
         $sub = \App::$argv[2] ?? '';
 
         if ($sub === 'permcats') {
+            $name = trim($_GET['name'] ?? '');
+            if ($name !== '') {
+                $this->getPermcatDetail($uid, $name);
+            }
             $this->getPermcats($uid);
         }
 
@@ -128,7 +133,9 @@ class Connections
         ]);
     }
 
-    // POST /api/connections/permcats      — create a custom permission role
+    // POST /api/connections/permcats      — create a custom permission role, or
+    //                                        update an existing custom role's permission grid
+    //                                        (body: { name, perms?: string[] })
     // POST /api/connections/:id/approve  — approve a pending connection
     // POST /api/connections/:id          — update role / closeness
     public function post(): void
@@ -311,13 +318,86 @@ class Connections
         if (strtolower($name) === 'default') Response::error(400, 'That name is reserved');
 
         require_once 'include/channel.php';
-        $pcat    = new \Zotlabs\Lib\Permcat($uid);
-        $default = $pcat->fetch('default');
-        $permarr = $default['raw_perms'] ?? \Zotlabs\Access\Permissions::FilledPerms([]);
+        $pcat     = new \Zotlabs\Lib\Permcat($uid);
+        $existing = $pcat->fetch($name);
+        $is_update = !isset($existing['error']);
+
+        if ($is_update && intval($existing['system'] ?? 0)) {
+            Response::error(403, 'Cannot modify a built-in role');
+        }
+
+        if (array_key_exists('perms', $body) && is_array($body['perms'])) {
+            // Explicit permission grid — either seeding a new custom role
+            // or overwriting an existing one's permissions.
+            $all_perms = \Zotlabs\Access\Permissions::Perms();
+            $permarr   = array_values(array_intersect(array_keys($all_perms), $body['perms']));
+        } elseif ($is_update) {
+            Response::error(400, 'Permissions are required to update a role');
+        } else {
+            $default = $pcat->fetch('default');
+            $filled  = $default['raw_perms'] ?? \Zotlabs\Access\Permissions::FilledPerms([]);
+            $permarr = array_keys(array_filter($filled));
+        }
 
         \Zotlabs\Lib\Permcat::update($uid, $name, $permarr);
 
-        Response::send(['name' => $name, 'label' => $name, 'system' => false]);
+        // If we just changed an existing role's permissions, push the change
+        // out to every contact currently holding that role.
+        if ($is_update) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                $affected = q(
+                    "SELECT abook_xchan FROM abook
+                     WHERE abook_channel = %d AND abook_role = '%s' AND abook_self = 0 AND abook_pending = 0",
+                    intval($uid),
+                    dbesc($name)
+                );
+                if ($affected) {
+                    \Zotlabs\Lib\Permcat::assign($channel, $name, array_column($affected, 'abook_xchan'));
+                }
+            }
+        }
+
+        $saved = (new \Zotlabs\Lib\Permcat($uid))->fetch($name);
+
+        Response::send([
+            'name'   => $saved['name']      ?? $name,
+            'label'  => $saved['localname'] ?? $name,
+            'system' => (bool) intval($saved['system'] ?? 0),
+        ]);
+    }
+
+    private function getPermcatDetail(int $uid, string $name): never
+    {
+        require_once 'include/channel.php';
+        require_once 'include/permissions.php';
+
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+
+        $global_perms = \Zotlabs\Access\Permissions::Perms();
+        $raw_perms    = $pc['raw_perms'] ?? [];
+
+        $perms = [];
+        foreach ($global_perms as $key => $label) {
+            $limit = \Zotlabs\Access\PermissionLimits::Get($uid, $key);
+            $perms[] = [
+                'key'       => $key,
+                'label'     => $label,
+                'value'     => (bool) ($raw_perms[$key] ?? false),
+                // true when the channel's privacy settings force this permission
+                // open/closed regardless of what the role grants
+                'inherited' => !($limit & PERMS_SPECIFIC),
+            ];
+        }
+
+        Response::send([
+            'name'   => $pc['name'],
+            'label'  => $pc['localname'],
+            'system' => (bool) intval($pc['system'] ?? 0),
+            'perms'  => $perms,
+        ]);
     }
 
     private function deletePermcat(int $uid, string $name): never
