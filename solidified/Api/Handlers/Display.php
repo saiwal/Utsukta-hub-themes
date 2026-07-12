@@ -3,11 +3,13 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Concerns\FormatsItems;
 use Theme\Solidified\Api\Concerns\ReactionCounts;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 use Theme\Solidified\Api\Response;
 
 class Display
 {
     use FormatsItems;
+    use FiltersBlockedChannels;
 
     public function get(): void
     {
@@ -132,13 +134,15 @@ class Display
         $this->applyViewerFollowing($items, $observer_hash);
 
         // ── Split root from comments ──────────────────────────────────────────
+        $blocked   = $this->blockedXchans(local_channel());
         $root_item = null;
         $comments  = [];
 
         foreach ($items as $item) {
             if (intval($item['item_thread_top'])) {
                 $root_item = $this->formatItem($item, $observer_hash);
-            } else {
+            } elseif (!$this->isBlockedHash($blocked, $item['author_xchan'] ?? null)
+                && !$this->isBlockedHash($blocked, $item['owner_xchan'] ?? null)) {
                 $comments[] = $this->formatItem($item, $observer_hash);
             }
         }
@@ -146,6 +150,11 @@ class Display
         if (!$root_item) {
             Response::error(404, 'Root item not found');
         }
+
+        // Root stays visible even if blocked — flagged so the frontend can
+        // swap in a placeholder instead of hard-hiding a direct permalink.
+        $root_item['blocked'] = $this->isBlockedHash($blocked, $root_item['author']['hash'] ?? null)
+            || (!empty($root_item['owner']) && $this->isBlockedHash($blocked, $root_item['owner']['hash'] ?? null));
 
         $deletedStubs = $this->deletedParentStubs($comments, $root_item['mid']);
 

@@ -58,6 +58,7 @@ class Router
         'rss-feed'       => Handlers\Rss::class,
         'weather'        => Handlers\Weather::class,
         'announcements'  => Handlers\Announcements::class,
+        'blocklist'      => Handlers\Blocklist::class,
     ];
 
     public static function dispatch(string $method): void

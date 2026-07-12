@@ -2,6 +2,7 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 
 /**
  * GET /api/directory
@@ -18,6 +19,8 @@ use Theme\Solidified\Api\Response;
  */
 class Directory
 {
+    use FiltersBlockedChannels;
+
     private const LIMIT = 30;
 
     // Our order keys → dirsearch order keys
@@ -227,6 +230,8 @@ class Directory
         $hashes     = array_filter(array_column($results, 'hash'));
         $hashes_sql = implode("','", array_map('dbesc', $hashes));
 
+        $blocked = $local_channel ? $this->blockedXchans((int) $local_channel) : [];
+
         // Local channels: get nick + channel_id
         $local_map = [];
         if ($hashes) {
@@ -280,6 +285,7 @@ class Directory
         $entries = [];
         foreach ($results as $rr) {
             $hash       = $rr['hash']    ?? '';
+            if ($this->isBlockedHash($blocked, $hash)) continue;
             $addr       = $rr['address'] ?? '';
             $local_info = $local_map[$hash] ?? null;
             $local_nick = $local_info['nick'] ?? '';
