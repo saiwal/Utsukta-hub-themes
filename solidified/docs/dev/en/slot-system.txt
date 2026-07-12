@@ -10,7 +10,9 @@ Every widget is registered with a **stable id** in a central widget registry (`m
 |----------|---------------|
 | `right` | Right sidebar (desktop) |
 | `leftBottom` | Bottom of left sidebar |
-| `mainTop` | Top of main content area |
+| `header` | Top of main content area, above `mainTop` — always full-width, single column |
+| `mainTop` | Top of main content area — masonry-packed via CSS columns, so widgets of different heights pack without grid dead space |
+| `footer` | Bottom of main content area, below the routed page — always full-width, single column, same as `header` |
 | `rightVisitor` | Right sidebar shown to visitors |
 
 ## Declaring Widgets in a Module

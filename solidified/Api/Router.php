@@ -36,6 +36,7 @@ class Router
         'files'  => Handlers\Files::class,
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
+        'menus' => Handlers\Menus::class,
         'notes' => Handlers\Notes::class,
         'wiki' => Handlers\Wiki::class,
         'nav' => Handlers\Nav::class,
@@ -57,6 +58,7 @@ class Router
         'rss-feed'       => Handlers\Rss::class,
         'weather'        => Handlers\Weather::class,
         'announcements'  => Handlers\Announcements::class,
+        'blocklist'      => Handlers\Blocklist::class,
     ];
 
     public static function dispatch(string $method): void

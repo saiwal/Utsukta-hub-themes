@@ -5,6 +5,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Concerns\FormatsItems;
 use Theme\Solidified\Api\Concerns\ReactionCounts;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 
@@ -15,6 +16,7 @@ require_once ('include/acl_selectors.php');
 class Network
 {
     use FormatsItems;
+    use FiltersBlockedChannels;
 
     public function get(): void
     {
@@ -101,7 +103,9 @@ class Network
 
         // ── SQL fragments ─────────────────────────────────────────────────────
         $sql_options = $star ? ' and item_starred = 1 ' : '';
-        $sql_extra = '';
+        $blocked = $this->blockedXchans($uid);
+        $sql_extra = $this->blockedSqlClause('item.author_xchan', $blocked)
+            . $this->blockedSqlClause('item.owner_xchan', $blocked);
         $item_thread_top = ' AND item_thread_top = 1 ';
 
         // Privacy group

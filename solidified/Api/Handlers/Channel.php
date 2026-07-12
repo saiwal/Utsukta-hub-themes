@@ -3,11 +3,13 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Concerns\FormatsItems;
 use Theme\Solidified\Api\Concerns\ReactionCounts;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 use Theme\Solidified\Api\Response;
 
 class Channel
 {
     use FormatsItems;
+    use FiltersBlockedChannels;
 
     public function get(): void
     {
@@ -56,7 +58,10 @@ class Channel
         $item_normal     = item_normal($channel_uid);
         $uids            = ' AND item.uid = ' . $channel_uid . ' ';
         $item_thread_top = ' AND item_thread_top = 1 ';
-        $sql_extra       = ' AND item.item_wall = 1 ';
+        $blocked         = $this->blockedXchans($uid);
+        $sql_extra       = ' AND item.item_wall = 1 '
+            . $this->blockedSqlClause('item.author_xchan', $blocked)
+            . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
         // Verb whitelist — exclude reactions and federation noise
 				$sql_extra .= " AND item.verb IN ('Create', 'Update', 'EmojiReact', 'Invite') ";

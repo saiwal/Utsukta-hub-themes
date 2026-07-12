@@ -5,10 +5,12 @@ namespace Theme\Solidified\Api\Handlers;
 use Zotlabs\Lib\Config;
 use Theme\Solidified\Api\Response;
 use Theme\Solidified\Api\Concerns\FormatsItems;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 
 class Pubstream {
 
     use FormatsItems;
+    use FiltersBlockedChannels;
 
     public function get(): void {
         // --- Gate 1: pubstream must be globally enabled -----------------------
@@ -51,7 +53,10 @@ class Pubstream {
         $uids      = " and item.uid = {$sys_id} ";
         $abook_uids = " and abook.abook_channel = {$sys_id} ";
 
-        $sql_extra        = item_permissions_sql($sys_id);
+        $blocked          = local_channel() ? $this->blockedXchans(local_channel()) : [];
+        $sql_extra        = item_permissions_sql($sys_id)
+            . $this->blockedSqlClause('item.author_xchan', $blocked)
+            . $this->blockedSqlClause('owner_xchan', $blocked);
         $item_normal      = item_normal();
         $thread_top       = " and item.item_thread_top = 1 ";
         $ordering         = Config::Get('system', 'pubstream_ordering', 'created');

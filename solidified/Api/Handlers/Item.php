@@ -15,10 +15,13 @@ use Zotlabs\Access\PermissionLimits;
 use App;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Concerns\ReactionCounts;
+use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
 use Theme\Solidified\Api\Response;
 
 class Item
 {
+    use FiltersBlockedChannels;
+
     // ── Entry points ──────────────────────────────────────────────────────────
     //
     // GET  /api/item                         -> 400
@@ -254,6 +257,10 @@ class Item
             ? ''
             : ' LIMIT ' . max(1, intval($count));
 
+        $blocked = $this->blockedXchans(local_channel());
+        $blocked_sql = $this->blockedSqlClause('item.author_xchan', $blocked)
+            . $this->blockedSqlClause('item.owner_xchan', $blocked);
+
         // Fetch all thread children (direct replies + nested) — excludes reactions
         $rows = dbq('SELECT item.*,
             ' . self::reactionSubqueries() . "
@@ -263,6 +270,7 @@ class Item
               AND item.obj_type NOT IN ('Answer')
               AND item.item_thread_top = 0
               $item_normal
+              $blocked_sql
             ORDER BY item.created ASC
             $limit");
 
@@ -301,6 +309,9 @@ class Item
         $rootUid = intval($root['uid']);
         $verb = dbesc($activityVerb);
 
+        $blocked = $this->blockedXchans(local_channel());
+        $blocked_sql = $this->blockedSqlClause('item.author_xchan', $blocked);
+
         $rows = dbq("SELECT DISTINCT item.author_xchan, MIN(item.created) AS created
                      FROM item
                      WHERE item.uid = $rootUid
@@ -308,6 +319,7 @@ class Item
                        AND item.verb = '$verb'
                        AND item.item_deleted = 0
                        $item_normal
+                       $blocked_sql
                      GROUP BY item.author_xchan
                      ORDER BY MIN(item.created) ASC");
 
