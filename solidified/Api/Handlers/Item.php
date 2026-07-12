@@ -492,6 +492,8 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+
+            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
         // Categories → term records (federate correctly via datarray['term'])
@@ -750,6 +752,8 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+
+            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
         // Inherit ACL and privacy from parent
@@ -1137,8 +1141,33 @@ class Item
             Response::error(400, 'body is required');
         }
 
+        $postTags = [];
+
         if ($mimetype === 'text/bbcode') {
+            require_once('include/text.php');
+
+            $content = cleanup_bbcode($content);
+
+            // Rebuild mention/hashtag/group term records from the edited body.
+            // Unlike a new post, editing never widens the thread ACL (same
+            // reasoning as createComment()) — only term records are collected.
+            $results = linkify_tags($content, $uid);
+            if ($results) {
+                foreach ($results as $result) {
+                    $s = $result['success'];
+                    if ($s['replaced']) {
+                        $postTags[] = [
+                            'ttype' => $s['termtype'],
+                            'term'  => $s['term'],
+                            'url'   => $s['url'],
+                        ];
+                    }
+                }
+            }
+
             $content = $this->expandShareTags($content);
+
+            $postTags = array_merge($postTags, self::buildEmojiTerms($uid, $content));
         }
 
         // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
@@ -1164,6 +1193,18 @@ class Item
            WHERE id = %d AND uid = %d",
             dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
             dbesc($now), dbesc($now), $iid, $uid);
+
+        // Rebuild term records to match the edited body (mentions, hashtags,
+        // groups, emoji) — same delete+reinsert approach core's own
+        // item_store_update() uses (include/items.php ~2400-2418), since this
+        // handler updates the item row directly rather than going through it.
+        q("DELETE FROM term WHERE oid = %d AND otype = %d", $iid, intval(TERM_OBJ_POST));
+        foreach ($postTags as $t) {
+            q("INSERT INTO term (uid, oid, otype, ttype, term, url, imgurl)
+                VALUES (%d, %d, %d, %d, '%s', '%s', '%s')",
+                intval($uid), $iid, intval(TERM_OBJ_POST), intval($t['ttype']),
+                dbesc($t['term']), dbesc($t['url']), dbesc($t['imgurl'] ?? ''));
+        }
 
         // Update the WEBPAGE slug (stored in iconfig) if one was provided
         if ($slug) {
@@ -1393,6 +1434,39 @@ class Item
                   LIMIT 1");
 
         return $r ? $r[0] : null;
+    }
+
+    // Scan body text for :shortcode: emoji recognized by get_emojis() and build
+    // TERM_EMOJI term records so they federate as an AP Emoji tag (core mirror:
+    // Zotlabs/Module/Item.php ~line 729), instead of surviving only as dead
+    // shortcode text for remote instances that don't already know them.
+    private static function buildEmojiTerms(int $profileUid, string $content): array
+    {
+        $terms = [];
+
+        if (preg_match_all('/(\:(\w|\+|\-)+\:)(?=|[\!\.\?]|$)/', $content, $match)) {
+            $emojis = get_emojis();
+            foreach ($match[0] as $mtch) {
+                $shortname = trim($mtch, ':');
+
+                if (!isset($emojis[$shortname])) {
+                    continue;
+                }
+
+                $emoji = $emojis[$shortname];
+
+                $terms[] = [
+                    'uid'    => $profileUid,
+                    'ttype'  => TERM_EMOJI,
+                    'otype'  => TERM_OBJ_POST,
+                    'term'   => trim($mtch),
+                    'url'    => z_root() . '/emoji/' . $shortname,
+                    'imgurl' => z_root() . '/' . $emoji['filepath'],
+                ];
+            }
+        }
+
+        return $terms;
     }
 
     // Build a minimal item datarray for item_store().
@@ -1862,6 +1936,9 @@ class Item
 
         $acl = self::scopeToAcl('public', $uid);
 
+        require_once('include/text.php');
+        $extraTerms = $extraContent ? self::buildEmojiTerms($uid, $extraContent) : [];
+
         $datarray = self::buildItemArray(
             profileUid: $uid,
             content: $content,
@@ -1869,6 +1946,7 @@ class Item
             mimetype: 'text/bbcode',
             acl: $acl,
             isWall: true,
+            term: $extraTerms,
         );
 
         $post = item_store($datarray);
