@@ -957,9 +957,9 @@ class Settings
         $action = $data['action'] ?? '';
 
         if ($action === 'remove_channel') {
-            // Mirrors what the core settings module does
-            $account_id = get_account_id();
-            if (!$account_id)
+            // Mirrors Zotlabs\Module\Removeme
+            $account = App::get_account();
+            if (!$account)
                 Response::error(403, 'Permission denied');
 
             // Channel removal is irreversible — require the account password as a
@@ -968,16 +968,17 @@ class Settings
             if ($password === '')
                 Response::error(400, 'Password confirmation is required');
 
-            $acct = q("SELECT account_salt, account_password FROM account WHERE account_id = %d LIMIT 1",
-                intval($account_id));
-            if (!$acct)
-                Response::error(403, 'Permission denied');
-
-            $hash = hash('whirlpool', $acct[0]['account_salt'] . $password);
-            if (!hash_equals($acct[0]['account_password'], $hash))
+            $x = account_verify_password($account['account_email'], $password);
+            if (!$x || !$x['account'])
                 Response::error(403, 'Incorrect password');
 
-            \Zotlabs\Lib\Channel::channel_remove($uid, $account_id, true);
+            if ($account['account_password_changed'] > \DBA::$dba->get_null_date()) {
+                $d1 = datetime_convert('UTC', 'UTC', 'now - 48 hours');
+                if ($account['account_password_changed'] > $d1)
+                    Response::error(403, 'Channel removals are not allowed within 48 hours of changing the account password.');
+            }
+
+            channel_remove($uid, true, true);
             Response::send(['status' => 'ok', 'redirect' => z_root()]);
         }
 
