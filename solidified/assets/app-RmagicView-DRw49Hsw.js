@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-9kNHfgxH.js";import{ir as t}from"./app-5Wu7uYcs.js";function n(){return e(t,{href:`/login`})}export{n as default};

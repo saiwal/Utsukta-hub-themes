@@ -7,10 +7,12 @@ namespace {
 
 	function solidified_theme_admin_enable() {
 		Route::register('view/theme/solidified/mod/api.php', 'api');
+		register_hook('enotify_store_end', 'view/theme/solidified/hooks/webpush.php', 'solidified_webpush_send');
   }
 
   function solidified_theme_admin_disable() {
 		Route::unregister('view/theme/solidified/mod/api.php', 'api');
+		unregister_hook('enotify_store_end', 'view/theme/solidified/hooks/webpush.php', 'solidified_webpush_send');
   }
 
   function theme_admin(&$a) {

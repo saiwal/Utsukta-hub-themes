@@ -22,6 +22,7 @@ class Router
         'new-channel' => Handlers\NewChannel::class,
         'stream-widgets' => Handlers\StreamWidgets::class,
         'widget-layout' => Handlers\WidgetLayout::class,
+        'push-subscription' => Handlers\PushSubscription::class,
         'drafts' => Handlers\Drafts::class,
         'scheduled' => Handlers\Scheduled::class,
         'item' => Handlers\Item::class,
