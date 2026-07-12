@@ -19,15 +19,21 @@ require_once 'include/security.php';
  *   POST /api/menus/create                   { name, desc? }
  *   POST /api/menus/:id/edit                 { name, desc? }
  *   POST /api/menus/:id/delete
- *   POST /api/menus/:id/items/create         { label, link, order?, zid?, newwin? }
- *   POST /api/menus/:id/items/:iid/edit      { label, link, order?, zid?, newwin? }
+ *   POST /api/menus/:id/items/create         { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
+ *   POST /api/menus/:id/items/:iid/edit      { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
  *   POST /api/menus/:id/items/:iid/delete
  *
  * Nesting convention: Hubzilla menu items are flat, so an item whose link is
  * "menu:<other-menu-name>" is expanded into a submenu holding that menu's
- * items (recursively, depth-capped, cycle-guarded). Per-item ACLs stored via
- * the stock Menus app keep working at every level — resolution goes through
- * permissions_sql() for the observer.
+ * items (recursively, depth-capped, cycle-guarded). Menu items carry a
+ * per-item ACL (same allow_cid/allow_gid/deny_cid/deny_gid columns the stock
+ * Menus app uses) — resolution goes through permissions_sql() for the
+ * observer.
+ *
+ * Item ACL: scope is "public" (default), "connections" (the channel's
+ * default post ACL), or "custom" (explicit contact_allow/group_allow/
+ * contact_deny/group_deny arrays of xchan hashes / group ids). Omitting
+ * `scope` on an edit leaves the item's existing ACL untouched.
  */
 class Menus
 {
@@ -96,15 +102,17 @@ class Menus
                 'desc' => $menu[0]['menu_desc'],
             ],
             'items' => array_map(fn($it) => [
-                'id'     => intval($it['mitem_id']),
-                'label'  => $it['mitem_desc'],
-                'link'   => $it['mitem_link'],
-                'order'  => intval($it['mitem_order']),
-                'zid'    => (bool)(intval($it['mitem_flags']) & MENU_ITEM_ZID),
-                'newwin' => (bool)(intval($it['mitem_flags']) & MENU_ITEM_NEWWIN),
-                // Item has a non-public ACL (set via the stock Menus app);
-                // the SPA editor preserves but does not edit it.
-                'locked' => (bool)($it['allow_cid'] || $it['allow_gid'] || $it['deny_cid'] || $it['deny_gid']),
+                'id'         => intval($it['mitem_id']),
+                'label'      => $it['mitem_desc'],
+                'link'       => $it['mitem_link'],
+                'order'      => intval($it['mitem_order']),
+                'zid'        => (bool)(intval($it['mitem_flags']) & MENU_ITEM_ZID),
+                'newwin'     => (bool)(intval($it['mitem_flags']) & MENU_ITEM_NEWWIN),
+                'locked'     => (bool)($it['allow_cid'] || $it['allow_gid'] || $it['deny_cid'] || $it['deny_gid']),
+                'allow_cid'  => expand_acl($it['allow_cid']),
+                'allow_gid'  => expand_acl($it['allow_gid']),
+                'deny_cid'   => expand_acl($it['deny_cid']),
+                'deny_gid'   => expand_acl($it['deny_gid']),
             ], $items ?: []),
         ]);
     }
@@ -287,6 +295,7 @@ class Menus
 
         if ($arg4 === 'create') {
             $arr = $this->itemFields($body);
+            $arr += $this->resolveAcl($uid, (string)($body['scope'] ?? 'public'), $body);
             if (!menu_add_item($menu_id, $uid, $arr))
                 Response::error(400, 'Unable to add menu item');
             menu_sync_packet($uid, get_observer_hash(), $menu_id);
@@ -314,12 +323,17 @@ class Menus
 
         $arr = $this->itemFields($body);
         $arr['mitem_id'] = $mitem_id;
-        // menu_edit_item() rebuilds the ACL from the request — feed the stored
-        // ACL back in expanded form or editing would silently make it public.
-        $arr['contact_allow'] = expand_acl($item[0]['allow_cid']);
-        $arr['group_allow']   = expand_acl($item[0]['allow_gid']);
-        $arr['contact_deny']  = expand_acl($item[0]['deny_cid']);
-        $arr['group_deny']    = expand_acl($item[0]['deny_gid']);
+        // menu_edit_item() rebuilds the ACL from the request — a request that
+        // doesn't touch ACL must feed the stored ACL back in expanded form,
+        // or editing would silently make the item public.
+        $arr += array_key_exists('scope', $body)
+            ? $this->resolveAcl($uid, (string)$body['scope'], $body)
+            : [
+                'contact_allow' => expand_acl($item[0]['allow_cid']),
+                'group_allow'   => expand_acl($item[0]['allow_gid']),
+                'contact_deny'  => expand_acl($item[0]['deny_cid']),
+                'group_deny'    => expand_acl($item[0]['deny_gid']),
+            ];
 
         if (!menu_edit_item($menu_id, $uid, $arr))
             Response::error(400, 'Unable to update menu item');
@@ -349,5 +363,41 @@ class Menus
             'mitem_order' => intval($body['order'] ?? 0),
             'mitem_flags' => $flags,
         ];
+    }
+
+    /**
+     * @return array contact_allow/group_allow/contact_deny/group_deny fields
+     *   (plain arrays of xchan hashes / group ids) for menu_add_item() /
+     *   menu_edit_item(), which build the AccessList internally.
+     */
+    private function resolveAcl(int $uid, string $scope, array $body): array
+    {
+        if ($scope === 'custom') {
+            return [
+                'contact_allow' => is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [],
+                'group_allow'   => is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [],
+                'contact_deny'  => is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [],
+                'group_deny'    => is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [],
+            ];
+        }
+
+        if ($scope === 'connections') {
+            $channel = q(
+                "SELECT channel_allow_cid, channel_allow_gid, channel_deny_cid, channel_deny_gid
+                 FROM channel WHERE channel_id = %d LIMIT 1",
+                intval($uid)
+            );
+            if ($channel) {
+                return [
+                    'contact_allow' => expand_acl($channel[0]['channel_allow_cid']),
+                    'group_allow'   => expand_acl($channel[0]['channel_allow_gid']),
+                    'contact_deny'  => expand_acl($channel[0]['channel_deny_cid']),
+                    'group_deny'    => expand_acl($channel[0]['channel_deny_gid']),
+                ];
+            }
+        }
+
+        // 'public' (default/fallback): fully open, no ACL.
+        return ['contact_allow' => [], 'group_allow' => [], 'contact_deny' => [], 'group_deny' => []];
     }
 }
