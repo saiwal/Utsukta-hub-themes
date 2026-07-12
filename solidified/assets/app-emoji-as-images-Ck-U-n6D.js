@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-9kNHfgxH.js";var[t,n]=e(localStorage.getItem(`hz-emoji-as-images`)===`1`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-emoji-as-images`,e?`1`:`0`)}export{r as n,i as t};

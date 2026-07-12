@@ -492,6 +492,8 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+
+            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
         // Categories → term records (federate correctly via datarray['term'])
@@ -750,6 +752,8 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+
+            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
         // Inherit ACL and privacy from parent
@@ -1395,6 +1399,39 @@ class Item
         return $r ? $r[0] : null;
     }
 
+    // Scan body text for :shortcode: emoji recognized by get_emojis() and build
+    // TERM_EMOJI term records so they federate as an AP Emoji tag (core mirror:
+    // Zotlabs/Module/Item.php ~line 729), instead of surviving only as dead
+    // shortcode text for remote instances that don't already know them.
+    private static function buildEmojiTerms(int $profileUid, string $content): array
+    {
+        $terms = [];
+
+        if (preg_match_all('/(\:(\w|\+|\-)+\:)(?=|[\!\.\?]|$)/', $content, $match)) {
+            $emojis = get_emojis();
+            foreach ($match[0] as $mtch) {
+                $shortname = trim($mtch, ':');
+
+                if (!isset($emojis[$shortname])) {
+                    continue;
+                }
+
+                $emoji = $emojis[$shortname];
+
+                $terms[] = [
+                    'uid'    => $profileUid,
+                    'ttype'  => TERM_EMOJI,
+                    'otype'  => TERM_OBJ_POST,
+                    'term'   => trim($mtch),
+                    'url'    => z_root() . '/emoji/' . $shortname,
+                    'imgurl' => z_root() . '/' . $emoji['filepath'],
+                ];
+            }
+        }
+
+        return $terms;
+    }
+
     // Build a minimal item datarray for item_store().
     // Handles both top-level posts and comments.
     private static function buildItemArray(
@@ -1862,6 +1899,9 @@ class Item
 
         $acl = self::scopeToAcl('public', $uid);
 
+        require_once('include/text.php');
+        $extraTerms = $extraContent ? self::buildEmojiTerms($uid, $extraContent) : [];
+
         $datarray = self::buildItemArray(
             profileUid: $uid,
             content: $content,
@@ -1869,6 +1909,7 @@ class Item
             mimetype: 'text/bbcode',
             acl: $acl,
             isWall: true,
+            term: $extraTerms,
         );
 
         $post = item_store($datarray);

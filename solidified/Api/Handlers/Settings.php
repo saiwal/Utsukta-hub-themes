@@ -119,7 +119,6 @@ class Settings
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
             'itemspage' => intval(get_pconfig($uid, 'system', 'itemspage', 10)),
-            'no_smilies' => intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
             'title_tosource' => intval(get_pconfig($uid, 'system', 'title_tosource', 0)),
             'start_menu' => intval(get_pconfig($uid, 'system', 'start_menu', 0)),
             'user_scalable' => intval(get_pconfig($uid, 'system', 'user_scalable', 0)),
@@ -133,6 +132,7 @@ class Settings
             'custom_theme_colors' => $custom_theme_colors,
             'scroll_style' => $scroll_style,
             'corner_radius' => $corner_radius,
+            'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
         ]);
     }
 
@@ -753,8 +753,6 @@ class Settings
             set_pconfig($uid, 'system', 'update_interval', intval($data['update_interval']) * 1000);
         if (isset($data['itemspage']))
             set_pconfig($uid, 'system', 'itemspage', max(1, min(30, intval($data['itemspage']))));
-        if (isset($data['no_smilies']))
-            set_pconfig($uid, 'system', 'no_smilies', intval($data['no_smilies']));
         if (isset($data['title_tosource']))
             set_pconfig($uid, 'system', 'title_tosource', intval($data['title_tosource']));
         if (isset($data['start_menu']))
@@ -815,6 +813,9 @@ class Settings
 
         if (isset($data['corner_radius']) && in_array($data['corner_radius'], ['none', 'sm', 'default', 'lg', 'xl'], true))
             set_pconfig($uid, 'spa', 'corner_radius', $data['corner_radius']);
+
+        if (isset($data['show_emoji_images']))
+            set_pconfig($uid, 'system', 'no_smilies', 1 - intval($data['show_emoji_images']));
 
         Response::send(['status' => 'ok']);
     }
