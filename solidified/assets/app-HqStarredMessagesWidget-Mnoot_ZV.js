@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-9kNHfgxH.js";import{t}from"./app-MessageFeed-Yg9YBb-e.js";function n(){return e(t,{type:`starred`})}export{n as default};
