@@ -56,6 +56,18 @@ class SiteLogo
             Response::error(400, 'Upload error: ' . $code);
         }
 
+        // Bound decode memory use (GD needs roughly width * height * 4 bytes)
+        // before handing the file to attach_store/photo_factory — an
+        // oversized image would otherwise risk an uncaught OOM fatal deep
+        // inside GD instead of a clean error response.
+        $dims = @getimagesize($_FILES['file']['tmp_name']);
+        if (!$dims) {
+            Response::error(400, 'Invalid image file.');
+        }
+        if ($dims[0] > 4000 || $dims[1] > 4000) {
+            Response::error(400, 'Image dimensions too large (max 4000x4000 px).');
+        }
+
         $hash = photo_new_resource();
         $_FILES['userfile'] = $_FILES['file'];
 
@@ -103,7 +115,13 @@ class SiteLogo
             'edited'       => dbescdate($base['edited']),
         ];
 
-        $im->scaleImageSquare(512);
+        // scaleImageSquare() stretches width/height independently rather than
+        // cropping, distorting non-square sources — center-crop to square
+        // first so the logo isn't squished.
+        $side = min($im->getWidth(), $im->getHeight());
+        $cropX = intval(($im->getWidth() - $side) / 2);
+        $cropY = intval(($im->getHeight() - $side) / 2);
+        $im->cropImage(512, $cropX, $cropY, $side, $side);
         $r1 = $im->storeThumbnail($p, self::RES_512);
         $im->scaleImageSquare(192);
         $r2 = $im->storeThumbnail($p, self::RES_192);
