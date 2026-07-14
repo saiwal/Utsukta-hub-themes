@@ -51,6 +51,7 @@ class Router
         'saved-searches' => Handlers\SavedSearches::class,
         'bookmarks'      => Handlers\Bookmarks::class,
         'avatar'         => Handlers\Avatar::class,
+        'site-logo'      => Handlers\SiteLogo::class,
         'folders'        => Handlers\Folders::class,
         'xchan'          => Handlers\Xchan::class,
         'connections'    => Handlers\Connections::class,

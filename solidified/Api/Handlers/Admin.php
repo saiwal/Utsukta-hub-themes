@@ -148,6 +148,9 @@ class Admin
             // Basic identity
             'sitename'                 => self::cfgStr('sitename'),
             'banner'                   => self::cfgStr('banner'),
+            'sitelogo_512'             => self::cfgStr('sitelogo_512'),
+            'sitelogo_192'             => self::cfgStr('sitelogo_192'),
+            'sitelogo_favicon'         => self::cfgStr('sitelogo_favicon'),
             'admininfo'                => self::cfgStr('admininfo'),
             'siteinfo'                 => self::cfgStr('siteinfo'),
             'site_location'            => self::cfgStr('site_location'),

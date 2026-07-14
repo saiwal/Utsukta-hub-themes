@@ -13,6 +13,8 @@
 
 require_once __DIR__ . '/manifest.php';
 $solidified_assets = solidified_assets();
+$solidified_favicon = get_config('system', 'sitelogo_favicon') ?: '/view/theme/solidified/assets/favicon.ico';
+$solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/solidified/assets/apple-touch-icon-180x180.png';
 ?>
 
 <!DOCTYPE html>
@@ -28,14 +30,14 @@ $solidified_assets = solidified_assets();
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
-	<link rel="icon" href="/view/theme/solidified/assets/favicon.ico">
+	<link rel="icon" href="<?php echo $solidified_favicon ?>">
 	<link rel="manifest" href="/api/manifest" />
 	<meta name="theme-color" content="#1e293b" />
 	<meta name="mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="apple-mobile-web-app-title" content="Solidified" />
-	<link rel="apple-touch-icon" href="/view/theme/solidified/assets/apple-touch-icon-180x180.png" />
+	<link rel="apple-touch-icon" href="<?php echo $solidified_touch_icon ?>" />
 </head>
 
 <body>
