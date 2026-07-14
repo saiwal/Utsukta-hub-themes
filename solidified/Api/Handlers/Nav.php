@@ -83,6 +83,9 @@ class Nav
         if ($banner === false)
             $banner = \Zotlabs\Lib\Config::Get('system', 'sitename');
 
+        // Site logo (admin-uploaded, falls back to the static app icon client-side)
+        $sitelogo = \Zotlabs\Lib\Config::Get('system', 'sitelogo_192');
+
         // Current channel reddress or site @hostname for visitors
         $sitelocation = '';
         if (!$is_local)
@@ -323,6 +326,7 @@ class Nav
             'viewer'           => $viewer,
             'actions'          => $actions,
             'banner'           => (string)($banner ?: ''),
+            'sitelogo'         => (string)($sitelogo ?: ''),
             'sitelocation'     => $sitelocation,
             'channels'         => $channels,
             'pinned'           => $pinned,
