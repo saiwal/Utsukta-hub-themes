@@ -35,7 +35,7 @@ $solidified_assets = solidified_assets();
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="apple-mobile-web-app-title" content="Solidified" />
-	<link rel="apple-touch-icon" href="/view/theme/solidified/assets/icon-192.png" />
+	<link rel="apple-touch-icon" href="/view/theme/solidified/assets/apple-touch-icon-180x180.png" />
 </head>
 
 <body>
