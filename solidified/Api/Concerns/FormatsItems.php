@@ -215,6 +215,7 @@ trait FormatsItems
             'flags' => array_values(array_filter([
                 intval($item['item_thread_top']) ? 'thread_parent' : null,
                 intval($item['item_private']) ? 'private' : null,
+                intval($item['item_private']) === 2 ? 'direct_message' : null,
                 intval($item['item_starred']) ? 'starred' : null,
                 intval($item['item_notshown'])
                     ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
