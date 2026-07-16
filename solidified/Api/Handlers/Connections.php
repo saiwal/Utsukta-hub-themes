@@ -137,6 +137,7 @@ class Connections
     //                                        update an existing custom role's permission grid
     //                                        (body: { name, perms?: string[] })
     // POST /api/connections/:id/approve  — approve a pending connection
+    // POST /api/connections/:id/refresh  — re-pull permissions/profile from the remote contact
     // POST /api/connections/:id          — update role / closeness
     public function post(): void
     {
@@ -163,6 +164,8 @@ class Connections
 
         if ($action === 'approve') {
             $this->approve($uid, $abook_id, $abook);
+        } elseif ($action === 'refresh') {
+            $this->refresh($uid, $abook_id, $abook);
         } else {
             $this->update($uid, $abook_id, $abook);
         }
@@ -221,6 +224,30 @@ class Connections
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_create', $abook_id]);
 
         Response::send(['approved' => true]);
+    }
+
+    private function refresh(int $uid, int $abook_id, array $abook): never
+    {
+        $xchan = q(
+            "SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
+            dbesc($abook['abook_xchan'])
+        );
+        if (!$xchan) Response::error(404, 'Contact not found');
+        $xchan = $xchan[0];
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        if ($xchan['xchan_network'] === 'zot6') {
+            $ok = \Zotlabs\Lib\Libzot::refresh($xchan, $channel);
+            if (!$ok) Response::error(502, 'Refresh failed - contact is currently unavailable.');
+        } else {
+            // For other networks we can't pull remotely; re-push our local
+            // permission info outward instead.
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_update', $abook_id]);
+        }
+
+        Response::send(['refreshed' => true]);
     }
 
     private function update(int $uid, int $abook_id, array $abook): never

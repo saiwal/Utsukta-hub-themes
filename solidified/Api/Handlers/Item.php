@@ -1398,7 +1398,9 @@ class Item
 
     private function resolveItem(string $mid, string $ob_hash): ?array
     {
-        $item_normal = item_normal();
+        // Do NOT use item_normal() here — it restricts to item_type = ITEM_TYPE_POST (0),
+        // which would exclude webpages, articles, wiki pages, etc. (same reasoning as
+        // editItem()/deleteItem() below).
 
         // b64-encoded mid
         if (str_starts_with($mid, 'b64.')) {
@@ -1418,7 +1420,7 @@ class Item
             $r = dbq("SELECT * FROM item
                       WHERE item.$col = '$midEsc'
                         AND item.uid = $uid
-                        $item_normal
+                        AND item.item_deleted = 0
                       LIMIT 1");
             if ($r)
                 return $r[0];
@@ -1428,7 +1430,7 @@ class Item
         $permission_sql = item_permissions_sql(0, $ob_hash);
         $r = dbq("SELECT * FROM item
                   WHERE item.$col = '$midEsc'
-                    $item_normal
+                    AND item.item_deleted = 0
                     $permission_sql
                   ORDER BY item_wall DESC
                   LIMIT 1");
