@@ -2,6 +2,7 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
+use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Response;
 use Zotlabs\Lib\Libsync;
 
@@ -299,9 +300,13 @@ class Photos
                 }
             }
 
-            $comment_rows = dbq("SELECT * FROM item
+            // Allowlist real comment verbs — parent_mid also catches reaction/marker
+            // rows (Like, Dislike, Announce, Follow/Ignore thread-subscribe, RSVP),
+            // which must never render as blank "comments" (mirrors Item.php::getComments()).
+            $comment_rows = dbq("SELECT item.*, " . ReactionCounts::subqueries() . "
+                                 FROM item
                                  WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
-                                   AND verb NOT IN ('Like','Dislike')
+                                   AND verb IN ('Create','Update','EmojiReact')
                                    $item_normal
                                    AND uid = $owner_uid
                                    $sql_item
@@ -311,11 +316,29 @@ class Photos
                 xchan_query($comment_rows);
                 $comment_rows = fetch_post_tags($comment_rows, true);
                 foreach ($comment_rows as $c) {
+                    $c_liked = $c_disliked = false;
+                    if ($ob_hash && !empty($c['reaction_verbs'])) {
+                        foreach (explode('|', $c['reaction_verbs']) as $rv) {
+                            if (!str_contains($rv, ':')) continue;
+                            [$rv_verb, $rv_xchan] = explode(':', $rv, 2);
+                            if ($rv_xchan !== $ob_hash) continue;
+                            if ($rv_verb === 'Like') $c_liked = true;
+                            if ($rv_verb === 'Dislike') $c_disliked = true;
+                        }
+                    }
                     $comments[] = [
                         'iid' => intval($c['id']),
                         'mid' => $c['mid'],
+                        'uuid' => $c['uuid'],
+                        'parent_mid' => $c['parent_mid'],
+                        'thr_parent' => $c['thr_parent'],
+                        'item_thread_top' => intval($c['item_thread_top']),
                         'body' => $c['body'],
                         'created' => $c['created'],
+                        'like_count' => intval($c['like_count'] ?? 0),
+                        'dislike_count' => intval($c['dislike_count'] ?? 0),
+                        'viewer_liked' => $c_liked,
+                        'viewer_disliked' => $c_disliked,
                         'author' => [
                             'name' => $c['author']['xchan_name'] ?? '',
                             'url' => $c['author']['xchan_url'] ?? '',
