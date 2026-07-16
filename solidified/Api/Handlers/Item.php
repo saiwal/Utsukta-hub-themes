@@ -1226,32 +1226,46 @@ class Item
 
         $uid = local_channel();
         $ob_hash = get_observer_hash();
-        $item_normal = item_normal();
 
-        if (str_starts_with($mid, 'b64.')) {
-            $mid = unpack_link_id($mid);
-        }
-        $col = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
-        $midEsc = dbesc($mid);
+        // Prefer the caller's own copy (needed below to correctly tell whether
+        // this is really their own stream copy); falls back to any accessible
+        // copy for the true-author/owner/admin case.
+        $i = $this->resolveItem($mid, $ob_hash);
 
-        // Find any copy to verify identity and permission
-        // Deliberately not using item_normal() — it excludes articles (item_type != 0)
-        $item = dbq("SELECT * FROM item WHERE $col = '$midEsc' AND item_deleted = 0 LIMIT 1");
-
-        if (!$item) {
+        if (!$i) {
             json_return_and_die(['error' => 'Item not found']);
         }
 
-        $i = $item[0];
+        // $local_delete: this row lives under the caller's own uid (their own
+        // stream/wall copy) — lets them remove it from their own feed only.
+        // $can_delete: the caller actually authored/owns/sourced this content
+        // (or is a site admin deleting content that originated here) — lets
+        // them perform a real, federated delete. Mirrors core's
+        // Zotlabs/Module/Item.php::get() (/item/drop/:id).
+        $local_delete = ($uid && $uid == $i['uid']);
 
         $can_delete = (
-            ($uid && $uid == $i['uid']) ||
-            ($ob_hash && in_array($ob_hash, [$i['author_xchan'], $i['owner_xchan']])) ||
-            is_site_admin()
+            $ob_hash && in_array($ob_hash, [$i['author_xchan'], $i['owner_xchan'], $i['source_xchan']], true)
         );
 
-        if (!$can_delete) {
+        if (is_site_admin()) {
+            $local_delete = true;
+            if (intval($i['item_origin'])) {
+                $can_delete = true;
+            }
+        }
+
+        if (!($can_delete || $local_delete)) {
             json_return_and_die(['error' => 'Permission denied']);
+        }
+
+        if ($local_delete && !$can_delete) {
+            // Local-only removal: just this one row (drop_item()'s internal
+            // cascade also removes same-uid child comments under it). No sync
+            // packet, no tag_deliver, no Notifier summon — nothing federates,
+            // other copies of this post elsewhere are untouched.
+            drop_item(intval($i['id']));
+            json_return_and_die(['success' => true]);
         }
 
         // Drop all local copies (same mid stored under different channel uids)
