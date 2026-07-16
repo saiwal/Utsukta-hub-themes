@@ -75,10 +75,10 @@ class Connections
 
         $sql_search = '';
         if ($search !== '') {
-            $sql_search = " AND (xchan.xchan_name LIKE '%"
-                . protect_sprintf(dbesc($search)) . "%'"
-                . " OR xchan.xchan_addr LIKE '%"
-                . protect_sprintf(dbesc($search)) . "%') ";
+            $sql_search = " AND (xchan.xchan_name LIKE '%%"
+                . protect_sprintf(dbesc($search)) . "%%'"
+                . " OR xchan.xchan_addr LIKE '%%"
+                . protect_sprintf(dbesc($search)) . "%%') ";
         }
 
         $sql_order = match ($order_key) {
