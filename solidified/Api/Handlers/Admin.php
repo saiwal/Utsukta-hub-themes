@@ -34,6 +34,17 @@ class Admin
         return (bool) intval($v);
     }
 
+    // Some config keys (blacklisted/whitelisted sites/channels, embed_allow/deny,
+    // trusted_directory_servers) are stored by core as arrays (one entry per line);
+    // present them as newline-joined text like redbasic does.
+    private static function cfgList(string $k): string
+    {
+        $v = Config::Get('system', $k);
+        if (is_array($v)) return implode("\n", $v);
+        if ($v === false || $v === null) return '';
+        return (string) $v;
+    }
+
     private function requireAdmin(): void
     {
         if (!local_channel() || !is_site_admin()) {
@@ -507,16 +518,16 @@ class Admin
             'cloud_report_disksize'     => self::cfgBool('cloud_report_disksize'),
             'allowed_email'             => self::cfgStr('allowed_email'),
             'not_allowed_email'         => self::cfgStr('not_allowed_email'),
-            'whitelisted_sites'         => self::cfgStr('whitelisted_sites'),
-            'blacklisted_sites'         => self::cfgStr('blacklisted_sites'),
-            'whitelisted_channels'      => self::cfgStr('whitelisted_channels'),
-            'blacklisted_channels'      => self::cfgStr('blacklisted_channels'),
-            'embed_allow'               => self::cfgStr('embed_allow'),
-            'embed_deny'                => self::cfgStr('embed_deny'),
+            'whitelisted_sites'         => self::cfgList('whitelisted_sites'),
+            'blacklisted_sites'         => self::cfgList('blacklisted_sites'),
+            'whitelisted_channels'      => self::cfgList('whitelisted_channels'),
+            'blacklisted_channels'      => self::cfgList('blacklisted_channels'),
+            'embed_allow'               => self::cfgList('embed_allow'),
+            'embed_deny'                => self::cfgList('embed_deny'),
             'embed_sslonly'             => self::cfgBool('embed_sslonly'),
             'transport_security_header' => self::cfgBool('transport_security_header'),
             'content_security_policy'   => self::cfgBool('content_security_policy'),
-            'trusted_directory_servers' => self::cfgStr('trusted_directory_servers'),
+            'trusted_directory_servers' => self::cfgList('trusted_directory_servers'),
         ]);
     }
 
@@ -524,15 +535,22 @@ class Admin
     {
         $data = Auth::$parsedBody;
 
-        $str_fields  = ['allowed_email', 'not_allowed_email', 'whitelisted_sites', 'blacklisted_sites',
-                         'whitelisted_channels', 'blacklisted_channels', 'embed_allow', 'embed_deny',
-                         'trusted_directory_servers'];
+        $str_fields  = ['allowed_email', 'not_allowed_email'];
+        $list_fields = ['whitelisted_sites', 'blacklisted_sites', 'whitelisted_channels',
+                         'blacklisted_channels', 'embed_allow', 'embed_deny', 'trusted_directory_servers'];
         $bool_fields = ['block_public', 'cloud_disable_siteroot', 'cloud_report_disksize',
                          'embed_sslonly', 'transport_security_header', 'content_security_policy'];
 
         foreach ($str_fields as $k)
             if (isset($data[$k]))
                 Config::Set('system', $k, trim((string) $data[$k]));
+
+        // Stored as arrays (one entry per line) to match how redbasic reads/writes them.
+        foreach ($list_fields as $k)
+            if (isset($data[$k])) {
+                $lines = array_filter(array_map('trim', explode("\n", (string) $data[$k])), fn($l) => $l !== '');
+                Config::Set('system', $k, array_values($lines));
+            }
 
         foreach ($bool_fields as $k)
             if (isset($data[$k]))
