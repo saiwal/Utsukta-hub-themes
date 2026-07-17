@@ -1,15 +1,15 @@
 # PHP API
 
-The `src/Api/` directory is a PHP backend that lives inside the Hubzilla theme as `Theme\Solidified\Api`. It is deployed alongside the theme and provides the SPA's own JSON API at `/api/*`.
+The `src/Api/` directory is a PHP backend that lives inside the Hubzilla theme as `Theme\Solidified\Api`. It is deployed alongside the theme and provides the SPA's own JSON API at `/spa/*`.
 
 ## Router
 
-`Router::dispatch($method)` reads `App::$argv[1]` (the URL segment after `/api/`) and maps it to a handler class:
+`Router::dispatch($method)` reads `App::$argv[1]` (the URL segment after `/spa/`) and maps it to a handler class:
 
 ```
-URL: /api/network      → Handlers\Network::get()
-URL: /api/item/abc123  → Handlers\Item::get()
-URL: /api/settings/display (POST) → Handlers\Settings::post()
+URL: /spa/network      → Handlers\Network::get()
+URL: /spa/item/abc123  → Handlers\Item::get()
+URL: /spa/settings/display (POST) → Handlers\Settings::post()
 ```
 
 Unknown resources return `404`. Unsupported HTTP methods return `405`. Path segments are URL-decoded before dispatch.
@@ -150,30 +150,30 @@ private static array $map = [
 ];
 ```
 
-3. Call it from the SPA at `/api/myresource`.
+3. Call it from the SPA at `/spa/myresource`.
 
 ## Item Endpoints Reference
 
 ```
-GET  /api/item/:mid                 item + thread root
-GET  /api/item/:mid/comments        all comments for item
-GET  /api/item/:mid/comments/:n     most recent N comments
-GET  /api/item/:mid/likes           who liked
-GET  /api/item/:mid/dislikes        who disliked
-GET  /api/item/:mid/repeats         who repeated
+GET  /spa/item/:mid                 item + thread root
+GET  /spa/item/:mid/comments        all comments for item
+GET  /spa/item/:mid/comments/:n     most recent N comments
+GET  /spa/item/:mid/likes           who liked
+GET  /spa/item/:mid/dislikes        who disliked
+GET  /spa/item/:mid/repeats         who repeated
 
-POST /api/item                      create top-level post
-POST /api/item/:mid/comment         post a comment
-POST /api/item/:mid/like            toggle like
-POST /api/item/:mid/dislike         toggle dislike
-POST /api/item/:mid/repeat          toggle repeat/reshare
-POST /api/item/:mid/accept          RSVP accept (exclusive)
-POST /api/item/:mid/reject          RSVP reject (exclusive)
-POST /api/item/:mid/tentativeaccept RSVP tentative (exclusive)
-POST /api/item/:mid/star            toggle starred flag
-POST /api/item/:mid/edit            edit body/title
-POST /api/item/:mid/delete          delete (federated)
-POST /api/item/:mid/reshare         reshare with optional text
+POST /spa/item                      create top-level post
+POST /spa/item/:mid/comment         post a comment
+POST /spa/item/:mid/like            toggle like
+POST /spa/item/:mid/dislike         toggle dislike
+POST /spa/item/:mid/repeat          toggle repeat/reshare
+POST /spa/item/:mid/accept          RSVP accept (exclusive)
+POST /spa/item/:mid/reject          RSVP reject (exclusive)
+POST /spa/item/:mid/tentativeaccept RSVP tentative (exclusive)
+POST /spa/item/:mid/star            toggle starred flag
+POST /spa/item/:mid/edit            edit body/title
+POST /spa/item/:mid/delete          delete (federated)
+POST /spa/item/:mid/reshare         reshare with optional text
 ```
 
 `:mid` may be a full zot6 URL, a short UUID, or a `b64.`-prefixed base64-encoded mid.
@@ -183,13 +183,13 @@ POST /api/item/:mid/reshare         reshare with optional text
 Personal notes are stored as `ITEM_TYPE_CUSTOM` (type 9) items. They never federate and never appear in any stream.
 
 ```
-GET  /api/notes            list the authenticated user's notes (paginated)
-POST /api/notes            create a new note
-POST /api/item/:mid/edit   edit an existing note (shared with regular items)
-POST /api/item/:mid/delete delete a note
+GET  /spa/notes            list the authenticated user's notes (paginated)
+POST /spa/notes            create a new note
+POST /spa/item/:mid/edit   edit an existing note (shared with regular items)
+POST /spa/item/:mid/delete delete a note
 ```
 
-### GET /api/notes
+### GET /spa/notes
 
 Query params: `start` (default 0), `limit` (default 20, max 50).
 
@@ -201,7 +201,7 @@ id, mid, uuid, body, created, edited, mimetype
 
 Only items with `verb = 'Create'` and `item_type = ITEM_TYPE_CUSTOM` are returned, which filters out any companion `Add` activities Hubzilla may have created via the legacy `/item` endpoint.
 
-### POST /api/notes
+### POST /spa/notes
 
 Body (JSON): `{ "body": "...", "mimetype": "text/bbcode" }`
 

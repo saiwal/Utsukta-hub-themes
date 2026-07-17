@@ -51,6 +51,46 @@ class Auth
         return self::requireLocal();
     }
 
+    // Account-level auth — for endpoints that may run before any channel is
+    // selected (e.g. channel import/creation for a fresh account), so
+    // local_channel()-based auth doesn't apply. Returns the account row.
+    private static function requireAccount(): array
+    {
+        $account = \App::get_account();
+        if (!$account || intval($account['account_id'] ?? 0) !== intval(get_account_id())) {
+            Response::error(403, 'Permission denied');
+        }
+        return $account;
+    }
+
+    // For POST/DELETE at the account level — CSRF + body parsing (JSON or form-data)
+    public static function requireAccountJson(): array
+    {
+        Csrf::validate();
+        $ct = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (str_contains($ct, 'multipart/form-data') || str_contains($ct, 'application/x-www-form-urlencoded')) {
+            self::$parsedBody = $_POST;
+        } else {
+            $raw = file_get_contents('php://input');
+            if (empty($raw) && \App::$request) {
+                $stream = \App::$request->getBody();
+                if ($stream->isSeekable()) {
+                    $stream->rewind();
+                }
+                $raw = (string) $stream;
+            }
+            self::$parsedBody = json_decode($raw ?: '', true) ?? [];
+        }
+        return self::requireAccount();
+    }
+
+    // For account-level multipart POST (file uploads) — CSRF only, no JSON content-type required
+    public static function requireAccountMultipart(): array
+    {
+        Csrf::validate();
+        return self::requireAccount();
+    }
+
     private static function requireJson(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET')

@@ -1,1 +1,0 @@
-import{t as e}from"./app-fetch-BALKQ1P3.js";async function t(t,n){let r=await(await e(`/api/help/nav?section=${t}&lang=${encodeURIComponent(n)}`)).json();return r.data??r}async function n(t,n,r){let i=await(await e(`/api/help/topic?section=${t}&lang=${encodeURIComponent(n)}&topic=${encodeURIComponent(r)}`)).json();return i.data??i}export{n,t};

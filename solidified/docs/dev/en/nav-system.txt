@@ -3,7 +3,7 @@
 ## Overview
 
 The navigation list is computed dynamically from several sources:
-- Pinned apps (user's personal pinned apps from `/api/nav`)
+- Pinned apps (user's personal pinned apps from `/spa/nav`)
 - Featured apps (Hubzilla's installed featured apps)
 - Channel tabs (tabs visible on a channel page)
 - System apps (apps visible to non-owner visitors)
@@ -36,7 +36,7 @@ const navItems = useNav(subjectNick);  // () => NavItemDef[]
 
 Only apps that have a registered SPA route are included. `isSpaApp()` checks the app's URL against the set of known SPA route roots (derived from `getRoutes()`). Apps that link outside the SPA are excluded from the nav.
 
-Installed-app filtering: featured apps that are not in the viewer's installed set are omitted (the installed set comes from `/api/nav`).
+Installed-app filtering: featured apps that are not in the viewer's installed set are omitted (the installed set comes from `/spa/nav`).
 
 Deduplication: `dedupByHref()` removes items with identical `href` values.
 
@@ -82,7 +82,7 @@ context: ["owner", "local"]  // multiple roles
 
 ## Channel Tabs vs Pinned Apps
 
-- **Channel tabs** come from `/api/nav?channel_nick=<nick>` — they are permission-gated by the server and represent the channel's public-facing feature tabs.
-- **Pinned apps** come from `/api/nav` (no nick) — they are the viewer's personal pinned shortcuts.
+- **Channel tabs** come from `/spa/nav?channel_nick=<nick>` — they are permission-gated by the server and represent the channel's public-facing feature tabs.
+- **Pinned apps** come from `/spa/nav` (no nick) — they are the viewer's personal pinned shortcuts.
 
 These two lists are never mixed for the same request. The nav switches between them based on the subject nick and viewer role.

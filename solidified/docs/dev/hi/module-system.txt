@@ -82,7 +82,7 @@ href: () => `/photos/${usePageNick()()}`,
 - स्लॉट विजेट रेंडर नहीं होते (`Slot.tsx` में जांच होती है)।
 - नेव आइटम `useInstalledApps()` द्वारा फ़िल्टर हो जाता है।
 
-installed-apps सूची `/api/nav` से आती है और शुरुआती लोड के दौरान खाली `Set` होती है — उस समय सभी मॉड्यूल सक्रिय माने जाते हैं।
+installed-apps सूची `/spa/nav` से आती है और शुरुआती लोड के दौरान खाली `Set` होती है — उस समय सभी मॉड्यूल सक्रिय माने जाते हैं।
 
 ```typescript
 // module-registry.ts
@@ -133,7 +133,7 @@ const affinityInstalled = () => installedApps().has("Affinity Tool");
 - `StreamFiltersWidget.tsx` — Closeness / Affinity स्लाइडर तब तक छिपा रहता है जब तक "Affinity Tool" ऐप इंस्टॉल न हो।
 - `StreamFiltersWidget.tsx` — Privacy Groups पिकर तब तक छिपा रहता है जब तक "Privacy Groups" इंस्टॉल न हो।
 
-यहाँ भी वही empty-set pass-through नियम लागू होता है: `/api/nav` का रिस्पॉन्स आने से पहले `useInstalledApps()` खाली `Set` लौटाता है, इसलिए शुरुआती रेंडर में सेक्शन दिखेगा। यदि default-hide चाहते हैं तो `installedApps().size > 0 && affinityInstalled()` से गार्ड करें।
+यहाँ भी वही empty-set pass-through नियम लागू होता है: `/spa/nav` का रिस्पॉन्स आने से पहले `useInstalledApps()` खाली `Set` लौटाता है, इसलिए शुरुआती रेंडर में सेक्शन दिखेगा। यदि default-hide चाहते हैं तो `installedApps().size > 0 && affinityInstalled()` से गार्ड करें।
 
 ## एकाधिक रूट
 

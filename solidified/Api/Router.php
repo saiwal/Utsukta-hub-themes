@@ -12,6 +12,7 @@ class Router
         'csrf' => Handlers\Csrf::class,
         'siteinfo' => Handlers\Siteinfo::class,
         'settings' => Handlers\Settings::class,
+        'portability' => Handlers\Portability::class,
         'userconfig' => Handlers\UserConfig::class,
         'help' => Handlers\Help::class,
         'display' => Handlers\Display::class,

@@ -82,7 +82,7 @@ When `appName` is set, the module is suppressed unless the Hubzilla app by that 
 - Slot widgets are not rendered (checked in `Slot.tsx`).
 - The nav item is filtered out by `useInstalledApps()`.
 
-The installed-apps list comes from `/api/nav` and is an empty `Set` during the initial load — while the set is empty every module is treated as active (pass-through).
+The installed-apps list comes from `/spa/nav` and is an empty `Set` during the initial load — while the set is empty every module is treated as active (pass-through).
 
 ```typescript
 // module-registry.ts
@@ -133,7 +133,7 @@ Then wrap the conditional UI in a `<Show>`:
 - `StreamFiltersWidget.tsx` — the Closeness / Affinity slider is hidden unless the "Affinity Tool" app is installed.
 - `StreamFiltersWidget.tsx` — Privacy Groups picker is hidden unless "Privacy Groups" is installed.
 
-The same empty-set pass-through rule applies here: `useInstalledApps()` returns an empty `Set` until `/api/nav` responds, so the section is visible during the initial render. If you want to hide-by-default instead, guard with `installedApps().size > 0 && affinityInstalled()`.
+The same empty-set pass-through rule applies here: `useInstalledApps()` returns an empty `Set` until `/spa/nav` responds, so the section is visible during the initial render. If you want to hide-by-default instead, guard with `installedApps().size > 0 && affinityInstalled()`.
 
 ## Multiple Routes
 
