@@ -26,7 +26,7 @@ or manually extract the release in `view/themes`
 
 ![lcars](./lcars/img/screenshot.png)
 
-### 4. [Solidified (Alpha)](./solidified/README.md)
+### 4. [Solidified](./solidified/README.md)
 
 ![solidified screenshot](./solidified/img/screenshot.png)
 
