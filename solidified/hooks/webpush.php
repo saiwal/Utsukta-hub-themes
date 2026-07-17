@@ -14,6 +14,12 @@ namespace {
 	 * $datarray fields used here (see Zotlabs\Lib\Enotify::submit()):
 	 *   uid (recipient channel_id), xname (sender display name), msg (final
 	 *   notification text), photo (sender avatar), link (permalink), hash.
+	 *
+	 * NOTE: $datarray['msg'] is raw bbcode (built from Enotify::submit()'s
+	 * $epreamble templates, e.g. "[zrl=...]a direct message[/zrl]"), not
+	 * pre-rendered HTML. It must go through bbcode() before strip_tags(),
+	 * same as Api\Handlers\Notifications.php does for the in-app list —
+	 * plain strip_tags() alone leaves the [zrl=...] markup in the payload.
 	 */
 	function solidified_webpush_send(&$datarray) {
 
@@ -41,6 +47,7 @@ namespace {
 		}
 
 		require_once __DIR__ . '/../vendor/autoload.php';
+		require_once('include/bbcode.php');
 
 		try {
 			$webPush = new \Minishlink\WebPush\WebPush([
@@ -57,7 +64,7 @@ namespace {
 
 		$payload = json_encode([
 			'title' => $datarray['xname'] ?? 'Hubzilla',
-			'body' => strip_tags($datarray['msg'] ?? ''),
+			'body' => trim(strip_tags(bbcode($datarray['msg'] ?? ''))),
 			'icon' => $datarray['photo'] ?? '',
 			'url' => $datarray['link'] ?? z_root(),
 			'tag' => $datarray['hash'] ?? '',
