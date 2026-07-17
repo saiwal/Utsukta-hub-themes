@@ -4,7 +4,7 @@ State is managed with **Solid's reactive primitives** (signals, memos, resources
 
 ## Auth Store (`src/shared/store/auth-store.ts`)
 
-Fetches viewer identity once at startup from `/api/pconfig`.
+Fetches viewer identity once at startup from `/spa/pconfig`.
 
 ```typescript
 type AuthState = {
@@ -30,7 +30,7 @@ On load the store also reads `spa` preferences from the pconfig response and app
 
 ## Nav Store (`src/shared/store/nav-store.ts`)
 
-Fetches `/api/nav` (optionally with `?channel_nick=<nick>`) whenever the subject channel changes. Returns viewer identity, pinned/featured apps, channel tabs, installed app names, and system apps.
+Fetches `/spa/nav` (optionally with `?channel_nick=<nick>`) whenever the subject channel changes. Returns viewer identity, pinned/featured apps, channel tabs, installed app names, and system apps.
 
 The nick signal `navNick` is initialised from the URL at startup and updated by `Layout.tsx` on every navigation.
 

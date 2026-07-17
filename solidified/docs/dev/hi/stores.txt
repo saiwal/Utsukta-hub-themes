@@ -4,7 +4,7 @@
 
 ## Auth Store (`src/shared/store/auth-store.ts`)
 
-स्टार्टअप पर `/api/pconfig` से व्यूअर की पहचान एक बार फ़ेच करता है।
+स्टार्टअप पर `/spa/pconfig` से व्यूअर की पहचान एक बार फ़ेच करता है।
 
 ```typescript
 type AuthState = {
@@ -30,7 +30,7 @@ const admin = isAdmin();    // boolean
 
 ## Nav Store (`src/shared/store/nav-store.ts`)
 
-जब भी सब्जेक्ट चैनल बदले, `/api/nav` (वैकल्पिक रूप से `?channel_nick=<nick>` के साथ) फ़ेच करता है। इसमें व्यूअर की पहचान, pinned/featured ऐप, चैनल टैब, इन्स्टॉल्ड ऐप नाम और system apps होते हैं।
+जब भी सब्जेक्ट चैनल बदले, `/spa/nav` (वैकल्पिक रूप से `?channel_nick=<nick>` के साथ) फ़ेच करता है। इसमें व्यूअर की पहचान, pinned/featured ऐप, चैनल टैब, इन्स्टॉल्ड ऐप नाम और system apps होते हैं।
 
 Nick सिग्नल `navNick` स्टार्टअप पर URL से इनिशियलाइज़ होता है और `Layout.tsx` हर नेविगेशन पर इसे अपडेट करता है।
 

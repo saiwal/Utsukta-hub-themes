@@ -79,7 +79,7 @@ Users can override which widgets appear on which pages. The layout lives in pcon
 
 - Absence of a module/slot entry → registry defaults apply.
 - An explicit empty array → the user removed every widget from that slot.
-- Saved via `POST /api/widget-layout` (`{ layout: … }`, `{ layout: null }` resets everything); loaded at boot from `GET /api/pconfig`.
+- Saved via `POST /spa/widget-layout` (`{ layout: … }`, `{ layout: null }` resets everything); loaded at boot from `GET /spa/pconfig`.
 
 Client state is in `src/shared/store/widget-layout.ts`: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`. Saves are optimistic with rollback; localStorage (`hz-widget-layout`) caches the layout so sidebars don't flash defaults while pconfig loads. The server value — including its absence — always wins for local users.
 
@@ -87,7 +87,7 @@ Stored ids that point at unknown, global, context-disallowed, or uninstalled-app
 
 ### Visitors see the owner's arrangement
 
-`widget_layout` is included in the per-channel prefs that `GET /api/pconfig?channel=<nick>` exposes (`channelSpa()` in `Pconfig.php`), the same payload that carries the channel's theme. `useChannelTheme` feeds it into a separate `pageLayout` signal (`initPageWidgetLayout` / `pageLayoutFor`), cleared when leaving channel pages. `Slot` picks the source by viewer role: on your own pages (`viewerRole() === "owner"`) your layout applies; on anyone else's channel-scoped pages — including for logged-in local users — the page owner's layout applies. The page-owner layout is never persisted on the visitor's device.
+`widget_layout` is included in the per-channel prefs that `GET /spa/pconfig?channel=<nick>` exposes (`channelSpa()` in `Pconfig.php`), the same payload that carries the channel's theme. `useChannelTheme` feeds it into a separate `pageLayout` signal (`initPageWidgetLayout` / `pageLayoutFor`), cleared when leaving channel pages. `Slot` picks the source by viewer role: on your own pages (`viewerRole() === "owner"`) your layout applies; on anyone else's channel-scoped pages — including for logged-in local users — the page owner's layout applies. The page-owner layout is never persisted on the visitor's device.
 
 ## Edit Mode
 

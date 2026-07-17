@@ -1,0 +1,1 @@
+async function e(){let e=await fetch(`/spa/siteinfo`);if(!e.ok)throw Error(`siteinfo: ${e.status}`);let t=await e.json(),n=t.data??t;return{...n,addons:Array.isArray(n.addons)?n.addons:[],themes:Array.isArray(n.themes)?n.themes:[],blocked_sites:Array.isArray(n.blocked_sites)?n.blocked_sites:[],federated:Array.isArray(n.federated)?n.federated:[]}}export{e as t};

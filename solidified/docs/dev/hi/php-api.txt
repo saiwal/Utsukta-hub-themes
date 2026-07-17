@@ -1,15 +1,15 @@
 # PHP API
 
-`src/Api/` डायरेक्टरी एक PHP बैकएंड है जो Hubzilla थीम के अंदर `Theme\Solidified\Api` के रूप में रहता है। यह थीम के साथ डिप्लॉय होता है और `/api/*` पर SPA का खुद का JSON API प्रदान करता है।
+`src/Api/` डायरेक्टरी एक PHP बैकएंड है जो Hubzilla थीम के अंदर `Theme\Solidified\Api` के रूप में रहता है। यह थीम के साथ डिप्लॉय होता है और `/spa/*` पर SPA का खुद का JSON API प्रदान करता है।
 
 ## Router
 
-`Router::dispatch($method)` `App::$argv[1]` (URL का `/api/` के बाद का सेगमेंट) पढ़ता है और उसे हैंडलर क्लास से मैप करता है:
+`Router::dispatch($method)` `App::$argv[1]` (URL का `/spa/` के बाद का सेगमेंट) पढ़ता है और उसे हैंडलर क्लास से मैप करता है:
 
 ```
-URL: /api/network      → Handlers\Network::get()
-URL: /api/item/abc123  → Handlers\Item::get()
-URL: /api/settings/display (POST) → Handlers\Settings::post()
+URL: /spa/network      → Handlers\Network::get()
+URL: /spa/item/abc123  → Handlers\Item::get()
+URL: /spa/settings/display (POST) → Handlers\Settings::post()
 ```
 
 अज्ञात रिसोर्स पर `404` और असमर्थित HTTP method पर `405` रिटर्न होता है। डिस्पैच से पहले पाथ सेगमेंट URL-decode होते हैं।
@@ -150,30 +150,30 @@ private static array $map = [
 ];
 ```
 
-3. SPA से `/api/myresource` पर कॉल करें।
+3. SPA से `/spa/myresource` पर कॉल करें।
 
 ## Item एंडपॉइंट संदर्भ
 
 ```
-GET  /api/item/:mid                 item + thread root
-GET  /api/item/:mid/comments        item के सभी comments
-GET  /api/item/:mid/comments/:n     सबसे हालिया N comments
-GET  /api/item/:mid/likes           किसने like किया
-GET  /api/item/:mid/dislikes        किसने dislike किया
-GET  /api/item/:mid/repeats         किसने repeat किया
+GET  /spa/item/:mid                 item + thread root
+GET  /spa/item/:mid/comments        item के सभी comments
+GET  /spa/item/:mid/comments/:n     सबसे हालिया N comments
+GET  /spa/item/:mid/likes           किसने like किया
+GET  /spa/item/:mid/dislikes        किसने dislike किया
+GET  /spa/item/:mid/repeats         किसने repeat किया
 
-POST /api/item                      नया top-level पोस्ट बनाएं
-POST /api/item/:mid/comment         comment पोस्ट करें
-POST /api/item/:mid/like            like toggle करें
-POST /api/item/:mid/dislike         dislike toggle करें
-POST /api/item/:mid/repeat          repeat/reshare toggle करें
-POST /api/item/:mid/accept          RSVP accept (exclusive)
-POST /api/item/:mid/reject          RSVP reject (exclusive)
-POST /api/item/:mid/tentativeaccept RSVP tentative (exclusive)
-POST /api/item/:mid/star            starred flag toggle करें
-POST /api/item/:mid/edit            body/title edit करें
-POST /api/item/:mid/delete          delete (federated)
-POST /api/item/:mid/reshare         optional text के साथ reshare
+POST /spa/item                      नया top-level पोस्ट बनाएं
+POST /spa/item/:mid/comment         comment पोस्ट करें
+POST /spa/item/:mid/like            like toggle करें
+POST /spa/item/:mid/dislike         dislike toggle करें
+POST /spa/item/:mid/repeat          repeat/reshare toggle करें
+POST /spa/item/:mid/accept          RSVP accept (exclusive)
+POST /spa/item/:mid/reject          RSVP reject (exclusive)
+POST /spa/item/:mid/tentativeaccept RSVP tentative (exclusive)
+POST /spa/item/:mid/star            starred flag toggle करें
+POST /spa/item/:mid/edit            body/title edit करें
+POST /spa/item/:mid/delete          delete (federated)
+POST /spa/item/:mid/reshare         optional text के साथ reshare
 ```
 
 `:mid` एक पूरा zot6 URL, short UUID, या `b64.`-prefixed base64-encoded mid हो सकता है।
@@ -183,13 +183,13 @@ POST /api/item/:mid/reshare         optional text के साथ reshare
 Personal notes `ITEM_TYPE_CUSTOM` (type 9) items के रूप में store होते हैं। ये कभी federate नहीं होते और किसी भी stream में नहीं दिखते।
 
 ```
-GET  /api/notes            authenticated user के notes की सूची (paginated)
-POST /api/notes            नया note बनाएं
-POST /api/item/:mid/edit   मौजूदा note edit करें (regular items के साथ shared)
-POST /api/item/:mid/delete note delete करें
+GET  /spa/notes            authenticated user के notes की सूची (paginated)
+POST /spa/notes            नया note बनाएं
+POST /spa/item/:mid/edit   मौजूदा note edit करें (regular items के साथ shared)
+POST /spa/item/:mid/delete note delete करें
 ```
 
-### GET /api/notes
+### GET /spa/notes
 
 Query params: `start` (default 0), `limit` (default 20, max 50)।
 
@@ -201,7 +201,7 @@ id, mid, uuid, body, created, edited, mimetype
 
 केवल `verb = 'Create'` और `item_type = ITEM_TYPE_CUSTOM` वाले items लौटाए जाते हैं — यह legacy `/item` endpoint के किसी भी companion `Add` activity को filter करता है।
 
-### POST /api/notes
+### POST /spa/notes
 
 Body (JSON): `{ "body": "...", "mimetype": "text/bbcode" }`
 

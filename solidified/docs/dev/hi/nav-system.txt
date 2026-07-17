@@ -3,7 +3,7 @@
 ## अवलोकन
 
 नेविगेशन सूची कई स्रोतों से डायनामिक रूप से कम्प्यूट होती है:
-- Pinned apps (यूज़र के `/api/nav` से पर्सनल pinned ऐप)
+- Pinned apps (यूज़र के `/spa/nav` से पर्सनल pinned ऐप)
 - Featured apps (Hubzilla के इन्स्टॉल्ड featured ऐप)
 - Channel tabs (चैनल पेज पर दिखने वाले टैब)
 - System apps (non-owner विज़िटर को दिखने वाले ऐप)
@@ -82,7 +82,7 @@ context: ["owner", "local"]   // एकाधिक रोल
 
 ## Channel Tabs बनाम Pinned Apps
 
-- **Channel tabs** `/api/nav?channel_nick=<nick>` से आते हैं — सर्वर द्वारा परमिशन-गेटेड होते हैं और चैनल के पब्लिक फ़ीचर टैब दर्शाते हैं।
-- **Pinned apps** `/api/nav` (nick के बिना) से आते हैं — व्यूअर के पर्सनल pinned शॉर्टकट होते हैं।
+- **Channel tabs** `/spa/nav?channel_nick=<nick>` से आते हैं — सर्वर द्वारा परमिशन-गेटेड होते हैं और चैनल के पब्लिक फ़ीचर टैब दर्शाते हैं।
+- **Pinned apps** `/spa/nav` (nick के बिना) से आते हैं — व्यूअर के पर्सनल pinned शॉर्टकट होते हैं।
 
 ये दोनों सूचियाँ एक ही रिक्वेस्ट के लिए कभी मिक्स नहीं होतीं। subject nick और viewer role के आधार पर नेव इन दोनों के बीच स्विच करता है।

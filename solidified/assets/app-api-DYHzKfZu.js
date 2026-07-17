@@ -1,1 +1,0 @@
-import{t as e}from"./app-fetch-BALKQ1P3.js";async function t(t){let n=await e(`/api/notify/${t}`);if(!n.ok)throw Error(`Failed to resolve notification (${n.status})`);return(await n.json()).data}async function n(){let t=await e(`/api/notifications`);if(!t.ok)throw Error(`Failed to fetch notifications (${t.status})`);return(await t.json()).data??[]}export{t as n,n as t};

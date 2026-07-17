@@ -83,7 +83,7 @@ const save = useMutation(() => ({
 
 ## Nav Data
 
-`src/shared/store/nav-store.ts` caches `/api/nav` under `["nav", nick]`. All nav hooks (`useNavData`, `useInstalledApps`, …) share it. After installing/uninstalling an app call `refetchNavData()` — it invalidates every nav variant.
+`src/shared/store/nav-store.ts` caches `/spa/nav` under `["nav", nick]`. All nav hooks (`useNavData`, `useInstalledApps`, …) share it. After installing/uninstalling an app call `refetchNavData()` — it invalidates every nav variant.
 
 ## What NOT to Convert
 

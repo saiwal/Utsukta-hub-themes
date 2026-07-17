@@ -79,7 +79,7 @@ export const notificationsWidget: WidgetDef = {
 
 - मॉड्यूल/स्लॉट एंट्री की अनुपस्थिति → रजिस्ट्री डिफ़ॉल्ट लागू होते हैं।
 - स्पष्ट खाली array → यूज़र ने उस स्लॉट से सभी विजेट हटा दिए।
-- `POST /api/widget-layout` से सहेजा जाता है (`{ layout: … }`, `{ layout: null }` सब कुछ रीसेट करता है); बूट पर `GET /api/pconfig` से लोड होता है।
+- `POST /spa/widget-layout` से सहेजा जाता है (`{ layout: … }`, `{ layout: null }` सब कुछ रीसेट करता है); बूट पर `GET /spa/pconfig` से लोड होता है।
 
 क्लाइंट स्टेट `src/shared/store/widget-layout.ts` में है: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`। सेव ऑप्टिमिस्टिक हैं (विफलता पर रोलबैक); localStorage (`hz-widget-layout`) लेआउट कैश करता है ताकि pconfig लोड होते समय साइडबार डिफ़ॉल्ट न दिखाए। लोकल यूज़र के लिए सर्वर का मान — उसकी अनुपस्थिति सहित — हमेशा जीतता है।
 
@@ -87,7 +87,7 @@ export const notificationsWidget: WidgetDef = {
 
 ### विज़िटर को स्वामी की व्यवस्था दिखती है
 
-`widget_layout` उन प्रति-चैनल प्राथमिकताओं में शामिल है जो `GET /api/pconfig?channel=<nick>` देता है (`Pconfig.php` में `channelSpa()`) — वही पेलोड जो चैनल की थीम ले जाता है। `useChannelTheme` इसे एक अलग `pageLayout` सिग्नल में भेजता है (`initPageWidgetLayout` / `pageLayoutFor`), जो चैनल पेज छोड़ने पर साफ़ हो जाता है। `Slot` व्यूअर की भूमिका से स्रोत चुनता है: अपने पेजों पर (`viewerRole() === "owner"`) आपका लेआउट लागू होता है; किसी और के चैनल पेजों पर — लॉग-इन लोकल यूज़र सहित — पेज स्वामी का लेआउट लागू होता है। पेज-स्वामी लेआउट विज़िटर के डिवाइस पर कभी सहेजा नहीं जाता।
+`widget_layout` उन प्रति-चैनल प्राथमिकताओं में शामिल है जो `GET /spa/pconfig?channel=<nick>` देता है (`Pconfig.php` में `channelSpa()`) — वही पेलोड जो चैनल की थीम ले जाता है। `useChannelTheme` इसे एक अलग `pageLayout` सिग्नल में भेजता है (`initPageWidgetLayout` / `pageLayoutFor`), जो चैनल पेज छोड़ने पर साफ़ हो जाता है। `Slot` व्यूअर की भूमिका से स्रोत चुनता है: अपने पेजों पर (`viewerRole() === "owner"`) आपका लेआउट लागू होता है; किसी और के चैनल पेजों पर — लॉग-इन लोकल यूज़र सहित — पेज स्वामी का लेआउट लागू होता है। पेज-स्वामी लेआउट विज़िटर के डिवाइस पर कभी सहेजा नहीं जाता।
 
 ## संपादन मोड
 
