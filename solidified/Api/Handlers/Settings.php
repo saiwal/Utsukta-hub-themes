@@ -8,6 +8,7 @@ use Zotlabs\Access\PermissionRoles;
 use Zotlabs\Access\Permissions;
 use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\Config;
+use Zotlabs\Daemon\Master;
 use App;
 
 class Settings
@@ -48,6 +49,10 @@ class Settings
                 break;
             case 'danger':
                 $this->getDangerSettings();
+                break;
+            case 'locations':
+                $this->getLocationsSettings();
+                break;
             default:
                 $this->getDisplaySettings();
                 break;
@@ -546,6 +551,29 @@ class Settings
         Response::send(['apps' => $apps, 'nav_order' => array_values((array) $nav_order)]);
     }
 
+    private function getLocationsSettings(): void
+    {
+        $channel = App::get_channel();
+
+        $rows = q(
+            "select * from hubloc where hubloc_hash = '%s' and hubloc_deleted = 0 order by hubloc_primary desc, hubloc_addr asc",
+            dbesc($channel['channel_hash'])
+        );
+
+        $locations = [];
+        foreach (($rows ?: []) as $row) {
+            $locations[] = [
+                'id'      => (int) $row['hubloc_id'],
+                'addr'    => $row['hubloc_addr'],
+                'url'     => $row['hubloc_url'],
+                'primary' => (bool) $row['hubloc_primary'],
+                'isLocal' => $row['hubloc_url'] === z_root(),
+            ];
+        }
+
+        Response::send(['locations' => $locations]);
+    }
+
     // Maps the SPA's notifyN / vnotifyN field names to the bitmask constants
     // used by channel_notifyflags and pconfig system.vnotify.
     private function notifyBits(): array
@@ -740,6 +768,9 @@ class Settings
             case 'danger':
                 $this->postDangerSettings($uid, $data);
                 break;
+            case 'locations':
+                $this->postLocationsSettings($uid, $data);
+                break;
             default:
                 Response::error(404, 'Unknown settings section');
         }
@@ -900,7 +931,75 @@ class Settings
 
         Response::send(['status' => 'ok']);
     }
- 
+
+    private function postLocationsSettings(int $uid, array $data): void
+    {
+        $channel = App::get_channel();
+        $action = $data['action'] ?? '';
+
+        if (!in_array($action, ['set_primary', 'drop', 'sync'], true))
+            Response::error(400, 'Invalid request');
+
+        if ($action === 'sync') {
+            Master::Summon(['Notifier', 'refresh_all', $channel['channel_id']]);
+            Response::send(['success' => true]);
+        }
+
+        $hubloc_id = intval($data['id'] ?? 0);
+        if (!$hubloc_id) Response::error(400, 'Invalid request');
+
+        $r = q(
+            "select * from hubloc where hubloc_id = %d and hubloc_hash = '%s' limit 1",
+            intval($hubloc_id),
+            dbesc($channel['channel_hash'])
+        );
+        if (!$r) Response::error(404, 'Location not found');
+
+        if ($action === 'set_primary') {
+            q(
+                "UPDATE hubloc SET hubloc_primary = 0 WHERE hubloc_primary = 1 AND hubloc_hash = '%s'",
+                dbesc($channel['channel_hash'])
+            );
+            q(
+                "UPDATE hubloc SET hubloc_primary = 1 WHERE hubloc_id = %d AND hubloc_hash = '%s'",
+                intval($hubloc_id),
+                dbesc($channel['channel_hash'])
+            );
+
+            $x = q(
+                "select * from hubloc where hubloc_id = %d and hubloc_hash = '%s'",
+                intval($hubloc_id),
+                dbesc($channel['channel_hash'])
+            );
+            if ($x) hubloc_change_primary($x[0]);
+
+            Master::Summon(['Notifier', 'refresh_all', $channel['channel_id']]);
+            Response::send(['success' => true]);
+        }
+
+        // drop
+        if ($r[0]['hubloc_url'] === z_root())
+            Response::error(400, 'Cannot drop the local hub location');
+
+        if (intval($r[0]['hubloc_primary'])) {
+            $x = q(
+                "select hubloc_id from hubloc where hubloc_primary = 1 and hubloc_hash = '%s'",
+                dbesc($channel['channel_hash'])
+            );
+            if (!$x || count($x) === 1)
+                Response::error(400, 'Please select another location to become primary before removing the primary location');
+        }
+
+        q(
+            "UPDATE hubloc SET hubloc_deleted = 1 WHERE hubloc_id_url = '%s' AND hubloc_hash = '%s'",
+            dbesc($r[0]['hubloc_id_url']),
+            dbesc($channel['channel_hash'])
+        );
+
+        Master::Summon(['Notifier', 'refresh_all', $channel['channel_id']]);
+        Response::send(['success' => true]);
+    }
+
     private function postProfileSettings(int $uid, array $data): void
     {
         $fields = [
