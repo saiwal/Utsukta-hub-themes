@@ -33,10 +33,26 @@ class Display
         }
 
         // ── Find target item ──────────────────────────────────────────────────
-        $target = q("SELECT id, uid, mid, parent_mid, thr_parent, verb,
-                            item_type, item_deleted, item_blocked, author_xchan
-                     FROM item WHERE $identifier = '%s' LIMIT 1",
-            dbesc($item_hash));
+        // Items with wide ACLs (esp. direct messages) have one row per local
+        // recipient sharing the same uuid/mid — prefer the viewer's own copy
+        // (correct item_unseen/permissions for them) before falling back to
+        // an arbitrary row, otherwise an unqualified LIMIT 1 can resolve to
+        // e.g. the sender's own copy and silently show the wrong unseen state.
+        $target = [];
+        if (local_channel()) {
+            $target = q("SELECT id, uid, mid, parent_mid, thr_parent, verb,
+                                item_type, item_deleted, item_blocked, author_xchan
+                         FROM item WHERE $identifier = '%s' AND uid = %d LIMIT 1",
+                dbesc($item_hash),
+                intval(local_channel()));
+        }
+
+        if (!$target) {
+            $target = q("SELECT id, uid, mid, parent_mid, thr_parent, verb,
+                                item_type, item_deleted, item_blocked, author_xchan
+                         FROM item WHERE $identifier = '%s' LIMIT 1",
+                dbesc($item_hash));
+        }
 
         if (!$target) {
             Response::error(404, 'Item not found');
