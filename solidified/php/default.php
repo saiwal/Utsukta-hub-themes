@@ -18,7 +18,7 @@ $solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/so
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<title><?php if (x($page, 'title')) echo $page['title'] ?></title>
 	<script>
