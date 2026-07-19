@@ -69,6 +69,8 @@ class Pconfig
                 $config[$row['cat']][$row['k']] = $row['v'];
             }
 
+            $nsfw_installed = \Zotlabs\Lib\Apps::system_app_installed($uid, 'NSFW');
+
             $response = [
                 'uid'      => $uid,
                 'channel'  => $nick,
@@ -76,6 +78,9 @@ class Pconfig
                 'system'   => $config['system']  ?? [],
                 'spa'      => $config['spa']     ?? [],
                 'features' => array_map('boolval', $config['feature'] ?? []),
+                'nsfw'     => [
+                    'words' => $nsfw_installed ? (string) ($config['nsfw']['words'] ?? 'nsfw,contentwarning') : '',
+                ],
             ];
 
             // Include the visited channel's display prefs so the SPA can theme per-channel

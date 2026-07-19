@@ -178,6 +178,8 @@ class Settings
             'permit_all_mentions' => intval(get_pconfig($uid, 'system', 'permit_all_mentions')),
             'moderate_unsolicited_comments' => intval(get_pconfig($uid, 'system', 'moderate_unsolicited_comments')),
             'ocap_enabled' => intval(get_pconfig($uid, 'system', 'ocap_enabled')),
+            'nsfw_installed' => \Zotlabs\Lib\Apps::system_app_installed($uid, 'NSFW'),
+            'nsfw_words' => (string) get_pconfig($uid, 'nsfw', 'words', 'nsfw,contentwarning'),
         ]);
     }
 
@@ -892,6 +894,9 @@ class Settings
             if (isset($data[$t]))
                 set_pconfig($uid, 'system', $t, ((intval($data[$t]) == 1) ? 1 : 0));
         }
+
+        if (isset($data['nsfw_words']))
+            set_pconfig($uid, 'nsfw', 'words', notags(trim((string) $data['nsfw_words'])));
 
         Master::Summon(['Directory', $uid]);
         Libsync::build_sync_packet();
