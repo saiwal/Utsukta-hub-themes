@@ -7,6 +7,7 @@ use Theme\Solidified\Api\Response;
 require_once 'include/security.php';
 require_once 'include/conversation.php';
 require_once 'include/menu.php';
+require_once 'include/features.php';
 
 class Nav
 {
@@ -92,6 +93,10 @@ class Nav
             $sitelocation = isset(App::$profile['reddress'])
                 ? App::$profile['reddress']
                 : '@' . App::get_hostname();
+
+        // "Navigation Channel Select" feature — expands the nav "channels" entry
+        // into an inline multi-channel switcher instead of linking to /manage.
+        $nav_channel_select = $is_local ? (bool) feature_enabled($uid, 'nav_channel_select') : false;
 
         // Multi-channel switcher — only for local users without a delegate session
         $channels = [];
@@ -329,6 +334,7 @@ class Nav
             'sitelogo'         => (string)($sitelogo ?: ''),
             'sitelocation'     => $sitelocation,
             'channels'         => $channels,
+            'nav_channel_select' => $nav_channel_select,
             'pinned'           => $pinned,
             'featured'         => $featured,
             'system_apps'      => $system_apps,
