@@ -8,6 +8,7 @@ use Zotlabs\Access\PermissionRoles;
 use Zotlabs\Access\Permissions;
 use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\Config;
+use Zotlabs\Lib\Libsync;
 use Zotlabs\Daemon\Master;
 use App;
 
@@ -37,6 +38,9 @@ class Settings
                 break;
             case 'privacy':
                 $this->getPrivacySettings();
+                break;
+            case 'channel':
+                $this->getChannelSettings();
                 break;
             case 'apps':
                 $this->getAppsSettings();
@@ -165,10 +169,22 @@ class Settings
 
     private function getPrivacySettings(): void
     {
-        load_pconfig(local_channel());
+        $uid = local_channel();
+        load_pconfig($uid);
 
-        $channel = App::get_channel();
-        $global_perms = Permissions::Perms();
+        Response::send([
+            'autoperms' => intval(get_pconfig($uid, 'system', 'autoperms')),
+            'index_opt_out' => intval(get_pconfig($uid, 'system', 'index_opt_out')),
+            'permit_all_mentions' => intval(get_pconfig($uid, 'system', 'permit_all_mentions')),
+            'moderate_unsolicited_comments' => intval(get_pconfig($uid, 'system', 'moderate_unsolicited_comments')),
+            'ocap_enabled' => intval(get_pconfig($uid, 'system', 'ocap_enabled')),
+        ]);
+    }
+
+    // Per-permission access-limit rows for the custom role, shaped like core's
+    // Settings/Privacy advanced section: [key, label, value, help, options]
+    private function buildPermissArr(int $uid): array
+    {
         $permiss = [];
 
         $perm_opts = [
@@ -190,10 +206,10 @@ class Settings
         ];
 
         $help_txt = t('Advise: set to "Anybody on the internet" and use privacy groups to restrict access');
-        $limits = PermissionLimits::Get(local_channel());
+        $limits = PermissionLimits::Get($uid);
         $anon_comments = Config::Get('system', 'anonymous_comments', true);
 
-        foreach ($global_perms as $k => $perm) {
+        foreach (Permissions::Perms() as $k => $perm) {
             $options = [];
             $can_be_public = (strstr($k, 'view') || ($k === 'post_comments' && $anon_comments));
 
@@ -207,33 +223,45 @@ class Settings
             $permiss[] = [
                 $k,
                 $perm,
-                $limits[$k],
+                intval($limits[$k] ?? 0),
                 ((in_array($k, $help)) ? $help_txt : ''),
                 $options
             ];
         }
 
-        // logger('permiss: ' . print_r($permiss,true));
+        return $permiss;
+    }
 
-        $autoperms = get_pconfig(local_channel(), 'system', 'autoperms');
-        $index_opt_out = get_pconfig(local_channel(), 'system', 'index_opt_out');
-        $group_actor = get_pconfig(local_channel(), 'system', 'group_actor');
-        $permit_all_mentions = get_pconfig(local_channel(), 'system', 'permit_all_mentions');
-        $moderate_unsolicited_comments = get_pconfig(local_channel(), 'system', 'moderate_unsolicited_comments');
-        $ocap_enabled = get_pconfig(local_channel(), 'system', 'ocap_enabled');
+    private function getChannelSettings(): void
+    {
+        $uid = local_channel();
+        load_pconfig($uid);
 
-        $permissions_role = get_pconfig(local_channel(), 'system', 'permissions_role', 'custom');
-        $permission_limits = ($permissions_role === 'custom');
+        $channel = App::get_channel();
+        $role_options = PermissionRoles::channel_roles();
+
+        $permissions_role = get_pconfig($uid, 'system', 'permissions_role');
+        // Invalid/unset role ships as '' so the frontend forces a selection (as core does)
+        if (!in_array($permissions_role, array_keys($role_options), true))
+            $permissions_role = '';
 
         Response::send([
-            '$permission_limits' => $permission_limits,
-            '$permiss_arr' => $permiss,
-            '$autoperms' => $autoperms,
-            '$index_opt_out' => $index_opt_out,
-            '$group_actor' => $group_actor,
-            '$permit_all_mentions' => $permit_all_mentions,
-            '$moderate_unsolicited_comments' => $moderate_unsolicited_comments,
-            '$ocap_enabled' => $ocap_enabled,
+            'permissions_role' => $permissions_role,
+            'role_options' => $role_options,
+            'timezone' => $channel['channel_timezone'],
+            'timezones' => get_timezones(),
+            'defloc' => $channel['channel_location'],
+            'allow_location' => (get_pconfig($uid, 'system', 'use_browser_location') ? 1 : 0),
+            'adult' => ((intval($channel['channel_pageflags']) & PAGE_ADULT) ? 1 : 0),
+            'maxreq' => intval($channel['channel_max_friend_req']),
+            'photo_path' => get_pconfig($uid, 'system', 'photo_path', ''),
+            'attach_path' => get_pconfig($uid, 'system', 'attach_path', ''),
+            'expire' => intval($channel['channel_expire_days']),
+            'expire_sys' => intval(Config::Get('system', 'default_expire_days')),
+            'message_filter_incl' => get_pconfig($uid, 'system', 'message_filter_incl', ''),
+            'message_filter_excl' => get_pconfig($uid, 'system', 'message_filter_excl', ''),
+            'permiss_arr' => $this->buildPermissArr($uid),
+            'group_actor' => intval(get_pconfig($uid, 'system', 'group_actor')),
         ]);
     }
 
@@ -648,9 +676,6 @@ class Settings
             'post_joingroup' => intval(get_pconfig($uid, 'system', 'post_joingroup', 0)),
             'post_profilechange' => intval(get_pconfig($uid, 'system', 'post_profilechange', 0)),
             'mailhost' => get_pconfig($uid, 'system', 'email_notify_host', App::get_hostname()),
-            'photo_path' => get_pconfig($uid, 'system', 'photo_path', ''),
-            'attach_path' => get_pconfig($uid, 'system', 'attach_path', ''),
-            'expire' => intval($channel['channel_expire_days']),
         ];
 
         foreach ($this->notifyBits() as $k => $bit)
@@ -756,6 +781,9 @@ class Settings
             case 'privacy':
                 $this->postPrivacySettings($uid, $data);
                 break;
+            case 'channel':
+                $this->postChannelSettings($uid, $data);
+                break;
             case 'notifications':
                 $this->postNotificationSettings($uid, $data);
                 break;
@@ -853,25 +881,88 @@ class Settings
 
     private function postPrivacySettings(int $uid, array $data): void
     {
-        $global_perms = \Zotlabs\Access\Permissions::Perms();
-
-        foreach ($global_perms as $k => $perm) {
-            if (isset($data[$k]))
-                \Zotlabs\Access\PermissionLimits::Set($uid, $k, intval($data[$k]));
-        }
-
         $toggles = [
             'autoperms',
             'index_opt_out',
-            'group_actor',
             'permit_all_mentions',
             'moderate_unsolicited_comments',
             'ocap_enabled',
         ];
         foreach ($toggles as $t) {
             if (isset($data[$t]))
-                set_pconfig($uid, 'system', $t, intval($data[$t]));
+                set_pconfig($uid, 'system', $t, ((intval($data[$t]) == 1) ? 1 : 0));
         }
+
+        Master::Summon(['Directory', $uid]);
+        Libsync::build_sync_packet();
+
+        Response::send(['status' => 'ok']);
+    }
+
+    private function postChannelSettings(int $uid, array $data): void
+    {
+        $channel = App::get_channel();
+
+        $role = notags(trim((string) ($data['permissions_role'] ?? '')));
+        if (!$role || !in_array($role, array_keys(PermissionRoles::channel_roles()), true))
+            Response::error(400, 'Please select a channel role');
+
+        if ($role !== get_pconfig($uid, 'system', 'permissions_role')) {
+            $role_permissions = PermissionRoles::role_perms($role);
+
+            if (isset($role_permissions['limits'])) {
+                foreach ($role_permissions['limits'] as $k => $v) {
+                    PermissionLimits::Set($uid, $k, $v);
+                }
+            }
+
+            set_pconfig($uid, 'system', 'group_actor',
+                ((($role_permissions['channel_type'] ?? '') === 'group') ? 1 : 0));
+        }
+
+        $timezone = notags(trim((string) ($data['timezone'] ?? '')));
+        if (!in_array($timezone, \DateTimeZone::listIdentifiers(), true))
+            $timezone = $channel['channel_timezone'];
+
+        $adult = ((intval($data['adult'] ?? 0) == 1) ? 1 : 0);
+        $pageflags = intval($channel['channel_pageflags']);
+        if ($adult != (($pageflags & PAGE_ADULT) ? 1 : 0))
+            $pageflags = ($pageflags ^ PAGE_ADULT);
+
+        set_pconfig($uid, 'system', 'permissions_role', $role);
+        set_pconfig($uid, 'system', 'use_browser_location', ((intval($data['allow_location'] ?? 0) == 1) ? 1 : 0));
+        set_pconfig($uid, 'system', 'photo_path', escape_tags(trim((string) ($data['photo_path'] ?? ''))));
+        set_pconfig($uid, 'system', 'attach_path', escape_tags(trim((string) ($data['attach_path'] ?? ''))));
+        set_pconfig($uid, 'system', 'message_filter_incl', trim((string) ($data['message_filter_incl'] ?? '')));
+        set_pconfig($uid, 'system', 'message_filter_excl', trim((string) ($data['message_filter_excl'] ?? '')));
+
+        // Permission limits and the group-actor flag only apply to the custom role (core keeps
+        // these in Settings/Privacy; the SPA surfaces them as a modal on the channel form).
+        // Runs after the role-change block so explicit values win over the role preset.
+        if ($role === 'custom') {
+            foreach (Permissions::Perms() as $k => $perm) {
+                if (isset($data[$k]))
+                    PermissionLimits::Set($uid, $k, intval($data[$k]));
+            }
+            if (isset($data['group_actor']))
+                set_pconfig($uid, 'system', 'group_actor', ((intval($data['group_actor']) == 1) ? 1 : 0));
+        }
+
+        // channel_max_friend_req: core's settings page displays maxreq but omits it from its
+        // post handler; persisting it here is deliberate.
+        q("UPDATE channel SET channel_pageflags = %d, channel_timezone = '%s',
+            channel_location = '%s', channel_expire_days = %d, channel_max_friend_req = %d
+            WHERE channel_id = %d",
+            intval($pageflags),
+            dbesc($timezone),
+            dbesc(notags(trim((string) ($data['defloc'] ?? '')))),
+            intval($data['expire'] ?? 0),
+            max(0, intval($data['maxreq'] ?? 0)),
+            intval($uid)
+        );
+
+        Master::Summon(['Directory', $uid]);
+        Libsync::build_sync_packet();
 
         Response::send(['status' => 'ok']);
     }
