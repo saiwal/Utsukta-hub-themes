@@ -19,6 +19,14 @@ class Folders
                 intval(TERM_FILE)
             );
             $folders = $r ? array_map(fn($row) => ['name' => $row['term'], 'count' => (int) $row['cnt']], $r) : [];
+
+            $sr = q(
+                "SELECT COUNT(*) AS cnt FROM item WHERE uid = %d AND item_starred = 1 AND item_deleted = 0",
+                intval($uid)
+            );
+            $starredCount = $sr ? (int) $sr[0]['cnt'] : 0;
+
+            Response::send($folders, ['starred_count' => $starredCount]);
         } else {
             $r = q(
                 "SELECT DISTINCT term FROM term WHERE uid = %d AND ttype = %d ORDER BY term ASC",
