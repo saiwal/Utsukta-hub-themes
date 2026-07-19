@@ -31,6 +31,7 @@ class Router
         'privacy-groups' => Handlers\PrivacyGroups::class,
         'articles' => Handlers\Articles::class,
         'network' => Handlers\Network::class,
+        'hq-messages' => Handlers\HqMessages::class,
         'channel' => Handlers\Channel::class,
         'profile' => Handlers\Profile::class,
         'profiles' => Handlers\Profiles::class,
