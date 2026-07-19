@@ -108,7 +108,7 @@ class Wiki
             'name'        => \NativeWiki::name_decode($w['urlName'] ?? ''),
             'url_name'    => $w['urlName']    ?? '',
             'html_name'   => $w['htmlName']   ?? '',
-            'mime_type'   => $w['mimeType']   ?? 'text/markdown',
+            'mime_type'   => $w['mimeType']   ?? 'text/bbcode',
             'type_lock'   => (bool) ($w['typeLock'] ?? false),
         ];
     }
@@ -319,7 +319,12 @@ class Wiki
             Response::error(404, 'Page not found');
         }
 
-        $mimeType = $p['pageMimeType'] ?? 'text/markdown';
+        // The SPA has no per-page format picker — every page in a wiki is
+        // authored in the wiki's configured mimetype. Trust that over the
+        // item's own stored mimetype, which can be stale (e.g. left over
+        // from before a wiki's format was finalized) and would otherwise run
+        // bbcode content through the markdown pipeline.
+        $mimeType = $p['mimeType'] ?? 'text/bbcode';
         $raw      = $p['content'] ?? '';
 
         $hookinfo = ['content' => $raw, 'mimetype' => $mimeType];
@@ -460,7 +465,7 @@ class Wiki
                 'resource_id'   => $rid,
                 'pageUrlName'   => $pageUrlName,
                 'content'       => $reverted['content'],
-                'mimeType'      => $w['mimeType'] ?? 'text/markdown',
+                'mimeType'      => $w['mimeType'] ?? 'text/bbcode',
             ]);
 
             if (!$saved['success']) {
