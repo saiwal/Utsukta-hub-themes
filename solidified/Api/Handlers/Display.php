@@ -156,7 +156,13 @@ class Display
 
         foreach ($items as $item) {
             if (intval($item['item_thread_top'])) {
-                $root_item = $this->formatItem($item, $observer_hash);
+                $isPinned = false;
+                if (!empty($item['uid']) && !empty($item['uuid'])) {
+                    $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
+                    $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
+                    $isPinned      = in_array($item['uuid'], $pinnedMids, true);
+                }
+                $root_item = $this->formatItem($item, $observer_hash, $isPinned);
             } elseif (!$this->isBlockedHash($blocked, $item['author_xchan'] ?? null)
                 && !$this->isBlockedHash($blocked, $item['owner_xchan'] ?? null)) {
                 $comments[] = $this->formatItem($item, $observer_hash);

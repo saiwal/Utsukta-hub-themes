@@ -23,6 +23,11 @@ class Channel
         $observer_xchan = get_observer_hash();
         $itemspage      = intval(get_pconfig($uid ?: $channel_uid, 'system', 'itemspage') ?: 10);
 
+        // ── Pinned posts (channel wall) ──────────────────────────────────────
+        $pinnedMidsRaw = get_pconfig($channel_uid, 'pinned', ITEM_TYPE_POST, []);
+        $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
+        $pinnedMidSet  = array_flip($pinnedMids);
+
         // ── Pagination ────────────────────────────────────────────────────────
         $offset     = max(0, intval($_GET['start'] ?? 0));
         $pager_sql  = " LIMIT $itemspage OFFSET $offset ";
@@ -153,13 +158,49 @@ class Channel
 
         // ── Format and respond ────────────────────────────────────────────────
         $out = array_map(
-            fn($item) => $this->formatItem($item, $observer_xchan),
+            fn($item) => $this->formatItem($item, $observer_xchan, isset($pinnedMidSet[$item['uuid']])),
             $items
         );
 
+        // ── Pinned posts banner (base wall view only: no filters, first page) ──
+        // Not folded into the main query/pagination — matches core's separate
+        // Zotlabs/Widget/Pinned.php, which never touches stream ordering.
+        $showPinnedMeta  = (!$nouveau && $offset === 0);
+        $pinnedFormatted = [];
+
+        if ($showPinnedMeta && $pinnedMids) {
+            $pinnedInList = implode("','", array_map('dbesc', $pinnedMids));
+            $prows = dbq("SELECT item.*, $reaction_subqueries
+                FROM item
+                WHERE item.uuid IN ('$pinnedInList')
+                  AND item.uid = $channel_uid
+                  AND item.id = item.parent
+                  AND item.item_private = 0
+                  AND item.item_deleted = 0");
+
+            if ($prows) {
+                xchan_query($prows, true);
+                $prows = fetch_post_tags($prows, true);
+                $this->applyViewerFollowing($prows, $observer_xchan);
+
+                // Most-recently-pinned first.
+                $pinOrder = array_flip(array_reverse($pinnedMids));
+                usort($prows, fn($a, $b) => ($pinOrder[$a['uuid']] ?? 0) <=> ($pinOrder[$b['uuid']] ?? 0));
+
+                $pinnedFormatted = array_map(
+                    fn($item) => $this->formatItem($item, $observer_xchan, true),
+                    $prows
+                );
+
+                // Dedup: don't also show these inline in the page-1 batch.
+                $pinnedUuids = array_flip(array_column($prows, 'uuid'));
+                $out = array_values(array_filter($out, fn($f) => !isset($pinnedUuids[$f['uuid']])));
+            }
+        }
+
         $can_post_wall = perm_is_allowed($channel_uid, $observer_xchan, 'post_wall');
 
-        Response::send($out, [
+        $meta = [
             'offset'        => $offset,
             'limit'         => $itemspage,
             'count'         => count($out),
@@ -168,7 +209,12 @@ class Channel
             'nouveau'       => $nouveau,
             'ordering'      => $ordering,
             'can_post_wall' => $can_post_wall,
-        ]);
+        ];
+        if ($showPinnedMeta) {
+            $meta['pinned'] = $pinnedFormatted;
+        }
+
+        Response::send($out, $meta);
     }
 
     private function resolveChannel(int $uid): array
