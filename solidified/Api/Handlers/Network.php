@@ -92,8 +92,10 @@ class Network
             $search = '';
         }
 
-        // Filters that force nouveau (flat) mode
-        if ($search || $file || (!$pf && $cid) || $hashtags || $verb || $category || $conv || $unseen) {
+        // Filters that force nouveau (flat) mode — forum/channel (cid), group (gid),
+        // and xchan filters intentionally stay threaded (posts only) unless the user
+        // explicitly picks order=unthreaded; only these filters force a flat listing.
+        if ($search || $file || $hashtags || $verb || $category || $conv || $unseen) {
             $nouveau = true;
         }
 
