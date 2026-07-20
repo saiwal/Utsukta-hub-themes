@@ -168,7 +168,7 @@ trait FormatsItems
         ];
     }
 
-    private function formatItem(array $item, string $observer_xchan): array
+    private function formatItem(array $item, string $observer_xchan, bool $isPinned = false): array
     {
         $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
 
@@ -217,6 +217,7 @@ trait FormatsItems
                 intval($item['item_private']) ? 'private' : null,
                 intval($item['item_private']) === 2 ? 'direct_message' : null,
                 intval($item['item_starred']) ? 'starred' : null,
+                $isPinned ? 'pinned' : null,
                 intval($item['item_notshown'])
                     ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
                     : null,

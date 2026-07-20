@@ -36,6 +36,7 @@ class Item
     // POST /api/item/:mid/dislike            -> toggle dislike
     // POST /api/item/:mid/repeat             -> toggle repeat
     // POST /api/item/:mid/star               -> toggle starred
+    // POST /api/item/:mid/pin                -> toggle pinned (channel wall)
     // POST /api/item/:mid/comment            -> post a comment
     // POST /api/item/:mid/delete             -> delete item
     // POST /api/item/:mid/edit               -> edit item body/title
@@ -111,7 +112,7 @@ class Item
         // message IDs that contain "/" (full zot6 URLs like https://host/item/uuid).
         // The action verb is always the last segment for POST requests.
         $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
-                       'tentativeaccept', 'star', 'comment', 'delete',
+                       'tentativeaccept', 'star', 'pin', 'comment', 'delete',
                        'edit', 'reshare', 'saveto', 'vote',
                        'follow', 'unfollow'];
 
@@ -154,6 +155,9 @@ class Item
                 break;
             case 'star':
                 $this->toggleStar($mid);
+                break;
+            case 'pin':
+                $this->togglePin($mid);
                 break;
             case 'comment':
                 $this->createComment($mid);
@@ -1011,6 +1015,53 @@ class Item
         json_return_and_die(['success' => true, 'starred' => (bool) $newState]);
     }
 
+    // POST /api/item/:mid/pin
+    // Toggles pinned state of a top-level, non-private wall post owned by the
+    // local channel. Core parity (Zotlabs/Module/Pin.php): pconfig-backed
+    // ('pinned' cat, ITEM_TYPE_POST key), synced to clones via Libsync. Unlike
+    // core, membership in the pinned array is toggled (add/remove) rather than
+    // always replaced — this SPA allows pinning more than one post at a time.
+    private function togglePin(string $mid): void
+    {
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $uid = local_channel();
+
+        if (str_starts_with($mid, 'b64.')) {
+            $mid = unpack_link_id($mid);
+        }
+        $col = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
+        $midEsc = dbesc($mid);
+
+        $item = dbq("SELECT id, uuid FROM item
+                     WHERE item.$col = '$midEsc' AND item.uid = $uid
+                       AND item.id = item.parent
+                       AND item.item_private = 0
+                       AND item.item_wall = 1
+                       AND item.item_deleted = 0
+                     LIMIT 1");
+
+        if (!$item) {
+            json_return_and_die(['error' => 'Item not found, not eligible, or permission denied']);
+        }
+
+        $midb64 = $item[0]['uuid'];
+        $pinned = get_pconfig($uid, 'pinned', ITEM_TYPE_POST, []);
+        $pinned = is_array($pinned) ? $pinned : [];
+        $isPinned = in_array($midb64, $pinned, true);
+
+        $pinned = $isPinned
+            ? array_values(array_diff($pinned, [$midb64]))
+            : [...$pinned, $midb64];
+
+        set_pconfig($uid, 'pinned', ITEM_TYPE_POST, $pinned);
+
+        Libsync::build_sync_packet($uid, ['config']);
+
+        json_return_and_die(['success' => true, 'pinned' => !$isPinned]);
+    }
+
     // POST /api/item/:mid/follow | /api/item/:mid/unfollow
     // Mirrors core Mod_Subthread: records a Follow (sub) or Ignore (unsub)
     // activity authored by the viewer on the thread top of their own copy of
@@ -1708,6 +1759,14 @@ class Item
             return $a;
         }, $attachRaw ? (json_decode($attachRaw, true) ?: []) : []);
 
+        // Only top-level items can be pinned — skip the pconfig lookup for comments.
+        $isPinned = false;
+        if (intval($item['item_thread_top']) && !empty($item['uid']) && !empty($item['uuid'])) {
+            $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
+            $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
+            $isPinned      = in_array($item['uuid'], $pinnedMids, true);
+        }
+
         return [
             'uuid' => $item['uuid'],
             'mid' => $item['mid'],
@@ -1737,6 +1796,7 @@ class Item
                 intval($item['item_private']) ? 'private' : null,
                 intval($item['item_private']) === 2 ? 'direct_message' : null,
                 intval($item['item_starred']) ? 'starred' : null,
+                $isPinned ? 'pinned' : null,
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
