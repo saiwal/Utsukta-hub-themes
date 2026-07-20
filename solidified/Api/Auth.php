@@ -25,6 +25,41 @@ class Auth
     public static function requireLocalJson(): int
     {
         Csrf::validate();
+        self::parseJsonBody();
+        return self::requireLocal();
+    }
+
+    // For multipart POST (file uploads) — auth + CSRF, no JSON content-type required
+    public static function requireLocalMultipart(): int
+    {
+        Csrf::validate();
+        return self::requireLocal();
+    }
+
+    // Any authenticated viewer — native local channel OR a remote/OWA
+    // magic-auth visitor. Use for actions that federate against an existing
+    // item (react, comment) rather than ones that need a wall of your own
+    // on this server (new post, reshare-to-wall).
+    public static function requireLoggedIn(): string
+    {
+        $hash = get_observer_hash();
+        if (!$hash || (!local_channel() && !remote_channel())) {
+            Response::error(401, 'Authentication required');
+        }
+        return $hash;
+    }
+
+    // For POST/DELETE — auth (local or remote) + CSRF token + body parsing.
+    // Returns the observer's xchan hash (the acting identity).
+    public static function requireLoggedInJson(): string
+    {
+        Csrf::validate();
+        self::parseJsonBody();
+        return self::requireLoggedIn();
+    }
+
+    private static function parseJsonBody(): void
+    {
         $ct = $_SERVER['CONTENT_TYPE'] ?? '';
         if (str_contains($ct, 'multipart/form-data') || str_contains($ct, 'application/x-www-form-urlencoded')) {
             // Form submission — PHP populates $_POST automatically.
@@ -41,14 +76,6 @@ class Auth
             }
             self::$parsedBody = json_decode($raw ?: '', true) ?? [];
         }
-        return self::requireLocal();
-    }
-
-    // For multipart POST (file uploads) — auth + CSRF, no JSON content-type required
-    public static function requireLocalMultipart(): int
-    {
-        Csrf::validate();
-        return self::requireLocal();
     }
 
     // Account-level auth — for endpoints that may run before any channel is
