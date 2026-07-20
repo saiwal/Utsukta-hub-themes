@@ -31,7 +31,7 @@ $solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/so
 	<meta name="format-detection" content="telephone=no">
 	<meta name="format-detection" content="date=no">
 	<link rel="icon" href="<?php echo $solidified_favicon ?>">
-	<link rel="manifest" href="/api/manifest" />
+	<link rel="manifest" href="/spa/manifest" />
 	<meta name="theme-color" content="#1e293b" />
 	<meta name="mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -48,7 +48,7 @@ $solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/so
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/api/sw', { scope: '/', updateViaCache: 'none' })
+      navigator.serviceWorker.register('/spa/sw', { scope: '/', updateViaCache: 'none' })
         .then(function (reg) {
           console.log('[PWA] SW registered, scope:', reg.scope);
           reg.addEventListener('updatefound', function () {

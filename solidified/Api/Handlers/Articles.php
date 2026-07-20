@@ -32,32 +32,46 @@ class Articles
         }
 
         $permission_sql = item_permissions_sql($profile_uid);
-$slug = \App::$argv[3] ?? $_GET['uuid'] ?? '';
-if ($slug) {
-    $this->getSingle($slug, $profile_uid, $ob_hash, $permission_sql);
+$identifier = \App::$argv[3] ?? $_GET['uuid'] ?? '';
+if ($identifier) {
+    $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
 }
 
-        $this->getList($profile_uid, $ob_hash, $permission_sql);
+        $this->getList($profile_uid, $ob_hash, $permission_sql, $nick);
     }
 
     // -------------------------------------------------------------------------
-    // GET /api/articles/:nick/:uuid
+    // GET /api/articles/:nick/:uuid-or-slug
     // -------------------------------------------------------------------------
 
     private function getSingle(
-        string $slug,
+        string $identifier,
         int    $profile_uid,
         string $ob_hash,
-        string $permission_sql
+        string $permission_sql,
+        string $nick
     ): never {
-        $uuid_safe = dbesc($slug);
+        $identifier_safe = dbesc($identifier);
 
         $r = dbq("SELECT id FROM item
             WHERE item.uid = $profile_uid
-            AND item.uuid = '$uuid_safe'
+            AND item.uuid = '$identifier_safe'
             AND item.item_type = " . ITEM_TYPE_ARTICLE . "
             AND item.item_deleted = 0
             LIMIT 1");
+
+        if (!$r) {
+            // Not a uuid match — try resolving it as a slug (iconfig alias).
+            $r = dbq("SELECT item.id FROM item
+                LEFT JOIN iconfig ON iconfig.iid = item.id
+                WHERE item.uid = $profile_uid
+                AND iconfig.cat = 'system'
+                AND iconfig.k = '" . item_type_to_namespace(ITEM_TYPE_ARTICLE) . "'
+                AND iconfig.v = '$identifier_safe'
+                AND item.item_type = " . ITEM_TYPE_ARTICLE . "
+                AND item.item_deleted = 0
+                LIMIT 1");
+        }
 
         if (!$r) {
             Response::error(404, 'Article not found');
@@ -88,9 +102,9 @@ if ($slug) {
 
         foreach ($items as $item) {
             if (intval($item['item_thread_top'])) {
-                $root = $this->formatItem($item, $ob_hash);
+                $root = $this->formatItem($item, $ob_hash, $nick);
             } else {
-                $comments[] = $this->formatItem($item, $ob_hash);
+                $comments[] = $this->formatItem($item, $ob_hash, $nick);
             }
         }
 
@@ -108,7 +122,8 @@ if ($slug) {
     private function getList(
         int    $profile_uid,
         string $ob_hash,
-        string $permission_sql
+        string $permission_sql,
+        string $nick
     ): never {
         $itemspage = intval(get_pconfig(local_channel(), 'system', 'itemspage') ?: 10);
         $offset    = max(0, intval($_GET['start'] ?? 0));
@@ -179,7 +194,7 @@ if ($slug) {
 
         $out = [];
         foreach (($items ?: []) as $item) {
-            $out[] = $this->formatItem($item, $ob_hash);
+            $out[] = $this->formatItem($item, $ob_hash, $nick);
         }
 
         Response::paginate($out, $offset, $itemspage, $root_count);
@@ -192,7 +207,7 @@ if ($slug) {
         return ReactionCounts::subqueries();
     }
 
-    private function formatItem(array $item, string $ob_hash): array
+    private function formatItem(array $item, string $ob_hash, string $nick): array
     {
         $liked = $disliked = $repeated = false;
 
@@ -207,6 +222,19 @@ if ($slug) {
             }
         }
 
+        // Extract the ARTICLE slug from iconfig (attached by fetch_post_tags / xchan_query)
+        $slug = '';
+        if (!empty($item['iconfig']) && is_array($item['iconfig'])) {
+            foreach ($item['iconfig'] as $cfg) {
+                if (($cfg['cat'] ?? '') === 'system'
+                    && ($cfg['k'] ?? '') === item_type_to_namespace(ITEM_TYPE_ARTICLE)
+                ) {
+                    $slug = urldecode($cfg['v']);
+                    break;
+                }
+            }
+        }
+
         return [
             'uuid'            => $item['uuid'],
             'mid'             => $item['mid'],
@@ -217,6 +245,10 @@ if ($slug) {
             'title'           => $item['title'],
             'body'            => $item['body'],
             'summary'         => $item['summary'] ?? '',
+            'slug'            => $slug,
+            // Human-facing app URL (slug when set, uuid otherwise) — distinct
+            // from 'permalink' (the immutable mid-based federation identity).
+            'view_url'        => z_root() . '/articles/' . $nick . '/' . ($slug ?: $item['uuid']),
             'verb'            => $item['verb'],
             'obj_type'        => $item['obj_type'],
             'item_type'       => intval($item['item_type']),
@@ -244,6 +276,11 @@ if ($slug) {
                 ],
             ],
             'permalink'       => $item['plink'] ?? '',
+            'public_policy'   => $item['public_policy'] ?? '',
+            'allow_cid'       => self::parseHashList($item['allow_cid'] ?? ''),
+            'allow_gid'       => self::parseHashList($item['allow_gid'] ?? ''),
+            'deny_cid'        => self::parseHashList($item['deny_cid']  ?? ''),
+            'deny_gid'        => self::parseHashList($item['deny_gid']  ?? ''),
             'viewer_liked'    => $liked,
             'viewer_disliked' => $disliked,
             'viewer_repeated' => $repeated,
@@ -259,9 +296,36 @@ if ($slug) {
         ];
     }
 
+    // Hubzilla stores ACL as "<hash1><hash2>..." — extract the bare hashes.
+    private static function parseHashList(string $str): array
+    {
+        if (!$str) return [];
+        preg_match_all('/<([^>]+)>/', $str, $m);
+        return $m[1] ?? [];
+    }
+
+    // Resolve the raw contact_allow/group_allow/contact_deny/group_deny arrays
+    // + public_policy sent by ArticleComposer into item ACL columns.
+    private function resolveAcl(array $input): array
+    {
+        $wrap = fn(array $arr): string =>
+            implode('', array_map(fn($h) => '<' . $h . '>', array_filter($arr)));
+
+        $allow_cid     = $wrap((array) ($input['contact_allow'] ?? []));
+        $allow_gid     = $wrap((array) ($input['group_allow']   ?? []));
+        $deny_cid      = $wrap((array) ($input['contact_deny']  ?? []));
+        $deny_gid      = $wrap((array) ($input['group_deny']    ?? []));
+        $public_policy = trim($input['public_policy'] ?? '');
+
+        $item_private = ($public_policy === 'contacts' || $allow_cid || $allow_gid) ? 1 : 0;
+
+        return [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy];
+    }
+
     // -------------------------------------------------------------------------
     // POST /api/articles/:nick
-    // Body (JSON): { title, summary, body, slug, category, mimetype, post_id? }
+    // Body (JSON): { title, summary, body, slug, category, mimetype, post_id?,
+    //                contact_allow?, group_allow?, contact_deny?, group_deny?, public_policy? }
     // post_id present → edit existing article via item_store_update
     // post_id absent  → create new article via item_store
     // -------------------------------------------------------------------------
@@ -283,7 +347,9 @@ if ($slug) {
             Response::error(403, 'Permission denied');
         }
 
-        $input    = json_decode(file_get_contents('php://input'), true) ?? [];
+        // Auth::requireLocalJson() already parsed the JSON body — re-reading
+        // php://input here would return empty, since the stream is drained.
+        $input    = \Theme\Solidified\Api\Auth::$parsedBody;
         $body     = trim($input['body']     ?? '');
         $title    = escape_tags(trim($input['title']    ?? ''));
         $summary  = escape_tags(trim($input['summary']  ?? ''));
@@ -320,24 +386,36 @@ if ($slug) {
 
         // ── Edit existing article ─────────────────────────────────────────────
         if ($post_id) {
-            $orig = dbq("SELECT * FROM item WHERE id = %d AND uid = %d AND item_type = " . ITEM_TYPE_ARTICLE . " LIMIT 1",
-                intval($post_id), $uid);
+            // dbq() runs the SQL string as-is — it does not do q()'s printf-style
+            // placeholder substitution — so values must be interpolated here.
+            $orig = dbq("SELECT * FROM item WHERE id = " . intval($post_id) . "
+                AND uid = " . intval($uid) . "
+                AND item_type = " . ITEM_TYPE_ARTICLE . " LIMIT 1");
 
             if (!$orig) {
                 Response::error(404, 'Article not found');
             }
 
-            $datarray                 = $orig[0];
-            $datarray['title']        = $title;
-            $datarray['summary']      = $summary;
-            $datarray['body']         = $body;
-            $datarray['mimetype']     = $mimetype;
-            $datarray['edited']       = datetime_convert();
-            $datarray['changed']      = datetime_convert();
-            $datarray['commented']    = datetime_convert();
-            $datarray['edit']         = true;
-            $datarray['id']           = $post_id;
-            $datarray['term']         = $post_tags;
+            [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
+                $this->resolveAcl($input);
+
+            $datarray                   = $orig[0];
+            $datarray['title']          = $title;
+            $datarray['summary']        = $summary;
+            $datarray['body']           = $body;
+            $datarray['mimetype']       = $mimetype;
+            $datarray['edited']         = datetime_convert();
+            $datarray['changed']        = datetime_convert();
+            $datarray['commented']      = datetime_convert();
+            $datarray['edit']           = true;
+            $datarray['id']             = $post_id;
+            $datarray['term']           = $post_tags;
+            $datarray['allow_cid']      = $allow_cid;
+            $datarray['allow_gid']      = $allow_gid;
+            $datarray['deny_cid']       = $deny_cid;
+            $datarray['deny_gid']       = $deny_gid;
+            $datarray['item_private']   = $item_private;
+            $datarray['public_policy']  = $public_policy;
 
             if ($slug) {
                 \Zotlabs\Lib\IConfig::Set($datarray, 'system',
@@ -361,6 +439,9 @@ if ($slug) {
         $mid  = z_root() . '/item/' . $uuid;
         $now  = datetime_convert();
 
+        [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
+            $this->resolveAcl($input);
+
         $datarray = [
             'aid'             => intval($channel['channel_account_id']),
             'uid'             => $uid,
@@ -381,15 +462,16 @@ if ($slug) {
             'item_thread_top' => 1,
             'item_origin'     => 1,
             'item_wall'       => 1,
-            'item_private'    => 0,
+            'item_private'    => $item_private,
             'mimetype'        => $mimetype,
             'title'           => $title,
             'summary'         => $summary,
             'body'            => $body,
-            'allow_cid'       => '',
-            'allow_gid'       => '',
-            'deny_cid'        => '',
-            'deny_gid'        => '',
+            'allow_cid'       => $allow_cid,
+            'allow_gid'       => $allow_gid,
+            'deny_cid'        => $deny_cid,
+            'deny_gid'        => $deny_gid,
+            'public_policy'   => $public_policy,
             'plink'           => $mid,
             'term'            => $post_tags,
         ];

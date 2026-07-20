@@ -3,6 +3,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Zotlabs\Lib\Libsync;
 
 /**
  * Files (cloud storage) handler
@@ -11,17 +12,28 @@ use Theme\Solidified\Api\Response;
  * GET  /api/files/:nick/folder/:hash     → list folder by hash ('' = root)
  * GET  /api/files/:nick/meta/:hash       → single file metadata + ACL
  * GET  /api/files/:nick/quota            → storage used/limit in bytes
+ * GET  /api/files/:nick/download/:hash   → download a file, or a folder as a zip
+ * GET  /api/files/:nick/categories/:hash → list category terms for a file/folder
  * POST /api/files/:nick/permissions      → update file ACL
+ * POST /api/files/:nick/rename           → rename a file/folder in place
+ * POST /api/files/:nick/move             → move a file/folder to another folder
+ * POST /api/files/:nick/copy             → copy a file/folder to another folder
+ * POST /api/files/:nick/categories       → replace category terms for a file/folder
  *
  * Register in Router.php $map:
  *   'files' => Handlers\Files::class,
  */
 class Files
 {
+    private const ROW_COLUMNS = "id, hash, filename, filetype, filesize, folder,
+                    display_path, is_dir, is_photo, created, edited, revision,
+                    allow_cid, allow_gid, deny_cid, deny_gid";
+
     public function get(): void
     {
         require_once 'include/attach.php';
         require_once 'include/security.php';
+        require_once 'include/channel.php';
 
         $channel  = $this->resolveChannel();
         $owner_uid = intval($channel['channel_id']);
@@ -43,6 +55,12 @@ class Files
                 break;
             case 'quota':
                 $this->quota($channel);
+                break;
+            case 'download':
+                $this->download($owner_uid, $ob_hash, $datum, $channel);
+                break;
+            case 'categories':
+                $this->getCategories($owner_uid, $ob_hash, $datum);
                 break;
             default:
                 // Root folder (folder hash = '')
@@ -87,10 +105,24 @@ class Files
 
         $action = \App::$argv[3] ?? '';
 
-        if ($action === 'permissions') {
-            $this->updatePermissions($uid, $data);
-        } else {
-            Response::error(404, 'Unknown action');
+        switch ($action) {
+            case 'permissions':
+                $this->updatePermissions($uid, $data);
+                break;
+            case 'rename':
+                $this->renameItem($uid, $data);
+                break;
+            case 'move':
+                $this->moveOrCopyItem($uid, $data, false);
+                break;
+            case 'copy':
+                $this->moveOrCopyItem($uid, $data, true);
+                break;
+            case 'categories':
+                $this->updateCategories($uid, $data);
+                break;
+            default:
+                Response::error(404, 'Unknown action');
         }
     }
 
@@ -102,9 +134,7 @@ class Files
         $folder_cond = "folder = '" . dbesc($folder_hash) . "'";
 
         $r = q(
-            "SELECT id, hash, filename, filetype, filesize, folder,
-                    display_path, is_dir, is_photo, created, edited,
-                    allow_cid, allow_gid, deny_cid, deny_gid
+            "SELECT " . self::ROW_COLUMNS . "
                FROM attach
               WHERE uid = %d
                 AND $folder_cond
@@ -130,9 +160,7 @@ class Files
         $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
 
         $r = q(
-            "SELECT id, hash, filename, filetype, filesize, folder,
-                    display_path, is_dir, is_photo, created, edited,
-                    allow_cid, allow_gid, deny_cid, deny_gid
+            "SELECT " . self::ROW_COLUMNS . "
                FROM attach
               WHERE uid = %d
                 AND hash = '%s'
@@ -172,16 +200,276 @@ class Files
         attach_change_permissions($uid, $hash, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $recurse, true);
 
         // Return fresh metadata
-        $updated = q(
-            "SELECT id, hash, filename, filetype, filesize, folder,
-                    display_path, is_dir, is_photo, created, edited,
-                    allow_cid, allow_gid, deny_cid, deny_gid
-               FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+        $updated = $this->fetchRow($uid, $hash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    // ── Rename / Move / Copy ─────────────────────────────────────────────────
+
+    private function renameItem(int $uid, array $data): void
+    {
+        $hash    = $data['hash'] ?? '';
+        $newname = trim((string) ($data['filename'] ?? ''));
+        if (!$hash || $newname === '') Response::error(400, 'hash and filename required');
+
+        $r = q(
+            "SELECT id, hash, folder FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
             intval($uid),
             dbesc($hash)
         );
+        if (!$r) Response::error(404, 'File not found');
 
-        Response::send($updated ? $this->formatRow($updated[0]) : null);
+        $res = attach_move($uid, $hash, $r[0]['folder'], $newname);
+        if (empty($res['success'])) Response::error(500, $res['message'] ?? 'Rename failed');
+
+        $this->syncAttach($uid, $hash);
+
+        $updated = $this->fetchRow($uid, $hash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    private function moveOrCopyItem(int $uid, array $data, bool $copy): void
+    {
+        $hash      = $data['hash'] ?? '';
+        $newFolder = (string) ($data['folder'] ?? '');
+        if (!$hash) Response::error(400, 'hash required');
+
+        $r = q(
+            "SELECT id, hash, filename, is_dir FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        if ($newFolder) {
+            $f = q(
+                "SELECT id FROM attach WHERE uid = %d AND hash = '%s' AND is_dir = 1 LIMIT 1",
+                intval($uid),
+                dbesc($newFolder)
+            );
+            if (!$f) Response::error(404, 'Destination folder not found');
+        }
+
+        if (intval($r[0]['is_dir']) && $newFolder !== '' && $this->isSelfOrDescendant($uid, $newFolder, $hash)) {
+            Response::error(400, $copy
+                ? 'Cannot copy a folder into itself or one of its own sub-folders'
+                : 'Cannot move a folder into itself or one of its own sub-folders');
+        }
+
+        $res = $copy
+            ? attach_copy($uid, $hash, $newFolder)
+            : attach_move($uid, $hash, $newFolder);
+
+        if (empty($res['success'])) {
+            Response::error(500, $res['message'] ?? ($copy ? 'Copy failed' : 'Move failed'));
+        }
+
+        $resultHash = $copy ? $res['resource_id'] : $hash;
+        $this->syncAttach($uid, $resultHash);
+
+        $updated = $this->fetchRow($uid, $resultHash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    /** Walk $candidateFolderHash's ancestor chain up to root, checking whether $sourceHash appears in it. */
+    private function isSelfOrDescendant(int $uid, string $candidateFolderHash, string $sourceHash): bool
+    {
+        $hash = $candidateFolderHash;
+        $seen = [];
+        while ($hash !== '') {
+            if ($hash === $sourceHash) return true;
+            if (isset($seen[$hash])) break; // guard against a pre-existing cycle
+            $seen[$hash] = true;
+            $r = q("SELECT folder FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1", intval($uid), dbesc($hash));
+            if (!$r) break;
+            $hash = $r[0]['folder'];
+        }
+        return false;
+    }
+
+    /** Mirrors classic core's attach_edit sync: export the changed attach row and build a sync packet for clones. */
+    private function syncAttach(int $uid, string $resource): void
+    {
+        $channel = \App::get_channel();
+        $sync    = attach_export_data($channel, $resource, false);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+    }
+
+    // ── Download (file passthrough, folder → zip) ───────────────────────────
+
+    private function download(int $uid, string $ob_hash, string $hash, array $channel): void
+    {
+        if (!$hash) Response::error(400, 'Hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT hash, filename, filetype, is_dir, content, os_storage
+               FROM attach
+              WHERE uid = %d AND hash = '%s' $sql_extra
+              LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        if (intval($r[0]['is_dir'])) {
+            $this->downloadZip($uid, $ob_hash, $r[0], $channel);
+        } else {
+            $this->downloadFile($r[0], $channel);
+        }
+    }
+
+    private function downloadFile(array $row, array $channel): void
+    {
+        $unsafe_types = ['text/html', 'text/css', 'application/javascript'];
+        if (in_array($row['filetype'], $unsafe_types, true) && !channel_codeallowed($channel['channel_id'])) {
+            header('Content-Type: text/plain');
+        } else {
+            header('Content-Type: ' . $row['filetype']);
+        }
+        header('Content-Disposition: attachment; filename="' . addslashes($row['filename']) . '"');
+
+        if (!intval($row['os_storage'])) {
+            $content = dbunescbin($row['content']);
+            header('Content-Length: ' . strlen($content));
+            echo $content;
+            exit;
+        }
+
+        $fname = $this->resolveStorePath($row['content'], $channel['channel_address']);
+        if (!is_file($fname)) Response::error(404, 'File data not found on disk');
+
+        header('Content-Length: ' . filesize($fname));
+        readfile($fname);
+        exit;
+    }
+
+    private function downloadZip(int $uid, string $ob_hash, array $root, array $channel): void
+    {
+        $tmp_dir = 'store/[data]/' . $channel['channel_address'] . '/tmp';
+        if (!is_dir($tmp_dir)) mkdir($tmp_dir, STORAGE_DEFAULT_PERMISSIONS, true);
+
+        $zip_path = $tmp_dir . '/zip_' . random_string(32) . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zip_path, \ZipArchive::CREATE) !== true) {
+            Response::error(500, 'Could not create zip archive');
+        }
+
+        $this->addFolderToZip($zip, $uid, $ob_hash, $root['hash'], '', $channel['channel_address']);
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . addslashes($root['filename']) . '.zip"');
+        header('Content-Length: ' . filesize($zip_path));
+        readfile($zip_path);
+        unlink($zip_path);
+        exit;
+    }
+
+    private function addFolderToZip(\ZipArchive $zip, int $uid, string $ob_hash, string $folderHash, string $zipPrefix, string $channelAddress): void
+    {
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT hash, filename, is_dir, content, os_storage
+               FROM attach
+              WHERE uid = %d AND folder = '%s' $sql_extra",
+            intval($uid),
+            dbesc($folderHash)
+        );
+
+        foreach (($r ?: []) as $row) {
+            $entryPath = $zipPrefix !== '' ? $zipPrefix . '/' . $row['filename'] : $row['filename'];
+
+            if (intval($row['is_dir'])) {
+                $zip->addEmptyDir($entryPath);
+                $this->addFolderToZip($zip, $uid, $ob_hash, $row['hash'], $entryPath, $channelAddress);
+                continue;
+            }
+
+            // Legacy DB-blob storage (os_storage = 0) has no on-disk path to zip; skip it.
+            if (!intval($row['os_storage'])) continue;
+
+            $fname = $this->resolveStorePath($row['content'], $channelAddress);
+            if (is_file($fname)) {
+                $zip->addFile($fname, $entryPath);
+                // Compressing is CPU-intensive for potentially large archives — just store the data.
+                $zip->setCompressionName($entryPath, \ZipArchive::CM_STORE);
+            }
+        }
+    }
+
+    /** attach.content is usually a full "store/<addr>/<hash>" path, but some rows only store the bare hash. */
+    private function resolveStorePath(string $content, string $channelAddress): string
+    {
+        $fname = dbunescbin($content);
+        if (strpos($fname, 'store') === false) {
+            $fname = 'store/' . $channelAddress . '/' . $fname;
+        }
+        return $fname;
+    }
+
+    // ── Categories (term table, otype = TERM_OBJ_FILE) ──────────────────────
+
+    private function getCategories(int $uid, string $ob_hash, string $hash): void
+    {
+        if (!$hash) Response::error(400, 'hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT id FROM attach WHERE uid = %d AND hash = '%s' $sql_extra LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        $terms = q(
+            "SELECT term FROM term WHERE uid = %d AND oid = %d AND otype = %d",
+            intval($uid),
+            intval($r[0]['id']),
+            TERM_OBJ_FILE
+        );
+
+        Response::send([
+            'categories' => array_map(fn($t) => $t['term'], $terms ?: []),
+        ]);
+    }
+
+    private function updateCategories(int $uid, array $data): void
+    {
+        require_once 'include/taxonomy.php';
+
+        $hash       = $data['hash'] ?? '';
+        $categories = is_array($data['categories'] ?? null) ? $data['categories'] : [];
+        if (!$hash) Response::error(400, 'hash required');
+
+        $r = q(
+            "SELECT id FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+        $attach_id = intval($r[0]['id']);
+
+        q(
+            "DELETE FROM term WHERE uid = %d AND oid = %d AND otype = %d",
+            intval($uid),
+            $attach_id,
+            TERM_OBJ_FILE
+        );
+
+        $channel = \App::get_channel();
+        $nick    = $channel['channel_address'];
+        $saved   = [];
+
+        foreach ($categories as $term) {
+            $term = trim((string) $term);
+            if ($term === '') continue;
+            $term_link = z_root() . '/cloud/' . $nick . '/?cat=' . urlencode($term);
+            store_item_tag($uid, $attach_id, TERM_OBJ_FILE, TERM_CATEGORY, $term, $term_link);
+            $saved[] = $term;
+        }
+
+        Response::send(['categories' => $saved]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -219,6 +507,7 @@ class Files
             'is_photo'     => (bool) intval($row['is_photo']),
             'created'      => $row['created'],
             'edited'       => $row['edited'],
+            'revision'     => intval($row['revision']),
             'acl' => [
                 'allow_gid' => $this->expandAcl($row['allow_gid']),
                 'allow_cid' => $this->expandAcl($row['allow_cid']),
@@ -226,6 +515,17 @@ class Files
                 'deny_cid'  => $this->expandAcl($row['deny_cid']),
             ],
         ];
+    }
+
+    /** Fetch a single attach row (owner-scoped, no observer permission filter) by hash. */
+    private function fetchRow(int $uid, string $hash): ?array
+    {
+        $r = q(
+            "SELECT " . self::ROW_COLUMNS . " FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        return $r ? $r[0] : null;
     }
 
     private function resolveChannel(): array
