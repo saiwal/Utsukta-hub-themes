@@ -184,9 +184,23 @@ class Profile
             'connections'     => intval($conn_count[0]['total']   ?? 0),
             'is_connected'    => $is_connected,
             'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $channel['xchan_addr'] ?? ''),
+            'feed_url'        => z_root() . '/feed/' . $profile['channel_address'],
             'viewer_xchan'    => $ob_hash,
             'viewer_is_local' => (bool) local_channel(),
         ]);
+    }
+
+    // Origin (scheme://host[:port]) of a channel's home hub, derived from its
+    // xchan_url/actor url — used to build a feed link for remote channels,
+    // mirroring how core resolves xchan_url's origin for local channels via z_root().
+    private function originOf(string $url): string {
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $host   = parse_url($url, PHP_URL_HOST);
+        if (!$scheme || !$host) {
+            return '';
+        }
+        $port = parse_url($url, PHP_URL_PORT);
+        return $scheme . '://' . $host . ($port ? ':' . $port : '');
     }
 
     // ── Remote channel profile via WebFinger + AP actor ─────────────────────
@@ -262,6 +276,7 @@ class Profile
             'connections'     => 0,
             'is_connected'    => $is_connected,
             'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $nick),
+            'feed_url'        => ($origin = $this->originOf($url)) ? $origin . '/feed/' . $user : '',
             'viewer_xchan'    => $ob_hash,
             'viewer_is_local' => (bool) $local_uid,
             'is_remote'       => true,
