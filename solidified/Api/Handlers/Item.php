@@ -675,7 +675,7 @@ class Item
     // Body: { body, title? }
     private function createComment(string $parentMid): void
     {
-        Auth::requireLocalJson();
+        $ob_hash = Auth::requireLoggedInJson();
         $body = Auth::$parsedBody;
         $content = trim($body['body'] ?? '');
 
@@ -683,7 +683,6 @@ class Item
             json_return_and_die(['error' => 'body is required']);
         }
 
-        $ob_hash = get_observer_hash();
         $item_normal = item_normal();
 
         // Resolve parent
@@ -808,12 +807,9 @@ class Item
     // Returns: { success, state: "added"|"removed", like_count, ... }
     private function toggleReaction(string $mid, string $activityVerb): void
     {
-        $this->requireLocalChannel();
+        $ob_hash = Auth::requireLoggedIn();
         $this->requireCsrf();
 
-        $uid = local_channel();
-        $channel = App::get_channel();
-        $ob_hash = $channel['channel_hash'];
         $item_normal = item_normal();
 
         $target = $this->resolveItem($mid, $ob_hash);
@@ -824,10 +820,11 @@ class Item
         $verbEsc = dbesc($activityVerb);
         $targetMid = dbesc($target['mid']);
         $obHashEsc = dbesc($ob_hash);
+        $targetUid = intval($target['uid']);
 
-        // Check for existing reaction
+        // Check for existing reaction on this same item copy
         $existing = dbq("SELECT id FROM item
-                         WHERE uid = $uid
+                         WHERE uid = $targetUid
                            AND verb = '$verbEsc'
                            AND thr_parent = '$targetMid'
                            AND author_xchan = '$obHashEsc'
@@ -847,8 +844,8 @@ class Item
             $now = datetime_convert();
 
             $datarray = [
-                'aid' => $channel['channel_account_id'],
-                'uid' => intval($target['uid']),
+                'aid' => intval($target['aid']),
+                'uid' => $targetUid,
                 'uuid' => $uuid,
                 'mid' => $reactionMid,
                 'parent_mid' => $target['mid'],
@@ -1564,9 +1561,12 @@ class Item
         $private = $isComment
             ? intval($parent['item_private'])
             : (!empty($acl['allow_cid']) || !empty($acl['allow_gid']) ? 1 : 0);
+        // Comments are stored under the parent's owning account (App::get_channel()
+        // is empty for a remote/OWA commenter, who has no local channel here).
+        $aid = $isComment ? intval($parent['aid']) : intval($channel['channel_account_id'] ?? 0);
 
         return [
-            'aid' => $channel['channel_account_id'],
+            'aid' => $aid,
             'uid' => $profileUid,
             'uuid' => $uuid,
             'mid' => $mid,
