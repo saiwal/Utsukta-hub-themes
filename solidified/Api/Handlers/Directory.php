@@ -74,7 +74,9 @@ class Directory
             'p'            => $page,
         ];
 
-        if ($safe)      $params['safe']      = 1;
+        // dirsearch defaults 'safe' to 1 (on) when the param is absent, so the
+        // off case must be sent explicitly rather than merely omitted.
+        $params['safe'] = $safe;
         if ($pubforums) $params['pubforums'] = 1;
         if (!$globaldir) $params['hub']      = \App::get_hostname();
         if ($ds_order)  $params['order']     = $ds_order;
