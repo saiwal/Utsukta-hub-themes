@@ -113,6 +113,65 @@ Internally, `Slot` renders:
 
 Local widgets are skipped when the active module's `appName` app is not installed; each widget is additionally gated by its *owning* module's app, and `visitorVisible: false` widgets are skipped for non-local viewers (this filter applies to global widgets too).
 
+## Layout templates (`templateId` / `ModuleDef.pageTemplate`)
+
+Layouts are normally keyed by module id alone, so every page within a module
+(e.g. every `/channel/:nick`) shares one saved arrangement. A module can opt a
+slot into **per-item** arrangements instead — e.g. each webpage can have its
+own right sidebar — by assigning the item a reusable, **named template**
+rather than giving the item its own one-off saved list. This mirrors classic
+Hubzilla's PDL `layout_mid`: an item points at 0 or 1 named layout, so storage
+grows with the number of distinct templates an owner maintains, not with the
+number of items using them, and editing a template updates every item
+assigned to it at once.
+
+Templates live in a separate store, `src/shared/store/widget-templates.ts`
+(pconfig cat `spa`, key `widget_templates`):
+```json
+{ "version": 1, "templates": { "tpl_xxxxxx": { "name": "Docs page", "slots": { "right": [...] } } } }
+```
+A template's `slots` shape is identical to one entry of `widget_layout`'s
+`modules` map, so entry validation is shared. Templates are managed from a
+dedicated screen (`/webpages/:nick/layouts`, `LayoutTemplatesView.tsx`) using
+the same `WidgetArrangementEditor` component `<Slot editable>` uses for
+inline editing — always "on" there (no pencil toggle needed) and bound to
+`saveTemplateSlots` instead of `saveSlotLayout`.
+
+Two small hooks wire an item's template assignment into `Slot`:
+
+- `ModuleDef.pageTemplate?: () => string | null | undefined` — a reactive
+  accessor a module registers that returns the template id assigned to "the
+  specific item shown by the current route" (a webpage's `layout_template`,
+  set in its editor), or `null`/`undefined` when none is assigned or there's
+  no such item (list views, the editor itself, etc.).
+- `<Slot templateId="...">` — when set, this slot's `custom` entries resolve
+  from `templateEntriesFor`/`pageTemplateEntriesFor` (own vs. page-owner's
+  templates, mirroring `layoutFor`/`pageLayoutFor`) instead of the
+  module-level layout. Widget *eligibility* (`isModuleActive`,
+  `resolveModuleSlot`, `widgetAllowedIn`) still uses the real `moduleId`. A
+  templated slot is **not** directly editable from `<Slot editable>` — the
+  pencil/rearrange chrome only shows when no template is assigned — editing
+  happens on the template itself, from the management screen, so a change
+  there is understood to affect every item using it.
+
+`Layout.tsx` wires this together generically, with no per-module special
+casing:
+
+```typescript
+const rightTemplateId = createMemo(() => getModule(activeModuleId())?.pageTemplate?.() ?? undefined);
+// ...
+<Slot name="right" moduleId={activeModuleId()} templateId={rightTemplateId()} editable />
+```
+
+Templates ride to visitors the same way a module's own layout does (see
+"Visitors see the owner's arrangement" above) — `channelSpa()` in
+`Pconfig.php` includes `widget_templates` alongside `widget_layout`, so a
+visitor to one specific webpage sees that page's assigned template, not the
+module-level default. `webpages/index.ts` is the reference implementation: it
+registers `pageTemplate: () => currentPageTemplateId()`, backed by a signal
+that `PageView.tsx` sets/clears from the loaded page's `layout_template` field
+as it loads/unloads.
+
 ## Registry Lookups
 
 - `getWidget(id)` — a single registered widget, or `null`.

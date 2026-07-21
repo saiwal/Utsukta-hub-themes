@@ -51,6 +51,12 @@ class Pconfig
         $widget_layout = get_pconfig($cuid, 'spa', 'widget_layout', '');
         if ($widget_layout) $result['widget_layout'] = (string) $widget_layout;
 
+        // Layout templates a page may be assigned to — visitors need these to
+        // render the same widgets the owner assigned, not just the owner
+        // themself.
+        $widget_templates = get_pconfig($cuid, 'spa', 'widget_templates', '');
+        if ($widget_templates) $result['widget_templates'] = (string) $widget_templates;
+
         return $result;
     }
 
