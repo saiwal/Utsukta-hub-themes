@@ -1,6 +1,7 @@
 <?php
 namespace Theme\Solidified\Api\Handlers;
 
+use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 use Zotlabs\Lib\Cache;
 
@@ -32,10 +33,7 @@ class Login
     }
     public function get(): void
     {
-        if (empty($_SESSION['solidified_login_token'])) {
-            $_SESSION['solidified_login_token'] = bin2hex(random_bytes(32));
-        }
-        Response::send(['token' => $_SESSION['solidified_login_token']]);
+        Response::send(['token' => Auth::issueFormToken('spa_login_tok')]);
     }
 
     public function post(): void
@@ -58,11 +56,9 @@ class Login
             Response::error(429, 'Too many failed login attempts. Please try again later.');
         }
 
-        $expected = $_SESSION['solidified_login_token'] ?? '';
-        if (!$expected || !hash_equals($expected, $token)) {
+        if (!Auth::validateFormToken('spa_login_tok', $token)) {
             Response::error(403, 'Invalid security token');
         }
-        unset($_SESSION['solidified_login_token']);
 
         // security.php is only loaded via auth.php which is conditionally included.
         // Require it directly — it contains only function definitions (no inline code).

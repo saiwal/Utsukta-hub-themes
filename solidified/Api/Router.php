@@ -49,6 +49,7 @@ class Router
         'logout'   => Handlers\Logout::class,
         'register' => Handlers\Register::class,
         'regate'   => Handlers\Regate::class,
+        'password-reset' => Handlers\PasswordReset::class,
         'search' => Handlers\Search::class,
         'saved-searches' => Handlers\SavedSearches::class,
         'bookmarks'      => Handlers\Bookmarks::class,

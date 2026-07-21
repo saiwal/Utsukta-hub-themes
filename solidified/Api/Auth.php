@@ -127,4 +127,53 @@ class Auth
             Response::error(400, 'Content-Type must be application/json');
         }
     }
+
+    // Anti-bot/anti-CSRF token for anonymous forms (login, register, password
+    // reset), issued as its own cookie rather than stored in $_SESSION.
+    //
+    // Anonymous page loads fire several concurrent requests (nav, pconfig,
+    // the form's own token fetch). With no session cookie yet, each one
+    // independently opens its own PHP session, and the browser keeps
+    // whichever response's Set-Cookie it processes last — which may not be
+    // the one the token was written into, so a session-anchored token can
+    // silently belong to a session the browser then discards. A dedicated,
+    // uniquely-named cookie isn't touched by any of those other requests, so
+    // it's immune to that race regardless of how many concurrent anonymous
+    // calls exist.
+    public static function issueFormToken(string $cookieName): string
+    {
+        if (!empty($_COOKIE[$cookieName])) {
+            return $_COOKIE[$cookieName];
+        }
+        $token = bin2hex(random_bytes(32));
+        setcookie($cookieName, $token, [
+            'expires' => time() + 600,
+            'path' => '/',
+            'secure' => (($_SERVER['HTTPS'] ?? '') !== ''),
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+        // setcookie() only takes effect on the *next* request — reflect it
+        // into this request's superglobal so a same-request read sees it too.
+        $_COOKIE[$cookieName] = $token;
+        return $token;
+    }
+
+    public static function validateFormToken(string $cookieName, string $submitted): bool
+    {
+        $expected = $_COOKIE[$cookieName] ?? '';
+        $ok = $expected !== '' && hash_equals($expected, $submitted);
+
+        // One-time use — clear it whether or not it matched.
+        setcookie($cookieName, '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'secure' => (($_SERVER['HTTPS'] ?? '') !== ''),
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+        unset($_COOKIE[$cookieName]);
+
+        return $ok;
+    }
 }
