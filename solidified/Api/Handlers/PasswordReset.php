@@ -1,6 +1,7 @@
 <?php
 namespace Theme\Solidified\Api\Handlers;
 
+use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 use Zotlabs\Lib\Cache;
 use Zotlabs\Lib\Config;
@@ -63,10 +64,7 @@ class PasswordReset
             return;
         }
 
-        if (empty($_SESSION['solidified_pwreset_token'])) {
-            $_SESSION['solidified_pwreset_token'] = bin2hex(random_bytes(32));
-        }
-        Response::send(['token' => $_SESSION['solidified_pwreset_token']]);
+        Response::send(['token' => Auth::issueFormToken('spa_pwreset_tok')]);
     }
 
     public function post(): void
@@ -93,11 +91,9 @@ class PasswordReset
         $email = \notags(\punify(trim($body['email'] ?? '')));
         $token = $body['token'] ?? '';
 
-        $expected = $_SESSION['solidified_pwreset_token'] ?? '';
-        if (!$expected || !hash_equals($expected, $token)) {
+        if (!Auth::validateFormToken('spa_pwreset_tok', $token)) {
             Response::error(403, 'Invalid security token');
         }
-        unset($_SESSION['solidified_pwreset_token']);
 
         if (!$email) {
             Response::error(400, 'Email address is required');

@@ -3,6 +3,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use App;
 use Zotlabs\Lib\Config;
+use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 
 class Register
@@ -19,9 +20,7 @@ class Register
             return;
         }
 
-        if (empty($_SESSION['solidified_register_token'])) {
-            $_SESSION['solidified_register_token'] = bin2hex(random_bytes(32));
-        }
+        $registerToken = Auth::issueFormToken('spa_register_tok');
 
         require_once('include/bbcode.php');
         $register_text_raw = Config::Get('system', 'register_text') ?? '';
@@ -43,7 +42,7 @@ class Register
             'register_text'       => $register_text,
             'site_name'           => \Zotlabs\Lib\System::get_site_name(),
             'nickhub'             => '@' . str_replace(['http://', 'https://', '/'], '', Config::Get('system', 'baseurl')),
-            'token'               => $_SESSION['solidified_register_token'],
+            'token'               => $registerToken,
         ]);
     }
 
@@ -56,12 +55,10 @@ class Register
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
-        $token    = $body['token'] ?? '';
-        $expected = $_SESSION['solidified_register_token'] ?? '';
-        if (!$expected || !hash_equals($expected, $token)) {
+        $token = $body['token'] ?? '';
+        if (!Auth::validateFormToken('spa_register_tok', $token)) {
             Response::error(403, 'Invalid security token');
         }
-        unset($_SESSION['solidified_register_token']);
 
         require_once('include/security.php');
         require_once('include/account.php');
