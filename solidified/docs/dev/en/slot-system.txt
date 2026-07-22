@@ -267,7 +267,12 @@ only one rendering path to maintain, and — since the owner already has the
 "Edit layout" pencil available on any page they own — those regions aren't
 just a preview, they're immediately editable too, at the same time as the
 page's title/body, using the exact same `<Slot editable>` mechanism as any
-other module (see "Editing a templated slot" above).
+other module (see "Editing a templated slot" above). The composer also puts
+a pencil/checkmark button of its own next to the "Page layout" select —
+identical in behavior to `Layout.tsx`'s sidebar toggle (same
+`editingWidgets`/`setEditingWidgets`, `widgets.edit_layout`/`done_editing`
+labels), just placed where the author is already looking instead of making
+them go find the sidebar header.
 
 `LayoutTemplatesView.tsx` uses the identical trick for templates that aren't
 attached to any page yet (or when it's just more convenient to jump straight
