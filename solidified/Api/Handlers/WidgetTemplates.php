@@ -35,7 +35,36 @@ class WidgetTemplates
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
-        Response::send(self::load($uid));
+        $doc = self::load($uid);
+        $doc['usage'] = self::usageCounts($uid);
+        Response::send($doc);
+    }
+
+    // How many of the owner's webpages currently point at each template id —
+    // lets the management screen show "Unused" so redundant templates can be
+    // found without guesswork. Only needed for the GET (management screen)
+    // response; usage doesn't change from create/rename/delete/save_slots.
+    private static function usageCounts(int $uid): array
+    {
+        $rows = q(
+            "SELECT iconfig.v AS template_id, COUNT(*) AS cnt
+             FROM iconfig
+             JOIN item ON item.id = iconfig.iid
+             WHERE item.uid = %d
+               AND iconfig.cat = 'spa'
+               AND iconfig.k = 'layout_template'
+               AND item.item_type = %d
+               AND item.item_deleted = 0
+             GROUP BY iconfig.v",
+            intval($uid),
+            intval(ITEM_TYPE_WEBPAGE)
+        );
+
+        $usage = [];
+        foreach (($rows ?: []) as $row) {
+            $usage[$row['template_id']] = intval($row['cnt']);
+        }
+        return $usage;
     }
 
     public function post(): void
