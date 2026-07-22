@@ -305,6 +305,8 @@ class Webpages
             Response::error(500, 'Failed to create webpage');
         }
 
+        $this->assignLayoutTemplate($uid, intval($post['item_id']), $body['layout_template'] ?? null);
+
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
 
         Response::send([
@@ -312,6 +314,29 @@ class Webpages
             'uuid' => $uuid,
             'mid'  => $mid,
         ]);
+    }
+
+    // Assigns (or clears) the layout template a webpage uses for its right
+    // sidebar. Silently ignores an id that isn't one of the owner's current
+    // templates — same "stale ids are dropped, not errored" tolerance used
+    // for stored widget ids elsewhere, since templates can be deleted out
+    // from under a page.
+    private function assignLayoutTemplate(int $uid, int $iid, $templateId): void
+    {
+        if (!is_string($templateId) || $templateId === '') {
+            \Zotlabs\Lib\IConfig::Delete($iid, 'spa', 'layout_template');
+            return;
+        }
+
+        $raw = get_pconfig($uid, 'spa', 'widget_templates', '');
+        $decoded = $raw ? json_decode($raw, true) : null;
+        $templates = is_array($decoded['templates'] ?? null) ? $decoded['templates'] : [];
+
+        if (isset($templates[$templateId])) {
+            \Zotlabs\Lib\IConfig::Set($iid, 'spa', 'layout_template', $templateId);
+        } else {
+            \Zotlabs\Lib\IConfig::Delete($iid, 'spa', 'layout_template');
+        }
     }
 
     private function updateWebpage(int $uid, array $body): void
@@ -372,6 +397,10 @@ class Webpages
                 dbesc($pagetitle), $iid);
         }
 
+        if (array_key_exists('layout_template', $body)) {
+            $this->assignLayoutTemplate($uid, $iid, $body['layout_template']);
+        }
+
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $iid]);
 
         Response::send(['success' => true]);
@@ -415,33 +444,37 @@ class Webpages
 
     private function formatDetail(array $item): array
     {
-        // Extract the WEBPAGE pagelink from iconfig (attached by fetch_post_tags / xchan_query)
+        // Extract the WEBPAGE pagelink and assigned layout template from
+        // iconfig (attached by fetch_post_tags / xchan_query)
         $pagelink = '';
+        $layout_template = null;
         if (!empty($item['iconfig']) && is_array($item['iconfig'])) {
             foreach ($item['iconfig'] as $cfg) {
                 if (($cfg['cat'] ?? '') === 'system' && ($cfg['k'] ?? '') === 'WEBPAGE') {
                     $pagelink = urldecode($cfg['v']);
-                    break;
+                } elseif (($cfg['cat'] ?? '') === 'spa' && ($cfg['k'] ?? '') === 'layout_template') {
+                    $layout_template = $cfg['v'];
                 }
             }
         }
 
         return [
-            'uuid'          => $item['uuid'],
-            'mid'           => $item['mid'],
-            'title'         => $item['title'],
-            'summary'       => $item['summary'] ?? '',
-            'body'          => $item['body'],
-            'mimetype'      => $item['mimetype'],
-            'slug'          => $pagelink,
-            'created'       => $item['created'],
-            'edited'        => $item['edited'],
-            'item_private'  => intval($item['item_private']),
-            'public_policy' => $item['public_policy'] ?? '',
-            'allow_cid'     => self::parseHashList($item['allow_cid'] ?? ''),
-            'allow_gid'     => self::parseHashList($item['allow_gid'] ?? ''),
-            'deny_cid'      => self::parseHashList($item['deny_cid']  ?? ''),
-            'deny_gid'      => self::parseHashList($item['deny_gid']  ?? ''),
+            'uuid'            => $item['uuid'],
+            'mid'             => $item['mid'],
+            'title'           => $item['title'],
+            'summary'         => $item['summary'] ?? '',
+            'body'            => $item['body'],
+            'mimetype'        => $item['mimetype'],
+            'slug'            => $pagelink,
+            'created'         => $item['created'],
+            'edited'          => $item['edited'],
+            'item_private'    => intval($item['item_private']),
+            'public_policy'   => $item['public_policy'] ?? '',
+            'allow_cid'       => self::parseHashList($item['allow_cid'] ?? ''),
+            'allow_gid'       => self::parseHashList($item['allow_gid'] ?? ''),
+            'deny_cid'        => self::parseHashList($item['deny_cid']  ?? ''),
+            'deny_gid'        => self::parseHashList($item['deny_gid']  ?? ''),
+            'layout_template' => $layout_template,
         ];
     }
 
