@@ -352,21 +352,22 @@ class Wiki
 
     public function post(): void
     {
-        $uid   = Auth::requireLocalJson();
-        $owner = $this->resolveOwner();
-
-        // Must be channel owner for write ops
-        if (intval($owner['channel_id']) !== $uid) {
-            Response::error(403, 'Only the channel owner can write to wikis');
-        }
+        $obs_hash = Auth::requireLoggedInJson();
+        $owner    = $this->resolveOwner();
+        $uid      = intval($owner['channel_id']);
 
         $this->requireAddon($uid);
-        $obs_hash = get_observer_hash();
-        $data     = Auth::$parsedBody;
-        $argc     = count(\App::$argv);
+        $data = Auth::$parsedBody;
+        $argc = count(\App::$argv);
 
         // ── POST /api/wiki/:nick  →  create wiki ──────────────────────────────
+        // No wiki resource exists yet to carry a per-resource ACL, so creation
+        // stays owner-only.
         if ($argc === 3) {
+            if (!local_channel() || local_channel() !== $uid) {
+                Response::error(403, 'Only the channel owner can create wikis');
+            }
+
             $wiki_name = trim($data['name'] ?? '');
             $mime_type = 'text/bbcode';
             $type_lock = (bool) ($data['type_lock'] ?? false);
@@ -432,7 +433,12 @@ class Wiki
         }
 
         // ── POST /api/wiki/:nick/:wikiName/acl  →  save wiki ACL ─────────────
+        // Changing the ACL itself stays owner-only — write_wiki access to the
+        // resource shouldn't let a visitor grant themselves broader access.
         if ($argc === 5 && \App::$argv[4] === 'acl') {
+            if (!local_channel() || local_channel() !== $uid) {
+                Response::error(403, 'Owner access required');
+            }
             $this->postAcl($owner, $rid);
             return;
         }
@@ -571,19 +577,20 @@ class Wiki
 
     public function delete(): void
     {
-        $uid   = Auth::requireLocalJson();
-        $owner = $this->resolveOwner();
-
-        if (intval($owner['channel_id']) !== $uid) {
-            Response::error(403, 'Only the channel owner can delete');
-        }
+        $obs_hash = Auth::requireLoggedInJson();
+        $owner    = $this->resolveOwner();
+        $uid      = intval($owner['channel_id']);
 
         $this->requireAddon($uid);
-        $obs_hash = get_observer_hash();
-        $argc     = count(\App::$argv);
+        $argc = count(\App::$argv);
 
         // ── DELETE /api/wiki/:nick/:wikiName  →  delete entire wiki ──────────
+        // Deletes the whole resource (and its ACL), so this stays owner-only.
         if ($argc === 4) {
+            if (!local_channel() || local_channel() !== $uid) {
+                Response::error(403, 'Only the channel owner can delete');
+            }
+
             $wikiName = \NativeWiki::name_decode(\App::$argv[3] ?? '');
             $w        = $this->resolveWiki($owner, $wikiName);
             $rid      = $w['resource_id'];

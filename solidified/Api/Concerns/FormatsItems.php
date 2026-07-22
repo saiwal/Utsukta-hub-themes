@@ -2,8 +2,73 @@
 // Api/Concerns/FormatsItems.php
 namespace Theme\Solidified\Api\Concerns;
 
+use Zotlabs\Lib\IConfig;
+
 trait FormatsItems
 {
+    // Comma-joined display names of everyone on a direct message's ACL —
+    // author_name/owner only tell you who *sent* a given row, not the other
+    // participants, which matters for group DMs. Mirrors
+    // Handlers/HqMessages.php::getDmRecipients(), which predates this trait
+    // and covers the same case for the HQ message-card list.
+    protected function dmRecipients(array $item): string
+    {
+        if (intval($item['item_private'] ?? 0) !== 2) {
+            return '';
+        }
+
+        $channel = \App::get_channel();
+        if (!$channel) {
+            return '';
+        }
+
+        $column = '';
+
+        if ($channel['channel_hash'] === ($item['owner']['xchan_hash'] ?? null)) {
+            $recips = expand_acl($item['allow_cid'] ?? '');
+            if (is_array($recips)) {
+                array_unshift($recips, $item['owner']['xchan_hash']);
+                $column = 'xchan_hash';
+            }
+        } else {
+            $recips = IConfig::Get($item, 'activitypub', 'recips');
+            if (isset($recips['to']) && is_array($recips['to'])) {
+                $recips = $recips['to'];
+                array_unshift($recips, $item['owner']['xchan_url'] ?? '');
+                $column = 'xchan_url';
+            } else {
+                $hookinfo = ['item' => $item, 'recips' => null, 'column' => ''];
+                call_hooks('direct_message_recipients', $hookinfo);
+                $recips = $hookinfo['recips'];
+                $column = $hookinfo['column'];
+            }
+        }
+
+        $recipients = '';
+
+        if (is_array($recips) && $column) {
+            // Whichever branch above ran, the message's own author ends up
+            // in $recips too (e.g. you're the sender, so you're both the
+            // item owner unshifted in and a recipient) — exclude them since
+            // they're already shown separately as the post author.
+            $authorKey = $column === 'xchan_url'
+                ? ($item['author']['xchan_url'] ?? '')
+                : ($item['author_xchan'] ?? '');
+
+            stringify_array_elms($recips, true);
+            $query_str = implode(',', $recips);
+            $xchans = dbq("SELECT DISTINCT xchan_name, $column FROM xchan WHERE $column IN ($query_str) AND xchan_deleted = 0");
+            foreach ($xchans as $xchan) {
+                if ($authorKey !== '' && $xchan[$column] === $authorKey) {
+                    continue;
+                }
+                $recipients .= $xchan['xchan_name'] . ', ';
+            }
+        }
+
+        return trim($recipients, ', ');
+    }
+
     // Find deleted items that are parents of the given comments but absent from
     // the result set. Returns pre-formatted stubs (same shape as formatItem output)
     // so the frontend can build a complete thread tree without gaps.
@@ -267,6 +332,7 @@ trait FormatsItems
                 }
                 return null;
             })(),
+            'recipients' => $this->dmRecipients($item),
             'permalink' => $item['plink'] ?? '',
             'location' => $item['location'] ?? '',
             'coord' => $item['coord'] ?? '',

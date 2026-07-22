@@ -14,7 +14,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
-use Zotlabs\Lib\IConfig;
+use Theme\Solidified\Api\Concerns\FormatsItems;
 
 require_once 'include/items.php';
 require_once 'include/text.php';
@@ -23,6 +23,8 @@ require_once 'include/bbcode.php';
 
 class HqMessages
 {
+    use FormatsItems;
+
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -37,7 +39,6 @@ class HqMessages
             return;
         }
 
-        $channel = \App::get_channel();
         $limit = 30;
 
         $item_normal = item_normal();
@@ -123,7 +124,7 @@ class HqMessages
 
             $info = '';
             if ($type === 'direct') {
-                $info .= $this->getDmRecipients($channel, $item);
+                $info .= $this->dmRecipients($item);
             }
 
             if ($item['owner_xchan'] !== $item['author_xchan']) {
@@ -235,43 +236,5 @@ class HqMessages
         Response::send($entries, [
             'offset' => count($entries) < $limit ? -1 : $offset + $limit,
         ]);
-    }
-
-    private function getDmRecipients(array $channel, array $item): string
-    {
-        $column = '';
-
-        if ($channel['channel_hash'] === $item['owner']['xchan_hash']) {
-            $recips = expand_acl($item['allow_cid']);
-            if (is_array($recips)) {
-                array_unshift($recips, $item['owner']['xchan_hash']);
-                $column = 'xchan_hash';
-            }
-        } else {
-            $recips = IConfig::Get($item, 'activitypub', 'recips');
-            if (isset($recips['to']) && is_array($recips['to'])) {
-                $recips = $recips['to'];
-                array_unshift($recips, $item['owner']['xchan_url']);
-                $column = 'xchan_url';
-            } else {
-                $hookinfo = ['item' => $item, 'recips' => null, 'column' => ''];
-                call_hooks('direct_message_recipients', $hookinfo);
-                $recips = $hookinfo['recips'];
-                $column = $hookinfo['column'];
-            }
-        }
-
-        $recipients = '';
-
-        if (is_array($recips) && $column) {
-            stringify_array_elms($recips, true);
-            $query_str = implode(',', $recips);
-            $xchans = dbq("SELECT DISTINCT xchan_name FROM xchan WHERE $column IN ($query_str) AND xchan_deleted = 0");
-            foreach ($xchans as $xchan) {
-                $recipients .= $xchan['xchan_name'] . ', ';
-            }
-        }
-
-        return trim($recipients, ', ');
     }
 }

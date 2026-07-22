@@ -316,10 +316,19 @@ class Nav
             }
         }
 
-        // Names of all apps the local user has installed (empty for visitors/anon)
+        // Names of all apps installed on the subject being viewed. When a
+        // channel_nick is present this must reflect THAT channel's installs,
+        // not the viewer's own — otherwise a visitor whose own account never
+        // installed e.g. Wiki gets bounced off a page where the owner has it
+        // enabled (the SPA's ModuleGuard treats absence here as "feature
+        // unavailable" and redirects away). Falls back to the viewer's own
+        // account when there's no subject (own dashboard-style pages).
         $installed_apps = [];
-        if ($is_local) {
-            $all = \Zotlabs\Lib\Apps::app_list($uid, false) ?: [];
+        $apps_channel_id = (!empty($subject) && !($subject['channel_removed'] ?? false))
+            ? intval($subject['channel_id'])
+            : ($is_local ? $uid : 0);
+        if ($apps_channel_id) {
+            $all = \Zotlabs\Lib\Apps::app_list($apps_channel_id, false) ?: [];
             foreach ($all as $app) {
                 $enc = \Zotlabs\Lib\Apps::app_encode($app);
                 if (!empty($enc['name']))
