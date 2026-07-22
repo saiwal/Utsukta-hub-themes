@@ -47,10 +47,21 @@ trait FormatsItems
         $recipients = '';
 
         if (is_array($recips) && $column) {
+            // Whichever branch above ran, the message's own author ends up
+            // in $recips too (e.g. you're the sender, so you're both the
+            // item owner unshifted in and a recipient) — exclude them since
+            // they're already shown separately as the post author.
+            $authorKey = $column === 'xchan_url'
+                ? ($item['author']['xchan_url'] ?? '')
+                : ($item['author_xchan'] ?? '');
+
             stringify_array_elms($recips, true);
             $query_str = implode(',', $recips);
-            $xchans = dbq("SELECT DISTINCT xchan_name FROM xchan WHERE $column IN ($query_str) AND xchan_deleted = 0");
+            $xchans = dbq("SELECT DISTINCT xchan_name, $column FROM xchan WHERE $column IN ($query_str) AND xchan_deleted = 0");
             foreach ($xchans as $xchan) {
+                if ($authorKey !== '' && $xchan[$column] === $authorKey) {
+                    continue;
+                }
                 $recipients .= $xchan['xchan_name'] . ', ';
             }
         }

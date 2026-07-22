@@ -47,13 +47,14 @@ class Channel
         $hashtags = $_GET['tag']     ?? '';
         $category = $_GET['cat']     ?? '';
         $mid      = $_GET['mid']     ?? '';
+        $dm       = intval($_GET['dm'] ?? 0);
 
         $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))
             ? notags($_GET['dend'])   : '';
         $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
             ? notags($_GET['dbegin']) : '';
 
-        if ($search || $hashtags || $category) {
+        if ($search || $hashtags || $category || $dm) {
             $nouveau = true;
         }
 
@@ -88,6 +89,12 @@ class Channel
             $sql_extra .= " AND item.mid = '" . dbesc($mid) . "' ";
             $nouveau = true;
         }
+
+        // Privacy fence — DMs are hidden from the general wall view by
+        // default, and are the only thing shown when dm=1 is requested.
+        $sql_extra .= $dm
+            ? ' AND item.item_private = 2 '
+            : ' AND item.item_private IN (0, 1) ';
 
         // Permission filter for non-owners
         $sql_extra .= item_permissions_sql($channel_uid, $observer_xchan);
