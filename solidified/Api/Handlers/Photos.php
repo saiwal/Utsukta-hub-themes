@@ -26,6 +26,11 @@ class Photos
             Response::error(403, 'Permission denied');
         }
 
+        // write_storage is a channel-wide grant (not per-photo/per-album), so
+        // it can be resolved once here and handed down — any observer (local
+        // or remote) holding it may edit this channel's photos, not just the owner.
+        $can_write = (bool) perm_is_allowed($owner_uid, $ob_hash, 'write_storage');
+
         $datatype = \App::$argv[3] ?? 'summary';
         $datum    = \App::$argv[4] ?? '';
 
@@ -39,21 +44,21 @@ class Photos
 
         switch ($datatype) {
             case 'albums':
-                $this->getAlbumsSummary($channel, $ob_hash);
+                $this->getAlbumsSummary($channel, $ob_hash, $can_write);
                 break;
             case 'album':
-                $this->getAlbum($channel, $ob_hash, $datum);
+                $this->getAlbum($channel, $ob_hash, $datum, $can_write);
                 break;
             case 'image':
-                $this->getImage($channel, $ob_hash, $datum);
+                $this->getImage($channel, $ob_hash, $datum, $can_write);
                 break;
             default:
-                $this->getSummary($channel, $ob_hash);
+                $this->getSummary($channel, $ob_hash, $can_write);
                 break;
         }
     }
 
-    private function getSummary(array $channel, string $ob_hash): void
+    private function getSummary(array $channel, string $ob_hash, bool $can_write): void
     {
         // Recent photos — last 8, any album
         $sql_extra = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
@@ -85,10 +90,10 @@ class Photos
             ];
         }
 
-        Response::send($out);
+        Response::send($out, ['can_write' => $can_write]);
     }
 
-    private function getAlbumsSummary(array $channel, string $ob_hash): void
+    private function getAlbumsSummary(array $channel, string $ob_hash, bool $can_write): void
     {
         $uid        = intval($channel['channel_id']);
         $ph_drv     = photo_factory('');
@@ -113,7 +118,7 @@ class Photos
         ) ?: [];
 
         if (!$counts_raw) {
-            Response::send([]);
+            Response::send([], ['can_write' => $can_write]);
             return;
         }
 
@@ -151,17 +156,17 @@ class Photos
             ];
         }
 
-        Response::send($albums);
+        Response::send($albums, ['can_write' => $can_write]);
     }
 
-    private function getAlbum(array $channel, string $ob_hash, string $albumHash): void
+    private function getAlbum(array $channel, string $ob_hash, string $albumHash, bool $can_write): void
     {
         require_once 'include/photos.php';
         require_once 'include/attach.php';
 
         // Empty hash → root-level photos (not inside any folder)
         if ($albumHash === '') {
-            $this->getRootPhotos($channel, $ob_hash);
+            $this->getRootPhotos($channel, $ob_hash, $can_write);
             return;
         }
 
@@ -202,12 +207,12 @@ class Photos
             ];
         }
 
-        Response::send($out, ['album_name' => $display_path]);
+        Response::send($out, ['album_name' => $display_path, 'can_write' => $can_write]);
     }
 
     // ── GET /api/photos/:nick/image/:id — single photo ────────────────────────
 
-    private function getImage(array $channel, string $ob_hash, string $resourceId): void
+    private function getImage(array $channel, string $ob_hash, string $resourceId, bool $can_write): void
     {
         if (!$resourceId)
             Response::error(400, 'Photo resource_id required');
@@ -395,11 +400,20 @@ class Photos
             'item_mid' => $item_mid,
             'item_uuid' => $item_uuid,
             'comments' => $comments,
+            'can_write' => $can_write,
         ]);
     }
 
     // ── POST /api/photos/:nick/image/:resource_id/edit ────────────────────────
     // Saves the edited image as a NEW copy in the same album; never touches the original.
+
+    /** write_storage is a channel-wide grant — any observer (local or remote) holding it may edit, not just the owner. */
+    private function requireWrite(int $uid, string $obs_hash): void
+    {
+        if (!perm_is_allowed($uid, $obs_hash, 'write_storage')) {
+            Response::error(403, 'Permission denied');
+        }
+    }
 
     public function post(): void
     {
@@ -408,54 +422,72 @@ class Photos
         require_once 'include/photos.php';
         require_once 'include/security.php';
 
+        $owner = $this->resolveChannel();
+        $uid   = intval($owner['channel_id']);
+
         $datatype = \App::$argv[3] ?? '';
 
         // POST /api/photos/:nick/albums — create a new album (JSON)
         if ($datatype === 'albums') {
-            Auth::requireLocalJson();
-            $this->createAlbum();
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->createAlbum($owner);
             return;
         }
 
         // POST /api/photos/:nick/image/:id/rename — rename photo (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'rename') {
-            Auth::requireLocalJson();
-            $this->renamePhoto(\App::$argv[4] ?? '');
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->renamePhoto($uid, $owner, \App::$argv[4] ?? '');
             return;
         }
 
         // POST /api/photos/:nick/image/:id/title — update title (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'title') {
-            Auth::requireLocalJson();
-            $this->updateTitle(\App::$argv[4] ?? '');
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->updateTitle($uid, \App::$argv[4] ?? '');
             return;
         }
 
         // POST /api/photos/:nick/image/:id/description — update description (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'description') {
-            Auth::requireLocalJson();
-            $this->updateDescription(\App::$argv[4] ?? '');
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->updateDescription($uid, \App::$argv[4] ?? '');
             return;
         }
 
         // POST /api/photos/:nick/image/:id/nsfw — toggle NSFW flag (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'nsfw') {
-            Auth::requireLocalJson();
-            $this->updateNsfw(\App::$argv[4] ?? '');
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->updateNsfw($uid, \App::$argv[4] ?? '');
             return;
         }
 
         // POST /api/photos/:nick/(image|album)/:id/acl — save privacy ACL (JSON)
+        // ACL changes stay owner-only — write_storage access shouldn't let a
+        // visitor grant themselves (or others) broader access.
         if (in_array($datatype, ['image', 'album']) && (\App::$argv[5] ?? '') === 'acl') {
             Auth::requireLocalJson();
-            $this->postAcl($datatype, \App::$argv[4] ?? '');
+            if (local_channel() !== $uid) {
+                Response::error(403, 'Owner access required');
+            }
+            $this->postAcl($uid, $owner, $datatype, \App::$argv[4] ?? '');
             return;
         }
 
-        $uid      = Auth::requireLocalMultipart();
-        $channel  = \App::get_channel();
-        $origId   = \App::$argv[4] ?? '';
-        $action   = \App::$argv[5] ?? '';
+        // Multipart uploads still require a local session on this hub (no
+        // remote-visitor multipart auth path exists) — but a local user
+        // holding write_storage ACL on another channel may upload into it,
+        // not just that channel's own owner.
+        Auth::requireLocalMultipart();
+        $this->requireWrite($uid, get_observer_hash());
+
+        $origId = \App::$argv[4] ?? '';
+        $action = \App::$argv[5] ?? '';
 
         if ($datatype !== 'image' || !$origId) {
             Response::error(400, 'Invalid request');
@@ -478,7 +510,7 @@ class Photos
             $newHash = photo_new_resource();
 
             $_FILES['userfile'] = $_FILES['file'];
-            $res = attach_store($channel, get_observer_hash(), '', [
+            $res = attach_store($owner, get_observer_hash(), '', [
                 'album'  => $album,
                 'hash'   => $newHash,
                 'nosync' => true,
@@ -512,7 +544,7 @@ class Photos
             $fullScale = intval($base['imgscale']);
 
             $p = [
-                'aid'          => get_account_id(),
+                'aid'          => $owner['channel_account_id'],
                 'uid'          => $uid,
                 'resource_id'  => $newHash,
                 'filename'     => basename($_FILES['file']['name'] ?? 'photo.jpg'),
@@ -521,10 +553,10 @@ class Photos
                 'os_path'      => $base['os_path'] ?? '',
                 'display_path' => $base['display_path'] ?? '',
                 'photo_usage'  => PHOTO_NORMAL,
-                'allow_cid'    => $channel['channel_allow_cid'],
-                'allow_gid'    => $channel['channel_allow_gid'],
-                'deny_cid'     => $channel['channel_deny_cid'],
-                'deny_gid'     => $channel['channel_deny_gid'],
+                'allow_cid'    => $owner['channel_allow_cid'],
+                'allow_gid'    => $owner['channel_allow_gid'],
+                'deny_cid'     => $owner['channel_deny_cid'],
+                'deny_gid'     => $owner['channel_deny_gid'],
             ];
 
             $im->scaleImage(1024);
@@ -563,7 +595,7 @@ class Photos
 
         // Store the edited file as a fresh attachment in the same album (original untouched)
         $_FILES['userfile'] = $_FILES['file'];
-        $res = attach_store($channel, get_observer_hash(), '', [
+        $res = attach_store($owner, get_observer_hash(), '', [
             'album'  => $meta['album'],
             'hash'   => $newHash,
             'nosync' => true,
@@ -598,7 +630,7 @@ class Photos
         $fullScale = intval($base['imgscale']);
 
         $p = [
-            'aid'          => get_account_id(),
+            'aid'          => $owner['channel_account_id'],
             'uid'          => $uid,
             'resource_id'  => $newHash,
             'filename'     => $meta['filename'],
@@ -640,18 +672,28 @@ class Photos
         require_once 'include/photos.php';
         require_once 'include/security.php';
 
-        $uid     = Auth::requireLocalJson();
-        $channel = \App::get_channel();
+        $owner    = $this->resolveChannel();
+        $uid      = intval($owner['channel_id']);
+        $obs_hash = Auth::requireLoggedInJson();
+        $this->requireWrite($uid, $obs_hash);
+
         $dtype   = \App::$argv[3] ?? '';
         $datum   = \App::$argv[4] ?? '';
 
-        if ($dtype === 'image' && $datum) { $this->deletePhoto($uid, $channel, $datum); return; }
+        if ($dtype === 'image' && $datum) { $this->deletePhoto($uid, $owner, $datum); return; }
         if ($dtype === 'images') {
             $ids = Auth::$parsedBody['resource_ids'] ?? [];
             if (!is_array($ids) || empty($ids)) Response::error(400, 'resource_ids required');
-            $this->batchDeletePhotos($uid, $channel, $ids); return;
+            $this->batchDeletePhotos($uid, $owner, $ids); return;
         }
-        if ($dtype === 'album' && $datum) { $this->deleteAlbum($uid, $channel, $datum); return; }
+        // Whole-album deletion stays owner-only — bulk-destructive, unlike
+        // deleting a single photo, matches the wiki "delete entire resource" gate.
+        if ($dtype === 'album' && $datum) {
+            if (!local_channel() || local_channel() !== $uid) {
+                Response::error(403, 'Owner access required');
+            }
+            $this->deleteAlbum($uid, $owner, $datum); return;
+        }
         Response::error(400, 'Invalid request');
     }
 
@@ -711,7 +753,7 @@ class Photos
 
     // ── Root photos (folder = '') ─────────────────────────────────────────────
 
-    private function getRootPhotos(array $channel, string $ob_hash): void
+    private function getRootPhotos(array $channel, string $ob_hash, bool $can_write): void
     {
         require_once 'include/photo/photo_driver.php';
 
@@ -746,7 +788,7 @@ class Photos
             ];
         }
 
-        Response::send($out, ['album_name' => '']);
+        Response::send($out, ['album_name' => '', 'can_write' => $can_write]);
     }
 
     // ── ACL helpers ───────────────────────────────────────────────────────────
@@ -815,13 +857,11 @@ class Photos
 
     // ── POST /api/photos/:nick/(image|album)/:id/acl ──────────────────────────
 
-    private function postAcl(string $type, string $datum): void
+    private function postAcl(int $uid, array $channel, string $type, string $datum): void
     {
         require_once 'include/attach.php';
 
-        $uid     = local_channel();
-        $channel = \App::get_channel();
-        $body    = Auth::$parsedBody;
+        $body = Auth::$parsedBody;
 
         $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
         $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
@@ -854,9 +894,8 @@ class Photos
 
     // ── POST /api/photos/:nick/image/:id/title ────────────────────────────────
 
-    private function updateTitle(string $resourceId): void
+    private function updateTitle(int $uid, string $resourceId): void
     {
-        $uid   = local_channel();
         $title = trim(Auth::$parsedBody['title'] ?? '');
 
         $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
@@ -873,9 +912,8 @@ class Photos
 
     // ── POST /api/photos/:nick/image/:id/description ──────────────────────────
 
-    private function updateDescription(string $resourceId): void
+    private function updateDescription(int $uid, string $resourceId): void
     {
-        $uid  = local_channel();
         $desc = trim(Auth::$parsedBody['description'] ?? '');
 
         $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
@@ -892,9 +930,8 @@ class Photos
 
     // ── POST /api/photos/:nick/image/:id/nsfw ────────────────────────────────
 
-    private function updateNsfw(string $resourceId): void
+    private function updateNsfw(int $uid, string $resourceId): void
     {
-        $uid      = local_channel();
         $is_nsfw  = !empty(Auth::$parsedBody['is_nsfw']) ? 1 : 0;
 
         $r = q("SELECT id FROM photo WHERE uid = %d AND resource_id = '%s' LIMIT 1",
@@ -911,12 +948,10 @@ class Photos
 
     // ── POST /api/photos/:nick/image/:id/rename ───────────────────────────────
 
-    private function renamePhoto(string $resourceId): void
+    private function renamePhoto(int $uid, array $channel, string $resourceId): void
     {
         require_once 'include/attach.php';
 
-        $uid     = local_channel();
-        $channel = \App::get_channel();
         $newName = trim(Auth::$parsedBody['filename'] ?? '');
 
         if (!$newName)
@@ -942,11 +977,10 @@ class Photos
 
     // ── POST /api/photos/:nick/albums — create album ──────────────────────────
 
-    private function createAlbum(): void
+    private function createAlbum(array $channel): void
     {
-        $channel = \App::get_channel();
-        $data    = Auth::$parsedBody;
-        $name    = trim($data['name'] ?? '');
+        $data = Auth::$parsedBody;
+        $name = trim($data['name'] ?? '');
 
         if (!$name) {
             Response::error(400, 'Album name required');
