@@ -43,12 +43,16 @@ class Files
             Response::error(403, 'Permission denied');
         }
 
+        // write_storage is a channel-wide grant — any observer (local or
+        // remote) holding it may edit this channel's storage, not just the owner.
+        $can_write = (bool) perm_is_allowed($owner_uid, $ob_hash, 'write_storage');
+
         $action = \App::$argv[3] ?? '';
         $datum  = \App::$argv[4] ?? '';
 
         switch ($action) {
             case 'folder':
-                $this->listFolder($owner_uid, $ob_hash, $datum);
+                $this->listFolder($owner_uid, $ob_hash, $datum, $can_write);
                 break;
             case 'meta':
                 $this->fileMeta($owner_uid, $ob_hash, $datum);
@@ -64,7 +68,7 @@ class Files
                 break;
             default:
                 // Root folder (folder hash = '')
-                $this->listFolder($owner_uid, $ob_hash, '');
+                $this->listFolder($owner_uid, $ob_hash, '', $can_write);
                 break;
         }
     }
@@ -100,26 +104,40 @@ class Files
     {
         require_once 'include/attach.php';
 
-        $uid  = Auth::requireLocalJson();
-        $data = Auth::$parsedBody;
+        $owner    = $this->resolveChannel();
+        $uid      = intval($owner['channel_id']);
+        $obs_hash = Auth::requireLoggedInJson();
 
+        // write_storage is a channel-wide grant — any observer (local or
+        // remote) holding it may edit this channel's cloud storage, not just
+        // the owner (matches WebDAV's own perm_is_allowed(..., 'write_storage')).
+        if (!perm_is_allowed($uid, $obs_hash, 'write_storage')) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $data   = Auth::$parsedBody;
         $action = \App::$argv[3] ?? '';
 
         switch ($action) {
             case 'permissions':
+                // ACL changes stay owner-only — write_storage access
+                // shouldn't let a visitor grant themselves broader access.
+                if (!local_channel() || local_channel() !== $uid) {
+                    Response::error(403, 'Owner access required');
+                }
                 $this->updatePermissions($uid, $data);
                 break;
             case 'rename':
-                $this->renameItem($uid, $data);
+                $this->renameItem($uid, $owner, $data);
                 break;
             case 'move':
-                $this->moveOrCopyItem($uid, $data, false);
+                $this->moveOrCopyItem($uid, $owner, $data, false);
                 break;
             case 'copy':
-                $this->moveOrCopyItem($uid, $data, true);
+                $this->moveOrCopyItem($uid, $owner, $data, true);
                 break;
             case 'categories':
-                $this->updateCategories($uid, $data);
+                $this->updateCategories($uid, $owner, $data);
                 break;
             default:
                 Response::error(404, 'Unknown action');
@@ -128,7 +146,7 @@ class Files
 
     // ── Folder listing ────────────────────────────────────────────────────────
 
-    private function listFolder(int $uid, string $ob_hash, string $folder_hash): void
+    private function listFolder(int $uid, string $ob_hash, string $folder_hash, bool $can_write): void
     {
         $sql_extra   = permissions_sql($uid, $ob_hash, 'attach');
         $folder_cond = "folder = '" . dbesc($folder_hash) . "'";
@@ -148,7 +166,7 @@ class Files
             $items[] = $this->formatRow($row);
         }
 
-        Response::send($items, ['folder' => $folder_hash]);
+        Response::send($items, ['folder' => $folder_hash, 'can_write' => $can_write]);
     }
 
     // ── Single file metadata ──────────────────────────────────────────────────
@@ -206,7 +224,7 @@ class Files
 
     // ── Rename / Move / Copy ─────────────────────────────────────────────────
 
-    private function renameItem(int $uid, array $data): void
+    private function renameItem(int $uid, array $channel, array $data): void
     {
         $hash    = $data['hash'] ?? '';
         $newname = trim((string) ($data['filename'] ?? ''));
@@ -222,13 +240,13 @@ class Files
         $res = attach_move($uid, $hash, $r[0]['folder'], $newname);
         if (empty($res['success'])) Response::error(500, $res['message'] ?? 'Rename failed');
 
-        $this->syncAttach($uid, $hash);
+        $this->syncAttach($uid, $channel, $hash);
 
         $updated = $this->fetchRow($uid, $hash);
         Response::send($updated ? $this->formatRow($updated) : null);
     }
 
-    private function moveOrCopyItem(int $uid, array $data, bool $copy): void
+    private function moveOrCopyItem(int $uid, array $channel, array $data, bool $copy): void
     {
         $hash      = $data['hash'] ?? '';
         $newFolder = (string) ($data['folder'] ?? '');
@@ -265,7 +283,7 @@ class Files
         }
 
         $resultHash = $copy ? $res['resource_id'] : $hash;
-        $this->syncAttach($uid, $resultHash);
+        $this->syncAttach($uid, $channel, $resultHash);
 
         $updated = $this->fetchRow($uid, $resultHash);
         Response::send($updated ? $this->formatRow($updated) : null);
@@ -288,10 +306,9 @@ class Files
     }
 
     /** Mirrors classic core's attach_edit sync: export the changed attach row and build a sync packet for clones. */
-    private function syncAttach(int $uid, string $resource): void
+    private function syncAttach(int $uid, array $channel, string $resource): void
     {
-        $channel = \App::get_channel();
-        $sync    = attach_export_data($channel, $resource, false);
+        $sync = attach_export_data($channel, $resource, false);
         if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
     }
 
@@ -434,7 +451,7 @@ class Files
         ]);
     }
 
-    private function updateCategories(int $uid, array $data): void
+    private function updateCategories(int $uid, array $channel, array $data): void
     {
         require_once 'include/taxonomy.php';
 
@@ -457,9 +474,8 @@ class Files
             TERM_OBJ_FILE
         );
 
-        $channel = \App::get_channel();
-        $nick    = $channel['channel_address'];
-        $saved   = [];
+        $nick  = $channel['channel_address'];
+        $saved = [];
 
         foreach ($categories as $term) {
             $term = trim((string) $term);

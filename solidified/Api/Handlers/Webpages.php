@@ -100,9 +100,9 @@ class Webpages
             Response::send($this->formatDetail($p[0]));
         }
 
-        // ── Page fetch by iid — owner only (for SPA editor) ──────────────────
+        // ── Page fetch by iid — write access required (SPA editor) ───────────
         if (!empty($_GET['iid'])) {
-            Auth::requireLocalGet();
+            Auth::requireLoggedIn();
             if (!$perms['write_pages']) {
                 Response::error(403, 'Permission denied');
             }
@@ -130,9 +130,9 @@ class Webpages
             Response::send($this->formatDetail($p[0]));
         }
 
-        // ── List webpages — owner only ─────────────────────────────────────────
+        // ── List webpages — write access required ──────────────────────────────
         // Listing requires write_pages (you need edit/delete capability to use the list)
-        Auth::requireLocalGet();
+        Auth::requireLoggedIn();
 
         if (!$perms['write_pages']) {
             Response::error(403, 'Permission denied');
@@ -186,15 +186,32 @@ class Webpages
     }
 
     // POST /api/webpages
-    // Body (JSON): { "action": "create", title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
-    // Body (JSON): { "action": "delete", "iid": 123 }
+    // Body (JSON): { "action": "create", "nick": "…", title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
+    // Body (JSON): { "action": "update", "nick": "…", uuid, title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
+    // Body (JSON): { "action": "delete", "nick": "…", "iid": 123 }
     public function post(): void
     {
-        $uid  = Auth::requireLocalJson();
-        $body = \Theme\Solidified\Api\Auth::$parsedBody;
+        $obs_hash = Auth::requireLoggedInJson();
+        $body     = \Theme\Solidified\Api\Auth::$parsedBody;
+
+        $nick = trim($body['nick'] ?? '');
+        if (!$nick) {
+            Response::error(400, 'nick required');
+        }
+        $owner = channelx_by_nick($nick);
+        if (!$owner) {
+            Response::error(404, 'Channel not found');
+        }
+        $uid = intval($owner['channel_id']);
+
+        // Any observer (local or remote) with write_pages ACL on this channel
+        // may create/update/delete its webpages — not just the owner.
+        if (!perm_is_allowed($uid, $obs_hash, 'write_pages')) {
+            Response::error(403, 'Permission denied');
+        }
 
         if (($body['action'] ?? '') === 'create') {
-            $this->createWebpage($uid, $body);
+            $this->createWebpage($owner, $obs_hash, $body);
             return;
         }
 
@@ -228,20 +245,11 @@ class Webpages
         Response::error(400, 'Unknown action');
     }
 
-    private function createWebpage(int $uid, array $body): void
+    private function createWebpage(array $owner, string $obs_hash, array $body): void
     {
         require_once 'include/items.php';
 
-        $channel  = \App::get_channel();
-        $observer = \App::get_observer();
-
-        if (!$channel || !$observer) {
-            Response::error(403, 'Authentication required');
-        }
-
-        if (!perm_is_allowed($uid, $observer['xchan_hash'], 'write_pages')) {
-            Response::error(403, 'Permission denied');
-        }
+        $uid = intval($owner['channel_id']);
 
         $title     = trim($body['title']     ?? '');
         $summary   = trim($body['summary']   ?? '');
@@ -262,14 +270,14 @@ class Webpages
         $now  = datetime_convert();
 
         $datarray = [
-            'aid'             => $channel['channel_account_id'],
+            'aid'             => $owner['channel_account_id'],
             'uid'             => $uid,
             'uuid'            => $uuid,
             'mid'             => $mid,
             'parent_mid'      => $mid,
             'thr_parent'      => $mid,
-            'owner_xchan'     => $channel['channel_hash'],
-            'author_xchan'    => $observer['xchan_hash'],
+            'owner_xchan'     => $owner['channel_hash'],
+            'author_xchan'    => $obs_hash,
             'created'         => $now,
             'edited'          => $now,
             'commented'       => $now,
