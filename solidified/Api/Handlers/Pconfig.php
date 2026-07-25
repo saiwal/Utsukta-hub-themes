@@ -77,13 +77,23 @@ class Pconfig
 
             $nsfw_installed = \Zotlabs\Lib\Apps::system_app_installed($uid, 'NSFW');
 
+            require_once 'include/features.php';
+            $features = [];
+            foreach (get_features(false) as $cat) {
+                foreach ($cat as $item) {
+                    if (is_array($item)) {
+                        $features[$item[0]] = (bool) feature_enabled($uid, $item[0]);
+                    }
+                }
+            }
+
             $response = [
                 'uid'      => $uid,
                 'channel'  => $nick,
                 'is_admin' => is_site_admin(),
                 'system'   => $config['system']  ?? [],
                 'spa'      => $config['spa']     ?? [],
-                'features' => array_map('boolval', $config['feature'] ?? []),
+                'features' => $features,
                 'nsfw'     => [
                     'words' => $nsfw_installed ? (string) ($config['nsfw']['words'] ?? 'nsfw,contentwarning') : '',
                 ],
