@@ -47,6 +47,7 @@ class Login
         $username = trim($body['username'] ?? '');
         $password = $body['password'] ?? '';
         $token    = $body['token']    ?? '';
+        $remember = !empty($body['remember']);
 
         if (!$username || !$password) {
             Response::error(400, 'Email and password are required');
@@ -95,6 +96,11 @@ class Login
         if ($account['account_flags'] !== 0) {
             Response::error(403, 'Account is not active');
         }
+
+        // Matches core's include/auth.php remember-me handling: a plain
+        // session cookie when unchecked, a one-year cookie when checked.
+        $_SESSION['remember_me'] = $remember ? 1 : 0;
+        \App::$session->new_cookie($remember ? 31449600 : 0);
 
         // $return=true prevents authenticate_success from calling goaway()
         \authenticate_success($account, $channel, true, true, true);
