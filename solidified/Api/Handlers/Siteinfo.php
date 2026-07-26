@@ -44,9 +44,9 @@ class Siteinfo
         }
 
         usort($classes, function ($a, $b) {
-            $bv = $b['storage_total'] ?? PHP_INT_MAX;
             $av = $a['storage_total'] ?? PHP_INT_MAX;
-            return $bv <=> $av ?: strcmp($a['name'], $b['name']);
+            $bv = $b['storage_total'] ?? PHP_INT_MAX;
+            return $av <=> $bv ?: strcmp($a['name'], $b['name']);
         });
 
         return $classes;
