@@ -22,11 +22,12 @@ class StreamWidgets
         }
 
         match ($sub) {
-            'tags'       => $this->getTags(),
-            'categories' => $this->getCategories(),
-            'popular'    => $this->getPopular(),
-            'archive'    => $this->getArchive(),
-            default      => Response::error(404, "Unknown sub-resource: {$sub}"),
+            'tags'         => $this->getTags(),
+            'categories'   => $this->getCategories(),
+            'popular'      => $this->getPopular(),
+            'archive'      => $this->getArchive(),
+            'archive-days' => $this->getArchiveDays(),
+            default        => Response::error(404, "Unknown sub-resource: {$sub}"),
         };
     }
 
@@ -187,6 +188,48 @@ class StreamWidgets
         }
 
         Response::send(['archive' => array_values($years)]);
+    }
+
+    // ── /api/stream-widgets/archive-days ─────────────────────────────────────
+    // Day-of-month post counts for a single year+month, used to plot dots on
+    // a calendar-style archive widget.
+
+    private function getArchiveDays(): void
+    {
+        $uid           = $this->resolveUid();
+        $type          = $this->itemType();
+        $item_type_val = $this->itemTypeValue($type);
+        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $perm_sql      = item_permissions_sql($uid);
+
+        $year  = (int) ($_GET['year']  ?? 0);
+        $month = (int) ($_GET['month'] ?? 0);
+
+        if ($year < 1 || $month < 1 || $month > 12) {
+            Response::error(400, 'Valid year and month are required');
+        }
+
+        $rows = dbq(
+            "SELECT DAY(item.created) AS dy, COUNT(*) AS total
+             FROM item
+             WHERE item.uid             = " . intval($uid) . "
+               AND item.item_thread_top = 1
+               AND item.item_wall       = 1
+               AND item.item_deleted    = 0
+               AND item.verb           != 'Add'
+               AND YEAR(item.created)   = " . intval($year) . "
+               AND MONTH(item.created)  = " . intval($month) . "
+               $perm_sql $item_normal
+             GROUP BY dy
+             ORDER BY dy ASC"
+        );
+
+        $days = array_map(fn($r) => [
+            'day'   => (int) $r['dy'],
+            'count' => (int) $r['total'],
+        ], $rows ?: []);
+
+        Response::send(['days' => $days]);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

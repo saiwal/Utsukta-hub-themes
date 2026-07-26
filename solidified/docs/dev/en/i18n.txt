@@ -20,47 +20,50 @@ function MyComponent() {
 
 ## Available Locales
 
-Locales are registered in `src/i18n/locales/index.ts`:
+Locales are registered in `src/i18n/locales/index.ts`. Each entry lazy-loads its dictionary on demand rather than importing it eagerly, so switching locale doesn't pull every language into the initial bundle:
 
 ```typescript
 export const localeRegistry = {
-  en: { dict: en, label: "English", flag: "🇬🇧" },
-  hi: { dict: hi, label: "Hindi",   flag: "🇮🇳" },
-};
+  en: { label: "English", flag: "🇬🇧", load: (): Promise<RawDictionary> => import("./en/index").then((m) => m.dict) },
+  hi: { label: "हिन्दी",  flag: "🇮🇳", load: (): Promise<RawDictionary> => import("./hi/index").then((m) => m.dict) },
+  de: { label: "Deutsch", flag: "🇩🇪", load: (): Promise<RawDictionary> => import("./de/index").then((m) => m.dict) },
+  // ← add new locales here
+} satisfies Record<string, { label: string; flag: string; load: () => Promise<RawDictionary> }>;
 ```
 
-The locale preference is persisted in localStorage under the key `"hz-locale"`. On mount the provider reads this value and switches to the saved locale.
+Three locales ship out of the box: `en` (English), `hi` (Hindi), `de` (German).
+
+The locale preference is persisted in localStorage under the key `"hz-locale"`. On mount the provider reads this value, calls that locale's `load()`, and switches once the dictionary resolves.
 
 ## Adding a New Locale
 
-1. Create `src/i18n/locales/<code>.ts` exporting `dict` of type `RawDictionary`.
-2. Copy the `en` locale as a base and translate the strings.
+1. Create `src/i18n/locales/<code>/` with a namespace file per feature area (see "Dictionary Structure" below) plus an `index.ts` that merges them into a `dict` export of type `RawDictionary`.
+2. Copy the `en/` locale as a base and translate the strings.
 3. Register it in `src/i18n/locales/index.ts`:
 
 ```typescript
-import { dict as fr } from "./fr";
-
 export const localeRegistry = {
-  en: { dict: en, label: "English", flag: "🇬🇧" },
-  fr: { dict: fr, label: "Français", flag: "🇫🇷" },
+  en: { label: "English", flag: "🇬🇧", load: () => import("./en/index").then((m) => m.dict) },
+  fr: { label: "Français", flag: "🇫🇷", load: () => import("./fr/index").then((m) => m.dict) },
   // ...
 };
 ```
 
-TypeScript will enforce that every locale satisfies `RawDictionary`.
+TypeScript will enforce that every locale's merged `dict` satisfies `RawDictionary`.
 
 ## Dictionary Structure
 
-Dictionaries are flat-ish objects with dot-notation keys grouped by namespace. The English locale is split across files under `src/i18n/locales/en/`:
+Dictionaries are flat-ish objects with dot-notation keys grouped by namespace. Each locale is split across many small namespace files under `src/i18n/locales/<code>/`, one per feature area — e.g. `nav.ts`, `layout.ts`, `ui.ts`, `widgets.ts`, `tools.ts`, `games.ts`, `post.ts`, `help.ts`, `connection.ts`, `auth.ts`, `editor.ts`, `settings.ts`, `network.ts`, `directory.ts`, `hq.ts`, `channel.ts`, `photos.ts`, `articles.ts`, `calendar.ts`, and more — merged by that locale's `index.ts`:
 
 ```
 en/
-├── index.ts    # merges all namespace files
+├── index.ts    # merges all namespace files into `dict`
 ├── nav.ts      # navigation labels
 ├── layout.ts   # layout / shell strings
 ├── ui.ts       # generic UI labels (buttons, status, etc.)
 ├── widgets.ts  # sidebar widget strings
-└── tools.ts    # utility / settings strings
+├── help.ts     # help-mode overlay strings
+└── ...         # one file per module/feature area
 ```
 
 Example from `nav.ts`:

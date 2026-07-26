@@ -9,13 +9,17 @@
 | Layer | Technology |
 |-------|-----------|
 | UI framework | Solid.js v1.9 |
-| Routing | @solidjs/router v0.15 |
+| Routing | @solidjs/router v0.16 |
+| Data fetching | @tanstack/solid-query v5, @tanstack/solid-virtual v3 |
 | Styling | Tailwind CSS v4 |
-| Build | Vite + vite-plugin-solid |
-| i18n | @solid-primitives/i18n |
-| Markup | BBCode → HTML (bbcodeToHtml), DOMPurify sanitisation |
+| Build | Vite v8 + vite-plugin-solid |
+| i18n | @solid-primitives/i18n (lazy-loaded per-locale dictionaries) |
+| Markup | BBCode → HTML (bbcodeToHtml), DOMPurify sanitisation, marked (Markdown), turndown (HTML → BBCode) |
 | Icons | solid-icons (Iconify-based) |
 | Animations | solid-motionone |
+| Math | KaTeX (LaTeX rendering in the composer) |
+| Media | plyr (video/audio player), photoswipe (image lightbox), filerobot-image-editor (in-browser image editing) |
+| Crypto | libsodium-wrappers (end-to-end encrypted DMs) |
 | Backend | PHP 8 inside the Hubzilla theme |
 
 ## Project Layout
@@ -28,8 +32,8 @@ src/
 ├── router.tsx          # Re-exports getRoutes() signal
 ├── index.css           # Global CSS (Tailwind imports, custom properties)
 ├── pwa.ts              # Service worker update detection
-├── i18n/               # I18nProvider + locale dictionaries
-├── modules/            # 22 feature modules (each self-registers)
+├── i18n/               # I18nProvider + locale dictionaries (en, hi, de)
+├── modules/            # 35 feature modules (each self-registers)
 ├── shared/
 │   ├── lib/            # Utilities: module-registry, api, csrf, useNav, bbcode, …
 │   ├── store/          # Global reactive stores: auth, nav, site-config
