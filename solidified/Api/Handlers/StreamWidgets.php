@@ -36,7 +36,7 @@ class StreamWidgets
     {
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
-        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_type_val = $this->itemTypeValue($type);
         $item_normal   = item_normal(null, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
@@ -69,7 +69,7 @@ class StreamWidgets
     {
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
-        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_type_val = $this->itemTypeValue($type);
         $item_normal   = item_normal(null, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
@@ -157,7 +157,7 @@ class StreamWidgets
     {
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
-        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_type_val = $this->itemTypeValue($type);
         $item_normal   = item_normal(null, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
@@ -215,11 +215,24 @@ class StreamWidgets
     }
 
     /**
-     * Read ?type= param. Returns 'articles' or 'posts'.
+     * Read ?type= param. Returns 'articles', 'notes', or 'posts' (default).
      */
     private function itemType(): string
     {
-        return ($_GET['type'] ?? '') === 'articles' ? 'articles' : 'posts';
+        $type = $_GET['type'] ?? '';
+        return in_array($type, ['articles', 'notes'], true) ? $type : 'posts';
+    }
+
+    /**
+     * Map an itemType() result to its item.item_type column value.
+     */
+    private function itemTypeValue(string $type): int
+    {
+        return match ($type) {
+            'articles' => ITEM_TYPE_ARTICLE,
+            'notes'    => ITEM_TYPE_CUSTOM,
+            default    => ITEM_TYPE_POST,
+        };
     }
 
     /**
