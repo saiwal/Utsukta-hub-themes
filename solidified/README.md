@@ -8,16 +8,21 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 
 ## Features at a Glance
 
-- **modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, and more
-- **Rich text editor** — BBCode with WYSIWYG, Source, and Preview tabs
+- **35 modules** — channel, network, articles, photos, files, chat, calendar, wiki, webpages, directory, admin, games, and more
+- **Rich text editor** — BBCode with WYSIWYG, Source, and Preview tabs, plus LaTeX rendering
 - **Threaded feed** — like, dislike, repeat, comment, reshare, star, and delete with live state
 - **24 UI themes** — presets (Nord, Dracula, Catppuccin, Tokyo Night…) plus fully customizable
 - **Cached data layer** — TanStack Query: instant back-navigation, request dedup, background revalidation
 - **Progressive Web App** — service worker caching, push notifications, background update detection
 - **Responsive layout** — desktop three-column, tablet collapsible sidebar, mobile bottom tab bar
 - **Customizable Widget layouts** — add, remove, and reorder sidebar widgets, configure widgets that support multiple instances, a few widgets are pinned on every page
-- **i18n** — locale switcher with localStorage persistence
+- **i18n** — locale switcher with localStorage persistence, three locales ship out of the box
 - **Pluggable module system** — every feature self-registers routes, nav items, and sidebar slots
+- **In-browser image editor** — crop, filters, annotations, and adjustments before upload (Filerobot)
+- **Native video/audio player** — Plyr-based player with YouTube/Vimeo support for embedded media
+- **End-to-end encrypted DMs** — libsodium (XSalsa20-Poly1305), interoperable with Hubzilla's native crypto
+- **40 built-in puzzle games** — the Simon Tatham puzzle collection (Mines, Loopy, Net, Solo, and more), playable at `/games`
+- **Photo lightbox** — PhotoSwipe-based gallery viewer for photo albums and inline attachments
 
 ---
 
@@ -31,19 +36,26 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 | **Network** | `/network` | The authenticated user's personal federated home feed |
 | **HQ** | `/hq` | Personal dashboard with notifications and quick actions |
 | **Public Stream** | `/pubstream` | Public posts from all federated channels on this server |
+| **Post** | `/display/:uuid`, `/item/:uuid` | Permalink view of a single post and its full comment thread |
+| **Profile** | `/profile/:nick` | A channel's full profile page (bio/details), linking back to its wall |
+| **Profiles** | `/settings/profile/:id` | Manage multiple profiles per channel for privacy-scoped visibility |
+| **Bookmarks** | `/bookmarks` | Saved posts and links list |
+| **Notify** | `/notify`, `/notifications` | Full notification list with per-item read/redirect handling |
 
 ### Content apps
 
 | Module | Routes | What it does |
 |---|---|---|
 | **Articles** | `/articles/:nick/:uuid` | Long-form posts with title, summary, categories, and tags |
-| **Photos** | `/photos/:nick/album/:id` | Photo albums with image viewer |
+| **Photos** | `/photos/:nick/album/:id` | Photo albums with a PhotoSwipe-powered image viewer |
 | **Files / Cloud** | `/cloud/:nick/*` | Cloud file browser and storage |
-| **Webpages** | `/page/:nick/*` | Static pages with custom slugs |
+| **Webpages** | `/page/:nick/*` | Static pages with custom slugs, plus a page builder, menus, and layout templates |
 | **Wiki** | `/wiki/:nick/:wiki/:page` | Hierarchical per-channel wikis |
 | **Chat** | `/chat/:nick/:roomId` | Real-time chatrooms |
 | **Calendar** | `/cal/:nick` | Channel calendar with CalDAV support |
 | **Cart** | `/cart/:nick` | Shopping cart integration |
+| **Notepad** | `/notepad` | Private, server-synced scratchpad |
+| **Games** | `/games/:id` | 40 built-in puzzle games (the Simon Tatham collection: Mines, Loopy, Net, Solo, Towers, Undead, and more) |
 
 ### Discovery & connections
 
@@ -51,23 +63,30 @@ A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships 
 |---|---|---|
 | **Directory** | `/directory/*` | Connections, contact roles, privacy groups, people search, hub browser |
 | **Siteinfo** | `/siteinfo` | Public site statistics and metadata |
+| **Chanview** | `/chanview` | Read-only remote-channel viewer, used when browsing a channel on another hub |
 
 ### User & admin
 
 | Module | Routes | What it does |
 |---|---|---|
-| **Settings** | `/settings/*` | 8 sections: display, profile, account, privacy, notifications, integrations, apps, danger |
-| **Admin** | `/admin/*` | 13 admin subpages: summary, accounts, channels, security, features, addons, themes, logs, and more |
+| **Settings** | `/settings/*` | Sections: display, profile, account, privacy, locations, notifications, integrations, features, blocked, portability, danger |
+| **Admin** | `/admin/*` | 13 admin subpages: summary, site, accounts, channels, security, features, addons, themes, inspect-queue, queueworker, profile-fields, db-updates, logs |
 | **Manage** | `/manage` | Multi-channel identity management |
 | **Tools** | `/tools` | Developer and utility tools |
 | **Help** | `/help/*` | Integrated documentation with wildcard routing |
+| **Blocks** | *(widgets only, no routes)* | Reusable content-block widgets — RSS, HTML block, clock, weather, quote-of-the-day, embeds, menus, link lists, Pomodoro timer |
 
-### Auth
+### Auth & onboarding
 
 | Module | Routes | What it does |
 |---|---|---|
 | **Login** | `/login` | Authentication interface |
 | **Logout** | `/logout` | Session termination |
+| **Register** | `/register`, `/regate/:token` | New account registration and invite-token gated signup |
+| **Channel Create** | `/new_channel` | First-channel creation flow for a freshly registered account |
+| **Channel Import** | `/import` | Import a channel identity from a file or another hub |
+| **Password Reset** | `/forgot-password`, `/reset-password/:token` | Self-service password recovery |
+| **Rmagic** | `/rmagic` | "Remote magic-auth" — single-sign-on login when arriving from another Hubzilla hub |
 
 ---
 
@@ -94,10 +113,13 @@ Bold, Italic, Underline, Strikethrough, Highlight, Link, Bullet list, Numbered l
 **Other editor features:**
 - `@`-mention autocomplete with live user search
 - `:`-emoji autocomplete
+- LaTeX composer — renders math expressions to inline images via KaTeX
+- In-browser image editor (Filerobot) — crop, filter, and annotate images before attaching
 - Draft auto-save to IndexedDB, keyed per composer scope — survives page refresh
 - Ctrl+Enter to submit
 - ACL picker for post-level access control (privacy groups, individual channels)
 - Category tagging on posts and articles
+- End-to-end encrypted direct messages — libsodium (XSalsa20-Poly1305, PBKDF2-derived keys), byte-for-byte compatible with Hubzilla's native `[crypt]` BBCode tag
 
 ---
 
@@ -199,12 +221,13 @@ Themes are implemented as CSS custom properties on `data-theme` and integrate wi
 
 ## Internationalization
 
-Two full locales ship out of the box:
+Three locales ship out of the box:
 
 | Code | Language | Script |
 |---|---|---|
 | `en` | English | Latin |
 | `hi` | Hindi | Devanagari |
+| `de` | German | Latin |
 
 Translations are organized into namespace files (`nav`, `layout`, `ui`, `widgets`, `tools`). Locale preference is saved to localStorage (`hz-locale`). Adding a new locale means creating matching namespace files and registering the locale label — no framework changes needed.
 
@@ -219,13 +242,13 @@ Modules that correspond to optional Hubzilla apps are silently suppressed when t
 | Articles | `Articles` |
 | Calendar | `Calendar` |
 | Chat | `Chatrooms` |
-| Files | `Files` |
+| Files / Cloud | `Files` |
 | Photos | `Photos` |
 | Public Stream | `Public Stream` |
 | Webpages | `Webpages` |
 | Wiki | `Wiki` |
 
-Modules without an `appName` (channel, network, settings, admin, etc.) are always active.
+All other modules (channel, network, settings, admin, games, notepad, bookmarks, etc.) have no `appName` and are always active.
 
 ---
 
@@ -244,20 +267,29 @@ All responses use a consistent JSON envelope — `Response::send()`, `Response::
 | Area | Library | Version |
 |---|---|---|
 | Framework | Solid.js | 1.9.10 |
-| Router | @solidjs/router | 0.15.4 |
+| Router | @solidjs/router | 0.16.1 |
 | Data fetching | @tanstack/solid-query | 5.101.2 |
+| List virtualization | @tanstack/solid-virtual | 3.13.30 |
 | Styling | Tailwind CSS | 4.2.1 |
 | Icons | solid-icons | 1.2.0 |
 | Animations | solid-motionone | 1.0.4 |
 | i18n | @solid-primitives/i18n | 2.2.1 |
+| Responsive/media queries | @solid-primitives/media | 2.3.5 |
 | Markdown | marked | 18.0.0 |
 | HTML sanitization | dompurify | 3.3.1 |
 | BBCode | @bbob/parser + @bbob/html | 4.3.1 |
+| HTML → BBCode | turndown | 7.2.4 |
 | Draft persistence | idb-keyval (IndexedDB) | 6.2.2 |
 | Popovers | @floating-ui/dom | 1.7.6 |
+| Video/audio player | plyr | 3.8.4 |
+| Photo lightbox | photoswipe | 5.4.4 |
+| Image editor | filerobot-image-editor | 5.0.0-beta.159 |
+| Math rendering | katex | 0.16.22 |
+| QR codes | qrcode | 1.5.4 |
+| End-to-end encryption | libsodium-wrappers | 0.8.4 |
 | Service worker | Workbox | 7.4.0 |
-| Build tool | Vite | 7.3.1 |
-| TypeScript | — | 5.9.3 |
+| Build tool | Vite | 8.1.0 |
+| TypeScript | — | 6.0.3 |
 
 ---
 
@@ -281,6 +313,7 @@ npm run dev       # Dev server at http://localhost:5173
 | `npm run build:sw` | Build service worker only |
 | `npm run watch` | Watch mode build |
 | `npm run typecheck` | Type-check with watch |
+| `npm run games:download` | Download/refresh the puzzle-game assets used by the Games module (`scripts/download-puzzles.mjs`) |
 
 ### Build Output
 
@@ -307,7 +340,7 @@ src/
 ├── router.tsx          # Router setup
 ├── pwa.ts              # PWA update detection
 ├── i18n/               # i18n provider and locale files
-├── modules/            # Feature modules (22+ directories)
+├── modules/            # Feature modules (35 directories)
 │   ├── channel/
 │   ├── network/
 │   ├── articles/
