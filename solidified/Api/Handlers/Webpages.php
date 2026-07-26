@@ -3,11 +3,13 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\EnforcesServiceClass;
 
 require_once 'include/items.php';
 
 class Webpages
 {
+    use EnforcesServiceClass;
     // GET /api/webpages/:nick               → list webpages  (owner only: write_pages)
     // GET /api/webpages/:nick?pagelink=…    → render page    (public: view_pages)
     // GET /api/webpages/:nick?mid=…         → render page    (public: view_pages)
@@ -250,6 +252,8 @@ class Webpages
         require_once 'include/items.php';
 
         $uid = intval($owner['channel_id']);
+
+        $this->checkTopLevelItemLimit($uid, true);
 
         $title     = trim($body['title']     ?? '');
         $summary   = trim($body['summary']   ?? '');

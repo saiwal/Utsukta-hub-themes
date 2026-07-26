@@ -16,11 +16,13 @@ use App;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Concerns\ReactionCounts;
 use Theme\Solidified\Api\Concerns\FiltersBlockedChannels;
+use Theme\Solidified\Api\Concerns\EnforcesServiceClass;
 use Theme\Solidified\Api\Response;
 
 class Item
 {
     use FiltersBlockedChannels;
+    use EnforcesServiceClass;
 
     // ── Entry points ──────────────────────────────────────────────────────────
     //
@@ -358,6 +360,11 @@ class Item
     {
         $uid  = Auth::requireLocalJson();
         $body = Auth::$parsedBody;
+
+        // Quota check happens before any other work, matching core's own
+        // Zotlabs\Module\Item::post() placement (checked against the poster's
+        // own channel, not the wall owner's, for wall-to-wall posts).
+        $this->checkTopLevelItemLimit($uid, false);
 
         $content    = trim($body['body']        ?? '');
         $title      = trim($body['title']       ?? '');
