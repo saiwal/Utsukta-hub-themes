@@ -28,6 +28,27 @@ class Notes
             Response::error(400, 'Body is required');
         }
 
+        // Extract #hashtags into term records for the tag-cloud widget. Notes
+        // are always fully private with no ACL, so mentions/groups found by
+        // linkify_tags() are discarded — only hashtags are persisted.
+        $postTags = [];
+        if ($mimetype === 'text/bbcode') {
+            require_once 'include/text.php';
+            $results = linkify_tags($content, $uid);
+            foreach (($results ?: []) as $result) {
+                $s = $result['success'];
+                if ($s['replaced'] && (int) $s['termtype'] === TERM_HASHTAG) {
+                    $postTags[] = [
+                        'uid'   => $uid,
+                        'ttype' => TERM_HASHTAG,
+                        'otype' => TERM_OBJ_POST,
+                        'term'  => $s['term'],
+                        'url'   => $s['url'],
+                    ];
+                }
+            }
+        }
+
         $uuid = item_message_id();
         $mid  = z_root() . '/item/' . $uuid;
         $now  = datetime_convert();
@@ -61,6 +82,7 @@ class Notes
             'item_thread_top' => 1,
             'item_unseen'     => 0,
             'item_private'    => 1,
+            'term'            => array_unique($postTags, SORT_REGULAR),
         ];
 
         // No federation, no delivery, no notifications
@@ -76,10 +98,13 @@ class Notes
     // GET /api/notes
     // Lists the authenticated user's personal notes (ITEM_TYPE_CUSTOM items).
     // These never appear in streams or federate — the Notifier skips type != 0.
-    // Query params: start (int, default 0), limit (int, default 20)
+    // Query params: start (int, default 0), limit (int, default 20),
+    //               tag (hashtag filter), dbegin/dend (YYYY-MM-DD date range),
+    //               search (body text search)
     public function get(): void
     {
         require_once 'include/items.php';
+        require_once 'include/taxonomy.php';
 
         Auth::requireLocalGet();
 
@@ -90,12 +115,40 @@ class Notes
         // Use item_normal() with ITEM_TYPE_CUSTOM to get the correct SQL fragment
         $item_normal = item_normal(null, 'item', ITEM_TYPE_CUSTOM);
 
+        $sql_extra = '';
+        $tag = trim($_GET['tag'] ?? '');
+        if ($tag) {
+            $sql_extra .= protect_sprintf(term_query('item', $tag, TERM_HASHTAG));
+        }
+
+        $search = trim($_GET['search'] ?? '');
+        if ($search) {
+            $sql_extra .= sprintf(
+                " AND item.body LIKE '%s' ",
+                dbesc(protect_sprintf('%' . $search . '%'))
+            );
+        }
+
+        $dend = (isset($_GET['dend']) && is_a_date_arg($_GET['dend']))
+            ? notags($_GET['dend']) : '';
+        $dbegin = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
+            ? notags($_GET['dbegin']) : '';
+
+        if ($dend) {
+            $sql_extra .= " AND item.created <= '"
+                . dbesc(datetime_convert(date_default_timezone_get(), '', $dend)) . "' ";
+        }
+        if ($dbegin) {
+            $sql_extra .= " AND item.created >= '"
+                . dbesc(datetime_convert(date_default_timezone_get(), '', $dbegin)) . "' ";
+        }
+
         $count_r = dbq(
             "SELECT COUNT(*) AS total FROM item
              WHERE item.uid = $uid
                AND item.item_thread_top = 1
                AND item.verb = 'Create'
-               $item_normal"
+               $item_normal $sql_extra"
         );
         $total = intval($count_r[0]['total'] ?? 0);
 
@@ -106,7 +159,7 @@ class Notes
              WHERE item.uid = $uid
                AND item.item_thread_top = 1
                AND item.verb = 'Create'
-               $item_normal
+               $item_normal $sql_extra
              ORDER BY item.created DESC
              LIMIT $limit OFFSET $start"
         );
