@@ -128,9 +128,9 @@ class HqMessages
             }
 
             if ($item['owner_xchan'] !== $item['author_xchan']) {
-                $info .= t('via') . ' ' . $item['owner']['xchan_name'];
+                $info .= t('via') . ' ' . Response::decodeEntities($item['owner']['xchan_name']);
             } elseif ($item['verb'] === 'Announce' && isset($item['source'])) {
-                $info .= t('via') . ' ' . $item['source']['xchan_name'];
+                $info .= t('via') . ' ' . Response::decodeEntities($item['source']['xchan_name']);
             }
 
             if ($type === 'filed') {
@@ -171,7 +171,7 @@ class HqMessages
             }
 
             $entries[] = [
-                'author_name' => $item['author']['xchan_name'],
+                'author_name' => Response::decodeEntities($item['author']['xchan_name']),
                 'author_addr' => $item['author']['xchan_addr'] ?: $item['author']['xchan_url'],
                 'author_img' => $item['author']['xchan_photo_s'],
                 'info' => $info,
@@ -219,7 +219,7 @@ class HqMessages
             $hashLink = str_contains($notice['hash'], '-') ? $notice['hash'] : basename($notice['link']);
 
             $entries[] = [
-                'author_name' => $notice['xname'],
+                'author_name' => Response::decodeEntities($notice['xname']),
                 'author_addr' => $notice['hubloc_addr'],
                 'author_img' => $notice['photo'],
                 'info' => '',

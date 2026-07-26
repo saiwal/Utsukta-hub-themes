@@ -336,7 +336,7 @@ class Item
         xchan_query($rows, true);
 
         $out = array_map(fn($r) => [
-            'name' => $r['author']['xchan_name'] ?? '',
+            'name' => Response::decodeEntities($r['author']['xchan_name'] ?? ''),
             'address' => $r['author']['xchan_addr'] ?? '',
             'url' => $r['author']['xchan_url'] ?? '',
             'photo' => $r['author']['xchan_photo_m'] ?? '',
@@ -1746,7 +1746,7 @@ class Item
         if (($item['owner_xchan'] ?? '') !== ($item['author_xchan'] ?? '') && !empty($item['owner'])) {
             $x = $item['owner'];
             $owner = [
-                'name'    => $x['xchan_name']            ?? '',
+                'name'    => Response::decodeEntities($x['xchan_name'] ?? ''),
                 'address' => $x['xchan_addr']            ?? '',
                 'url'     => $x['xchan_url']             ?? '',
                 'hash'    => $x['xchan_hash']            ?? '',
@@ -1807,7 +1807,7 @@ class Item
                 intval($item['item_unseen']) ? 'unseen' : null,
             ])),
             'author' => [
-                'name'    => $item['author']['xchan_name']            ?? '',
+                'name'    => Response::decodeEntities($item['author']['xchan_name'] ?? ''),
                 'address' => $item['author']['xchan_addr']            ?? '',
                 'url'     => $item['author']['xchan_url']             ?? '',
                 'hash'    => $item['author']['xchan_hash']            ?? '',

@@ -234,7 +234,7 @@ class PrivacyGroups
     {
         return [
             'xchan_hash' => $c['xchan_hash'],
-            'name'       => $c['xchan_name'] ?? '',
+            'name'       => Response::decodeEntities($c['xchan_name'] ?? ''),
             'url'        => $c['xchan_url'] ?? '',
             'photo'      => $c['xchan_photo_m'] ?? '',
             'addr'       => $c['xchan_addr'] ?? '',

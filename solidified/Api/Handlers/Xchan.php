@@ -113,7 +113,7 @@ class Xchan
 
         Response::send(array_merge([
             'xchan_hash'   => $xchan['xchan_hash'],
-            'name'         => $xchan['xchan_name'],
+            'name'         => Response::decodeEntities($xchan['xchan_name']),
             'address'      => $xchan['xchan_addr'],
             'url'          => $xchan['xchan_url'],
             'photo'        => $xchan['xchan_photo_l'] ?: ($xchan['xchan_photo_m'] ?? ''),

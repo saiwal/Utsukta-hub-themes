@@ -255,7 +255,7 @@ class Wiki
             $list   = [];
             foreach (($result['pages'] ?? []) as $p) {
                 $list[] = [
-                    'name'     => escape_tags($p['title'] ?? ''),
+                    'name'     => $p['title'] ?? '',
                     'url_name' => $p['url']   ?? '',
                 ];
             }

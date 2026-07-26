@@ -42,7 +42,7 @@ class UserConfig
             'is_admin'  => $is_local && is_site_admin(),
             'uid'       => $is_local ? (int) local_channel() : 0,
             'nick'      => $channel['channel_address'] ?? '',
-            'name'      => $observer['xchan_name']    ?? '',
+            'name'      => Response::decodeEntities($observer['xchan_name'] ?? ''),
             'avatar'    => $observer['xchan_photo_m'] ?? '',
             'url'       => $observer['xchan_url']     ?? '',
             'baseurl'   => \z_root(),

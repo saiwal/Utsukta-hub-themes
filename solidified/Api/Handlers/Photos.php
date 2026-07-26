@@ -375,7 +375,7 @@ class Photos
                         'viewer_liked' => $c_liked,
                         'viewer_disliked' => $c_disliked,
                         'author' => [
-                            'name' => $c['author']['xchan_name'] ?? '',
+                            'name' => Response::decodeEntities($c['author']['xchan_name'] ?? ''),
                             'url' => $c['author']['xchan_url'] ?? '',
                             'photo' => $c['author']['xchan_photo_m'] ?? '',
                         ],
@@ -864,7 +864,7 @@ class Photos
             intval($uid));
         $connections = array_map(fn($c) => [
             'hash'  => $c['xchan_hash'],
-            'name'  => $c['xchan_name'],
+            'name'  => Response::decodeEntities($c['xchan_name']),
             'photo' => $c['xchan_photo_m'] ?? '',
         ], $cRows ?: []);
 

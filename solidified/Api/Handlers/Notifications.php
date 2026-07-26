@@ -57,7 +57,7 @@ class Notifications
                 'notify_link' => ($row['ntype'] == NOTIFY_INTRO)
                     ? z_root() . '/notify/view/' . $row['id']
                     : $row['link'],
-                'name'        => $row['xname'],
+                'name'        => Response::decodeEntities($row['xname']),
                 'url'         => $row['url'],
                 'photo'       => $row['photo'],
                 'when'        => datetime_convert('UTC', date_default_timezone_get(), $row['created']),
