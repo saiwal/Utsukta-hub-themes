@@ -2,7 +2,7 @@
 
 A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships as the **Solidified** theme for [Hubzilla](https://framagit.org/hubzilla/core), a federated social networking platform. It replaces the classic server-rendered UI with a fast, reactive client-side experience while staying fully integrated with Hubzilla's PHP backend.
 
-> The compiled theme is distributed at **[saiwal/Utsukta-hub-themes](https://github.com/saiwal/Utsukta-hub-themes)** on GitHub.
+> The theme source is available at **[saiwal/Hubzilla-Solidified-Source](https://github.com/saiwal/Hubzilla-Solidified-Source)** on GitHub.
 
 ---
 
@@ -231,150 +231,6 @@ Three locales ship out of the box:
 
 Translations are organized into namespace files (`nav`, `layout`, `ui`, `widgets`, `tools`). Locale preference is saved to localStorage (`hz-locale`). Adding a new locale means creating matching namespace files and registering the locale label — no framework changes needed.
 
----
-
-## Installation Gating
-
-Modules that correspond to optional Hubzilla apps are silently suppressed when the user has not installed that app. The `/api/nav` response returns `installed_apps: string[]`; any module whose `appName` is absent from that list has its routes redirected to `/` and its sidebar widgets hidden.
-
-| Module | Required Hubzilla app |
-|---|---|
-| Articles | `Articles` |
-| Calendar | `Calendar` |
-| Chat | `Chatrooms` |
-| Files / Cloud | `Files` |
-| Photos | `Photos` |
-| Public Stream | `Public Stream` |
-| Webpages | `Webpages` |
-| Wiki | `Wiki` |
-
-All other modules (channel, network, settings, admin, games, notepad, bookmarks, etc.) have no `appName` and are always active.
-
----
-
-## PHP Backend (`src/Api/`)
-
-A PHP API layer ships alongside the SPA as `Theme\Solidified\Api` inside the Hubzilla theme. It extends Hubzilla's native API with SPA-specific endpoints.
-
-**Key handlers:** `Network`, `Channel`, `Item`, `Nav`, `Settings`, `Profile`, `Photos`, `Files`, `Articles`, `Chat`, `Cal`, `Wiki`, `Webpages`, `Admin`, `Manage`, `Directory`, `Display`, `Pubstream`, `Siteinfo`, `Sw`, `Manifest`
-
-All responses use a consistent JSON envelope — `Response::send()`, `Response::paginate()`, `Response::error()` — with CSRF protection on all mutation endpoints.
-
----
-
-## Tech Stack
-
-| Area | Library | Version |
-|---|---|---|
-| Framework | Solid.js | 1.9.10 |
-| Router | @solidjs/router | 0.16.1 |
-| Data fetching | @tanstack/solid-query | 5.101.2 |
-| List virtualization | @tanstack/solid-virtual | 3.13.30 |
-| Styling | Tailwind CSS | 4.2.1 |
-| Icons | solid-icons | 1.2.0 |
-| Animations | solid-motionone | 1.0.4 |
-| i18n | @solid-primitives/i18n | 2.2.1 |
-| Responsive/media queries | @solid-primitives/media | 2.3.5 |
-| Markdown | marked | 18.0.0 |
-| HTML sanitization | dompurify | 3.3.1 |
-| BBCode | @bbob/parser + @bbob/html | 4.3.1 |
-| HTML → BBCode | turndown | 7.2.4 |
-| Draft persistence | idb-keyval (IndexedDB) | 6.2.2 |
-| Popovers | @floating-ui/dom | 1.7.6 |
-| Video/audio player | plyr | 3.8.4 |
-| Photo lightbox | photoswipe | 5.4.4 |
-| Image editor | filerobot-image-editor | 5.0.0-beta.159 |
-| Math rendering | katex | 0.16.22 |
-| QR codes | qrcode | 1.5.4 |
-| End-to-end encryption | libsodium-wrappers | 0.8.4 |
-| Service worker | Workbox | 7.4.0 |
-| Build tool | Vite | 8.1.0 |
-| TypeScript | — | 6.0.3 |
-
----
-
-## Getting Started (Development)
-
-**Requirements:** Node.js 18+, a running Hubzilla instance.
-
-```bash
-npm install
-npm run dev       # Dev server at http://localhost:5173
-                  # Proxies /api → https://hz-ddev.ddev.site
-```
-
-### Commands
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server with API proxy |
-| `npm run build` | Production build (`tsc -b && vite build`) |
-| `npm run build:all` | Production build + service worker |
-| `npm run build:sw` | Build service worker only |
-| `npm run watch` | Watch mode build |
-| `npm run typecheck` | Type-check with watch |
-| `npm run games:download` | Download/refresh the puzzle-game assets used by the Games module (`scripts/download-puzzles.mjs`) |
-
-### Build Output
-
-Vite outputs to `../hz-ddev/core/extend/theme/utsukta-themes/solidified/assets/` (configurable in `vite.config.ts`):
-
-```
-assets/
-├── app.js           # Main entry
-├── app-[name].js    # Code-split chunks
-└── app.css          # Styles
-```
-
-Static docs and the PHP `src/Api/` directory are copied to the theme root via `vite-plugin-static-copy`.
-
----
-
-## Project Structure
-
-```
-src/
-├── App.tsx             # Root component, module auto-import
-├── Layout.tsx          # Main layout (nav, sidebars, mobile tab)
-├── index.tsx           # Entry point (PWA, theme setup)
-├── router.tsx          # Router setup
-├── pwa.ts              # PWA update detection
-├── i18n/               # i18n provider and locale files
-├── modules/            # Feature modules (35 directories)
-│   ├── channel/
-│   ├── network/
-│   ├── articles/
-│   └── ...
-├── shared/
-│   ├── lib/            # Utilities (API, module registry, BBCode, CSRF)
-│   ├── store/          # Global state (auth, config, nav)
-│   ├── types/          # Shared TypeScript types
-│   ├── views/          # Shared UI components
-│   ├── widgets/        # Shared widget components
-│   ├── editor/         # Rich text editor
-│   └── stream/         # Stream/feed components
-└── Api/                # PHP backend handlers
-```
-
-### Adding a Module
-
-```typescript
-// src/modules/myfeature/index.ts
-import { registerModule } from "@/shared/lib/module-registry";
-
-registerModule({
-  id: "myfeature",
-  routes: [{ path: "/myfeature", component: () => import("./views/MyView") }],
-  navItem: { label: "My Feature", icon: "star", path: "/myfeature" },
-  slots: { right: [MyWidget] },
-  // appName: "My App",  // optional: gate on Hubzilla app installation
-});
-```
-
-Modules are auto-imported via `import.meta.glob()` — no changes to core files needed.
-
----
-
 ## AI Assistance
 
 Parts of this codebase were developed with the assistance of [Claude Code](https://claude.ai/code), Anthropic's AI coding tool. This includes code generation, translation key authoring (i18n locale files), and documentation. All AI-generated content has been reviewed and is the responsibility of the project maintainers.
@@ -383,4 +239,4 @@ Parts of this codebase were developed with the assistance of [Claude Code](https
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](../LICENSE).
