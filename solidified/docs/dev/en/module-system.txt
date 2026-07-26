@@ -23,27 +23,43 @@ registerModule({
     href: "/myfeature",
     context: "owner",        // who sees this nav item
   },
-  slots: {
-    right: () => import("./widgets/MySidebarWidget"),
-  },
+  widgets: [
+    {
+      id: "myfeature.sidebar",         // stable, persisted — never rename once shipped
+      label: () => useI18n().t("widgets.myfeature_sidebar"),
+      loader: () => import("./widgets/MySidebarWidget"),
+      slot: "right",
+    },
+  ],
   appName: "MyFeature",      // omit if no app prerequisite
 });
 ```
 
 The file is auto-imported by `App.tsx` via `import.meta.glob("./modules/*/index.ts", { eager: true })`. You never need to update a central list.
 
+See `slot-system.txt` for the full `WidgetDef` reference (multi-instance widgets, config panels, global vs. module-local widgets, layout templates).
+
 ## ModuleDef Interface
 
 ```typescript
 interface ModuleDef {
-  id: string;                   // unique module identifier
-  routes: RouteDef[];           // SPA routes (lazy-loaded)
-  navItem: NavItemDef;          // navigation entry
-  slots?: SlotsDef;             // widget injections
-  permissions?: string[];       // future use
-  appName?: string;             // Hubzilla app gate (e.g. "Photos")
+  id: string;                        // unique module identifier
+  routes: RouteDef[];                // SPA routes (lazy-loaded)
+  navItem?: NavItemDef;              // navigation entry (optional — some modules are widget-only, e.g. "blocks")
+  widgets?: WidgetDef[];             // widget contributions — see slot-system.txt
+  /** @deprecated Ignored by the registry; migrate to `widgets`. */
+  slots?: SlotsDef;
+  permissions?: string[];            // future use
+  appName?: string;                  // Hubzilla app gate (e.g. "Photos")
+  requiresAuth?: boolean;            // true = anonymous visitors are redirected to /login
+  /** Reactive accessor for the layout-template id assigned to the item the
+   * active route is showing (e.g. a webpage's assigned template). See
+   * "Layout templates" in slot-system.txt. */
+  pageTemplate?: () => string | null | undefined;
 }
 ```
+
+`slots` is a deprecated, ignored field kept only for backward compatibility with older module code — new modules should declare sidebar/region content via `widgets`, not `slots`. A console warning fires if a module still sets a non-empty `slots` object.
 
 ## NavItemDef
 
@@ -55,6 +71,8 @@ interface NavItemDef {
   href: string | (() => string);   // navigation target (can be reactive)
   context?: NavContext | NavContext[];
   hidden?: boolean;
+  /** Help-mode target ("nav.<topic>" form) — see help-mode.txt. */
+  helpTarget?: string;
 }
 
 type NavContext =
