@@ -162,8 +162,20 @@ class StreamWidgets
         $item_normal   = item_normal(null, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
+        // item.created is stored in UTC, but the widget's dbegin/dend click
+        // filters are computed in the site's local timezone (see Channel.php
+        // et al., which convert them via datetime_convert(site_tz, 'UTC', ...)).
+        // Bucketing by raw UTC would misfile any post made near local
+        // midnight into the wrong month: a dot shows, but the click finds
+        // nothing. Shift by the site's current UTC offset before grouping —
+        // not per-row DST-aware, but matches this app's existing
+        // datetime_convert usage far better than no conversion at all.
+        $offset = (new \DateTimeZone(date_default_timezone_get()))
+            ->getOffset(new \DateTime('now', new \DateTimeZone('UTC')));
+        $localCreated = "DATE_ADD(item.created, INTERVAL $offset SECOND)";
+
         $rows = dbq(
-            "SELECT YEAR(item.created) AS yr, MONTH(item.created) AS mo, COUNT(*) AS total
+            "SELECT YEAR($localCreated) AS yr, MONTH($localCreated) AS mo, COUNT(*) AS total
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
@@ -209,25 +221,45 @@ class StreamWidgets
             Response::error(400, 'Valid year and month are required');
         }
 
+        // item.created is stored in UTC, but the calendar grid (and the
+        // dbegin/dend the day-click handler sends) buckets by the site's
+        // local timezone — convert the local month boundaries to UTC for the
+        // query, then bucket each row back into local time. Grouping
+        // directly on DAY(item.created) would misfile posts made near local
+        // midnight into the wrong UTC day: a dot shows, but clicking it
+        // finds nothing.
+        $tz         = date_default_timezone_get();
+        $monthStart = sprintf('%04d-%02d-01 00:00:00', $year, $month);
+        [$nextYear, $nextMonth] = $month === 12 ? [$year + 1, 1] : [$year, $month + 1];
+        $monthEnd   = sprintf('%04d-%02d-01 00:00:00', $nextYear, $nextMonth);
+
+        $utcFrom = datetime_convert($tz, 'UTC', $monthStart);
+        $utcTo   = datetime_convert($tz, 'UTC', $monthEnd);
+
         $rows = dbq(
-            "SELECT DAY(item.created) AS dy, COUNT(*) AS total
+            "SELECT item.created
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
                AND item.item_wall       = 1
                AND item.item_deleted    = 0
                AND item.verb           != 'Add'
-               AND YEAR(item.created)   = " . intval($year) . "
-               AND MONTH(item.created)  = " . intval($month) . "
-               $perm_sql $item_normal
-             GROUP BY dy
-             ORDER BY dy ASC"
+               AND item.created        >= '" . dbesc($utcFrom) . "'
+               AND item.created        <  '" . dbesc($utcTo)   . "'
+               $perm_sql $item_normal"
         );
 
-        $days = array_map(fn($r) => [
-            'day'   => (int) $r['dy'],
-            'count' => (int) $r['total'],
-        ], $rows ?: []);
+        $counts = [];
+        foreach ($rows ?: [] as $row) {
+            $day = (int) datetime_convert('UTC', $tz, $row['created'], 'j');
+            $counts[$day] = ($counts[$day] ?? 0) + 1;
+        }
+        ksort($counts);
+
+        $days = [];
+        foreach ($counts as $day => $count) {
+            $days[] = ['day' => $day, 'count' => $count];
+        }
 
         Response::send(['days' => $days]);
     }
