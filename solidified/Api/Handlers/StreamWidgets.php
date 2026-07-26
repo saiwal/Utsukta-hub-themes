@@ -181,6 +181,7 @@ class StreamWidgets
                AND item.item_thread_top = 1
                AND item.item_wall       = 1
                AND item.item_deleted    = 0
+               AND item.item_private   IN (0, 1)
                AND item.verb           != 'Add'
                $perm_sql $item_normal
              GROUP BY yr, mo
@@ -243,6 +244,7 @@ class StreamWidgets
                AND item.item_thread_top = 1
                AND item.item_wall       = 1
                AND item.item_deleted    = 0
+               AND item.item_private   IN (0, 1)
                AND item.verb           != 'Add'
                AND item.created        >= '" . dbesc($utcFrom) . "'
                AND item.created        <  '" . dbesc($utcTo)   . "'
