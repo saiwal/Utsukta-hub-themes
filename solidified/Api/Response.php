@@ -29,6 +29,14 @@ class Response
         ]);
     }
 
+    // Some text fields (xchan_name from federated actors, or values this API
+    // itself escape_tags()'d on write) can carry literal HTML entities.
+    // Decode once here so plain-text JSX rendering doesn't show "&quot;" etc.
+    public static function decodeEntities(?string $text): string
+    {
+        return htmlspecialchars_decode((string)$text, ENT_QUOTES | ENT_HTML5);
+    }
+
     public static function error(int $status, string $message): never
     {
         http_response_code($status);

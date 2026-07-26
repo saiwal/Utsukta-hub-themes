@@ -62,7 +62,7 @@ trait FormatsItems
                 if ($authorKey !== '' && $xchan[$column] === $authorKey) {
                     continue;
                 }
-                $recipients .= $xchan['xchan_name'] . ', ';
+                $recipients .= htmlspecialchars_decode($xchan['xchan_name'], ENT_QUOTES | ENT_HTML5) . ', ';
             }
         }
 
@@ -290,7 +290,7 @@ trait FormatsItems
                 intval($item['item_delayed'] ?? 0) ? 'scheduled' : null,
             ])),
             'author' => [
-                'name'    => urldecode($item['author']['xchan_name']         ?? ''),
+                'name'    => htmlspecialchars_decode(urldecode($item['author']['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
                 'address' => $item['author']['xchan_addr']         ?? '',
                 'url'     => $item['author']['xchan_url']          ?? '',
                 'hash'    => $item['author']['xchan_hash']         ?? '',
@@ -305,7 +305,7 @@ trait FormatsItems
                 if (!empty($item['source_xchan']) && !empty($item['source'])) {
                     $x = $item['source'];
                     return [
-                        'name'    => urldecode($x['xchan_name']            ?? ''),
+                        'name'    => htmlspecialchars_decode(urldecode($x['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
                         'hash'    => $x['xchan_hash']            ?? '',
@@ -320,7 +320,7 @@ trait FormatsItems
                 if ($item['owner_xchan'] !== $item['author_xchan'] && !empty($item['owner'])) {
                     $x = $item['owner'];
                     return [
-                        'name'    => urldecode($x['xchan_name']            ?? ''),
+                        'name'    => htmlspecialchars_decode(urldecode($x['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
                         'address' => $x['xchan_addr']            ?? '',
                         'url'     => $x['xchan_url']             ?? '',
                         'hash'    => $x['xchan_hash']            ?? '',
@@ -334,7 +334,7 @@ trait FormatsItems
             })(),
             'recipients' => $this->dmRecipients($item),
             'permalink' => $item['plink'] ?? '',
-            'location' => $item['location'] ?? '',
+            'location' => htmlspecialchars_decode($item['location'] ?? '', ENT_QUOTES | ENT_HTML5),
             'coord' => $item['coord'] ?? '',
             'expires' => (isset($item['expires']) && $item['expires'] > NULL_DATE)
                 ? $item['expires']

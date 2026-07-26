@@ -242,9 +242,9 @@ if ($identifier) {
             'thr_parent'      => $item['thr_parent'],
             'created'         => $item['created'],
             'edited'          => $item['edited'],
-            'title'           => $item['title'],
+            'title'           => Response::decodeEntities($item['title']),
             'body'            => $item['body'],
-            'summary'         => $item['summary'] ?? '',
+            'summary'         => Response::decodeEntities($item['summary'] ?? ''),
             'slug'            => $slug,
             // Human-facing app URL (slug when set, uuid otherwise) — distinct
             // from 'permalink' (the immutable mid-based federation identity).
@@ -266,7 +266,7 @@ if ($identifier) {
                 intval($item['item_starred'])    ? 'starred'       : null,
             ])),
             'author'          => [
-                'name'    => $item['author']['xchan_name']           ?? '',
+                'name'    => Response::decodeEntities($item['author']['xchan_name']  ?? ''),
                 'address' => $item['author']['xchan_addr']           ?? '',
                 'url'     => $item['author']['xchan_url']            ?? '',
                 'hash'    => $item['author']['xchan_hash']           ?? '',

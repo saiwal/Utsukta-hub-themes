@@ -668,7 +668,7 @@ class Connections
         return [
             'id'             => intval($row['abook_id']),
             'xchan_hash'     => $row['xchan_hash'],
-            'name'           => $row['xchan_name'],
+            'name'           => Response::decodeEntities($row['xchan_name']),
             'address'        => $row['xchan_addr'],
             'url'            => $row['xchan_url'],
             'photo'          => $row['xchan_photo_m'],

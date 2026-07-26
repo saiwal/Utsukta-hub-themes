@@ -116,7 +116,7 @@ class Manage
 
             $channels[] = [
                 'channel_id' => intval($ch['channel_id']),
-                'channel_name' => $ch['channel_name'],
+                'channel_name' => Response::decodeEntities($ch['channel_name']),
                 'channel_address' => $ch['channel_address'],
                 'channel_hash' => $ch['channel_hash'],
                 'is_current' => intval($ch['channel_id']) === $currentUid,
@@ -151,7 +151,7 @@ class Manage
         $delegates = [];
         foreach (($rows ?: []) as $del) {
             $delegates[] = [
-                'name' => $del['xchan_name'],
+                'name' => Response::decodeEntities($del['xchan_name']),
                 'address' => $del['xchan_addr'],
                 'photo' => $del['xchan_photo_m'] ?? '',
                 'url' => $del['xchan_url'] ?? '',

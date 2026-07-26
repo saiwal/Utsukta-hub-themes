@@ -98,7 +98,7 @@ class Profiles
             'hometown'     => $p['hometown'] ?? '',
             'gender'       => $p['gender'] ?? '',
             'dob'          => $p['dob'] ?? '',
-            'about'        => $p['about'] ?? '',
+            'about'        => Response::decodeEntities($p['about'] ?? ''),
             'keywords'     => $p['keywords'] ?? '',
             'hide_friends' => intval($p['hide_friends'] ?? 0),
             'publish'      => intval($p['publish'] ?? 0),
@@ -325,7 +325,7 @@ class Profiles
         Response::send(array_map(fn($r) => [
             'abook_id' => intval($r['abook_id']),
             'xchan_hash' => $r['xchan_hash'],
-            'name'       => $r['xchan_name'] ?? '',
+            'name'       => Response::decodeEntities($r['xchan_name'] ?? ''),
             'address'    => $r['xchan_addr'] ?? '',
             'photo'      => $r['xchan_photo_m'] ?? '',
         ], $rows ?? []));

@@ -195,7 +195,7 @@ class Cal
                 'plink'       => $rr['plink'] ?? '',
                 'html'        => $html,
                 'author'      => [
-                    'name'   => $rr['xchan_name']    ?? '',
+                    'name'   => Response::decodeEntities($rr['xchan_name'] ?? ''),
                     'avatar' => $rr['xchan_photo_s'] ?? '',
                     'url'    => $rr['xchan_url']     ?? '',
                 ],
@@ -701,7 +701,7 @@ class Cal
             }
 
             $color       = $cal['{http://apple.com/ns/ical/}calendar-color'] ?: '#6cad39';
-            $displayname = $cal['{DAV:}displayname'] ?: 'Calendar';
+            $displayname = Response::decodeEntities($cal['{DAV:}displayname'] ?: 'Calendar');
             $editable    = ($cal['share-access'] !== 2);
 
             // Use SabreDAV's own API — avoids direct table/column name assumptions
@@ -1054,7 +1054,7 @@ class Cal
             foreach ($sabrecals as $cal) {
                 $access      = $cal['share-access'];   // 1=own, 2=read-only, 3=read-write
                 $color       = $cal['{http://apple.com/ns/ical/}calendar-color'] ?: '#6cad39';
-                $displayname = $cal['{DAV:}displayname'] ?: 'Calendar';
+                $displayname = Response::decodeEntities($cal['{DAV:}displayname'] ?: 'Calendar');
                 $cpval       = get_pconfig($uid, 'cdav_calendar', $cal['id'][0]);
                 $enabled     = !($cpval !== false && intval($cpval) === 0);
                 $editable    = ($access !== 2);
@@ -1066,7 +1066,7 @@ class Cal
                         $shareeData = channelx_by_nick(substr($invite->principal, 11));
                         if ($shareeData) {
                             $sharees[] = [
-                                'name'   => $shareeData['channel_name'],
+                                'name'   => Response::decodeEntities($shareeData['channel_name']),
                                 'hash'   => $shareeData['channel_hash'],
                                 'access' => $invite->access,
                             ];
@@ -1108,7 +1108,7 @@ class Cal
         $chcal_enabled    = !($chcal_pval !== false && intval($chcal_pval) === 0);
         $channel_calendar = [
             'id'          => 'channel_calendar',
-            'displayname' => $channel['channel_name'],
+            'displayname' => Response::decodeEntities($channel['channel_name']),
             'color'       => '#3a87ad',
             'enabled'     => $chcal_enabled,
             'exportUrl'   => '/api/cal/' . $channel['channel_address'] . '?export=ical',
@@ -1186,7 +1186,7 @@ class Cal
             'id'          => intval($id[0]),
             'instanceId'  => intval($id[1]),
             'uri'         => $uri,
-            'displayname' => $name,
+            'displayname' => Response::decodeEntities($name),
             'color'       => $color,
         ]);
     }
@@ -1244,7 +1244,7 @@ class Cal
         $caldavBackend->updateCalendar([$calId, $instanceId], $patch);
         $patch->commit();
 
-        Response::send(['displayname' => $name, 'color' => $color]);
+        Response::send(['displayname' => Response::decodeEntities($name), 'color' => $color]);
     }
 
     // ── CalDAV: delete ────────────────────────────────────────────────────────

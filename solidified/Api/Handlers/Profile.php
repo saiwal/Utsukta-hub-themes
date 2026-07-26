@@ -147,7 +147,7 @@ class Profile
         ]);
 
         Response::send([
-            'channel_name'    => $profile['channel_name'],
+            'channel_name'    => Response::decodeEntities($profile['channel_name']),
             'channel_address' => $profile['channel_address'],
             'xchan_addr'      => $channel['xchan_addr'] ?? '',
             'channel_photo_l' => $channel['xchan_photo_l'] ?? '',
@@ -156,7 +156,7 @@ class Profile
             'is_default'      => (bool) $profile['is_default'],
             // Fields hidden when hidewall is set
             'pdesc'           => $block ? '' : ($profile['pdesc']     ?? ''),
-            'about'           => $block ? '' : ($profile['about']     ?? ''),
+            'about'           => $block ? '' : Response::decodeEntities($profile['about'] ?? ''),
             'location'        => $block ? '' : implode(', ', $location_parts),
             'address'         => $block ? '' : ($profile['address']   ?? ''),
             'hometown'        => $block ? '' : ($profile['hometown']  ?? ''),
@@ -221,7 +221,7 @@ class Profile
         $xchan = q("SELECT * FROM xchan WHERE xchan_addr = '%s' LIMIT 1", dbesc($nick));
         $xrow  = $xchan ? $xchan[0] : null;
 
-        $name   = $xrow['xchan_name']    ?? '';
+        $name   = Response::decodeEntities($xrow['xchan_name'] ?? '');
         $photo  = $xrow['xchan_photo_l'] ?? '';
         $url    = $xrow['xchan_url']     ?? '';
         $about  = '';
@@ -340,7 +340,7 @@ class Profile
         );
 
         $connections = array_map(fn($r) => [
-            'name'       => $r['xchan_name']        ?? '',
+            'name'       => Response::decodeEntities($r['xchan_name'] ?? ''),
             'address'    => $r['xchan_addr']         ?? '',
             'photo'      => $r['xchan_photo_m']      ?? '',
             'url'        => $r['xchan_url']           ?? '',

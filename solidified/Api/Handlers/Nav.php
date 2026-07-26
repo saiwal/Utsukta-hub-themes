@@ -35,7 +35,7 @@ class Nav
             'is_admin'    => $is_local && is_site_admin(),
             'is_owner'    => $is_owner,
             'nick'        => $channel['channel_address'] ?? '',
-            'name'        => $observer['xchan_name'] ?? '',
+            'name'        => Response::decodeEntities($observer['xchan_name'] ?? ''),
             'addr'        => $observer['xchan_addr'] ?? '',
             'avatar'      => $observer['xchan_photo_m'] ?? '',
             'avatar_s'    => $observer['xchan_photo_s'] ?? '',

@@ -340,7 +340,7 @@ class Directory
 
             $entries[] = [
                 'hash'         => $hash,
-                'name'         => $rr['name']        ?? '',
+                'name'         => Response::decodeEntities($rr['name'] ?? ''),
                 'address'      => $addr,
                 'network'      => 'zot6',
                 'photo'        => $rr['photo']        ?? '',

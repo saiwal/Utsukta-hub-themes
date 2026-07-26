@@ -309,7 +309,7 @@ class Chat
         foreach (($conns ?: []) as $c) {
             $conn_list[] = [
                 'hash'   => $c['abook_xchan'],
-                'name'   => $c['xchan_name'] ?? '',
+                'name'   => Response::decodeEntities($c['xchan_name'] ?? ''),
                 'avatar' => $c['xchan_photo_m'] ?? '',
                 'url'    => $c['xchan_url'] ?? '',
                 'addr'   => $c['xchan_addr'] ?? '',
@@ -464,7 +464,7 @@ class Chat
                 'id'          => intval($m['chat_id']),
                 'body'        => $body,
                 'created'     => $m['created'],
-                'author_name' => $m['xchan_name'] ?? '',
+                'author_name' => Response::decodeEntities($m['xchan_name'] ?? ''),
                 'author_avatar' => $m['xchan_photo_m'] ?? '',
                 'author_url'  => $m['xchan_url'] ?? '',
                 'author_hash' => $m['chat_xchan'],
@@ -484,7 +484,7 @@ class Chat
         foreach (($presence ?: []) as $p) {
             $present[] = [
                 'hash'   => $p['cp_xchan'],
-                'name'   => $p['xchan_name'] ?? '',
+                'name'   => Response::decodeEntities($p['xchan_name'] ?? ''),
                 'avatar' => $p['xchan_photo_m'] ?? '',
                 'url'    => $p['xchan_url'] ?? '',
                 'status' => $p['cp_status'],

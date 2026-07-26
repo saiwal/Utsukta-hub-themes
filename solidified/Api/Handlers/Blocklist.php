@@ -37,7 +37,7 @@ class Blocklist
 
         Response::send(array_map(fn($r) => [
             'hash'    => $r['xchan_hash'],
-            'name'    => $r['xchan_name'],
+            'name'    => Response::decodeEntities($r['xchan_name']),
             'address' => $r['xchan_addr'],
             'url'     => $r['xchan_url'],
             'photo'   => $r['xchan_photo_m'],

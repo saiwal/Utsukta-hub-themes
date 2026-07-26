@@ -142,7 +142,7 @@ class StreamWidgets
             'uuid'         => $item['uuid'],
             'title'        => $item['title'] ?? '',
             'body'         => $item['body']  ?? '',
-            'authorName'   => $item['author']['xchan_name']    ?? '',
+            'authorName'   => Response::decodeEntities($item['author']['xchan_name'] ?? ''),
             'authorAvatar' => $item['author']['xchan_photo_m'] ?? '',
             'created'      => $item['created'],
             'commentCount' => (int) $item['comment_count'],
