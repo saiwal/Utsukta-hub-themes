@@ -267,12 +267,109 @@ class Settings
         ]);
     }
 
+    // Service-class limit keys shown to the account holder, alongside how to
+    // compute current usage for each (mirrors the same usage queries core
+    // itself uses when enforcing these limits — see e.g. New_channel.php,
+    // Zotlabs/Lib/Connect.php, Zotlabs/Module/Item.php::item_check_service_class(),
+    // Zotlabs/Module/Photos.php, Zotlabs/Lib/Chatroom.php, Zotlabs/Module/Tokens.php).
+    // 'usage' is null for keys that aren't a running total (a floor value or a
+    // per-room concurrent count) — those just show the configured limit.
+    private const QUOTA_KEYS = [
+        'total_identities', 'total_channels', 'total_feeds', 'total_items', 'total_pages',
+        'photo_upload_limit', 'attach_upload_limit', 'chatrooms', 'chatters_inroom',
+        'access_tokens', 'minimum_feedcheck_minutes',
+    ];
+
     private function getAccountSettings(): void
     {
-        $email = \App::$account['account_email'];
+        require_once('include/text.php');
+
+        $email   = \App::$account['account_email'];
+        $channel = \App::get_channel();
+        $channel_id = intval($channel['channel_id'] ?? 0);
+        $account_id = intval(\App::$account['account_id'] ?? 0);
+
+        $quotas = ($channel_id && $account_id) ? $this->buildQuotas($channel_id, $account_id) : [];
+
         Response::send([
             '$email' => $email,
+            'quotas' => $quotas,
         ]);
+    }
+
+    private function buildQuotas(int $channel_id, int $account_id): array
+    {
+        $quotas = [];
+        foreach (self::QUOTA_KEYS as $key) {
+            $limit = service_class_fetch($channel_id, $key);
+            if ($limit === false) continue;
+            $limit = intval(engr_units_to_bytes($limit));
+
+            $quotas[] = [
+                'key'   => $key,
+                'limit' => $limit,
+                'usage' => $this->quotaUsage($key, $channel_id, $account_id),
+            ];
+        }
+        return $quotas;
+    }
+
+    private function quotaUsage(string $key, int $channel_id, int $account_id): ?int
+    {
+        switch ($key) {
+            case 'total_identities':
+                $r = q("SELECT COUNT(channel_id) AS total FROM channel WHERE channel_account_id = %d AND channel_removed = 0",
+                    $account_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'total_channels':
+                $r = q("SELECT COUNT(*) AS total FROM abook WHERE abook_channel = %d AND abook_self = 0",
+                    $channel_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'total_feeds':
+                $r = q("SELECT COUNT(*) AS total FROM abook WHERE abook_account = %d AND abook_feed = 1",
+                    $account_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'total_items':
+                require_once('include/items.php');
+                $r = q("SELECT COUNT(id) AS total FROM item WHERE parent = id AND item_wall = 1 AND uid = %d " . item_normal(),
+                    $channel_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'total_pages':
+                $r = q("SELECT COUNT(i.id) AS total FROM item i
+                        RIGHT JOIN channel c ON (i.author_xchan = c.channel_hash AND i.uid = c.channel_id)
+                        WHERE i.parent = i.id AND i.item_type = %d AND i.item_deleted = 0 AND i.uid = %d",
+                    intval(ITEM_TYPE_WEBPAGE), $channel_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'photo_upload_limit':
+                $r = q("SELECT SUM(filesize) AS total FROM photo WHERE aid = %d AND imgscale = 0",
+                    $account_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'attach_upload_limit':
+                $r = q("SELECT SUM(filesize) AS total FROM attach WHERE aid = %d",
+                    $account_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'chatrooms':
+                $r = q("SELECT COUNT(cr_id) AS total FROM chatroom WHERE cr_aid = %d",
+                    $account_id);
+                return intval($r[0]['total'] ?? 0);
+
+            case 'access_tokens':
+                $r = q("SELECT COUNT(atoken_id) AS total FROM atoken WHERE atoken_uid = %d",
+                    $channel_id);
+                return intval($r[0]['total'] ?? 0);
+
+            default:
+                // 'chatters_inroom' (per-room concurrent count) and
+                // 'minimum_feedcheck_minutes' (a floor, not a total) — limit only.
+                return null;
+        }
     }
 
     private function getAppsSettings(): void

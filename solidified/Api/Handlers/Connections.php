@@ -4,6 +4,9 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Zotlabs\Lib\Connect;
+use Zotlabs\Lib\Libsync;
+use Zotlabs\Daemon\Master;
 
 class Connections
 {
@@ -143,6 +146,7 @@ class Connections
     // POST /api/connections/permcats      — create a custom permission role, or
     //                                        update an existing custom role's permission grid
     //                                        (body: { name, perms?: string[] })
+    // POST /api/connections/connect       — add a new connection (body: { url })
     // POST /api/connections/:id/approve  — approve a pending connection
     // POST /api/connections/:id/refresh  — re-pull permissions/profile from the remote contact
     // POST /api/connections/:id          — update role / closeness
@@ -153,6 +157,10 @@ class Connections
 
         if ($sub === 'permcats') {
             $this->createPermcat($uid);
+        }
+
+        if ($sub === 'connect') {
+            $this->createConnection($uid);
         }
 
         $abook_id = intval($sub);
@@ -203,6 +211,60 @@ class Connections
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    // Ports core's Zotlabs\Module\Follow::init() (the classic /follow module) so
+    // adding a connection stays inside the SPA instead of navigating away to
+    // the classic theme. service-class limits (total_channels) are enforced
+    // inside Connect::connect() itself and surfaced via its 'message'.
+    private function createConnection(int $uid): never
+    {
+        require_once 'include/network.php';
+
+        $data = Auth::$parsedBody;
+        $url  = notags(trim($data['url'] ?? ''));
+        if (!$url) {
+            Response::error(400, 'url is required');
+        }
+
+        $parsed = parse_url($url);
+        if (isset($parsed['host'])) {
+            $parsed['host'] = punify($parsed['host']);
+            $url = unparse_url($parsed);
+        }
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        $result = Connect::connect($channel, $url);
+
+        if (!$result['success']) {
+            Response::error(400, $result['message'] ?: 'Unable to connect');
+        }
+
+        $clone = [];
+        foreach ($result['abook'] as $k => $v) {
+            if (strpos($k, 'abook_') === 0) {
+                $clone[$k] = $v;
+            }
+        }
+        unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+
+        $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+        if ($abconfig) {
+            $clone['abconfig'] = $abconfig;
+        }
+        Libsync::build_sync_packet(0, ['abook' => [$clone]], true);
+
+        $can_view_stream = intval(get_abconfig($uid, $clone['abook_xchan'], 'their_perms', 'view_stream'));
+        if ($can_view_stream || ($result['abook']['xchan_network'] ?? '') === 'rss') {
+            Master::Summon(['Onepoll', $result['abook']['abook_id']]);
+        }
+
+        Response::send([
+            'abook_id' => intval($result['abook']['abook_id']),
+            'xchan'    => $result['abook']['abook_xchan'],
+        ]);
+    }
 
     private function approve(int $uid, int $abook_id, array $abook): never
     {

@@ -8,6 +8,36 @@ use Zotlabs\Lib\Libsync;
 
 class Photos
 {
+    // Mirrors core's include/photos.php::photo_upload() total-storage check —
+    // the SPA stores photo uploads via attach_store() (which only enforces
+    // attach_upload_limit), so photo_upload_limit was never checked at all.
+    private function checkPhotoUploadLimit(array $owner, int $filesize): void
+    {
+        require_once('include/text.php');
+
+        $limit = engr_units_to_bytes(service_class_fetch($owner['channel_id'], 'photo_upload_limit'));
+        if ($limit === false) return;
+
+        $r = q("SELECT SUM(filesize) AS total FROM photo WHERE aid = %d AND imgscale = 0",
+            intval($owner['channel_account_id']));
+        $total = intval($r[0]['total'] ?? 0);
+
+        if ($total + $filesize > $limit) {
+            Response::error(400, upgrade_message());
+        }
+    }
+
+    // attach_store() returns ['success' => false, 'message' => '...'] with a
+    // specific reason (file-size cap or attach_upload_limit quota) on failure
+    // instead of throwing — forward that instead of a blanket 500.
+    private function requireAttachStoreSuccess(?array $res): void
+    {
+        if (!$res || empty($res['success'])) {
+            $msg = $res['message'] ?? '';
+            Response::error($msg ? 400 : 500, $msg ?: 'Image save failed');
+        }
+    }
+
     // GET /api/photos/:nick           → album list
     // GET /api/photos/:nick/album/:hash → photos in album
     // GET /api/photos/:nick/image/:id   → single photo detail
@@ -509,6 +539,8 @@ class Photos
             }
             $newHash = photo_new_resource();
 
+            $this->checkPhotoUploadLimit($owner, intval($_FILES['file']['size'] ?? 0));
+
             $_FILES['userfile'] = $_FILES['file'];
             $res = attach_store($owner, get_observer_hash(), '', [
                 'album'  => $album,
@@ -517,7 +549,8 @@ class Photos
                 'source' => 'photos',
             ]);
 
-            if (!$res || !intval($res['data']['is_photo'] ?? 0)) {
+            $this->requireAttachStoreSuccess($res);
+            if (!intval($res['data']['is_photo'] ?? 0)) {
                 Response::error(500, 'Image save failed');
             }
 
@@ -593,6 +626,8 @@ class Photos
         $meta    = $existing[0];
         $newHash = photo_new_resource();
 
+        $this->checkPhotoUploadLimit($owner, intval($_FILES['file']['size'] ?? 0));
+
         // Store the edited file as a fresh attachment in the same album (original untouched)
         $_FILES['userfile'] = $_FILES['file'];
         $res = attach_store($owner, get_observer_hash(), '', [
@@ -602,7 +637,8 @@ class Photos
             'source' => 'photos',
         ]);
 
-        if (!$res || !intval($res['data']['is_photo'] ?? 0)) {
+        $this->requireAttachStoreSuccess($res);
+        if (!intval($res['data']['is_photo'] ?? 0)) {
             Response::error(500, 'Image save failed');
         }
 

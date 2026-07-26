@@ -242,7 +242,10 @@ class Chat
             'deny_gid'  => $deny_gid,
         ];
 
-        Chatroom::create($channel, $arr);
+        $result = Chatroom::create($channel, $arr);
+        if (empty($result['success'])) {
+            Response::error(400, $result['message'] ?? 'Failed to create room');
+        }
 
         $x = q(
             "SELECT * FROM chatroom WHERE cr_name = '%s' AND cr_uid = %d LIMIT 1",

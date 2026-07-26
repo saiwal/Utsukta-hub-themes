@@ -52,6 +52,38 @@ class Admin
         }
     }
 
+    private const SERVICE_CLASS_PROPS = [
+        'photo_upload_limit', 'attach_upload_limit', 'total_items', 'total_pages',
+        'total_identities', 'total_channels', 'total_feeds',
+        'minimum_feedcheck_minutes', 'chatrooms', 'chatters_inroom', 'access_tokens',
+    ];
+
+    // Core has no function that lists defined service_class names — load the
+    // whole config family and read its keys (same approach util/service_class
+    // itself uses), skipping the 'config_loaded' load-marker and the
+    // 'upgrade_link' special key (a sitewide message string, not a class).
+    private function listServiceClassNames(): array
+    {
+        Config::Load('service_class');
+        $names = array_keys(App::$config['service_class'] ?? []);
+        return array_values(array_diff($names, ['config_loaded', 'upgrade_link']));
+    }
+
+    // Whitelist + coerce incoming property values; unknown keys are dropped,
+    // missing/blank keys are omitted (omission = "unlimited", matching how
+    // service_class_fetch() in core treats an absent property).
+    private function sanitizeServiceClassProps(array $raw): array
+    {
+        $out = [];
+        foreach (self::SERVICE_CLASS_PROPS as $k) {
+            if (!isset($raw[$k]) || $raw[$k] === '' || $raw[$k] === null) continue;
+            if (!is_numeric($raw[$k]) || intval($raw[$k]) < 0)
+                Response::error(400, "Property '{$k}' must be a non-negative integer");
+            $out[$k] = intval($raw[$k]);
+        }
+        return $out;
+    }
+
     public function get(): void
     {
         $this->requireAdmin();
@@ -76,6 +108,7 @@ class Admin
             case 'inspect-queue':  $this->getQueue();         break;
             case 'queueworker':    $this->getQueueworker();    break;
             case 'profile-fields': $this->getProfileFields(); break;
+            case 'service-classes': $this->getServiceClasses(); break;
             case 'db-updates':     $this->getDbUpdates();     break;
             case 'logs':           $this->getLogs();          break;
             default:
@@ -99,6 +132,7 @@ class Admin
             case 'addons':          $this->postAddons();         break;
             case 'themes':          $this->postThemes();         break;
             case 'profile-fields':  $this->postProfileFields();  break;
+            case 'service-classes': $this->postServiceClasses(); break;
             case 'logs':            $this->postLogs();           break;
             case 'queueworker':     $this->postQueueworker();    break;
             default:
@@ -415,11 +449,130 @@ class Admin
                 q("UPDATE register SET reg_vital = 0 WHERE reg_id = %d AND reg_vital = 1", $reg_id);
                 break;
 
+            case 'set_service_class':
+                $uid = intval($data['account_id'] ?? 0);
+                if (!$uid)
+                    Response::error(400, 'account_id required');
+                $class = trim($data['service_class'] ?? ''); // '' = unrestricted/no class
+                if ($class !== '' && Config::Get('service_class', $class) === false)
+                    Response::error(400, "Unknown service class: {$class}");
+                q("UPDATE account SET account_service_class = '%s' WHERE account_id = %d",
+                    dbesc($class), $uid);
+                break;
+
+            case 'set_expires':
+                $uid = intval($data['account_id'] ?? 0);
+                if (!$uid)
+                    Response::error(400, 'account_id required');
+                $raw = trim($data['expires'] ?? ''); // 'YYYY-MM-DD' or '' to clear
+                if ($raw === '') {
+                    $expires = '0001-01-01 00:00:00';
+                } else {
+                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw))
+                        Response::error(400, 'Invalid date format, expected YYYY-MM-DD');
+                    $ts = strtotime($raw . ' 00:00:00 UTC');
+                    if ($ts === false)
+                        Response::error(400, 'Invalid date');
+                    $expires = gmdate('Y-m-d H:i:s', $ts);
+                }
+                q("UPDATE account SET account_expires = '%s' WHERE account_id = %d",
+                    dbesc($expires), $uid);
+                break;
+
             default:
                 Response::error(400, "Unknown action: {$action}");
         }
 
         Response::send(['status' => 'ok']);
+    }
+
+    // ── Service classes ───────────────────────────────────────────────────────
+
+    private function getServiceClasses(): void
+    {
+        $default = self::cfgStr('default_service_class');
+        $names   = $this->listServiceClassNames();
+
+        $classes = [];
+        foreach ($names as $name) {
+            $props   = Config::Get('service_class', $name);
+            if (!is_array($props)) $props = [];
+            $count_r = q("SELECT COUNT(*) AS c FROM account WHERE account_service_class = '%s'", dbesc($name));
+            $classes[] = [
+                'name'          => $name,
+                'properties'    => $props,
+                'account_count' => intval($count_r[0]['c'] ?? 0),
+                'is_default'    => ($name === $default),
+            ];
+        }
+
+        $none_r = q("SELECT COUNT(*) AS c FROM account WHERE account_service_class = ''");
+
+        Response::send([
+            'classes'               => $classes,
+            'default_service_class' => $default,
+            'unrestricted_count'    => intval($none_r[0]['c'] ?? 0),
+        ]);
+    }
+
+    private function postServiceClasses(): void
+    {
+        $data   = Auth::$parsedBody;
+        $action = $data['action'] ?? '';
+
+        switch ($action) {
+            case 'create':
+                $name = trim($data['name'] ?? '');
+                if (!preg_match('/^[a-zA-Z0-9_-]{1,32}$/', $name))
+                    Response::error(400, 'Class name must be 1-32 characters: letters, digits, underscore, or hyphen');
+                if (in_array($name, ['config_loaded', 'upgrade_link'], true))
+                    Response::error(400, 'That name is reserved');
+                if (Config::Get('service_class', $name) !== false)
+                    Response::error(409, "A service class named '{$name}' already exists");
+
+                $props = $this->sanitizeServiceClassProps($data['properties'] ?? []);
+                Config::Set('service_class', $name, $props);
+                Response::send(['name' => $name, 'properties' => $props, 'account_count' => 0, 'is_default' => false]);
+                break;
+
+            case 'update':
+                $name = trim($data['name'] ?? '');
+                if (!$name || Config::Get('service_class', $name) === false)
+                    Response::error(404, 'Service class not found');
+                $props = $this->sanitizeServiceClassProps($data['properties'] ?? []);
+                Config::Set('service_class', $name, $props);
+                Response::send(['status' => 'ok']);
+                break;
+
+            case 'delete':
+                $name = trim($data['name'] ?? '');
+                if (!$name || Config::Get('service_class', $name) === false)
+                    Response::error(404, 'Service class not found');
+
+                $default = self::cfgStr('default_service_class');
+                if ($name === $default)
+                    Response::error(409, "Cannot delete '{$name}': it is the current default service class. Set a different default first.");
+
+                $count_r = q("SELECT COUNT(*) AS c FROM account WHERE account_service_class = '%s'", dbesc($name));
+                $n = intval($count_r[0]['c'] ?? 0);
+                if ($n > 0)
+                    Response::error(409, "Cannot delete '{$name}': {$n} account(s) are still assigned to it. Reassign them first.");
+
+                Config::Delete('service_class', $name);
+                Response::send(['status' => 'ok']);
+                break;
+
+            case 'set_default':
+                $name = trim($data['name'] ?? ''); // '' clears the default (no sitewide default class)
+                if ($name !== '' && Config::Get('service_class', $name) === false)
+                    Response::error(404, 'Service class not found');
+                Config::Set('system', 'default_service_class', notags($name));
+                Response::send(['status' => 'ok', 'default_service_class' => $name]);
+                break;
+
+            default:
+                Response::error(400, "Unknown action: {$action}");
+        }
     }
 
     // ── Channels ──────────────────────────────────────────────────────────────
