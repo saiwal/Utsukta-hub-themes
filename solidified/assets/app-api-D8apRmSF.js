@@ -1,0 +1,1 @@
+import{t as e}from"./app-fetch-CmSrOrFS.js";async function t(t,n){let r=await(await e(`/spa/help/nav?section=${t}&lang=${encodeURIComponent(n)}`)).json();return r.data??r}async function n(t,n,r){let i=await(await e(`/spa/help/topic?section=${t}&lang=${encodeURIComponent(n)}&topic=${encodeURIComponent(r)}`)).json();return i.data??i}export{n,t};

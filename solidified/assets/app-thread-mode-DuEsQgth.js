@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-9kNHfgxH.js";var[t,n]=e(localStorage.getItem(`hz-thread-mode`)!==`flat`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-thread-mode`,e?`threaded`:`flat`)}export{r as n,i as t};
