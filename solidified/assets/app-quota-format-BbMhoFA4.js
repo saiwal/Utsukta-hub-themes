@@ -1,0 +1,1 @@
+var e=[`photo_upload_limit`,`attach_upload_limit`];function t(e){return e>=1073741824?`${(e/1073741824).toFixed(1)} GB`:e>=1048576?`${(e/1048576).toFixed(1)} MB`:e>=1024?`${(e/1024).toFixed(1)} KB`:`${e} B`}function n(n,r){return e.includes(n)?t(r):String(r)}function r(e){let{usage:t,limit:n}=e;return t===null||!n?null:Math.min(100,Math.round(t/n*100))}export{r as n,n as t};
