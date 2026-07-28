@@ -2,6 +2,7 @@
 namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\ValidatesRemoteHost;
 use Zotlabs\Lib\Cache;
 
 /**
@@ -17,6 +18,8 @@ use Zotlabs\Lib\Cache;
  */
 class Rss
 {
+    use ValidatesRemoteHost;
+
     private const MAX_ITEMS = 10;
     private const MAX_BYTES = 1048576; // 1 MB
     private const CACHE_AGE = '15 MINUTE';
@@ -39,7 +42,7 @@ class Rss
             }
         }
 
-        $res = z_fetch_url($url, false, 0, ['timeout' => 10]);
+        $res = self::fetch_validated($url);
         if (!$res['success'] || !$res['body']) {
             Response::error(502, 'Feed fetch failed');
         }
@@ -62,11 +65,7 @@ class Rss
         return $feed;
     }
 
-    /**
-     * http(s) only, and the host must not be (or resolve to) a private,
-     * reserved, or loopback address. Redirect targets are fetched by
-     * z_fetch_url without re-checking — acceptable for owner-configured URLs.
-     */
+    /** http(s) only. Actual address safety is (re-)checked per-hop in fetch_validated(). */
     private static function url_allowed(string $url): bool
     {
         $parts = parse_url($url);
@@ -77,14 +76,100 @@ class Rss
         if (!$host || strcasecmp($host, 'localhost') === 0) {
             return false;
         }
+        return true;
+    }
 
-        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
-        if (filter_var($ip, FILTER_VALIDATE_IP)
-            && !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-            return false;
+    /**
+     * Fetches $url with the DNS-rebind/TOCTOU gap closed: resolves the
+     * host once, validates that specific IP, then pins the curl connection
+     * to it via CURLOPT_RESOLVE (so curl's own connect-time lookup can't
+     * diverge from the check). Redirects are followed manually (up to 5
+     * hops), re-validating the target host/IP on every hop — z_fetch_url()
+     * can't be used here because it follows redirects internally with no
+     * re-validation hook and offers no IP-pinning option.
+     */
+    private static function fetch_validated(string $url): array
+    {
+        for ($hop = 0; $hop <= 5; $hop++) {
+            $parts = parse_url($url);
+            if (!$parts || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)) {
+                return ['success' => false, 'body' => ''];
+            }
+            $host = $parts['host'] ?? '';
+            if (!$host || strcasecmp($host, 'localhost') === 0) {
+                return ['success' => false, 'body' => ''];
+            }
+            $ip = self::resolveSafePublicIp($host);
+            if (!$ip) {
+                return ['success' => false, 'body' => ''];
+            }
+            $port = $parts['port'] ?? ($parts['scheme'] === 'https' ? 443 : 80);
+
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RESOLVE => ["$host:$port:$ip"],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HEADER => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_USERAGENT => \Zotlabs\Lib\System::get_useragent(),
+            ]);
+            $raw = curl_exec($ch);
+            $info = curl_getinfo($ch);
+            curl_close($ch);
+
+            if ($raw === false) {
+                return ['success' => false, 'body' => ''];
+            }
+
+            $header_size = $info['header_size'] ?? 0;
+            $body = substr($raw, $header_size);
+            $code = intval($info['http_code'] ?? 0);
+
+            if (in_array($code, [301, 302, 303, 307, 308], true)) {
+                $header = substr($raw, 0, $header_size);
+                if (!preg_match('/^Location:\s*(.+?)\r?$/mi', $header, $m)) {
+                    return ['success' => false, 'body' => ''];
+                }
+                $location = trim($m[1]);
+                $url = self::resolve_redirect($url, $location);
+                if (!$url) {
+                    return ['success' => false, 'body' => ''];
+                }
+                continue;
+            }
+
+            return ['success' => $code >= 200 && $code < 300, 'body' => (string)$body];
         }
 
-        return true;
+        return ['success' => false, 'body' => ''];
+    }
+
+    /** Resolves a possibly-relative Location header against the URL that produced it. */
+    private static function resolve_redirect(string $base, string $location): ?string
+    {
+        if (parse_url($location, PHP_URL_SCHEME)) {
+            return $location; // already absolute
+        }
+        $base_parts = parse_url($base);
+        if (!$base_parts || empty($base_parts['scheme']) || empty($base_parts['host'])) {
+            return null;
+        }
+        $origin = $base_parts['scheme'] . '://' . $base_parts['host']
+            . (isset($base_parts['port']) ? ':' . $base_parts['port'] : '');
+
+        if (str_starts_with($location, '//')) {
+            return $base_parts['scheme'] . ':' . $location;
+        }
+        if (str_starts_with($location, '/')) {
+            return $origin . $location;
+        }
+        $base_path = $base_parts['path'] ?? '/';
+        $dir = substr($base_path, 0, strrpos($base_path, '/') + 1) ?: '/';
+        return $origin . $dir . $location;
     }
 
     /**

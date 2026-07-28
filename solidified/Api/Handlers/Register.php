@@ -3,6 +3,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use App;
 use Zotlabs\Lib\Config;
+use Zotlabs\Lib\Cache;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 
@@ -10,6 +11,23 @@ class Register
 {
     // Defined in Regate.php at file scope; redeclare here to avoid dependency.
     const REGISTER_AGREED = 0x0020;
+
+    // Max registration attempts per client IP within the window below.
+    // The form token alone doesn't throttle anything — a script can fetch a
+    // fresh one via GET before every attempt — so this mirrors the
+    // Cache-backed IP counter Login.php/PasswordReset.php already use.
+    private const MAX_REQUESTS = 5;
+    private const REQUEST_WINDOW = '1 HOUR';
+
+    private function throttleKey(): string
+    {
+        return 'spa_register_req:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    }
+
+    private function requestCount(): int
+    {
+        return (int) Cache::get($this->throttleKey(), self::REQUEST_WINDOW);
+    }
 
     public function get(): void
     {
@@ -59,6 +77,11 @@ class Register
         if (!Auth::validateFormToken('spa_register_tok', $token)) {
             Response::error(403, 'Invalid security token');
         }
+
+        if ($this->requestCount() >= self::MAX_REQUESTS) {
+            Response::error(429, 'Too many registration attempts. Please try again later.');
+        }
+        Cache::set($this->throttleKey(), (string) ($this->requestCount() + 1));
 
         require_once('include/security.php');
         require_once('include/account.php');

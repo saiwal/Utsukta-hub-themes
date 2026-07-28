@@ -202,6 +202,14 @@ class Drafts
         $now = datetime_convert();
         $iid = intval($row['id']);
 
+        // Same store-time sanitization gate as Item::editItem() /
+        // Webpages::updateWebpage() — this writes directly to the item row
+        // rather than through item_store_update(), so it must apply
+        // z_input_filter() itself or a client-supplied mimetype like
+        // text/html would be stored raw and rendered raw later.
+        require_once('include/text.php');
+        $content = z_input_filter($content, $mimetype, channel_codeallowed($uid));
+
         q(
             "UPDATE item
              SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',

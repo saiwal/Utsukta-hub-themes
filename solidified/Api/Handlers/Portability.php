@@ -3,6 +3,7 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
+use Theme\Solidified\Api\Concerns\ValidatesRemoteHost;
 use App;
 use DBA;
 use URLify;
@@ -12,6 +13,8 @@ use Zotlabs\Lib\Libzot;
 
 class Portability
 {
+    use ValidatesRemoteHost;
+
     private const VALID_SECTIONS = [
         'channel', 'connections', 'config', 'apps',
         'chatrooms', 'events', 'webpages', 'wikis',
@@ -232,6 +235,23 @@ class Portability
 
         $channelname = substr($oldAddress, 0, strpos($oldAddress, '@'));
         $servername = substr($oldAddress, strpos($oldAddress, '@') + 1);
+
+        // SSRF guard: $servername is fully client-supplied (any authenticated
+        // account can set old_address to name@<anything>). Reject hostnames
+        // that don't resolve to a public IP before any outbound request is
+        // made — same validator used by Rss.php's feed-fetch SSRF guard.
+        // Note: this is a single resolve-then-check, not IP-pinned like
+        // Rss.php's fetch — z_fetch_url() (used below and in
+        // probeApiPathHttpsOnly()) has no CURLOPT_RESOLVE passthrough, so a
+        // DNS-rebind between this check and the actual fetch isn't fully
+        // closed here. Given this endpoint is authenticated and rate-limited
+        // (5/hour), that residual gap is a manual-verification item rather
+        // than something fixed in this pass — flagging rather than guessing
+        // at a heavier custom-curl reimplementation of the Basic-Auth probe.
+        $hostOnly = (string)(parse_url('https://' . $servername, PHP_URL_HOST) ?: $servername);
+        if ($hostOnly === '' || strcasecmp($hostOnly, 'localhost') === 0 || !self::resolveSafePublicIp($hostOnly)) {
+            Response::error(400, 'Unable to connect to old server');
+        }
 
         $apiPath = $this->probeApiPathHttpsOnly($servername);
         if (!$apiPath) {

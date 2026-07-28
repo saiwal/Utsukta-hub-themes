@@ -151,7 +151,7 @@ class Auth
             'path' => '/',
             'secure' => (($_SERVER['HTTPS'] ?? '') !== ''),
             'httponly' => true,
-            'samesite' => 'None',
+            'samesite' => 'Lax',
         ]);
         // setcookie() only takes effect on the *next* request — reflect it
         // into this request's superglobal so a same-request read sees it too.
@@ -170,7 +170,7 @@ class Auth
             'path' => '/',
             'secure' => (($_SERVER['HTTPS'] ?? '') !== ''),
             'httponly' => true,
-            'samesite' => 'None',
+            'samesite' => 'Lax',
         ]);
         unset($_COOKIE[$cookieName]);
 

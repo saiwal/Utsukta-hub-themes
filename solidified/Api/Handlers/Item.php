@@ -1198,9 +1198,9 @@ class Item
 
         $postTags = [];
 
-        if ($mimetype === 'text/bbcode') {
-            require_once('include/text.php');
+        require_once('include/text.php');
 
+        if ($mimetype === 'text/bbcode') {
             $content = cleanup_bbcode($content);
 
             // Rebuild mention/hashtag/group term records from the edited body.
@@ -1223,6 +1223,16 @@ class Item
             $content = $this->expandShareTags($content);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($uid, $content));
+        } else {
+            // editItem() writes directly to the item row rather than going
+            // through item_store_update(), so it must apply the same
+            // z_input_filter() sanitization/permission gate core's own
+            // editor applies before storing (Zotlabs/Module/Item.php
+            // $execflag pattern) — otherwise a client-supplied mimetype
+            // like text/html would be stored and later rendered raw
+            // (prepare_text() does no sanitization at display time for
+            // text/html; it's a store-time-only guarantee).
+            $content = z_input_filter($content, $mimetype, channel_codeallowed($uid));
         }
 
         // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
