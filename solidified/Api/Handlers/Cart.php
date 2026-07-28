@@ -758,6 +758,14 @@ class Cart
 
         $order = $this->loadOrder($orderHash);
         if (!$order) Response::error(404, 'Order not found');
+
+        // Verify the order belongs to the current buyer (matches
+        // paypalCreateOrder/razorpayCreateOrder/*Verify — this was the one
+        // payment-order function missing the check).
+        $buyerXchan = get_observer_hash();
+        if (!$buyerXchan || $order['buyer_xchan'] !== $buyerXchan) {
+            Response::error(403, 'Access denied');
+        }
         if (!empty($order['order_paid'])) {
             Response::send(['paid' => true]);
             return;
@@ -780,7 +788,6 @@ class Cart
         $amount = round($amount, 2);
 
         // Derive customer email from xchan_addr; fallback to a placeholder
-        $buyerXchan = get_observer_hash();
         $xchanRows  = q("SELECT xchan_addr, xchan_name FROM xchan WHERE xchan_hash = '%s' LIMIT 1", dbesc($buyerXchan));
         $xchanAddr  = (!empty($xchanRows[0]['xchan_addr'])) ? $xchanRows[0]['xchan_addr'] : 'buyer@hubzilla.example';
         $xchanName  = (!empty($xchanRows[0]['xchan_name']))  ? $xchanRows[0]['xchan_name']  : 'Buyer';

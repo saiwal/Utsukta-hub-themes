@@ -81,17 +81,24 @@ class Regate
             Response::error(410, 'This verification link has expired');
         }
 
-        // Validate pin format and compare
+        // Validate pin format and compare against the actual secret
+        // (reg_hash). The 'i' (invite) branch previously set $acpin FROM
+        // reg_hash and then compared reg_hash to itself — a tautology that
+        // accepted any non-empty pin. For invites, reg_did2 (the URL token)
+        // is the invitee's plaintext email address, not a secret — reg_hash
+        // (the invite code sent separately to the invitee) is the only real
+        // credential, so it must be what the submitted $pin is checked
+        // against, same as the 'e'/'a' branches.
         $acpin = false;
         if ($type === 'e' && preg_match('/^[0-9a-f]{24}$/', $pin)) {
             $acpin = $pin;
         } elseif ($type === 'a' && preg_match('/^[0-9]{6}$/', $pin)) {
             $acpin = $pin;
-        } elseif ($type === 'i') {
-            $acpin = $reg['reg_hash'];
+        } elseif ($type === 'i' && preg_match('/^[0-9a-zA-Z]{4,64}$/', $pin)) {
+            $acpin = $pin;
         }
 
-        if ($acpin === false || $reg['reg_hash'] !== $acpin) {
+        if ($acpin === false || !hash_equals((string) $reg['reg_hash'], (string) $acpin)) {
             Response::error(400, 'Invalid verification code');
         }
 

@@ -381,6 +381,16 @@ class Webpages
         $iid = intval($item[0]['id']);
         $now = datetime_convert();
 
+        // updateWebpage() writes directly to the item row rather than going
+        // through item_store_update(), so it must apply the same
+        // z_input_filter() sanitization/permission gate core's own editor
+        // applies before storing (Zotlabs/Module/Item.php $execflag
+        // pattern) — otherwise a client-supplied mimetype like text/html
+        // would be stored and later rendered raw (prepare_text() does no
+        // sanitization at display time for text/html).
+        require_once('include/text.php');
+        $content = z_input_filter($content, $mimetype, channel_codeallowed($uid));
+
         if ($scope !== null) {
             [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
                 $this->resolveWebpageAcl($scope, $body);

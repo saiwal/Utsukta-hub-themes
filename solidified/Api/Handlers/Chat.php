@@ -528,6 +528,17 @@ class Chat
         if (!perm_is_allowed($this->subjectUid, $ob_hash, 'chat'))
             Response::error(403, 'Permission denied');
 
+        require_once('include/security.php');
+        $sql_extra = permissions_sql($this->subjectUid);
+
+        $room = q(
+            "SELECT * FROM chatroom WHERE cr_id = %d AND cr_uid = %d $sql_extra LIMIT 1",
+            intval($this->roomId),
+            intval($this->subjectUid)
+        );
+        if (!$room)
+            Response::error(404, 'Room not found');
+
         $raw  = file_get_contents('php://input');
         $data = $raw ? (json_decode($raw, true) ?? []) : [];
         $text = trim($data['body'] ?? '');
