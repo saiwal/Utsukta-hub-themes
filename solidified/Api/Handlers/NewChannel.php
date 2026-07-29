@@ -212,7 +212,9 @@ class NewChannel
     // "Federation" category below, so no admin-only/other gated apps leak in.
     private function federationApps(): array
     {
-        $system = Apps::get_system_apps(true, true);
+        // translate=false — 'name' is used as a stable identifier when the
+        // selection is echoed back to installProtocols(), not just displayed.
+        $system = Apps::get_system_apps(false, true);
         $protocols = [];
         foreach ($system as $app) {
             $categories = $app['categories'] ?? '';
@@ -239,7 +241,8 @@ class NewChannel
         $wanted = array_map('mb_strtolower', self::CURATED_INTEGRATIONS);
 
         // $sync=true — see federationApps() for why (requires: local_channel gating).
-        $system = Apps::get_system_apps(true, true);
+        // translate=false — see federationApps() for why 'name' stays canonical.
+        $system = Apps::get_system_apps(false, true);
         $apps = [];
         foreach ($system as $app) {
             $name = $app['name'] ?? '';
@@ -266,7 +269,10 @@ class NewChannel
         $wanted = array_map('mb_strtolower', self::CURATED_INTEGRATIONS);
         $selected = array_map('mb_strtolower', array_filter($names, 'is_string'));
 
-        $system = Apps::get_system_apps(true, true);
+        // translate=false — the stored app_name/guid must be the canonical
+        // .apd name so system_app_installed() and Nav.php's installed_apps
+        // list match regardless of the channel's language setting.
+        $system = Apps::get_system_apps(false, true);
         foreach ($system as $app) {
             $lname = mb_strtolower($app['name'] ?? '');
             if (!in_array($lname, $wanted, true)) continue;
@@ -274,6 +280,7 @@ class NewChannel
 
             $app['uid']    = $uid;
             $app['system'] = 1;
+            $app['guid']   = hash('whirlpool', $app['name']);
             Apps::app_install($uid, $app);
         }
     }
@@ -283,7 +290,8 @@ class NewChannel
         if (!is_array($protocols) || !$protocols) return;
 
         // $sync=true — see federationApps() for why (requires: local_channel gating).
-        $system = Apps::get_system_apps(true, true);
+        // translate=false — see installIntegrations() for why identity must stay canonical.
+        $system = Apps::get_system_apps(false, true);
         foreach ($system as $app) {
             $categories = $app['categories'] ?? '';
             if (!str_contains($categories, 'Federation')) continue;
@@ -291,6 +299,7 @@ class NewChannel
 
             $app['uid']    = $uid;
             $app['system'] = 1;
+            $app['guid']   = hash('whirlpool', $app['name']);
             Apps::app_install($uid, $app);
         }
     }

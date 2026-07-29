@@ -622,8 +622,13 @@ class Settings
     private function getIntegrationsSettings(): void
     {
         $uid = local_channel();
-        $system = \Zotlabs\Lib\Apps::get_system_apps(true);
-        \Zotlabs\Lib\Apps::translate_system_apps($system);
+        // translate=false — 'name' is the stable identifier round-tripped to
+        // postIntegrationsSettings() and must match $installed_map's keys
+        // (raw DB app_name), regardless of the channel's language setting.
+        // Display translation is handled client-side (src/shared/lib/app-labels.ts)
+        // via the SPA's own i18n catalog, not PHP core's gettext — the latter has
+        // no coverage for languages like Hindi.
+        $system = \Zotlabs\Lib\Apps::get_system_apps(false);
 
         // Build a map of installed apps (with terms) keyed by name
         $installed_list = \Zotlabs\Lib\Apps::app_list($uid, false) ?: [];
@@ -1095,7 +1100,9 @@ class Settings
         $guid = hash('whirlpool', $name);
 
         if ($action === 'install') {
-            $system = \Zotlabs\Lib\Apps::get_system_apps(true);
+            // translate=false — must match the canonical $name the frontend
+            // sent (sourced from getIntegrationsSettings(), also canonical).
+            $system = \Zotlabs\Lib\Apps::get_system_apps(false);
             $app    = null;
             foreach ($system as $s) {
                 if (($s['name'] ?? '') === $name) { $app = $s; break; }
