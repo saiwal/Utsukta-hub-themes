@@ -154,8 +154,10 @@ class Nav
                 }
             }
         } else {
-            $system = \Zotlabs\Lib\Apps::get_system_apps(true);
-            \Zotlabs\Lib\Apps::translate_system_apps($system);
+            // translate=false — $app['name'] is matched below against literal
+            // canonical names; a translated name would silently drop these
+            // links from a non-English visitor's pinned nav.
+            $system = \Zotlabs\Lib\Apps::get_system_apps(false);
 
             $public_names = ['Directory', 'Help'];
             if (can_view_public_stream())
@@ -179,7 +181,11 @@ class Nav
             $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
             foreach (($list ?: []) as $li)
                 $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
-            \Zotlabs\Lib\Apps::translate_system_apps($featured);
+            // No translate_system_apps() here — app_encode() already returns the
+            // canonical DB app_name, and useNav.ts matches featured[].name against
+            // the (also canonical) installed_apps set. Translating name here would
+            // silently drop genuinely-installed featured apps from the owner's nav
+            // in any non-English locale.
             usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
             $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
         }
@@ -350,6 +356,11 @@ class Nav
             'channel_tabs'     => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
             'installed_apps'   => $installed_apps,
+            // Effective language for this request/session — browser-detected
+            // (get_best_language()) or explicitly set via classic redbasic's
+            // language selector ($_SESSION['language']). Lets the SPA seed its
+            // own locale from whatever classic Hubzilla is already using.
+            'language'         => (string) App::$language,
         ]);
     }
 }
