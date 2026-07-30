@@ -32,12 +32,104 @@ class Articles
         }
 
         $permission_sql = item_permissions_sql($profile_uid);
-$identifier = \App::$argv[3] ?? $_GET['uuid'] ?? '';
-if ($identifier) {
-    $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
-}
+
+        $sub = \App::$argv[3] ?? '';
+        if ($sub === 'series') {
+            $seriesName = \App::$argv[4] ?? '';
+            if ($seriesName) {
+                $this->getSeriesDetail($seriesName, $profile_uid, $ob_hash, $permission_sql, $nick);
+            }
+            $this->getSeriesOverview($profile_uid, $permission_sql);
+        }
+
+        $identifier = $sub ?: ($_GET['uuid'] ?? '');
+        if ($identifier) {
+            $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
+        }
 
         $this->getList($profile_uid, $ob_hash, $permission_sql, $nick);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/articles/:nick/series            -> list of series with counts
+    // GET /api/articles/:nick/series/:name      -> ordered member articles
+    // -------------------------------------------------------------------------
+
+    private function getSeriesOverview(int $profile_uid, string $permission_sql): never
+    {
+        $rows = dbq("SELECT s.v AS name, COUNT(*) AS total,
+                MIN(CAST(o.v AS UNSIGNED)) AS min_order,
+                MAX(CAST(o.v AS UNSIGNED)) AS max_order
+            FROM iconfig s
+            INNER JOIN item ON item.id = s.iid
+            LEFT JOIN iconfig o ON o.iid = s.iid AND o.cat = 'article' AND o.k = 'series_order'
+            WHERE s.cat = 'article' AND s.k = 'series'
+            AND item.uid = $profile_uid
+            AND item.item_type = " . ITEM_TYPE_ARTICLE . "
+            AND item.item_deleted = 0
+            $permission_sql
+            GROUP BY s.v
+            ORDER BY s.v ASC");
+
+        $series = array_map(fn($r) => [
+            'name'      => $r['name'],
+            'count'     => intval($r['total']),
+            'min_order' => $r['min_order'] !== null ? intval($r['min_order']) : null,
+            'max_order' => $r['max_order'] !== null ? intval($r['max_order']) : null,
+        ], $rows ?: []);
+
+        Response::send(['series' => $series]);
+    }
+
+    private function getSeriesDetail(
+        string $name,
+        int    $profile_uid,
+        string $ob_hash,
+        string $permission_sql,
+        string $nick
+    ): never {
+        $name_safe = dbesc($name);
+
+        $r = dbq("SELECT item.id AS item_id FROM item
+            INNER JOIN iconfig s ON s.iid = item.id AND s.cat = 'article' AND s.k = 'series' AND s.v = '$name_safe'
+            LEFT JOIN iconfig o ON o.iid = item.id AND o.cat = 'article' AND o.k = 'series_order'
+            WHERE item.uid = $profile_uid
+            AND item.item_type = " . ITEM_TYPE_ARTICLE . "
+            AND item.item_deleted = 0
+            AND item.item_thread_top = 1
+            AND item.verb != 'Add'
+            $permission_sql
+            ORDER BY CAST(o.v AS UNSIGNED) ASC, item.created ASC");
+
+        $out = [];
+
+        if ($r) {
+            $ids   = ids_to_querystr($r, 'item_id');
+            $items = dbq("SELECT item.*, " . $this->reactionSubqueries() . "
+                FROM item
+                WHERE item.id IN ($ids)
+                AND item.item_deleted = 0");
+
+            if ($items) {
+                xchan_query($items, true);
+                $items = fetch_post_tags($items, true);
+
+                // Preserve the series_order sort computed above — the id-list
+                // query above has no ORDER BY of its own.
+                $byId = [];
+                foreach ($items as $item) {
+                    $byId[intval($item['id'])] = $item;
+                }
+                foreach ($r as $row) {
+                    $iid = intval($row['item_id']);
+                    if (isset($byId[$iid])) {
+                        $out[] = $this->formatItem($byId[$iid], $ob_hash, $nick);
+                    }
+                }
+            }
+        }
+
+        Response::send(['name' => $name, 'articles' => $out]);
     }
 
     // -------------------------------------------------------------------------
@@ -112,6 +204,29 @@ if ($identifier) {
             Response::error(404, 'Root item not found');
         }
 
+        if (!empty($root['translation_group'])) {
+            $group_safe = dbesc($root['translation_group']);
+            $siblings = dbq("SELECT item.uuid, item.title, item.lang,
+                    (SELECT v FROM iconfig sl WHERE sl.iid = item.id AND sl.cat = 'system'
+                        AND sl.k = '" . item_type_to_namespace(ITEM_TYPE_ARTICLE) . "' LIMIT 1) AS slug
+                FROM item
+                INNER JOIN iconfig tg ON tg.iid = item.id AND tg.cat = 'article'
+                    AND tg.k = 'translation_group' AND tg.v = '$group_safe'
+                WHERE item.uid = $profile_uid
+                AND item.uuid != '" . dbesc($root['uuid']) . "'
+                AND item.item_deleted = 0
+                $permission_sql");
+
+            $root['translations'] = array_map(fn($s) => [
+                'uuid'     => $s['uuid'],
+                'lang'     => $s['lang'],
+                'title'    => Response::decodeEntities($s['title']),
+                'view_url' => z_root() . '/articles/' . $nick . '/' . ($s['slug'] ? urldecode($s['slug']) : $s['uuid']),
+            ], $siblings ?: []);
+        } else {
+            $root['translations'] = [];
+        }
+
         Response::send(['article' => $root, 'comments' => $comments]);
     }
 
@@ -134,6 +249,7 @@ if ($identifier) {
         $category = $_GET['cat']    ?? '';
         $dbegin   = $_GET['dbegin'] ?? '';
         $dend     = $_GET['dend']   ?? '';
+        $series   = $_GET['series'] ?? '';
 
         if ($search && str_starts_with($search, '#')) {
             $hashtags = substr($search, 1);
@@ -165,14 +281,27 @@ if ($identifier) {
         if ($dend) {
             $sql_extra .= " AND item.created < '"  . dbesc($dend)   . "' ";
         }
+
+        $series_join = '';
+        $order_by    = 'item.created DESC';
+        if ($series) {
+            $series_safe  = dbesc($series);
+            $series_join  = " INNER JOIN iconfig sflt ON sflt.iid = item.id
+                AND sflt.cat = 'article' AND sflt.k = 'series' AND sflt.v = '$series_safe'
+                LEFT JOIN iconfig oflt ON oflt.iid = item.id
+                AND oflt.cat = 'article' AND oflt.k = 'series_order' ";
+            $order_by     = 'CAST(oflt.v AS UNSIGNED) ASC, item.created ASC';
+        }
+
         $r = dbq("SELECT item.id AS item_id FROM item
+            $series_join
             WHERE item.uid = $profile_uid
             AND item.item_type = " . ITEM_TYPE_ARTICLE . "
             AND item.item_thread_top = 1
             AND item.item_deleted = 0
             AND item.verb != 'Add'
             $permission_sql $sql_extra
-            ORDER BY item.created DESC
+            ORDER BY $order_by
             $pager_sql");
 
         $root_count = count($r ?: []);
@@ -183,8 +312,7 @@ if ($identifier) {
             $items = dbq("SELECT item.*, " . $this->reactionSubqueries() . "
                 FROM item
                 WHERE item.id IN ($ids)
-                AND item.item_deleted = 0
-                ORDER BY item.created DESC");
+                AND item.item_deleted = 0");
 
             if ($items) {
                 xchan_query($items, true);
@@ -192,9 +320,20 @@ if ($identifier) {
             }
         }
 
-        $out = [];
+        // Re-apply the id order chosen by the first (joined/paginated) query —
+        // "WHERE id IN (...)" does not guarantee row order, and the series
+        // ordering in particular can't be re-derived from item.created alone.
+        $byId = [];
         foreach (($items ?: []) as $item) {
-            $out[] = $this->formatItem($item, $ob_hash, $nick);
+            $byId[intval($item['id'])] = $item;
+        }
+
+        $out = [];
+        foreach (($r ?: []) as $row) {
+            $iid = intval($row['item_id']);
+            if (isset($byId[$iid])) {
+                $out[] = $this->formatItem($byId[$iid], $ob_hash, $nick);
+            }
         }
 
         Response::paginate($out, $offset, $itemspage, $root_count);
@@ -222,18 +361,28 @@ if ($identifier) {
             }
         }
 
-        // Extract the ARTICLE slug from iconfig (attached by fetch_post_tags / xchan_query)
-        $slug = '';
+        // Extract the ARTICLE slug + series/translation-group metadata from
+        // iconfig (attached by fetch_post_tags / xchan_query) in one pass.
+        $slug              = '';
+        $seriesName        = null;
+        $seriesOrder       = null;
+        $translationGroup  = null;
         if (!empty($item['iconfig']) && is_array($item['iconfig'])) {
             foreach ($item['iconfig'] as $cfg) {
-                if (($cfg['cat'] ?? '') === 'system'
-                    && ($cfg['k'] ?? '') === item_type_to_namespace(ITEM_TYPE_ARTICLE)
-                ) {
+                $cat = $cfg['cat'] ?? '';
+                $k   = $cfg['k']   ?? '';
+                if ($cat === 'system' && $k === item_type_to_namespace(ITEM_TYPE_ARTICLE)) {
                     $slug = urldecode($cfg['v']);
-                    break;
+                } elseif ($cat === 'article' && $k === 'series') {
+                    $seriesName = $cfg['v'];
+                } elseif ($cat === 'article' && $k === 'series_order') {
+                    $seriesOrder = intval($cfg['v']);
+                } elseif ($cat === 'article' && $k === 'translation_group') {
+                    $translationGroup = $cfg['v'];
                 }
             }
         }
+        $series = $seriesName !== null ? ['name' => $seriesName, 'order' => $seriesOrder] : null;
 
         return [
             'uuid'            => $item['uuid'],
@@ -242,6 +391,9 @@ if ($identifier) {
             'thr_parent'      => $item['thr_parent'],
             'created'         => $item['created'],
             'edited'          => $item['edited'],
+            'lang'            => $item['lang'] ?? '',
+            'series'          => $series,
+            'translation_group' => $translationGroup,
             'title'           => Response::decodeEntities($item['title']),
             'body'            => $item['body'],
             'summary'         => Response::decodeEntities($item['summary'] ?? ''),
@@ -324,10 +476,14 @@ if ($identifier) {
 
     // -------------------------------------------------------------------------
     // POST /api/articles/:nick
-    // Body (JSON): { title, summary, body, slug, category, mimetype, post_id?,
+    // Body (JSON): { title, summary, body, slug, category, mimetype, lang, post_id?,
+    //                series?, series_order?, translation_of?,
     //                contact_allow?, group_allow?, contact_deny?, group_deny?, public_policy? }
     // post_id present → edit existing article via item_store_update
     // post_id absent  → create new article via item_store
+    // translation_of (create-only) → link the new article to the source article's
+    // translation group (see renameSeries()/reorderSeries() below for the
+    // separate series management actions dispatched via argv[3]).
     // -------------------------------------------------------------------------
 
     public function post(): void
@@ -349,7 +505,16 @@ if ($identifier) {
 
         // Auth::requireLocalJson() already parsed the JSON body — re-reading
         // php://input here would return empty, since the stream is drained.
-        $input    = \Theme\Solidified\Api\Auth::$parsedBody;
+        $input = \Theme\Solidified\Api\Auth::$parsedBody;
+
+        $action = \App::$argv[3] ?? '';
+        if ($action === 'series-rename') {
+            $this->renameSeries($uid, $input);
+        }
+        if ($action === 'series-reorder') {
+            $this->reorderSeries($uid, $input);
+        }
+
         $body     = trim($input['body']     ?? '');
         $title    = escape_tags(trim($input['title']    ?? ''));
         $summary  = escape_tags(trim($input['summary']  ?? ''));
@@ -357,9 +522,16 @@ if ($identifier) {
         $category = trim($input['category'] ?? '');
         $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
         $post_id  = intval($input['post_id'] ?? 0);
+        $lang     = trim($input['lang']     ?? '');
+        $series   = trim($input['series']   ?? '');
+        $seriesOrder    = isset($input['series_order']) ? intval($input['series_order']) : null;
+        $translationOf  = trim($input['translation_of'] ?? '');
 
         if (!$body) {
             Response::error(400, 'Body is required');
+        }
+        if (!$lang) {
+            Response::error(400, 'Language is required');
         }
         if (!in_array($mimetype, ['text/bbcode', 'text/html', 'text/plain', 'text/markdown'], true)) {
             $mimetype = 'text/bbcode';
@@ -417,9 +589,23 @@ if ($identifier) {
             $datarray['item_private']   = $item_private;
             $datarray['public_policy']  = $public_policy;
 
+            // Pre-load existing iconfig rows — item_store_update() deletes
+            // ALL of an item's iconfig rows and re-inserts only what's in
+            // $datarray['iconfig'], so setting/clearing just one key here
+            // without first loading the others would silently drop them
+            // (e.g. the slug, or series metadata, when only lang changes).
+            $datarray['iconfig'] = dbq("SELECT * FROM iconfig WHERE iid = " . intval($post_id)) ?: [];
+
             if ($slug) {
                 \Zotlabs\Lib\IConfig::Set($datarray, 'system',
                     item_type_to_namespace(ITEM_TYPE_ARTICLE), $slug, true);
+            }
+            if ($series) {
+                \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'series', $series);
+                \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'series_order', $seriesOrder ?? 0);
+            } else {
+                \Zotlabs\Lib\IConfig::Delete($datarray, 'article', 'series');
+                \Zotlabs\Lib\IConfig::Delete($datarray, 'article', 'series_order');
             }
 
             $result = item_store_update($datarray);
@@ -428,6 +614,11 @@ if ($identifier) {
                 logger('Articles::post update error: ' . ($result['message'] ?? ''), LOGGER_DEBUG);
                 Response::error(500, 'Failed to update article');
             }
+
+            // item_store_update() re-detects language from the body and would
+            // clobber a manual choice — apply it as a direct write afterward.
+            q("UPDATE item SET lang = '%s' WHERE id = %d AND uid = %d",
+                dbesc($lang), intval($post_id), intval($uid));
 
             \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $post_id]);
 
@@ -441,6 +632,41 @@ if ($identifier) {
 
         [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
             $this->resolveAcl($input);
+
+        // ── Translation group ────────────────────────────────────────────────
+        // A new translation of an existing article shares a group id (the
+        // source article's own uuid) so siblings can be looked up later.
+        $translationGroup = null;
+        if ($translationOf) {
+            $src = dbq("SELECT id, uuid FROM item
+                WHERE uid = " . intval($uid) . "
+                AND uuid = '" . dbesc($translationOf) . "'
+                AND item_type = " . ITEM_TYPE_ARTICLE . "
+                AND item_deleted = 0 LIMIT 1");
+
+            if (!$src) {
+                Response::error(404, 'Source article not found');
+            }
+
+            $srcId = intval($src[0]['id']);
+
+            $existingGroup = dbq("SELECT v FROM iconfig
+                WHERE iid = $srcId AND cat = 'article' AND k = 'translation_group' LIMIT 1");
+            $translationGroup = $existingGroup ? $existingGroup[0]['v'] : $src[0]['uuid'];
+
+            if (!$existingGroup) {
+                \Zotlabs\Lib\IConfig::Set($srcId, 'article', 'translation_group', $translationGroup);
+            }
+
+            $dupeLang = dbq("SELECT item.lang FROM item
+                INNER JOIN iconfig tg ON tg.iid = item.id AND tg.cat = 'article'
+                    AND tg.k = 'translation_group' AND tg.v = '" . dbesc($translationGroup) . "'
+                WHERE item.uid = " . intval($uid) . " AND item.lang = '" . dbesc($lang) . "'
+                AND item.item_deleted = 0 LIMIT 1");
+            if ($dupeLang) {
+                Response::error(400, 'This language already has a translation in this group');
+            }
+        }
 
         $datarray = [
             'aid'             => intval($channel['channel_account_id']),
@@ -480,6 +706,13 @@ if ($identifier) {
             \Zotlabs\Lib\IConfig::Set($datarray, 'system',
                 item_type_to_namespace(ITEM_TYPE_ARTICLE), $slug, true);
         }
+        if ($series) {
+            \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'series', $series);
+            \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'series_order', $seriesOrder ?? 0);
+        }
+        if ($translationGroup) {
+            \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'translation_group', $translationGroup);
+        }
 
         $result = item_store($datarray);
 
@@ -488,12 +721,65 @@ if ($identifier) {
             Response::error(500, 'Failed to create article');
         }
 
+        // item_store() re-detects language from the body and would clobber a
+        // manual choice — apply it as a direct write afterward.
+        q("UPDATE item SET lang = '%s' WHERE id = %d AND uid = %d",
+            dbesc($lang), intval($result['item_id']), intval($uid));
+
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
 
         Response::send([
             'uuid' => $result['item']['uuid'] ?? $uuid,
             'iid'  => intval($result['item_id']),
         ], [], 201);
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/articles/:nick/series-rename   { from, to }
+    // POST /api/articles/:nick/series-reorder  { series, order: [uuid, ...] }
+    // Owner-only management actions on series metadata, applied as direct
+    // iconfig writes — no item content changes, so item_store*() isn't involved.
+    // -------------------------------------------------------------------------
+
+    private function renameSeries(int $uid, array $input): never
+    {
+        $from = trim($input['from'] ?? '');
+        $to   = trim($input['to']   ?? '');
+
+        if (!$from || !$to) {
+            Response::error(400, 'from and to are required');
+        }
+
+        q("UPDATE iconfig SET v = '%s'
+            WHERE cat = 'article' AND k = 'series' AND v = '%s'
+            AND iid IN (SELECT id FROM item WHERE uid = %d AND item_type = %d)",
+            dbesc($to), dbesc($from), intval($uid), intval(ITEM_TYPE_ARTICLE)
+        );
+
+        Response::send(['name' => $to]);
+    }
+
+    private function reorderSeries(int $uid, array $input): never
+    {
+        $series = trim($input['series'] ?? '');
+        $order  = (array) ($input['order'] ?? []);
+
+        if (!$series || !$order) {
+            Response::error(400, 'series and order are required');
+        }
+
+        foreach (array_values($order) as $index => $articleUuid) {
+            $r = dbq("SELECT id FROM item
+                WHERE uid = " . intval($uid) . "
+                AND uuid = '" . dbesc((string) $articleUuid) . "'
+                AND item_type = " . ITEM_TYPE_ARTICLE . " LIMIT 1");
+            if ($r) {
+                $memberId = intval($r[0]['id']);
+                \Zotlabs\Lib\IConfig::Set($memberId, 'article', 'series_order', $index + 1);
+            }
+        }
+
+        Response::send(['series' => $series, 'order' => array_values($order)]);
     }
 
 
