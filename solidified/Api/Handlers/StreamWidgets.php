@@ -15,6 +15,7 @@ class StreamWidgets
         // URL: /api/stream-widgets/tags
         //      /api/stream-widgets/categories
         //      /api/stream-widgets/popular
+        //      /api/stream-widgets/series
         $sub = \App::$argv[2] ?? null;
 
         if (!$sub) {
@@ -27,6 +28,7 @@ class StreamWidgets
             'popular'      => $this->getPopular(),
             'archive'      => $this->getArchive(),
             'archive-days' => $this->getArchiveDays(),
+            'series'       => $this->getSeries(),
             default        => Response::error(404, "Unknown sub-resource: {$sub}"),
         };
     }
@@ -150,6 +152,36 @@ class StreamWidgets
         ], $items);
 
         Response::send(['popular' => $popular]);
+    }
+
+    // ── /api/stream-widgets/series ───────────────────────────────────────────
+    // Distinct article series for the channel, with member counts. Only
+    // meaningful for type=articles — series is an articles-only concept.
+
+    private function getSeries(): void
+    {
+        $uid            = $this->resolveUid();
+        $permission_sql = item_permissions_sql($uid);
+
+        $rows = dbq(
+            "SELECT s.v AS name, COUNT(*) AS total
+             FROM iconfig s
+             INNER JOIN item ON item.id = s.iid
+             WHERE s.cat = 'article' AND s.k = 'series'
+               AND item.uid          = " . intval($uid) . "
+               AND item.item_type    = " . ITEM_TYPE_ARTICLE . "
+               AND item.item_deleted = 0
+               $permission_sql
+             GROUP BY s.v
+             ORDER BY s.v ASC"
+        );
+
+        $series = array_map(fn($r) => [
+            'name'  => $r['name'],
+            'count' => (int) $r['total'],
+        ], $rows ?: []);
+
+        Response::send(['series' => $series]);
     }
 
     // ── /api/stream-widgets/archive ──────────────────────────────────────────
