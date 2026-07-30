@@ -460,6 +460,33 @@ class Admin
                     dbesc($class), $uid);
                 break;
 
+            case 'set_password':
+                $uid = intval($data['account_id'] ?? 0);
+                if (!$uid)
+                    Response::error(400, 'account_id required');
+                $account = q("SELECT account_id, account_email FROM account WHERE account_id = %d", $uid);
+                if (!$account)
+                    Response::error(404, 'Account not found');
+
+                $password = (string) ($data['new_password'] ?? '');
+                $pwCheck = check_account_password($password);
+                if (!empty($pwCheck['error']))
+                    Response::error(400, $pwCheck['message'] ?? 'Password does not meet requirements');
+
+                $salt = random_string(32);
+                $encoded = hash('whirlpool', $salt . $password);
+                q("UPDATE account SET account_salt = '%s', account_password = '%s', account_reset = '' WHERE account_id = %d",
+                    dbesc($salt), dbesc($encoded), $uid);
+
+                $siteName = self::cfgStr('sitename');
+                z_mail([
+                    'toEmail' => $account[0]['account_email'],
+                    'messageSubject' => email_header_encode("Your password has been reset at {$siteName}", 'UTF-8'),
+                    'textVersion' => "An administrator at {$siteName} has just reset your account password.\n\n"
+                        . "If you did not expect this change, please contact the site administrator immediately.\n",
+                ]);
+                break;
+
             case 'set_expires':
                 $uid = intval($data['account_id'] ?? 0);
                 if (!$uid)
