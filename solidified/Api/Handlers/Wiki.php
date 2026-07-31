@@ -539,18 +539,20 @@ class Wiki
 
         try {
             // save_page only works on existing pages; if the page doesn't exist
-            // yet (new page flow) we must create the page item first.
-            $saved = \NativeWikiPage::save_page($pageArgs);
-
-            if (!$saved['success'] && str_contains($saved['message'] ?? '', 'Page not found')) {
+            // yet (new page flow) we must create the page item first. Check
+            // existence directly rather than pattern-matching save_page()'s
+            // error message — that message runs through t() and is translated,
+            // so a locale-specific string wouldn't match the English literal.
+            if (!\NativeWikiPage::load_page($pageArgs)) {
                 $created = \NativeWikiPage::create_page($owner, $obs_hash, $pageUrlName, $rid, $mime_type);
                 if (!$created['success']) {
                     logger('wiki create_page failed: resource_id=' . $rid . ' page=' . $pageUrlName
                         . ' message=' . ($created['message'] ?? '(none)'));
                     Response::error(500, $created['message'] ?? 'Error creating page');
                 }
-                $saved = \NativeWikiPage::save_page($pageArgs);
             }
+
+            $saved = \NativeWikiPage::save_page($pageArgs);
 
             if (!$saved['success']) {
                 logger('wiki save_page failed: resource_id=' . $rid . ' page=' . $pageUrlName
