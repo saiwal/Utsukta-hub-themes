@@ -537,34 +537,44 @@ class Wiki
             'mimeType'      => $mime_type,
         ];
 
-        // save_page only works on existing pages; if the page doesn't exist yet
-        // (new page flow) we must create the page item first.
-        $saved = \NativeWikiPage::save_page($pageArgs);
-
-        if (!$saved['success'] && str_contains($saved['message'] ?? '', 'Page not found')) {
-            $created = \NativeWikiPage::create_page($owner, $obs_hash, $pageUrlName, $rid, $mime_type);
-            if (!$created['success']) {
-                Response::error(500, $created['message'] ?? 'Error creating page');
-            }
+        try {
+            // save_page only works on existing pages; if the page doesn't exist
+            // yet (new page flow) we must create the page item first.
             $saved = \NativeWikiPage::save_page($pageArgs);
-        }
 
-        if (!$saved['success']) {
-            Response::error(500, $saved['message'] ?? 'Error saving page');
-        }
+            if (!$saved['success'] && str_contains($saved['message'] ?? '', 'Page not found')) {
+                $created = \NativeWikiPage::create_page($owner, $obs_hash, $pageUrlName, $rid, $mime_type);
+                if (!$created['success']) {
+                    logger('wiki create_page failed: resource_id=' . $rid . ' page=' . $pageUrlName
+                        . ' message=' . ($created['message'] ?? '(none)'));
+                    Response::error(500, $created['message'] ?? 'Error creating page');
+                }
+                $saved = \NativeWikiPage::save_page($pageArgs);
+            }
 
-        // Commit
-        $commit = \NativeWikiPage::commit([
-            'commit_msg'    => $commit_msg ?: 'Page updated',
-            'pageUrlName'   => $pageUrlName,
-            'resource_id'   => $rid,
-            'channel_id'    => $uid,
-            'observer_hash' => $obs_hash,
-            'revision'      => -1,
-        ]);
+            if (!$saved['success']) {
+                logger('wiki save_page failed: resource_id=' . $rid . ' page=' . $pageUrlName
+                    . ' message=' . ($saved['message'] ?? '(none)'));
+                Response::error(500, $saved['message'] ?? 'Error saving page');
+            }
 
-        if ($commit['success']) {
-            \NativeWiki::sync_a_wiki_item($uid, $commit['item_id'], $rid);
+            // Commit
+            $commit = \NativeWikiPage::commit([
+                'commit_msg'    => $commit_msg ?: 'Page updated',
+                'pageUrlName'   => $pageUrlName,
+                'resource_id'   => $rid,
+                'channel_id'    => $uid,
+                'observer_hash' => $obs_hash,
+                'revision'      => -1,
+            ]);
+
+            if ($commit['success']) {
+                \NativeWiki::sync_a_wiki_item($uid, $commit['item_id'], $rid);
+            }
+        } catch (\Throwable $e) {
+            logger('wiki page save threw: resource_id=' . $rid . ' page=' . $pageUrlName
+                . ' exception=' . get_class($e) . ' message=' . $e->getMessage());
+            Response::error(500, 'Error saving page: ' . $e->getMessage());
         }
 
         Response::send([
