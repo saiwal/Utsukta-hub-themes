@@ -71,9 +71,14 @@ class HqMessages
         }
 
         $dummy_order_sql = '';
+        // Sort by last thread activity ("commented", bumped by item_store()
+        // on every new reply) rather than thread-creation time, so a DM
+        // thread that just got a new reply bubbles back to the top.
+        $order_col = 'created';
         switch ($type) {
             case 'direct':
                 $type_sql = ' AND i.item_private = 2 AND i.item_thread_top = 1 ';
+                $order_col = 'commented';
                 // Tricks some mysql backends into using the right index.
                 $dummy_order_sql = ', i.received DESC ';
                 break;
@@ -95,7 +100,7 @@ class HqMessages
             $type_sql
             $search_sql
             $item_normal_i
-            ORDER BY i.created DESC $dummy_order_sql
+            ORDER BY i.$order_col DESC $dummy_order_sql
             LIMIT $limit OFFSET $offset",
             intval($uid),
             intval($uid),
@@ -175,7 +180,7 @@ class HqMessages
                 'author_addr' => $item['author']['xchan_addr'] ?: $item['author']['xchan_url'],
                 'author_img' => $item['author']['xchan_photo_s'],
                 'info' => $info,
-                'created' => datetime_convert('UTC', date_default_timezone_get(), $item['created']),
+                'created' => datetime_convert('UTC', date_default_timezone_get(), $item[$order_col]),
                 'summary' => $summary,
                 'b64mid' => $item['uuid'],
                 'href' => z_root() . '/hq/' . $item['uuid'],
