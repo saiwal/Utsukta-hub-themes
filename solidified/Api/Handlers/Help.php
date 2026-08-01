@@ -19,9 +19,10 @@ class Help {
         $action = \App::$argv[2] ?? null;
 
         match ($action) {
-            'nav'   => $this->handleNav(),
-            'topic' => $this->handleTopic(),
-            default => Response::error(400, 'Missing action: /api/help/nav or /api/help/topic'),
+            'nav'    => $this->handleNav(),
+            'topic'  => $this->handleTopic(),
+            'search' => $this->handleSearch(),
+            default  => Response::error(400, 'Missing action: /api/help/nav, /api/help/topic or /api/help/search'),
         };
     }
 
@@ -151,6 +152,81 @@ class Help {
             'lang'    => $lang,
             'langs'   => $langs,
         ]);
+    }
+
+    // ── search ────────────────────────────────────────────────────────────────
+    // GET /api/help/search?section=user&lang=en&q=federation
+
+    private function handleSearch(): void {
+        $section = $this->slugParam('section', 'user');
+        $lang    = $this->slugParam('lang',    'en');
+        $q       = trim($this->param('q', ''));
+
+        if ($q === '') {
+            Response::send(['results' => [], 'query' => $q, 'section' => $section, 'lang' => $lang]);
+        }
+
+        $base = $this->docsBase() . '/' . $section . '/' . $lang;
+        if (!is_dir($base)) {
+            $base = $this->findAnyLangBase($section);
+            if (!$base) {
+                Response::error(404, "No docs found for section '{$section}'");
+            }
+        }
+
+        $results = $this->searchTree($base, $base, $q);
+        usort($results, fn($a, $b) => (stripos($b['title'], $q) !== false) <=> (stripos($a['title'], $q) !== false));
+        $results = array_slice($results, 0, 30);
+
+        Response::send([
+            'results' => $results,
+            'query'   => $q,
+            'section' => $section,
+            'lang'    => $lang,
+        ]);
+    }
+
+    private function searchTree(string $dir, string $base, string $q): array {
+        $results = [];
+        foreach (scandir($dir) as $entry) {
+            if ($entry === '.' || $entry === '..') continue;
+            $full = $dir . '/' . $entry;
+
+            if (is_dir($full)) {
+                $results = array_merge($results, $this->searchTree($full, $base, $q));
+                continue;
+            }
+            if (!str_ends_with($entry, '.txt')) continue;
+
+            $raw = file_get_contents($full);
+            if (stripos($raw, $q) === false) continue;
+
+            $title = $this->extractTitle($raw) ?: $this->slugToLabel(pathinfo($entry, PATHINFO_FILENAME));
+
+            // Mirror handleTopic's path resolution: index.txt resolves to its
+            // containing dir, standalone files resolve to dir/filename.
+            $relDir = ltrim(substr($dir, strlen($base)), '/');
+            $topic  = $entry === 'index.txt'
+                ? $relDir
+                : ($relDir !== '' ? $relDir . '/' . pathinfo($entry, PATHINFO_FILENAME) : pathinfo($entry, PATHINFO_FILENAME));
+
+            $results[] = [
+                'path'    => $topic,
+                'title'   => $title,
+                'snippet' => $this->makeSnippet($raw, $q),
+            ];
+        }
+        return $results;
+    }
+
+    private function makeSnippet(string $text, string $q, int $radius = 80): string {
+        $plain = preg_replace('/[#*_`>\[\]]/', '', $text);
+        $plain = preg_replace('/\s+/', ' ', trim($plain));
+        $pos = stripos($plain, $q);
+        if ($pos === false) return mb_substr($plain, 0, 160);
+        $start = max(0, $pos - $radius);
+        $snippet = mb_substr($plain, $start, $radius * 2 + mb_strlen($q));
+        return ($start > 0 ? '…' : '') . trim($snippet) . '…';
     }
 
     // ── tree builder ──────────────────────────────────────────────────────────
