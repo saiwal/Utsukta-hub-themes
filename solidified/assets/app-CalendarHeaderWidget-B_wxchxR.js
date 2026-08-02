@@ -1,0 +1,1 @@
+import{m as e,s as t}from"./app-web-9kNHfgxH.js";import{yi as n}from"./app-T_t3rRTu.js";var r=e(`<h1 class="text-lg font-semibold text-txt">`);function i(){let{t:e}=n();return(()=>{var n=r();return t(n,()=>e(`nav.calendar`)),n})()}export{i as default};

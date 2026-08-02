@@ -7,6 +7,11 @@ use Theme\Solidified\Api\Response;
 
 class Avatar
 {
+    // No sitewide setting exists for this — animated multi-frame decoding
+    // (Imagick coalesceImages()) was never reachable via this endpoint
+    // before clients could upload animated avatars unflattened.
+    private const MAX_ANIMATION_FRAMES = 100;
+
     public function post(): void
     {
         $uid     = Auth::requireLocalMultipart();
@@ -57,6 +62,8 @@ class Avatar
             ? @file_get_contents(dbunescbin($base['content']))
             : dbunescbin($base['content']);
 
+        $this->guardImageBounds($imagedata, $hash, $uid);
+
         $im = photo_factory($imagedata, $base['mimetype']);
 
         if (!$im->is_valid()) {
@@ -79,6 +86,41 @@ class Avatar
             $this->processAvatar($uid, $channel, $im, $p, $hash);
         } else {
             $this->processCover($uid, $im, $p, $hash);
+        }
+    }
+
+    // Cheap pre-decode checks (getimagesizefromstring / Imagick::pingImageBlob
+    // read headers only) so a hostile upload can't force a full multi-frame
+    // Imagick coalesce/scale pass before we've validated it's reasonably sized.
+    private function guardImageBounds(string $imagedata, string $hash, int $uid): void
+    {
+        $maxLength = \Zotlabs\Lib\Config::Get('system', 'max_image_length');
+        if (!$maxLength) {
+            $maxLength = MAX_IMAGE_LENGTH;
+        }
+
+        $size = @getimagesizefromstring($imagedata);
+        if ($size && $maxLength > 0 && max($size[0], $size[1]) > $maxLength) {
+            attach_delete($uid, $hash, 1);
+            Response::error(400, 'Image dimensions exceed the site limit.');
+        }
+
+        if (class_exists('Imagick')) {
+            $frames = 0;
+            try {
+                $probe = new \Imagick();
+                $probe->pingImageBlob($imagedata);
+                $frames = $probe->getNumberImages();
+                $probe->clear();
+                $probe->destroy();
+            } catch (\Exception $e) {
+                $frames = 0;
+            }
+
+            if ($frames > self::MAX_ANIMATION_FRAMES) {
+                attach_delete($uid, $hash, 1);
+                Response::error(400, 'Animated image has too many frames (max ' . self::MAX_ANIMATION_FRAMES . ').');
+            }
         }
     }
 
