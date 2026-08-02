@@ -1,0 +1,1 @@
+import{t as e}from"./app-fetch-CmSrOrFS.js";async function t(){let t=await e(`/spa/bookmarks`);if(!t.ok)throw Error(`Failed to fetch bookmarks`);return(await t.json()).data?.menus??[]}async function n(t){if(!(await e(`/spa/bookmarks/${t}`,{method:`DELETE`})).ok)throw Error(`Failed to delete bookmark`)}export{t as n,n as t};

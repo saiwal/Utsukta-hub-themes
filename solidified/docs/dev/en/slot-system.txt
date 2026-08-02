@@ -10,8 +10,9 @@ Every widget is registered with a **stable id** in a central widget registry (`m
 |----------|---------------|
 | `right` | Right sidebar (desktop) |
 | `leftBottom` | Bottom of left sidebar |
-| `header` | Top of main content area, above `mainTop` — always full-width, single column |
-| `mainTop` | Top of main content area — masonry-packed via CSS columns, so widgets of different heights pack without grid dead space |
+| `header` | Top of main content area, above `gridTop` — always full-width, single column |
+| `gridTop` | Top of main content area — masonry-packed via CSS columns, so widgets of different heights pack without grid dead space |
+| `contentTop` | Directly above the routed page content — always full-width, single column, same as `header` |
 | `footer` | Bottom of main content area, below the routed page — always full-width, single column, same as `header` |
 | `rightVisitor` | Right sidebar shown to visitors |
 
@@ -160,7 +161,7 @@ const pageTemplateId = createMemo(() => getModule(activeModuleId())?.pageTemplat
 // ...
 <Slot name="right" moduleId={activeModuleId()} templateId={pageTemplateId()} editable />
 <Slot name="header" moduleId={activeModuleId()} templateId={pageTemplateId()} editable />
-// ...same for mainTop and footer
+// ...same for gridTop, contentTop, and footer
 ```
 
 Templates ride to visitors the same way a module's own layout does (see
@@ -175,14 +176,14 @@ as it loads/unloads.
 ### Multi-region templates
 
 A template isn't confined to the sidebar — it can place widgets in every
-slot `Layout.tsx` already treats as `editable`: `right`, `header`, `mainTop`,
-`footer` (`leftBottom`/`rightVisitor` are left out — nav-sidebar and
-visitor-only content, not part of an item's own "layout"). `Layout.tsx`
+slot `Layout.tsx` already treats as `editable`: `right`, `header`, `gridTop`,
+`contentTop`, `footer` (`leftBottom`/`rightVisitor` are left out — nav-sidebar
+and visitor-only content, not part of an item's own "layout"). `Layout.tsx`
 computes one `pageTemplateId` from `ModuleDef.pageTemplate` and passes it to
-all four `<Slot>`s — a template groups per-slot lists under one named entity
+all five `<Slot>`s — a template groups per-slot lists under one named entity
 (`WidgetTemplate.slots: Partial<Record<WidgetSlotName, LayoutEntry[]>>`), so
 the same assigned id applies to every region at once. Backward compatible:
-older templates only have `slots.right`, so their `header`/`mainTop`/`footer`
+older templates only have `slots.right`, so their `header`/`gridTop`/`footer`
 simply fall through to registry defaults until entries are added there — no
 migration needed, and no changes were needed to `WidgetTemplates.php` or to
 how `Slot.tsx` *resolves* a slot's entries, both already per-slot generic.

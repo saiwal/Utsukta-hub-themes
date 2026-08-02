@@ -22,7 +22,7 @@ use Theme\Solidified\Api\Response;
  */
 class WidgetLayout
 {
-    private const SLOTS = ['right', 'leftBottom', 'mainTop', 'rightVisitor', 'header', 'footer'];
+    private const SLOTS = ['right', 'leftBottom', 'gridTop', 'rightVisitor', 'header', 'footer', 'contentTop'];
     private const MAX_MODULES = 32;
     private const MAX_WIDGETS_PER_SLOT = 32;
     private const ID_PATTERN = '/^[a-zA-Z0-9._-]{1,64}$/';

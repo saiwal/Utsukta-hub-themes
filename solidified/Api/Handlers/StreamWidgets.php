@@ -128,6 +128,8 @@ class StreamWidgets
                AND item.item_thread_top = 1
                AND item.item_wall       = 1
                AND item.item_type       = " . intval($item_type_val) . "
+               AND item.item_private   IN (0, 1)
+               AND item.obj_type       NOT IN ('Event', '" . dbesc(ACTIVITY_OBJ_EVENT) . "')
                $item_normal
                $permission_sql
              ORDER BY comment_count DESC, item.created DESC
