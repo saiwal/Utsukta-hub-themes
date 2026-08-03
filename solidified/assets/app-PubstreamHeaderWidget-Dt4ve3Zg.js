@@ -1,1 +1,0 @@
-import{C as e,O as t,m as n,s as r}from"./app-web-9kNHfgxH.js";import{yi as i}from"./app-vcNtgTEU.js";import{n as a}from"./app-store-CqZlo9Y2.js";var o=n(`<h1 class="text-xl font-bold">`);function s(){let{t:n}=i();return t(e,{get when(){return!a()},get children(){var e=o();return r(e,()=>n(`pubstream.title`)),e}})}export{s as default};
