@@ -240,7 +240,23 @@ class Item
                    AND item_deleted = 0
                  ORDER BY created DESC, id DESC LIMIT 1"
             );
-            $row['viewer_following'] = !empty($fr) && $fr[0]['verb'] === 'Follow';
+            if (!empty($fr)) {
+                $row['viewer_following'] = $fr[0]['verb'] === 'Follow';
+            } else {
+                // No explicit Follow/Ignore yet — commenting on the thread
+                // already makes core notify() treat you as involved, so
+                // reflect that here too (see applyViewerFollowing()).
+                $participated = dbq(
+                    "SELECT id FROM item
+                     WHERE uid = $luid
+                       AND parent_mid = '$pmid'
+                       AND author_xchan = '$obs'
+                       AND verb NOT IN ('Follow', 'Ignore')
+                       AND item_deleted = 0
+                     LIMIT 1"
+                );
+                $row['viewer_following'] = !empty($participated);
+            }
         }
 
         json_return_and_die(['item' => self::formatItem($row, $ob_hash)]);
@@ -1127,7 +1143,20 @@ class Item
                       AND verb IN ('Follow', 'Ignore')
                       AND item_deleted = 0
                     ORDER BY created DESC LIMIT 1");
-        $currently = !empty($cur) && $cur[0]['verb'] === 'Follow';
+        if (!empty($cur)) {
+            $currently = $cur[0]['verb'] === 'Follow';
+        } else {
+            // No explicit Follow/Ignore yet — a comment already makes core
+            // notify() treat the viewer as following, so Unfollow must still
+            // record an explicit Ignore instead of no-op'ing here.
+            $participated = dbq("SELECT id FROM item
+                        WHERE parent = $tid
+                          AND author_xchan = '$obsEsc'
+                          AND verb NOT IN ('Follow', 'Ignore')
+                          AND item_deleted = 0
+                        LIMIT 1");
+            $currently = !empty($participated);
+        }
         if ($currently === $follow) {
             json_return_and_die(['success' => true, 'following' => $follow]);
         }

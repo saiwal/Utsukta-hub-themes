@@ -234,7 +234,11 @@ class Network
             $sql_extra .= ' AND item_spam = 1 ';
         }
 
-        // Followed threads (pf=1)
+        // Followed threads (pf=1). Mirrors viewer_following in FormatsItems::
+        // applyViewerFollowing() — an explicit Follow (with no later Ignore)
+        // counts, and so does having commented on a thread with no explicit
+        // Follow/Ignore at all, since core's own notifier already treats
+        // authoring an item in a thread as opting into its notifications.
         if ($pf && $observer_xchan) {
             $obs = dbesc($observer_xchan);
             $sql_extra .= " AND item.parent IN (
@@ -250,6 +254,20 @@ class Network
                       AND i.verb = 'Ignore'
                       AND i.item_deleted = 0
                       AND i.created > f.created
+                  )
+                UNION
+                SELECT c.parent
+                FROM item c
+                WHERE c.uid = $uid
+                  AND c.author_xchan = '$obs'
+                  AND c.verb NOT IN ('Follow', 'Ignore')
+                  AND c.item_deleted = 0
+                  AND NOT EXISTS (
+                    SELECT 1 FROM item i
+                    WHERE i.parent = c.parent
+                      AND i.author_xchan = '$obs'
+                      AND i.verb IN ('Follow', 'Ignore')
+                      AND i.item_deleted = 0
                   )
             ) ";
         }
