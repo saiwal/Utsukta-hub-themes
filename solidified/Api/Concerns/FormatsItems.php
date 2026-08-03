@@ -169,6 +169,25 @@ trait FormatsItems
             }
         }
 
+        // Without an explicit Follow/Ignore, core's notification() in
+        // include/items.php still notifies anyone who has authored an item
+        // (e.g. a comment) in the thread — so treat that the same way here,
+        // otherwise the UI shows "Follow" on threads the user is already
+        // being notified about, and Unfollow has nothing explicit to flip.
+        $participated = dbq(
+            "SELECT DISTINCT parent_mid FROM item
+             WHERE uid = $uid
+               AND parent_mid IN ('$inList')
+               AND author_xchan = '$obs'
+               AND verb NOT IN ('Follow', 'Ignore')
+               AND item_deleted = 0"
+        );
+        foreach (($participated ?: []) as $pr) {
+            if (!isset($map[$pr['parent_mid']])) {
+                $map[$pr['parent_mid']] = true;
+            }
+        }
+
         foreach ($items as &$item) {
             $item['viewer_following'] = $map[$item['parent_mid']] ?? false;
         }
