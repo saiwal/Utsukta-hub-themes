@@ -258,7 +258,8 @@ class Network
                 UNION
                 SELECT c.parent
                 FROM item c
-                WHERE c.author_xchan = '$obs'
+                WHERE c.uid = $uid
+                  AND c.author_xchan = '$obs'
                   AND c.verb NOT IN ('Follow', 'Ignore')
                   AND c.item_deleted = 0
                   AND NOT EXISTS (
