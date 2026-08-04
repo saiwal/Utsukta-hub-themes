@@ -80,6 +80,9 @@ class WidgetTemplates
             case 'rename':
                 $this->rename($uid, $body);
                 return;
+            case 'set_chrome':
+                $this->setChrome($uid, $body);
+                return;
             case 'delete':
                 $this->delete($uid, $body);
                 return;
@@ -126,6 +129,28 @@ class WidgetTemplates
             Response::error(404, 'Template not found');
         }
         $doc['templates'][$id]['name'] = $name;
+        self::save($uid, $doc);
+
+        Response::send(['templates' => $doc['templates']]);
+    }
+
+    private function setChrome(int $uid, array $body): void
+    {
+        $id = (string) ($body['id'] ?? '');
+        $chrome = $body['chrome'] ?? 'default';
+        if (!preg_match(self::ID_PATTERN, $id) || !in_array($chrome, ['default', 'zen', 'focus', 'wide', 'compact'], true)) {
+            Response::error(400, 'Invalid request');
+        }
+
+        $doc = self::load($uid);
+        if (!isset($doc['templates'][$id])) {
+            Response::error(404, 'Template not found');
+        }
+        if ($chrome === 'default') {
+            unset($doc['templates'][$id]['chrome']);
+        } else {
+            $doc['templates'][$id]['chrome'] = $chrome;
+        }
         self::save($uid, $doc);
 
         Response::send(['templates' => $doc['templates']]);
