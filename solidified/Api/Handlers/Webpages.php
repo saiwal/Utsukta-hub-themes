@@ -218,7 +218,7 @@ class Webpages
         }
 
         if (($body['action'] ?? '') === 'update') {
-            $this->updateWebpage($uid, $body);
+            $this->updateWebpage($uid, $body, $owner['channel_hash']);
             return;
         }
 
@@ -267,7 +267,7 @@ class Webpages
         }
 
         [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-            $this->resolveWebpageAcl($scope, $body);
+            $this->resolveWebpageAcl($scope, $body, $owner['channel_hash']);
 
         $uuid = item_message_id();
         $mid  = z_root() . '/item/' . $uuid;
@@ -351,7 +351,7 @@ class Webpages
         }
     }
 
-    private function updateWebpage(int $uid, array $body): void
+    private function updateWebpage(int $uid, array $body, string $ownerHash): void
     {
         require_once 'include/items.php';
 
@@ -393,7 +393,7 @@ class Webpages
 
         if ($scope !== null) {
             [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-                $this->resolveWebpageAcl($scope, $body);
+                $this->resolveWebpageAcl($scope, $body, $ownerHash);
 
             q("UPDATE item
                SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
@@ -429,12 +429,16 @@ class Webpages
     }
 
     // Returns [allow_cid, allow_gid, deny_cid, deny_gid, item_private, public_policy]
-    private function resolveWebpageAcl(string $scope, array $body): array
+    private function resolveWebpageAcl(string $scope, array $body, string $ownerHash): array
     {
         if ($scope === 'connections') {
             // item_private=1 + public_policy='contacts' is the mechanism
             // item_permissions_sql() checks this via scopes_sql()
             return ['', '', '', '', 1, 'contacts'];
+        }
+
+        if ($scope === 'private') {
+            return ['<' . $ownerHash . '>', '', '', '', 1, ''];
         }
 
         if ($scope === 'custom') {

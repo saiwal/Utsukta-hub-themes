@@ -31,9 +31,10 @@ require_once 'include/security.php';
  * observer.
  *
  * Item ACL: scope is "public" (default), "connections" (the channel's
- * default post ACL), or "custom" (explicit contact_allow/group_allow/
- * contact_deny/group_deny arrays of xchan hashes / group ids). Omitting
- * `scope` on an edit leaves the item's existing ACL untouched.
+ * default post ACL), "private" (owner only), or "custom" (explicit
+ * contact_allow/group_allow/contact_deny/group_deny arrays of xchan
+ * hashes / group ids). Omitting `scope` on an edit leaves the item's
+ * existing ACL untouched.
  */
 class Menus
 {
@@ -378,6 +379,16 @@ class Menus
                 'group_allow'   => is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [],
                 'contact_deny'  => is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [],
                 'group_deny'    => is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [],
+            ];
+        }
+
+        if ($scope === 'private') {
+            $channel = q("SELECT channel_hash FROM channel WHERE channel_id = %d LIMIT 1", intval($uid));
+            return [
+                'contact_allow' => $channel ? [$channel[0]['channel_hash']] : [],
+                'group_allow'   => [],
+                'contact_deny'  => [],
+                'group_deny'    => [],
             ];
         }
 

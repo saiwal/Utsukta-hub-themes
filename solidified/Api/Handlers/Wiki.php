@@ -149,10 +149,17 @@ class Wiki
         $uid  = intval($owner['channel_id']);
         $body = Auth::$parsedBody;
 
-        $allow_cid  = $this->buildAclField($body['allow_cid'] ?? []);
-        $allow_gid  = $this->buildAclField($body['allow_gid'] ?? []);
-        $deny_cid   = $this->buildAclField($body['deny_cid']  ?? []);
-        $deny_gid   = $this->buildAclField($body['deny_gid']  ?? []);
+        if (($body['scope'] ?? null) === 'private') {
+            $allow_cid = '<' . $owner['channel_hash'] . '>';
+            $allow_gid = '';
+            $deny_cid  = '';
+            $deny_gid  = '';
+        } else {
+            $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
+            $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
+            $deny_cid  = $this->buildAclField($body['deny_cid']  ?? []);
+            $deny_gid  = $this->buildAclField($body['deny_gid']  ?? []);
+        }
         $is_private = ($allow_cid || $allow_gid || $deny_cid || $deny_gid) ? 1 : 0;
 
         q("UPDATE item SET allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s', item_private = %d
@@ -377,10 +384,17 @@ class Wiki
             }
 
             $acl = new \Zotlabs\Access\AccessList($owner);
-            $allow_cid_raw = $this->buildAclField($data['allow_cid'] ?? []);
-            $allow_gid_raw = $this->buildAclField($data['allow_gid'] ?? []);
-            $deny_cid_raw  = $this->buildAclField($data['deny_cid']  ?? []);
-            $deny_gid_raw  = $this->buildAclField($data['deny_gid']  ?? []);
+            if (($data['scope'] ?? null) === 'private') {
+                $allow_cid_raw = '<' . $owner['channel_hash'] . '>';
+                $allow_gid_raw = '';
+                $deny_cid_raw  = '';
+                $deny_gid_raw  = '';
+            } else {
+                $allow_cid_raw = $this->buildAclField($data['allow_cid'] ?? []);
+                $allow_gid_raw = $this->buildAclField($data['allow_gid'] ?? []);
+                $deny_cid_raw  = $this->buildAclField($data['deny_cid']  ?? []);
+                $deny_gid_raw  = $this->buildAclField($data['deny_gid']  ?? []);
+            }
             if ($allow_cid_raw || $allow_gid_raw || $deny_cid_raw || $deny_gid_raw) {
                 $acl->set([
                     'allow_cid' => $allow_cid_raw,
