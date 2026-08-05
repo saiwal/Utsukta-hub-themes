@@ -30,7 +30,7 @@ class Network
         $uids = ' and item.uid = ' . $uid . ' ';
 
         // ── Pagination ────────────────────────────────────────────────────────
-        $itemspage = intval(get_pconfig($uid, 'system', 'itemspage') ?: 10);
+        $itemspage = max(1, min(30, intval(get_pconfig($uid, 'system', 'itemspage') ?: 10)));
         $offset = max(0, intval($_GET['start'] ?? 0));
         $pager_sql = " LIMIT $itemspage OFFSET $offset ";
 
