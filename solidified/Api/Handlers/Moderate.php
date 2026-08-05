@@ -22,16 +22,40 @@ use Theme\Solidified\Api\Response;
 class Moderate
 {
     // GET  /api/moderate                  -> list pending items for local_channel()
+    // GET  /api/moderate?mid=<mid>         -> pending Like/Dislike/Announce on one post/comment
+    //                                         (feeds the inline "pending reactions" panel — comments
+    //                                         get an inline approve/deny affordance instead, so this
+    //                                         scoped view only needs to cover reactions)
     // POST /api/moderate/:id/approve      -> unblock + re-notify
     // POST /api/moderate/:id/drop         -> delete
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
+        $mid = trim($_GET['mid'] ?? '');
+
+        // item_blocked = ITEM_MODERATED is overloaded: besides genuine
+        // unsolicited third-party content, core also parks the channel's own
+        // internal ActivityPub "Add to collection" bookkeeping records (verb
+        // Add/Remove, self-authored — see addToCollectionAndSync() /
+        // Activity::addToCollection() in core) under the same flag so they
+        // stay hidden from normal stream queries. Restrict to the verbs that
+        // are actually comments/reactions, and exclude anything the channel
+        // authored about itself, so those never masquerade as pending review.
+        $channel = \App::get_channel();
+        $ownHash = $channel['channel_hash'] ?? '';
+        $verbs   = $mid ? "'Like','Dislike','Announce'" : "'Create','Update','EmojiReact','Like','Dislike','Announce'";
 
         $rows = q(
-            "SELECT * FROM item WHERE uid = %d AND item_blocked = %d AND item_deleted = 0 ORDER BY created DESC",
+            "SELECT * FROM item
+             WHERE uid = %d AND item_blocked = %d AND item_deleted = 0
+               AND verb IN ($verbs)
+               AND author_xchan != '%s'
+               " . ($mid ? "AND thr_parent = '%s'" : "") . "
+             ORDER BY created DESC",
             intval($uid),
-            intval(ITEM_MODERATED)
+            intval(ITEM_MODERATED),
+            dbesc($ownHash),
+            ...($mid ? [dbesc($mid)] : [])
         );
         $rows = $rows ?: [];
 

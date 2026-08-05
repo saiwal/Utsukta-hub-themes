@@ -65,22 +65,23 @@ class Display
         }
 
         $observer_hash = get_observer_hash();
-        $item_normal   = item_normal();
+        $owner_uid     = intval($target_item['uid']);
+        // item_normal($owner_uid) relaxes the item_blocked filter to include
+        // ITEM_MODERATED (pending-moderation) rows, but only when the viewer
+        // IS that channel — same "owners see their own pending items" rule
+        // core's item_normal() already encodes internally.
+        $item_normal   = item_normal($owner_uid);
 
         // ── Permission check ──────────────────────────────────────────────────
         // 1. Check the item owner's uid directly — works for wall posts on
         //    any channel the observer has view_stream permission for.
-        $owner_uid = intval($target_item['uid']);
         $r = [];
 
         if ($owner_uid) {
             $perms = get_all_perms($owner_uid, $observer_hash);
             if ($perms['view_stream']) {
-                // item_normal($uid) relaxes item_delayed only when the viewer
-                // IS that channel — owners see their own scheduled posts.
-                $item_normal_owner = item_normal($owner_uid);
                 $r = q("SELECT item.id AS item_id FROM item
-                        WHERE uid = %d AND mid = '%s' $item_normal_owner LIMIT 1",
+                        WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
                     $owner_uid,
                     dbesc($target_item['parent_mid']));
             }
