@@ -427,6 +427,8 @@ class Item
         if (!$wallToWall) {
             if ($scope === 'public') {
                 $acl->set(['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => '']);
+            } elseif ($scope === 'private') {
+                $acl->set(['allow_cid' => '<' . $ownerChannel['channel_hash'] . '>', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => '']);
             } elseif ($scope === 'custom') {
                 $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
                 $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];

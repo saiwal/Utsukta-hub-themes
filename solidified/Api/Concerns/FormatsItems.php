@@ -307,6 +307,7 @@ trait FormatsItems
                     : null,
                 intval($item['item_unseen']) ? 'unseen' : null,
                 intval($item['item_delayed'] ?? 0) ? 'scheduled' : null,
+                intval($item['item_blocked'] ?? 0) === ITEM_MODERATED ? 'pending_moderation' : null,
             ])),
             'author' => [
                 'name'    => htmlspecialchars_decode(urldecode($item['author']['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),

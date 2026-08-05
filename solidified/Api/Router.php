@@ -40,6 +40,7 @@ class Router
         'files'  => Handlers\Files::class,
         'pubstream' => Handlers\Pubstream::class,
         'webpages' => Handlers\Webpages::class,
+        'blocks' => Handlers\Blocks::class,
         'menus' => Handlers\Menus::class,
         'notes' => Handlers\Notes::class,
         'wiki' => Handlers\Wiki::class,
@@ -67,6 +68,7 @@ class Router
         'blocklist'      => Handlers\Blocklist::class,
         'notify'         => Handlers\Notify::class,
         'notifications'  => Handlers\Notifications::class,
+        'moderate'       => Handlers\Moderate::class,
     ];
 
     public static function dispatch(string $method): void

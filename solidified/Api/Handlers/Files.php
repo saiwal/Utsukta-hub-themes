@@ -210,10 +210,18 @@ class Files
         );
         if (!$r) Response::error(404, 'File not found');
 
-        $allow_gid = $this->packAcl($data['group_allow']   ?? []);
-        $allow_cid = $this->packAcl($data['contact_allow'] ?? []);
-        $deny_gid  = $this->packAcl($data['group_deny']    ?? []);
-        $deny_cid  = $this->packAcl($data['contact_deny']  ?? []);
+        if (($data['scope'] ?? null) === 'private') {
+            $channel   = \App::get_channel();
+            $allow_gid = '';
+            $allow_cid = '<' . $channel['channel_hash'] . '>';
+            $deny_gid  = '';
+            $deny_cid  = '';
+        } else {
+            $allow_gid = $this->packAcl($data['group_allow']   ?? []);
+            $allow_cid = $this->packAcl($data['contact_allow'] ?? []);
+            $deny_gid  = $this->packAcl($data['group_deny']    ?? []);
+            $deny_cid  = $this->packAcl($data['contact_deny']  ?? []);
+        }
 
         attach_change_permissions($uid, $hash, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $recurse, true);
 

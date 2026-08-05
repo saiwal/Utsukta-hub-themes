@@ -21,7 +21,7 @@ class Channel
         $channel_uid = intval($channel['channel_id']);
 
         $observer_xchan = get_observer_hash();
-        $itemspage      = intval(get_pconfig($uid ?: $channel_uid, 'system', 'itemspage') ?: 10);
+        $itemspage      = max(1, min(30, intval(get_pconfig($uid ?: $channel_uid, 'system', 'itemspage') ?: 10)));
 
         // ── Pinned posts (channel wall) ──────────────────────────────────────
         $pinnedMidsRaw = get_pconfig($channel_uid, 'pinned', ITEM_TYPE_POST, []);

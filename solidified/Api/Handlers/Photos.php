@@ -899,10 +899,17 @@ class Photos
 
         $body = Auth::$parsedBody;
 
-        $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
-        $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
-        $deny_gid  = $this->buildAclField($body['deny_gid']  ?? []);
-        $deny_cid  = $this->buildAclField($body['deny_cid']  ?? []);
+        if (($body['scope'] ?? null) === 'private') {
+            $allow_gid = '';
+            $allow_cid = '<' . $channel['channel_hash'] . '>';
+            $deny_gid  = '';
+            $deny_cid  = '';
+        } else {
+            $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
+            $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
+            $deny_gid  = $this->buildAclField($body['deny_gid']  ?? []);
+            $deny_cid  = $this->buildAclField($body['deny_cid']  ?? []);
+        }
 
         if ($type === 'image') {
             if (!$datum) Response::error(400, 'resource_id required');

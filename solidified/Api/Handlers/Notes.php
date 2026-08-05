@@ -31,7 +31,8 @@ class Notes
         // Extract #hashtags into term records for the tag-cloud widget. Notes
         // are always fully private with no ACL, so mentions/groups found by
         // linkify_tags() are discarded — only hashtags are persisted.
-        $postTags = [];
+        $postTags    = [];
+        $attachments = [];
         if ($mimetype === 'text/bbcode') {
             require_once 'include/text.php';
             $results = linkify_tags($content, $uid);
@@ -45,6 +46,27 @@ class Notes
                         'term'  => $s['term'],
                         'url'   => $s['url'],
                     ];
+                }
+            }
+
+            // Extract [attachment] tags → attach array, strip them from body
+            // (same extraction Item.php's post/edit handlers use).
+            if (preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
+                require_once 'include/attach.php';
+                foreach ($match[2] as $i => $mtch) {
+                    $hash = substr($mtch, 0, strpos($mtch, ','));
+                    $rev  = intval(substr($mtch, strpos($mtch, ',')));
+                    $r    = attach_by_hash_nodata($hash, $observer['xchan_hash'], $rev);
+                    if ($r['success']) {
+                        $attachments[] = [
+                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'length'   => $r['data']['filesize'],
+                            'type'     => $r['data']['filetype'],
+                            'title'    => urlencode($r['data']['filename']),
+                            'revision' => $r['data']['revision'],
+                        ];
+                    }
+                    $content = str_replace($match[1][$i], '', $content);
                 }
             }
         }
@@ -77,6 +99,7 @@ class Notes
             'allow_gid'       => '',
             'deny_cid'        => '',
             'deny_gid'        => '',
+            'attach'          => $attachments,
             'item_wall'       => 1,
             'item_origin'     => 1,
             'item_thread_top' => 1,
@@ -154,7 +177,7 @@ class Notes
 
         $rows = dbq(
             "SELECT item.id, item.mid, item.uuid, item.body, item.title,
-                    item.created, item.edited, item.mimetype
+                    item.created, item.edited, item.mimetype, item.attach
              FROM item
              WHERE item.uid = $uid
                AND item.item_thread_top = 1
@@ -164,8 +187,10 @@ class Notes
              LIMIT $limit OFFSET $start"
         );
 
+        $root = z_root();
         $items = [];
         foreach (($rows ?: []) as $row) {
+            $attach = $row['attach'] ? (json_decode($row['attach'], true) ?: []) : [];
             $items[] = [
                 'id'       => intval($row['id']),
                 'mid'      => $row['mid'],
@@ -174,6 +199,17 @@ class Notes
                 'created'  => $row['created'],
                 'edited'   => $row['edited'],
                 'mimetype' => $row['mimetype'],
+                'attach'   => array_map(function (array $a) use ($root): array {
+                    $href = $a['href'] ?? '';
+                    if ($href && str_starts_with($href, '/')) $href = $root . $href;
+                    return [
+                        'href'     => $href,
+                        'type'     => $a['type']     ?? 'application/octet-stream',
+                        'title'    => $a['title']    ?? '',
+                        'length'   => (string) ($a['length']   ?? '0'),
+                        'revision' => (string) ($a['revision'] ?? '0'),
+                    ];
+                }, $attach),
             ];
         }
 

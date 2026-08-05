@@ -194,7 +194,7 @@ class Chat
             Response::error(400, 'Room name required');
 
         $expire = max(0, intval($data['expire'] ?? 120));
-        $visibility = $data['visibility'] ?? 'public'; // 'public' | 'connections' | 'private'
+        $visibility = $data['visibility'] ?? 'public'; // 'public' | 'connections' | 'private' | 'custom'
 
         $channel = App::get_channel();
 
@@ -212,7 +212,9 @@ class Chat
             if ($default_group) {
                 $allow_gid = '<' . $default_group . '>';
             }
-        } elseif ($visibility === 'custom' || $visibility === 'private') {
+        } elseif ($visibility === 'private') {
+            $allow_cid = '<' . $channel['channel_hash'] . '>';
+        } elseif ($visibility === 'custom') {
             // Granular allow/deny per contact and group
             foreach ((array)($data['allow_cid'] ?? []) as $h) {
                 $h = notags(trim($h));

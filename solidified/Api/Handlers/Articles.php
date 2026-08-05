@@ -240,7 +240,7 @@ class Articles
         string $permission_sql,
         string $nick
     ): never {
-        $itemspage = intval(get_pconfig(local_channel(), 'system', 'itemspage') ?: 10);
+        $itemspage = max(1, min(30, intval(get_pconfig(local_channel(), 'system', 'itemspage') ?: 10)));
         $offset    = max(0, intval($_GET['start'] ?? 0));
         $pager_sql = " LIMIT $itemspage OFFSET $offset ";
 
@@ -458,8 +458,12 @@ class Articles
 
     // Resolve the raw contact_allow/group_allow/contact_deny/group_deny arrays
     // + public_policy sent by ArticleComposer into item ACL columns.
-    private function resolveAcl(array $input): array
+    private function resolveAcl(array $input, string $ownerHash): array
     {
+        if (($input['scope'] ?? null) === 'private') {
+            return ['<' . $ownerHash . '>', '', '', '', 1, ''];
+        }
+
         $wrap = fn(array $arr): string =>
             implode('', array_map(fn($h) => '<' . $h . '>', array_filter($arr)));
 
@@ -569,7 +573,7 @@ class Articles
             }
 
             [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-                $this->resolveAcl($input);
+                $this->resolveAcl($input, $channel['channel_hash']);
 
             $datarray                   = $orig[0];
             $datarray['title']          = $title;
@@ -631,7 +635,7 @@ class Articles
         $now  = datetime_convert();
 
         [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-            $this->resolveAcl($input);
+            $this->resolveAcl($input, $channel['channel_hash']);
 
         // ── Translation group ────────────────────────────────────────────────
         // A new translation of an existing article shares a group id (the
