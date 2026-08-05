@@ -68,6 +68,7 @@ class Router
         'blocklist'      => Handlers\Blocklist::class,
         'notify'         => Handlers\Notify::class,
         'notifications'  => Handlers\Notifications::class,
+        'moderate'       => Handlers\Moderate::class,
     ];
 
     public static function dispatch(string $method): void
