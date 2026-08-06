@@ -447,6 +447,22 @@ class Item
             // 'contacts': keep the channel's default ACL from the AccessList constructor
         }
 
+        // Wall-to-wall post to a forum ("group actor") channel: classic Hubzilla
+        // silently converts this into a direct message addressed to the forum's
+        // own xchan. item_store() below calls tag_deliver(), which already knows
+        // how to re-broadcast such a DM under the forum's identity to its
+        // followers (include/items.php, group-DM delivery branch) — no delivery
+        // code needed here, only the ACL/private-flag conversion that makes the
+        // item qualify.
+        if ($wallToWall && get_pconfig($profileUid, 'system', 'group_actor')) {
+            $acl->set([
+                'allow_cid' => '<' . $ownerChannel['channel_hash'] . '>',
+                'allow_gid' => '',
+                'deny_cid'  => '',
+                'deny_gid'  => '',
+            ]);
+        }
+
         // Derive public_policy and comment_policy from the wall owner's permission limits
         $viewPolicy    = PermissionLimits::Get($profileUid, 'view_stream');
         $commentPolicy = PermissionLimits::Get($profileUid, 'post_comments');
