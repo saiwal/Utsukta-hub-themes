@@ -53,6 +53,8 @@ class Directory
             $this->suggest($local_channel, $observer, $order, $safe);
         }
 
+        $is_directory_admin = $this->isDirectoryAdmin();
+
         // ── Resolve /dirsearch URL ─────────────────────────────────────────────
         $dirmode = intval(\Zotlabs\Lib\Config::Get('system', 'directory_mode'));
 
@@ -109,6 +111,7 @@ class Directory
                 'total' => 0, 'page' => $page, 'start' => $start, 'limit' => self::LIMIT,
                 'globaldir' => (bool) $globaldir, 'safe_mode' => $safe,
                 'suggest' => false, 'order' => $order,
+                'is_directory_admin' => $is_directory_admin,
             ]);
         }
 
@@ -126,8 +129,19 @@ class Directory
                 'safe_mode' => $safe,
                 'suggest'   => false,
                 'order'     => $order,
+                'is_directory_admin' => $is_directory_admin,
             ]
         );
+    }
+
+    // Site admins on a hub that itself serves directory data (primary,
+    // secondary mirror, or standalone) can censor/mark-spam directory
+    // entries — mirrors core's $directory_admin in Zotlabs/Module/Directory.php.
+    private function isDirectoryAdmin(): bool
+    {
+        $dirmode = intval(\Zotlabs\Lib\Config::Get('system', 'directory_mode'));
+        return is_site_admin()
+            && in_array($dirmode, [DIRECTORY_MODE_PRIMARY, DIRECTORY_MODE_SECONDARY, DIRECTORY_MODE_STANDALONE]);
     }
 
     // ── Suggest ───────────────────────────────────────────────────────────────────
@@ -144,6 +158,7 @@ class Directory
             Response::send([], [
                 'total' => 0, 'page' => 1, 'start' => 0, 'limit' => self::LIMIT,
                 'globaldir' => true, 'safe_mode' => 1, 'suggest' => true, 'order' => $order,
+                'is_directory_admin' => $this->isDirectoryAdmin(),
             ]);
         }
 
@@ -182,6 +197,7 @@ class Directory
             Response::send([], [
                 'total' => 0, 'page' => 1, 'start' => 0, 'limit' => self::LIMIT,
                 'globaldir' => true, 'safe_mode' => 1, 'suggest' => true, 'order' => $order,
+                'is_directory_admin' => $this->isDirectoryAdmin(),
             ]);
         }
 
@@ -212,6 +228,7 @@ class Directory
             'safe_mode' => 1,
             'suggest'   => true,
             'order'     => $order,
+            'is_directory_admin' => $this->isDirectoryAdmin(),
         ]);
     }
 
@@ -361,6 +378,7 @@ class Directory
                 'cover'        => $cover,
                 'common_count' => $suggest ? ($rr['_common_count'] ?? null) : null,
                 'ignore_url'   => $suggest ? z_root() . '/directory?ignore=' . $hash : null,
+                'censored'     => intval($rr['censored'] ?? 0),
             ];
         }
 

@@ -89,7 +89,23 @@ class PrivacyGroups
     {
         $channel = App::get_channel();
         $rows    = q("SELECT * FROM pgrp WHERE uid = %d AND deleted = 0 ORDER BY gname ASC", intval($uid));
-        Response::send(array_map(fn($g) => $this->formatGroup($g, $channel), $rows ?? []));
+
+        $counts = q(
+            "SELECT gid, count(*) as total FROM pgrp_member
+               LEFT JOIN abook ON abook_xchan = pgrp_member.xchan
+               LEFT JOIN xchan ON xchan_hash = abook_xchan
+              WHERE pgrp_member.uid = %d AND abook_channel = %d
+                AND xchan_deleted = 0 AND abook_self = 0
+                AND abook_blocked = 0 AND abook_pending = 0
+              GROUP BY gid",
+            intval($uid), intval($uid)
+        );
+        $countByGid = array_column($counts ?? [], 'total', 'gid');
+
+        Response::send(array_map(
+            fn($g) => $this->formatGroup($g, $channel, intval($countByGid[$g['id']] ?? 0)),
+            $rows ?? []
+        ));
     }
 
     private function getGroup(int $uid, int $id): void
@@ -102,7 +118,7 @@ class PrivacyGroups
 
         $members = AccessList::members($uid, $id);
         Response::send([
-            'group'   => $this->formatGroup($r[0], $channel),
+            'group'   => $this->formatGroup($r[0], $channel, count($members ?? [])),
             'members' => array_map([$this, 'formatContact'], $members ?? []),
         ]);
     }
@@ -150,7 +166,7 @@ class PrivacyGroups
         $r = q("SELECT * FROM pgrp WHERE hash = '%s' AND uid = %d LIMIT 1",
             dbesc($hash), intval($uid));
 
-        Response::send($r ? $this->formatGroup($r[0], App::get_channel()) : ['hash' => $hash]);
+        Response::send($r ? $this->formatGroup($r[0], App::get_channel(), 0) : ['hash' => $hash]);
     }
 
     private function updateGroup(int $uid, int $id, array $data): void
@@ -187,7 +203,8 @@ class PrivacyGroups
         $updated = q("SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1",
             intval($id), intval($uid));
 
-        Response::send($updated ? $this->formatGroup($updated[0], App::get_channel()) : ['id' => $id]);
+        $member_count = (int) AccessList::members($uid, $id, true);
+        Response::send($updated ? $this->formatGroup($updated[0], App::get_channel(), $member_count) : ['id' => $id]);
     }
 
     private function toggleMember(int $uid, int $id, array $data): void
@@ -218,7 +235,7 @@ class PrivacyGroups
         ]);
     }
 
-    private function formatGroup(array $g, array $channel): array
+    private function formatGroup(array $g, array $channel, int $member_count = 0): array
     {
         return [
             'id'               => intval($g['id']),
@@ -227,6 +244,7 @@ class PrivacyGroups
             'visible'          => (bool) intval($g['visible']),
             'is_default_acl'   => trim($channel['channel_allow_gid'] ?? '', '<>') === $g['hash'],
             'is_default_group' => ($channel['channel_default_group'] ?? '') === $g['hash'],
+            'member_count'     => $member_count,
         ];
     }
 
