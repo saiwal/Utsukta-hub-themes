@@ -312,6 +312,9 @@ class Cal
         if (!$startIso) {
             Response::error(400, 'Start time is required');
         }
+        if (!$nofinish && $endIso && strtotime((string)$endIso) < strtotime((string)$startIso)) {
+            Response::error(400, 'End time must not be before start time');
+        }
 
         $adjust  = $allDay ? 0 : 1;
         $dtstart = datetime_convert('UTC', 'UTC', $startIso);
@@ -393,6 +396,9 @@ class Cal
         }
         if (!$startIso) {
             Response::error(400, 'Start time is required');
+        }
+        if (!$nofinish && $endIso && strtotime((string)$endIso) < strtotime((string)$startIso)) {
+            Response::error(400, 'End time must not be before start time');
         }
 
         $adjust  = $allDay ? 0 : 1;
@@ -542,6 +548,9 @@ class Cal
 
         if (!$title || !$startIso) {
             Response::error(400, 'Title and start are required');
+        }
+        if (!$nofinish && $endIso && strtotime((string)$endIso) < strtotime((string)$startIso)) {
+            Response::error(400, 'End time must not be before start time');
         }
 
         $object = $caldavBackend->getCalendarObject([$calId, $calInstanceId], $uri);
@@ -903,6 +912,9 @@ class Cal
 
         if (!$title || !$startIso) {
             Response::error(400, 'Title and start are required');
+        }
+        if (!$nofinish && $endIso && strtotime((string)$endIso) < strtotime((string)$startIso)) {
+            Response::error(400, 'End time must not be before start time');
         }
 
         $dtstart = new \DateTime(datetime_convert('UTC', 'UTC', $startIso));

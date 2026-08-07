@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-9kNHfgxH.js";import{h as t}from"./app-routing-BV7Kukwf.js";import{t as n}from"./app-TagWidget-DyjbsanW.js";function r(){let[r,i]=t(),a=()=>String(r.tag??``);return e(n,{type:`notes`,get activeTag(){return a()},onTagClick:e=>{i({tag:a()===e?void 0:e,dbegin:void 0,dend:void 0})}})}export{r as default};
