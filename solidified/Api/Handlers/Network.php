@@ -24,7 +24,7 @@ class Network
 
         $uid = local_channel();
         $channel = \App::get_channel();
-        $item_normal = item_normal();
+        $item_normal = item_normal($uid);
         $observer_xchan = get_observer_hash();
         $abook_uids = ' and abook.abook_channel = ' . $uid . ' ';
         $uids = ' and item.uid = ' . $uid . ' ';
@@ -145,7 +145,6 @@ class Network
             $sql_extra .= " AND item.parent IN (
                 SELECT DISTINCT parent FROM item
                 WHERE uid = $uid
-                AND id = parent
                 AND ( author_xchan = '" . dbesc($cid_xchan) . "'
                    OR owner_xchan  = '" . dbesc($cid_xchan) . "')
                 $item_normal
