@@ -667,6 +667,13 @@ class Cal
      * Fetch CalDAV events for the owner's enabled calendars within the given
      * UTC date range. Returns an array of event shapes compatible with the
      * channel-event format (but with calendarColor / calendarName extras).
+     *
+     * Mirrors core's Zotlabs\Module\Cdav::calendar/json path (redbasic's own
+     * event source): time-range filtering via calendarQuery() (DB-side, using
+     * SabreDAV's maintained firstoccurence/lastoccurence columns) and
+     * Sabre\VObject expand() for recurring events. A hand-rolled ICS parser
+     * without RRULE expansion would silently drop every recurring event whose
+     * master DTSTART falls outside the viewed range.
      */
     private function fetchCalDavEventsForRange(int $uid, array $channel, string $start, string $finish): array
     {
@@ -685,8 +692,22 @@ class Cal
             return [];
         }
 
-        $startTs = strtotime($start);
-        $endTs   = strtotime($finish);
+        $startDt = new \DateTime($start, new \DateTimeZone('UTC'));
+        $endDt   = new \DateTime($finish, new \DateTimeZone('UTC'));
+
+        $filters = [
+            'name'         => 'VCALENDAR',
+            'prop-filters' => [],
+            'comp-filters' => [
+                [
+                    'name'           => 'VEVENT',
+                    'is-not-defined' => null,
+                    'time-range'     => ['start' => $startDt, 'end' => $endDt],
+                    'comp-filters'   => [],
+                    'prop-filters'   => [],
+                ],
+            ],
+        ];
 
         $calEvents = [];
 
@@ -704,67 +725,81 @@ class Cal
             $displayname = Response::decodeEntities($cal['{DAV:}displayname'] ?: 'Calendar');
             $editable    = ($cal['share-access'] !== 2);
 
-            // Use SabreDAV's own API — avoids direct table/column name assumptions
             try {
-                $allObjects = $caldavBackend->getCalendarObjects($cal['id']);
+                $uris = $caldavBackend->calendarQuery($cal['id'], $filters);
             } catch (\Exception $e) {
                 continue;
             }
 
-            foreach (($allObjects ?: []) as $obj) {
-                $calData = $obj['calendardata'] ?? null;
+            if (!$uris) {
+                continue;
+            }
 
-                // getCalendarObjects may omit the blob; fetch individually if so
-                if (empty($calData) && !empty($obj['uri'])) {
-                    try {
-                        $single  = $caldavBackend->getCalendarObject($cal['id'], $obj['uri']);
-                        $calData = $single['calendardata'] ?? null;
-                    } catch (\Exception $e) {
-                        continue;
-                    }
-                }
+            $objects = $caldavBackend->getMultipleCalendarObjects($cal['id'], $uris);
 
-                if (empty($calData)) {
+            foreach ($objects as $obj) {
+                if (empty($obj['calendardata'])) {
                     continue;
                 }
 
-                $vevents = $this->parseIcal((string)$calData);
-                foreach ($vevents as $ev) {
-                    if (empty($ev['dtstart'])) {
-                        continue;
-                    }
+                try {
+                    $vcalendar = \Sabre\VObject\Reader::read($obj['calendardata']);
+                } catch (\Exception $e) {
+                    continue;
+                }
 
+                if (empty($vcalendar->VEVENT)) {
+                    continue;
+                }
+
+                // expand() drops the master TZID, so remember it first
+                $recurrentTimezone = null;
+                if (isset($vcalendar->VEVENT->RRULE)) {
+                    $recurrentTimezone = (string)$vcalendar->VEVENT->DTSTART['TZID'];
                     try {
-                        $evStartDt = new \DateTime($ev['dtstart'], new \DateTimeZone('UTC'));
-                        $evEndDt   = !empty($ev['dtend'])
-                            ? new \DateTime($ev['dtend'], new \DateTimeZone('UTC'))
-                            : $evStartDt;
+                        $vcalendar = $vcalendar->expand($startDt, $endDt);
                     } catch (\Exception $e) {
                         continue;
                     }
+                }
 
-                    // Skip events entirely outside the requested range
-                    if ($evStartDt->getTimestamp() >= $endTs || $evEndDt->getTimestamp() < $startTs) {
+                foreach ($vcalendar->VEVENT as $vevent) {
+                    $dtstart = (string)$vevent->DTSTART;
+                    if (!$dtstart) {
                         continue;
                     }
+                    $dtend = (string)$vevent->DTEND;
 
-                    $startIso = $evStartDt->format('c');
-                    $endIso   = !empty($ev['dtend'])
-                        ? (new \DateTime($ev['dtend'], new \DateTimeZone('UTC')))->format('c')
-                        : null;
+                    $recurrent   = isset($vevent->{'RECURRENCE-ID'});
+                    $timezoneStr = ($recurrent && $recurrentTimezone)
+                        ? $recurrentTimezone
+                        : (string)$vevent->DTSTART['TZID'];
+
+                    // Empty TZID (bare/all-day DTSTART) intentionally falls
+                    // through to TimeZoneUtil's own default (PHP's default
+                    // timezone) — matching core's Cdav.php, not UTC — so an
+                    // all-day event's midnight isn't shifted by the server's
+                    // UTC offset.
+                    $timezoneObj = \Sabre\VObject\TimeZoneUtil::getTimeZone($timezoneStr, $vcalendar);
+                    $timezone    = $timezoneObj->getName() ?: 'UTC';
+
+                    $allDay = ((string)$vevent->DTSTART['VALUE'] === 'DATE');
 
                     $calEvents[] = [
                         'id'            => intval($obj['id'] ?? 0),
                         'uri'           => $obj['uri'] ?? '',
-                        'title'         => $ev['summary']     ?: '',
-                        'description'   => $ev['description'] ?? '',
-                        'location'      => $ev['location']    ?? '',
-                        'start'         => $startIso,
-                        'end'           => $endIso,
-                        'allDay'        => $ev['allDay'],
-                        'nofinish'      => empty($ev['dtend']),
-                        'timezone'      => 'UTC',
-                        'rw'            => $editable,
+                        'title'         => (string)$vevent->SUMMARY,
+                        'description'   => (string)$vevent->DESCRIPTION,
+                        'location'      => (string)$vevent->LOCATION,
+                        'start'         => datetime_convert($timezone, date_default_timezone_get(), $dtstart, 'c'),
+                        'end'           => $dtend ? datetime_convert($timezone, date_default_timezone_get(), $dtend, 'c') : null,
+                        'allDay'        => $allDay,
+                        'nofinish'      => empty($dtend),
+                        'timezone'      => $timezone,
+                        // Individual occurrences of a recurring event aren't
+                        // safely single-editable — keep them read-only, same
+                        // as redbasic's own calendar (core Cdav.php).
+                        'rw'            => $editable && !$recurrent,
                         'plink'         => '',
                         'html'          => '',
                         'calendarId'    => $calId,
