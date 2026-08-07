@@ -180,7 +180,7 @@ class Cal
                 $html = format_event_html($rr);
             }
 
-            $events[] = [
+            $event = [
                 'id'          => intval($rr['id']),
                 'uri'         => $rr['event_hash'],
                 'title'       => html_entity_decode($rr['summary'],     ENT_COMPAT, 'UTF-8'),
@@ -200,6 +200,24 @@ class Cal
                     'url'    => $rr['xchan_url']     ?? '',
                 ],
             ];
+
+            // Audience detail is only meaningful (and only safe to expose) to
+            // the channel owner — everyone else already only sees events
+            // permissions_sql() let through, they don't need the raw list.
+            if ($is_owner) {
+                $ownHash = '<' . $channelx['channel_hash'] . '>';
+                $event['contactAllow'] = expand_acl($rr['allow_cid']);
+                $event['groupAllow']   = expand_acl($rr['allow_gid']);
+                $event['contactDeny']  = expand_acl($rr['deny_cid']);
+                $event['groupDeny']    = expand_acl($rr['deny_gid']);
+                $event['scope'] = (!$rr['allow_cid'] && !$rr['allow_gid'] && !$rr['deny_cid'] && !$rr['deny_gid'])
+                    ? 'public'
+                    : (($rr['allow_cid'] === $ownHash && !$rr['allow_gid'] && !$rr['deny_cid'] && !$rr['deny_gid'])
+                        ? 'private'
+                        : 'custom');
+            }
+
+            $events[] = $event;
         }
 
         // Merge CalDAV events for the channel owner (range queries only — skip for ?id=)
@@ -230,7 +248,7 @@ class Cal
         $action = \App::$argv[4] ?? '';
 
         if ($sub === 'import') {
-            $this->importIcal($uid, $channel);
+            $this->importIcal($uid);
             return;
         }
 
@@ -286,6 +304,7 @@ class Cal
         $endIso      = $body['end'] ?? null;
         $allDay      = (bool)($body['allDay'] ?? false);
         $nofinish    = (bool)($body['nofinish'] ?? false);
+        $timezone    = trim((string)($body['timezone'] ?? '')) ?: 'UTC';
 
         if (!$title) {
             Response::error(400, 'Title is required');
@@ -297,6 +316,7 @@ class Cal
         $adjust  = $allDay ? 0 : 1;
         $dtstart = datetime_convert('UTC', 'UTC', $startIso);
         $dtend   = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
+        $acl     = $this->resolveEventAcl($uid, (string)($body['scope'] ?? 'public'), $body);
 
         $datarray = [
             'uid'         => intval($uid),
@@ -310,11 +330,11 @@ class Cal
             'dtend'       => $dtend,
             'nofinish'    => ($nofinish || !$endIso) ? 1 : 0,
             'adjust'      => $adjust,
-            'timezone'    => 'UTC',
-            'allow_cid'   => '',
-            'allow_gid'   => '',
-            'deny_cid'    => '',
-            'deny_gid'    => '',
+            'timezone'    => $timezone,
+            'allow_cid'   => $acl['allow_cid'],
+            'allow_gid'   => $acl['allow_gid'],
+            'deny_cid'    => $acl['deny_cid'],
+            'deny_gid'    => $acl['deny_gid'],
         ];
 
         $event = event_store_event($datarray);
@@ -366,6 +386,7 @@ class Cal
         $endIso      = $body['end'] ?? null;
         $allDay      = (bool)($body['allDay'] ?? false);
         $nofinish    = (bool)($body['nofinish'] ?? false);
+        $timezone    = trim((string)($body['timezone'] ?? '')) ?: 'UTC';
 
         if (!$title) {
             Response::error(400, 'Title is required');
@@ -377,6 +398,18 @@ class Cal
         $adjust  = $allDay ? 0 : 1;
         $dtstart = datetime_convert('UTC', 'UTC', $startIso);
         $dtend   = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
+
+        // Only re-resolve the audience when the client actually sent a scope
+        // (the edit modal always does) — keeps non-form callers that omit it
+        // from silently wiping an existing custom audience.
+        $acl = isset($body['scope'])
+            ? $this->resolveEventAcl($uid, (string)$body['scope'], $body)
+            : [
+                'allow_cid' => $existing['allow_cid'],
+                'allow_gid' => $existing['allow_gid'],
+                'deny_cid'  => $existing['deny_cid'],
+                'deny_gid'  => $existing['deny_gid'],
+            ];
 
         $datarray = [
             'id'               => $eventId,
@@ -391,12 +424,12 @@ class Cal
             'dtend'            => $dtend,
             'nofinish'         => ($nofinish || !$endIso) ? 1 : 0,
             'adjust'           => $adjust,
-            'timezone'         => $existing['timezone'] ?: 'UTC',
+            'timezone'         => $timezone,
             'edited'           => datetime_convert(),
-            'allow_cid'        => $existing['allow_cid'],
-            'allow_gid'        => $existing['allow_gid'],
-            'deny_cid'         => $existing['deny_cid'],
-            'deny_gid'         => $existing['deny_gid'],
+            'allow_cid'        => $acl['allow_cid'],
+            'allow_gid'        => $acl['allow_gid'],
+            'deny_cid'         => $acl['deny_cid'],
+            'deny_gid'         => $acl['deny_gid'],
             'event_status'     => $existing['event_status'],
             'event_percent'    => intval($existing['event_percent']),
             'event_repeat'     => $existing['event_repeat'],
@@ -417,6 +450,58 @@ class Cal
         }
 
         Response::send(['success' => true]);
+    }
+
+    // Same scope-string convention (public/private/connections/custom) and
+    // per-handler-private-resolver pattern as Menus::resolveAcl() /
+    // Webpages::resolveWebpageAcl() / Blocks::resolveBlockAcl() — but returns
+    // the ready-to-store "<hash1><hash2>" bracket strings directly, since
+    // event/item rows (unlike menu items) store ACL that way, not as arrays.
+    private function resolveEventAcl(int $uid, string $scope, array $body): array
+    {
+        $pack = fn(array $hashes) => implode('', array_map(fn($h) => '<' . $h . '>', $hashes));
+
+        if ($scope === 'custom') {
+            $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
+            $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];
+            $contactDeny  = is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [];
+            $groupDeny    = is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [];
+            return [
+                'allow_cid' => $pack($contactAllow),
+                'allow_gid' => $pack($groupAllow),
+                'deny_cid'  => $pack($contactDeny),
+                'deny_gid'  => $pack($groupDeny),
+            ];
+        }
+
+        if ($scope === 'private') {
+            $ch = q("SELECT channel_hash FROM channel WHERE channel_id = %d LIMIT 1", intval($uid));
+            return [
+                'allow_cid' => $ch ? '<' . $ch[0]['channel_hash'] . '>' : '',
+                'allow_gid' => '',
+                'deny_cid'  => '',
+                'deny_gid'  => '',
+            ];
+        }
+
+        if ($scope === 'connections') {
+            $ch = q(
+                "SELECT channel_allow_cid, channel_allow_gid, channel_deny_cid, channel_deny_gid
+                 FROM channel WHERE channel_id = %d LIMIT 1",
+                intval($uid)
+            );
+            if ($ch) {
+                return [
+                    'allow_cid' => $ch[0]['channel_allow_cid'],
+                    'allow_gid' => $ch[0]['channel_allow_gid'],
+                    'deny_cid'  => $ch[0]['channel_deny_cid'],
+                    'deny_gid'  => $ch[0]['channel_deny_gid'],
+                ];
+            }
+        }
+
+        // 'public' (default/fallback): fully open, no ACL.
+        return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
     }
 
     private function editCalDavEvent(int $uid, array $channel, int $calId, string $uri): void
@@ -453,62 +538,49 @@ class Cal
         $endIso      = $body['end'] ?? null;
         $allDay      = !empty($body['allDay']);
         $nofinish    = !empty($body['nofinish']);
+        $tz          = trim((string)($body['timezone'] ?? '')) ?: date_default_timezone_get();
 
         if (!$title || !$startIso) {
             Response::error(400, 'Title and start are required');
         }
 
-        // Preserve the existing UID
-        $uid_str = '';
-        try {
-            $existing = $caldavBackend->getCalendarObject([$calId, $calInstanceId], $uri);
-            if (!empty($existing['calendardata']) &&
-                preg_match('/^UID:(.+)$/m', (string)$existing['calendardata'], $m)) {
-                $uid_str = trim($m[1]);
-            }
-        } catch (\Exception $e) {
-            // fall through — generate a new UID
-        }
-        if (!$uid_str) {
-            $uid_str = strtoupper(random_string(32));
+        $object = $caldavBackend->getCalendarObject([$calId, $calInstanceId], $uri);
+        if (empty($object['calendardata'])) {
+            Response::error(404, 'Event not found');
         }
 
-        $now = gmdate('Ymd\THis\Z');
+        $vcalendar = \Sabre\VObject\Reader::read($object['calendardata']);
 
-        $lines = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//Hubzilla SPA//Calendar//EN",
-            "BEGIN:VEVENT",
-            "UID:" . $uid_str,
-            "DTSTAMP:" . $now,
-            "LAST-MODIFIED:" . $now,
-        ];
+        $vcalendar->VEVENT->SUMMARY = $title;
 
+        $dtstart = new \DateTime(datetime_convert('UTC', 'UTC', $startIso));
+        $vcalendar->VEVENT->DTSTART = $dtstart;
         if ($allDay) {
-            $sd = str_replace('-', '', substr($startIso, 0, 10));
-            $lines[] = "DTSTART;VALUE=DATE:" . $sd;
-            if (!$nofinish && $endIso) {
-                $ed = str_replace('-', '', substr($endIso, 0, 10));
-                $lines[] = "DTEND;VALUE=DATE:" . $ed;
+            $vcalendar->VEVENT->DTSTART['VALUE'] = 'DATE';
+        } else {
+            $vcalendar->VEVENT->DTSTART['TZID'] = $tz;
+        }
+
+        if (!$nofinish && $endIso) {
+            $dtend = new \DateTime(datetime_convert('UTC', 'UTC', $endIso));
+            $vcalendar->VEVENT->DTEND = $dtend;
+            if ($allDay) {
+                $vcalendar->VEVENT->DTEND['VALUE'] = 'DATE';
+            } else {
+                $vcalendar->VEVENT->DTEND['TZID'] = $tz;
             }
         } else {
-            $lines[] = "DTSTART:" . gmdate('Ymd\THis\Z', strtotime($startIso));
-            if (!$nofinish && $endIso) {
-                $lines[] = "DTEND:" . gmdate('Ymd\THis\Z', strtotime($endIso));
-            }
+            unset($vcalendar->VEVENT->DTEND);
         }
 
-        $lines[] = "SUMMARY:" . $this->icalEscape($title);
-        if ($description) $lines[] = "DESCRIPTION:" . $this->icalEscape($description);
-        if ($location)    $lines[] = "LOCATION:"    . $this->icalEscape($location);
+        if ($description) {
+            $vcalendar->VEVENT->DESCRIPTION = $description;
+        }
+        if ($location) {
+            $vcalendar->VEVENT->LOCATION = $location;
+        }
 
-        $lines[] = "END:VEVENT";
-        $lines[] = "END:VCALENDAR";
-
-        $icalContent = implode("\r\n", $lines) . "\r\n";
-
-        $caldavBackend->updateCalendarObject([$calId, $calInstanceId], $uri, $icalContent);
+        $caldavBackend->updateCalendarObject([$calId, $calInstanceId], $uri, $vcalendar->serialize());
 
         Response::send(['success' => true]);
     }
@@ -588,7 +660,7 @@ class Cal
     private function exportIcal(int $channel_id, string $nick, string $sql_extra): void
     {
         $r = q(
-            "SELECT event.*
+            "SELECT event.*, item.id AS item_id
              FROM event
              LEFT JOIN item ON event.event_hash = item.resource_id
              WHERE item.resource_type = 'event'
@@ -599,66 +671,13 @@ class Cal
             intval($channel_id)
         );
 
-        $lines = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//Hubzilla SPA//Calendar//EN",
-            "CALSCALE:GREGORIAN",
-            "METHOD:PUBLISH",
-            "X-WR-CALNAME:" . $this->icalEscape($nick),
-        ];
-
-        foreach (($r ?: []) as $rr) {
-            $lines[] = "BEGIN:VEVENT";
-            $lines[] = "UID:" . $rr['event_hash'];
-
-            if ($rr['adjust'] == 0) {
-                $d = substr($rr['dtstart'], 0, 10);
-                $lines[] = "DTSTART;VALUE=DATE:" . str_replace('-', '', $d);
-                if (!$rr['nofinish'] && $rr['dtend']) {
-                    $de = substr($rr['dtend'], 0, 10);
-                    $lines[] = "DTEND;VALUE=DATE:" . str_replace('-', '', $de);
-                }
-            } else {
-                $lines[] = "DTSTART:" . datetime_convert('UTC', 'UTC', $rr['dtstart'], 'Ymd\THis\Z');
-                if (!$rr['nofinish'] && $rr['dtend']) {
-                    $lines[] = "DTEND:" . datetime_convert('UTC', 'UTC', $rr['dtend'], 'Ymd\THis\Z');
-                }
-            }
-
-            $summary = html_entity_decode($rr['summary'] ?? '', ENT_COMPAT, 'UTF-8');
-            $lines[] = "SUMMARY:" . $this->icalEscape($summary);
-
-            if (!empty($rr['description'])) {
-                $desc = html_entity_decode($rr['description'], ENT_COMPAT, 'UTF-8');
-                $lines[] = "DESCRIPTION:" . $this->icalEscape($desc);
-            }
-            if (!empty($rr['location'])) {
-                $loc = html_entity_decode($rr['location'], ENT_COMPAT, 'UTF-8');
-                $lines[] = "LOCATION:" . $this->icalEscape($loc);
-            }
-
-            $lines[] = "END:VEVENT";
-        }
-
-        $lines[] = "END:VCALENDAR";
-
-        $output = implode("\r\n", $lines) . "\r\n";
+        $output = ical_wrapper($r ?: []);
 
         header('Content-Type: text/calendar; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nick . '-calendar.ics"');
         header('Content-Length: ' . strlen($output));
         echo $output;
         exit;
-    }
-
-    private function icalEscape(string $str): string
-    {
-        return str_replace(
-            ['\\', ';',  ',',  "\r\n", "\n"],
-            ['\\\\', '\\;', '\\,', '\\n',  '\\n'],
-            $str
-        );
     }
 
     // ── CalDAV event range fetch ──────────────────────────────────────────────
@@ -820,7 +839,7 @@ class Cal
 
     // ── iCal import ───────────────────────────────────────────────────────────
 
-    private function importIcal(int $uid, array $channel): void
+    private function importIcal(int $uid): void
     {
         $body = Auth::$parsedBody;
         $icalContent = $body['ical'] ?? '';
@@ -829,169 +848,28 @@ class Cal
             Response::error(400, 'iCal content required');
         }
 
-        $vevents = $this->parseIcal((string)$icalContent);
+        require_once 'vendor/autoload.php';
 
         $imported = 0;
         $failed   = 0;
 
-        foreach ($vevents as $ev) {
-            if (empty($ev['dtstart'])) {
-                $failed++;
-                continue;
-            }
+        try {
+            $vcalendar = \Sabre\VObject\Reader::read((string)$icalContent);
+        } catch (\Exception $e) {
+            $vcalendar = null;
+        }
 
-            $adjust   = empty($ev['allDay']) ? 1 : 0;
-            $nofinish = empty($ev['dtend']) ? 1 : 0;
-            $dtstart  = datetime_convert('UTC', 'UTC', $ev['dtstart']);
-            $dtend    = $nofinish ? '' : datetime_convert('UTC', 'UTC', $ev['dtend']);
-
-            $datarray = [
-                'uid'         => intval($uid),
-                'account'     => get_account_id(),
-                'event_xchan' => $channel['channel_hash'],
-                'etype'       => 'event',
-                'summary'     => $ev['summary'] ?: 'Imported Event',
-                'description' => $ev['description'] ?? '',
-                'location'    => $ev['location'] ?? '',
-                'dtstart'     => $dtstart,
-                'dtend'       => $dtend,
-                'nofinish'    => $nofinish,
-                'adjust'      => $adjust,
-                'timezone'    => 'UTC',
-                'allow_cid'   => '',
-                'allow_gid'   => '',
-                'deny_cid'    => '',
-                'deny_gid'    => '',
-            ];
-
-            $event = event_store_event($datarray);
-            if ($event) {
-                event_store_item($datarray, $event);
-                $imported++;
-            } else {
-                $failed++;
+        if ($vcalendar && $vcalendar->VEVENT) {
+            foreach ($vcalendar->VEVENT as $vevent) {
+                if (event_import_ical($vevent, $uid)) {
+                    $imported++;
+                } else {
+                    $failed++;
+                }
             }
         }
 
         Response::send(['imported' => $imported, 'failed' => $failed]);
-    }
-
-    private function parseIcal(string $content): array
-    {
-        $content = preg_replace("/\r?\n[ \t]/", '', $content);
-        $lines   = preg_split("/\r?\n/", $content);
-
-        $events   = [];
-        $inEvent  = false;
-        $props    = [];
-
-        foreach ($lines as $line) {
-            $line = rtrim($line);
-
-            if ($line === 'BEGIN:VEVENT') {
-                $inEvent = true;
-                $props   = [];
-                continue;
-            }
-
-            if ($line === 'END:VEVENT') {
-                if ($inEvent) {
-                    $parsed = $this->extractVEvent($props);
-                    if ($parsed) {
-                        $events[] = $parsed;
-                    }
-                }
-                $inEvent = false;
-                continue;
-            }
-
-            if (!$inEvent) {
-                continue;
-            }
-
-            $colon = strpos($line, ':');
-            if ($colon === false) {
-                continue;
-            }
-
-            $keypart = substr($line, 0, $colon);
-            $value   = substr($line, $colon + 1);
-
-            $nameParts = explode(';', $keypart, 2);
-            $name      = strtoupper(trim($nameParts[0]));
-            $paramStr  = $nameParts[1] ?? '';
-
-            $params = [];
-            if ($paramStr) {
-                foreach (explode(';', $paramStr) as $p) {
-                    if (str_contains($p, '=')) {
-                        [$pk, $pv] = explode('=', $p, 2);
-                        $params[strtoupper(trim($pk))] = trim($pv);
-                    }
-                }
-            }
-
-            $props[$name] = ['value' => $value, 'params' => $params];
-        }
-
-        return $events;
-    }
-
-    private function extractVEvent(array $props): ?array
-    {
-        $dtstart_entry = $props['DTSTART'] ?? null;
-        if (!$dtstart_entry) {
-            return null;
-        }
-
-        $allDay  = isset($dtstart_entry['params']['VALUE'])
-                   && $dtstart_entry['params']['VALUE'] === 'DATE';
-        $dtstart = $this->parseIcalDate($dtstart_entry['value'], $allDay);
-
-        $dtend = '';
-        if (isset($props['DTEND'])) {
-            $dtend = $this->parseIcalDate($props['DTEND']['value'], $allDay);
-        }
-
-        return [
-            'summary'     => $this->icalUnescape($props['SUMMARY']['value']     ?? ''),
-            'description' => $this->icalUnescape($props['DESCRIPTION']['value'] ?? ''),
-            'location'    => $this->icalUnescape($props['LOCATION']['value']    ?? ''),
-            'dtstart'     => $dtstart,
-            'dtend'       => $dtend,
-            'allDay'      => $allDay,
-        ];
-    }
-
-    private function parseIcalDate(string $raw, bool $allDay = false): string
-    {
-        if (empty($raw)) {
-            return '';
-        }
-
-        $raw = rtrim($raw, 'Z');
-
-        if ($allDay || strlen($raw) === 8) {
-            $raw = substr($raw, 0, 8);
-            return substr($raw, 0, 4) . '-' . substr($raw, 4, 2) . '-' . substr($raw, 6, 2) . ' 00:00:00';
-        }
-
-        if (strlen($raw) >= 15 && $raw[8] === 'T') {
-            return substr($raw, 0, 4) . '-' . substr($raw, 4, 2) . '-' . substr($raw, 6, 2)
-                 . ' ' . substr($raw, 9, 2) . ':' . substr($raw, 11, 2) . ':' . substr($raw, 13, 2);
-        }
-
-        $ts = strtotime($raw);
-        return $ts !== false ? date('Y-m-d H:i:s', $ts) : '';
-    }
-
-    private function icalUnescape(string $str): string
-    {
-        return str_replace(
-            ['\\n', '\\N', '\\;', '\\,', '\\\\'],
-            ["\n",  "\n",  ';',   ',',   '\\'],
-            $str
-        );
     }
 
     // ── CalDAV: create event ──────────────────────────────────────────────────
@@ -1021,49 +899,45 @@ class Cal
         $endIso      = $body['end'] ?? null;
         $allDay      = !empty($body['allDay']);
         $nofinish    = !empty($body['nofinish']);
+        $tz          = trim((string)($body['timezone'] ?? '')) ?: date_default_timezone_get();
 
         if (!$title || !$startIso) {
             Response::error(400, 'Title and start are required');
         }
 
-        $uid_str = strtoupper(random_string(32));
-        $now     = gmdate('Ymd\THis\Z');
+        $dtstart = new \DateTime(datetime_convert('UTC', 'UTC', $startIso));
 
-        $lines = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//Hubzilla SPA//Calendar//EN",
-            "BEGIN:VEVENT",
-            "UID:" . $uid_str,
-            "DTSTAMP:" . $now,
-            "CREATED:" . $now,
-        ];
+        $vcalendar = new \Sabre\VObject\Component\VCalendar([
+            'VEVENT' => [
+                'SUMMARY' => $title,
+                'DTSTART' => $dtstart,
+            ],
+        ]);
 
-        if ($allDay) {
-            $sd = str_replace('-', '', substr($startIso, 0, 10));
-            $lines[] = "DTSTART;VALUE=DATE:" . $sd;
-            if (!$nofinish && $endIso) {
-                $ed = str_replace('-', '', substr($endIso, 0, 10));
-                $lines[] = "DTEND;VALUE=DATE:" . $ed;
-            }
-        } else {
-            $lines[] = "DTSTART:" . gmdate('Ymd\THis\Z', strtotime($startIso));
-            if (!$nofinish && $endIso) {
-                $lines[] = "DTEND:" . gmdate('Ymd\THis\Z', strtotime($endIso));
+        if (!$nofinish && $endIso) {
+            $dtend = new \DateTime(datetime_convert('UTC', 'UTC', $endIso));
+            $vcalendar->VEVENT->add('DTEND', $dtend);
+            if ($allDay) {
+                $vcalendar->VEVENT->DTEND['VALUE'] = 'DATE';
+            } else {
+                $vcalendar->VEVENT->DTEND['TZID'] = $tz;
             }
         }
+        if ($description) {
+            $vcalendar->VEVENT->add('DESCRIPTION', $description);
+        }
+        if ($location) {
+            $vcalendar->VEVENT->add('LOCATION', $location);
+        }
 
-        $lines[] = "SUMMARY:" . $this->icalEscape($title);
-        if ($description) $lines[] = "DESCRIPTION:" . $this->icalEscape($description);
-        if ($location)    $lines[] = "LOCATION:"    . $this->icalEscape($location);
+        if ($allDay) {
+            $vcalendar->VEVENT->DTSTART['VALUE'] = 'DATE';
+        } else {
+            $vcalendar->VEVENT->DTSTART['TZID'] = $tz;
+        }
 
-        $lines[] = "END:VEVENT";
-        $lines[] = "END:VCALENDAR";
-
-        $icalContent = implode("\r\n", $lines) . "\r\n";
-        $objectUri   = $uid_str . '.ics';
-
-        $caldavBackend->createCalendarObject([$calId, $instanceId], $objectUri, $icalContent);
+        $objectUri = strtoupper(random_string(32)) . '.ics';
+        $caldavBackend->createCalendarObject([$calId, $instanceId], $objectUri, $vcalendar->serialize());
 
         Response::send(['uri' => $objectUri]);
     }
