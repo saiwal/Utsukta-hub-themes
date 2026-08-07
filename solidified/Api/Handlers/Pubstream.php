@@ -112,7 +112,8 @@ class Pubstream {
         $this->applyViewerFollowing($items, $observer_xchan);
         $posts = [];
         foreach ($items as $item) {
-            if (!intval($item['item_thread_top'] ?? 0)) continue;
+						if (!intval($item['item_thread_top'] ?? 0)) continue;
+						$item['item_unseen'] = null; // remove unseen info from posts
             $posts[] = $this->formatItem($item , $observer_xchan);
         }
 
