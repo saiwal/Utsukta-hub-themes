@@ -646,6 +646,11 @@ class Settings
             if (!$name) continue;
             $seen[$name] = true;
 
+            // .apd files carry unresolved "$baseurl"/"$nick" placeholders in
+            // url/photo (see app_render() in core) — substitute them here,
+            // same as core does at render time, so icon URLs aren't broken.
+            \Zotlabs\Lib\Apps::app_macros($uid, $app);
+
             $inst       = $installed_map[$name] ?? null;
             $categories = $inst['categories'] ?? '';
 
@@ -663,6 +668,7 @@ class Settings
         // Include installed apps that are not in the system list (user apps, plugin apps, etc.)
         foreach ($installed_map as $name => $inst) {
             if (isset($seen[$name])) continue;
+            \Zotlabs\Lib\Apps::app_macros($uid, $inst);
             $categories = $inst['categories'] ?? '';
             $apps[] = [
                 'name'        => $name,
@@ -1079,7 +1085,7 @@ class Settings
     {
         $action = $data['action'] ?? '';
 
-        if (!in_array($action, ['install', 'uninstall', 'pin', 'feature', 'reorder'], true))
+        if (!in_array($action, ['install', 'uninstall', 'nav', 'reorder', 'toggle-frontend'], true))
             Response::error(400, 'Invalid request');
 
         if ($action === 'reorder') {
@@ -1090,6 +1096,18 @@ class Settings
                 fn($n) => $n !== null && $n !== ''
             ));
             set_pconfig($uid, 'spa', 'nav_order', json_encode($order));
+            Response::send(['status' => 'ok']);
+        }
+
+        if ($action === 'toggle-frontend') {
+            $id = notags(trim($data['id'] ?? ''));
+            if (!$id) Response::error(400, 'Invalid request');
+            $raw = get_pconfig($uid, 'spa', 'disabled_frontend_modules', '');
+            $disabled = $raw ? (json_decode($raw, true) ?? []) : [];
+            if (!is_array($disabled)) $disabled = [];
+            $disabled = array_values(array_diff($disabled, [$id]));
+            if (empty($data['enabled'])) $disabled[] = $id;
+            set_pconfig($uid, 'spa', 'disabled_frontend_modules', json_encode($disabled));
             Response::send(['status' => 'ok']);
         }
 
@@ -1117,16 +1135,34 @@ class Settings
         } elseif ($action === 'uninstall') {
             \Zotlabs\Lib\Apps::app_destroy($uid, ['guid' => $guid]);
 
-        } else {
-            // pin or feature — app must be installed first
+        } elseif ($action === 'nav') {
+            // app must be installed first
             $installed = q(
                 "SELECT id FROM app WHERE app_id = '%s' AND app_channel = %d AND app_deleted = 0 LIMIT 1",
                 dbesc($guid), intval($uid)
             );
             if (!$installed) Response::error(400, 'App must be installed first');
 
-            $term = ($action === 'pin') ? 'nav_pinned_app' : 'nav_featured_app';
-            \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], $term);
+            // app_feature() is a pure toggle (add/remove), not a set — only
+            // flip a term when its current presence disagrees with the
+            // desired end state. "enabled" folds pin+feature into one
+            // switch: on sets pinned (sufficient alone for nav visibility),
+            // off clears both so a legacy featured-only app also disappears.
+            $terms = q(
+                "SELECT term FROM term WHERE otype = %d AND oid = %d",
+                intval(TERM_OBJ_APP), intval($installed[0]['id'])
+            );
+            $termNames = $terms ? array_column($terms, 'term') : [];
+            $isPinned   = in_array('nav_pinned_app', $termNames, true);
+            $isFeatured = in_array('nav_featured_app', $termNames, true);
+            $enabled    = !empty($data['enabled']);
+
+            if ($enabled) {
+                if (!$isPinned) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_pinned_app');
+            } else {
+                if ($isPinned)   \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_pinned_app');
+                if ($isFeatured) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_featured_app');
+            }
         }
 
         Response::send(['status' => 'ok']);

@@ -210,6 +210,16 @@ class NewChannel
     // always is here, since we're still in the middle of creating the channel.
     // $sync=true skips that gating. Safe because we still scope to the
     // "Federation" category below, so no admin-only/other gated apps leak in.
+    // .apd files carry an unresolved "$baseurl" placeholder in `photo` (see
+    // Apps::app_macros(), which normally substitutes it — but that requires an
+    // existing channel uid to resolve "$nick" too, and there is no channel yet
+    // at this point in the flow). Only $baseurl is relevant to icon paths, so
+    // resolve it directly instead.
+    private function resolveAppPhoto(string $photo): string
+    {
+        return str_replace('$baseurl', z_root(), $photo);
+    }
+
     private function federationApps(): array
     {
         // translate=false — 'name' is used as a stable identifier when the
@@ -222,7 +232,7 @@ class NewChannel
             $protocols[] = [
                 'name'        => $app['name'] ?? '',
                 'description' => $app['desc'] ?? '',
-                'photo'       => $app['photo'] ?? '',
+                'photo'       => $this->resolveAppPhoto($app['photo'] ?? ''),
             ];
         }
         return $protocols;
@@ -250,7 +260,7 @@ class NewChannel
             $apps[] = [
                 'name'        => $name,
                 'description' => $app['desc'] ?? '',
-                'photo'       => $app['photo'] ?? '',
+                'photo'       => $this->resolveAppPhoto($app['photo'] ?? ''),
             ];
         }
 
