@@ -1079,7 +1079,7 @@ class Settings
     {
         $action = $data['action'] ?? '';
 
-        if (!in_array($action, ['install', 'uninstall', 'pin', 'feature', 'reorder'], true))
+        if (!in_array($action, ['install', 'uninstall', 'pin', 'feature', 'reorder', 'toggle-frontend'], true))
             Response::error(400, 'Invalid request');
 
         if ($action === 'reorder') {
@@ -1090,6 +1090,18 @@ class Settings
                 fn($n) => $n !== null && $n !== ''
             ));
             set_pconfig($uid, 'spa', 'nav_order', json_encode($order));
+            Response::send(['status' => 'ok']);
+        }
+
+        if ($action === 'toggle-frontend') {
+            $id = notags(trim($data['id'] ?? ''));
+            if (!$id) Response::error(400, 'Invalid request');
+            $raw = get_pconfig($uid, 'spa', 'disabled_frontend_modules', '');
+            $disabled = $raw ? (json_decode($raw, true) ?? []) : [];
+            if (!is_array($disabled)) $disabled = [];
+            $disabled = array_values(array_diff($disabled, [$id]));
+            if (empty($data['enabled'])) $disabled[] = $id;
+            set_pconfig($uid, 'spa', 'disabled_frontend_modules', json_encode($disabled));
             Response::send(['status' => 'ok']);
         }
 
