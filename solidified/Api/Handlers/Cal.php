@@ -103,59 +103,49 @@ class Cal
         $adjust_start  = datetime_convert('UTC', date_default_timezone_get(), $start);
         $adjust_finish = datetime_convert('UTC', date_default_timezone_get(), $finish);
 
-        // When the owner has explicitly disabled the channel calendar in the widget,
-        // skip the native event query. Default (key not set) = enabled.
-        $include_channel_cal = true;
-        if ($is_owner) {
-            $pval = get_pconfig($local_uid, 'cdav_calendar', 'channel_calendar');
-            $include_channel_cal = !($pval !== false && intval($pval) === 0);
+        $r = [];
+        if (isset($_GET['id'])) {
+            $r = q(
+                "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
+                        item.owner_xchan, item.id as item_id
+                 FROM event
+                 LEFT JOIN item ON item.resource_id = event.event_hash
+                               AND item.resource_type = 'event'
+                 WHERE event.uid = %d
+                   AND event.id = %d
+                 $sql_extra
+                 LIMIT 1",
+                intval($channel_id),
+                intval($_GET['id'])
+            );
+        } else {
+            $r = q(
+                "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
+                        item.owner_xchan, item.id as item_id
+                 FROM event
+                 LEFT JOIN item ON event.event_hash = item.resource_id
+                               AND item.resource_type = 'event'
+                               AND event.uid = item.uid
+                 WHERE event.uid = %d
+                   AND ((  event.adjust = 0
+                           AND ( event.dtend >= '%s' OR event.nofinish = 1 )
+                           AND event.dtstart <= '%s' )
+                       OR (event.adjust = 1
+                           AND ( event.dtend >= '%s' OR event.nofinish = 1 )
+                           AND event.dtstart <= '%s' ))
+                 $sql_extra",
+                intval($channel_id),
+                dbesc($start),
+                dbesc($finish),
+                dbesc($adjust_start),
+                dbesc($adjust_finish)
+            );
         }
 
-        $r = [];
-        if ($include_channel_cal) {
-            if (isset($_GET['id'])) {
-                $r = q(
-                    "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
-                            item.owner_xchan, item.id as item_id
-                     FROM event
-                     LEFT JOIN item ON item.resource_id = event.event_hash
-                                   AND item.resource_type = 'event'
-                     WHERE event.uid = %d
-                       AND event.id = %d
-                     $sql_extra
-                     LIMIT 1",
-                    intval($channel_id),
-                    intval($_GET['id'])
-                );
-            } else {
-                $r = q(
-                    "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
-                            item.owner_xchan, item.id as item_id
-                     FROM event
-                     LEFT JOIN item ON event.event_hash = item.resource_id
-                                   AND item.resource_type = 'event'
-                                   AND event.uid = item.uid
-                     WHERE event.uid = %d
-                       AND ((  event.adjust = 0
-                               AND ( event.dtend >= '%s' OR event.nofinish = 1 )
-                               AND event.dtstart <= '%s' )
-                           OR (event.adjust = 1
-                               AND ( event.dtend >= '%s' OR event.nofinish = 1 )
-                               AND event.dtstart <= '%s' ))
-                     $sql_extra",
-                    intval($channel_id),
-                    dbesc($start),
-                    dbesc($finish),
-                    dbesc($adjust_start),
-                    dbesc($adjust_finish)
-                );
-            }
-
-            if ($r) {
-                xchan_query($r);
-                $r = fetch_post_tags($r, true);
-                $r = sort_by_date($r);
-            }
+        if ($r) {
+            xchan_query($r);
+            $r = fetch_post_tags($r, true);
+            $r = sort_by_date($r);
         }
 
         $events = [];

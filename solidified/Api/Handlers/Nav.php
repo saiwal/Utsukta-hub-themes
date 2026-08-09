@@ -181,11 +181,10 @@ class Nav
             $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
             foreach (($list ?: []) as $li)
                 $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
-            // No translate_system_apps() here — app_encode() already returns the
-            // canonical DB app_name, and useNav.ts matches featured[].name against
-            // the (also canonical) installed_apps set. Translating name here would
-            // silently drop genuinely-installed featured apps from the owner's nav
-            // in any non-English locale.
+            // useNav.ts matches featured[].url_raw against the installed_apps set
+            // (both are the raw app_url of the same app row) — url, unlike name,
+            // is never translated and survives even a stale/translated app_name
+            // left over from an old install.
             usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
             $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
         }
@@ -337,8 +336,12 @@ class Nav
             $all = \Zotlabs\Lib\Apps::app_list($apps_channel_id, false) ?: [];
             foreach ($all as $app) {
                 $enc = \Zotlabs\Lib\Apps::app_encode($app);
-                if (!empty($enc['name']))
-                    $installed_apps[] = $enc['name'];
+                // Match by url, not name: app_name can be a translated string
+                // frozen at install time on old/non-English channels and never
+                // reconciled (only base apps self-heal on re-import); app_url
+                // is never translated, so it stays a stable match target.
+                if (!empty($enc['url']))
+                    $installed_apps[] = $enc['url'];
             }
         }
 
