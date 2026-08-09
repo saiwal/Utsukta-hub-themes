@@ -145,7 +145,10 @@ class Connections
 
     // POST /api/connections/permcats      — create a custom permission role, or
     //                                        update an existing custom role's permission grid
-    //                                        (body: { name, perms?: string[] })
+    //                                        (body: { name, perms?: string[] }), or toggle
+    //                                        the default-for-new-contacts role (body: { name, set_default: bool })
+    // POST /api/connections/permcats/assign-group — bulk-assign a role to every member of a
+    //                                        privacy group (body: { name, gid })
     // POST /api/connections/connect       — add a new connection (body: { url })
     // POST /api/connections/:id/approve  — approve a pending connection
     // POST /api/connections/:id/refresh  — re-pull permissions/profile from the remote contact
@@ -156,6 +159,9 @@ class Connections
         $sub = \App::$argv[2] ?? '';
 
         if ($sub === 'permcats') {
+            if ((\App::$argv[3] ?? '') === 'assign-group') {
+                $this->assignPermcatToGroup($uid);
+            }
             $this->createPermcat($uid);
         }
 
@@ -395,12 +401,14 @@ class Connections
     private function getPermcats(int $uid): never
     {
         require_once 'include/channel.php';
-        $pcat   = new \Zotlabs\Lib\Permcat($uid);
-        $list   = $pcat->listing();
+        $pcat         = new \Zotlabs\Lib\Permcat($uid);
+        $list         = $pcat->listing();
+        $default_name = get_pconfig($uid, 'system', 'default_permcat', 'default');
         $result = array_map(fn($pc) => [
-            'name'   => $pc['name'],
-            'label'  => $pc['localname'],
-            'system' => (bool) intval($pc['system']),
+            'name'       => $pc['name'],
+            'label'      => $pc['localname'],
+            'system'     => (bool) intval($pc['system']),
+            'is_default' => $pc['name'] === $default_name,
         ], $list);
         Response::send($result);
     }
@@ -411,12 +419,27 @@ class Connections
         $name = notags(trim($body['name'] ?? ''));
 
         if (!$name) Response::error(400, 'Role name is required');
-        if (strtolower($name) === 'default') Response::error(400, 'That name is reserved');
 
         require_once 'include/channel.php';
         $pcat     = new \Zotlabs\Lib\Permcat($uid);
         $existing = $pcat->fetch($name);
         $is_update = !isset($existing['error']);
+
+        // Toggling the default-for-new-contacts flag is independent of perms
+        // editing and allowed on built-in roles too (core's Permcats module
+        // lets any permcat, including 'default' itself, be the fallback).
+        if (array_key_exists('set_default', $body) && !array_key_exists('perms', $body)) {
+            if (!$is_update) Response::error(404, 'Role not found');
+            set_pconfig($uid, 'system', 'default_permcat', $body['set_default'] ? $existing['name'] : 'default');
+            Response::send([
+                'name'       => $existing['name'],
+                'label'      => $existing['localname'],
+                'system'     => (bool) intval($existing['system'] ?? 0),
+                'is_default' => (bool) $body['set_default'],
+            ]);
+        }
+
+        if (strtolower($name) === 'default') Response::error(400, 'That name is reserved');
 
         if ($is_update && intval($existing['system'] ?? 0)) {
             Response::error(403, 'Cannot modify a built-in role');
@@ -457,10 +480,54 @@ class Connections
         $saved = (new \Zotlabs\Lib\Permcat($uid))->fetch($name);
 
         Response::send([
-            'name'   => $saved['name']      ?? $name,
-            'label'  => $saved['localname'] ?? $name,
-            'system' => (bool) intval($saved['system'] ?? 0),
+            'name'       => $saved['name']      ?? $name,
+            'label'      => $saved['localname'] ?? $name,
+            'system'     => (bool) intval($saved['system'] ?? 0),
+            'is_default' => ($saved['name'] ?? $name) === get_pconfig($uid, 'system', 'default_permcat', 'default'),
         ]);
+    }
+
+    // Bulk-assigns a role to every member of a privacy group, reusing the same
+    // Permcat::assign() + bulk abook_role UPDATE pattern already used when a
+    // role's perms change (createPermcat) or a role is deleted (deletePermcat).
+    private function assignPermcatToGroup(int $uid): never
+    {
+        $body = Auth::$parsedBody;
+        $name = trim((string) ($body['name'] ?? ''));
+        $gid  = intval($body['gid'] ?? 0);
+
+        if (!$name) Response::error(400, 'Role name is required');
+        if (!$gid)  Response::error(400, 'gid is required');
+
+        require_once 'include/channel.php';
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+
+        $group = q(
+            "SELECT id FROM pgrp WHERE id = %d AND uid = %d AND deleted = 0 LIMIT 1",
+            intval($gid),
+            intval($uid)
+        );
+        if (!$group) Response::error(404, 'Group not found');
+
+        $members = \Zotlabs\Lib\AccessList::members($uid, $gid);
+        $hashes  = array_column($members ?? [], 'xchan_hash');
+
+        if ($hashes) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                \Zotlabs\Lib\Permcat::assign($channel, $pc['name'], $hashes);
+            }
+            $in = implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes));
+            q(
+                "UPDATE abook SET abook_role = '%s' WHERE abook_channel = %d AND abook_xchan IN ($in)",
+                dbesc($pc['name']),
+                intval($uid)
+            );
+        }
+
+        Response::send(['assigned' => count($hashes), 'name' => $pc['name'], 'gid' => $gid]);
     }
 
     private function getPermcatDetail(int $uid, string $name): never
@@ -508,6 +575,11 @@ class Connections
         if (intval($pc['system'] ?? 0)) Response::error(403, 'Cannot delete a built-in role');
 
         $exact_name = $pc['name'];
+
+        // If this was the default-for-new-contacts role, fall back to 'default'
+        if (get_pconfig($uid, 'system', 'default_permcat', 'default') === $exact_name) {
+            set_pconfig($uid, 'system', 'default_permcat', 'default');
+        }
 
         // Reassign contacts that had this role to 'default' before deleting
         $affected = q(
