@@ -12,6 +12,7 @@ class Connections
 {
     // GET /api/connections
     // GET /api/connections?address=<xchan_addr>       — exact single-connection lookup
+    // GET /api/connections?id=<abook_id>               — exact single-connection lookup by id
     // GET /api/connections/permcats                   — list available permission roles
     // GET /api/connections/permcats?name=<role>        — a single role's permission grid
     // GET /api/connections/:id/perms                  — bidirectional perms + incl/excl filters
@@ -63,6 +64,33 @@ class Connections
                  LIMIT 1",
                 intval($uid),
                 dbesc($address)
+            );
+            Response::send($rows ? $this->formatRow($rows[0]) : null);
+        }
+
+        // Exact id lookup — used by notification deep-links (classic Hubzilla's
+        // "intro" notify links point to connections#<abook_id>, which has no SPA
+        // route; the SPA resolves it to this lookup to open the accept/reject modal)
+        $id_param = $_GET['id'] ?? '';
+        if ($id_param !== '' && ctype_digit((string) $id_param)) {
+            $rows = q(
+                "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
+                        abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
+                        abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
+                        abook.abook_role, abook.abook_profile,
+                        xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
+                        xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
+                        xchan.xchan_pubforum
+                 FROM abook
+                 LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                 WHERE abook.abook_channel = %d
+                   AND abook.abook_self   = 0
+                   AND xchan.xchan_deleted = 0
+                   AND xchan.xchan_orphan  = 0
+                   AND abook.abook_id     = %d
+                 LIMIT 1",
+                intval($uid),
+                intval($id_param)
             );
             Response::send($rows ? $this->formatRow($rows[0]) : null);
         }
