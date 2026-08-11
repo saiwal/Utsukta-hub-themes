@@ -61,6 +61,7 @@ class Help {
         $section = $this->slugParam('section', 'user');
         $lang    = $this->slugParam('lang',    'en');
         $topic   = trim($this->param('topic', ''), '/');
+        $wantRaw = $this->param('format', 'html') === 'raw';
 
         // Sanitise topic path — only safe chars
         $topic = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $topic);
@@ -76,12 +77,12 @@ class Help {
             $base = $fallbackBase;
         }
 
-        // Resolve file: prefer {topic}/index.txt, then {topic}.txt
+        // Resolve file: prefer {topic}/index.md, then {topic}.md
         $file = null;
         $candidates = [
-            $base . '/' . $topic . '/index.txt',
-            $base . '/' . $topic . '.txt',
-            $base . '/index.txt',   // root of section
+            $base . '/' . $topic . '/index.md',
+            $base . '/' . $topic . '.md',
+            $base . '/index.md',   // root of section
         ];
         foreach ($candidates as $c) {
             if (file_exists($c)) { $file = $c; break; }
@@ -91,12 +92,24 @@ class Help {
             Response::error(404, "Topic not found: {$topic}");
         }
 
-        $raw  = file_get_contents($file);
+        $raw = file_get_contents($file);
+
+        if ($wantRaw) {
+            Response::send([
+                'content' => $raw,
+                'title'   => $this->extractTitle($raw),
+                'topic'   => $topic,
+                'section' => $section,
+                'lang'    => $lang,
+                'langs'   => $this->availableLangs($section),
+            ]);
+        }
+
         $html = MarkdownExtra::defaultTransform($raw);
 
         // Rewrite relative image srcs to absolute docs asset URLs.
         // The topic dir is the directory containing the resolved file.
-        // e.g. file = view/theme/solidified/docs/user/en/hq/widgets/post-composer/index.txt
+        // e.g. file = view/theme/solidified/docs/user/en/hq/widgets/post-composer/index.md
         //   → topicDir = hq/widgets/post-composer
         //   → assetBase = /view/theme/solidified/docs/user/en/hq/widgets/post-composer/
         $fileDir    = dirname($file);                     // absolute-ish (relative to CWD)
@@ -112,7 +125,7 @@ class Help {
             $html
         );
 
-        // Rewrite relative doc links (e.g. "./hq", "hq.txt", "connections.txt")
+        // Rewrite relative doc links (e.g. "./hq", "hq.md", "connections.md")
         // to absolute SPA help routes, so they resolve against the app's URL
         // scheme (/help/:section/:topic) instead of the browser's current
         // location. Leaves absolute/external/anchor/mailto/tel links alone.
@@ -129,7 +142,7 @@ class Help {
                 }
 
                 $target = preg_replace('#^\./#', '', $target);
-                $target = preg_replace('/\.txt$/', '', $target);
+                $target = preg_replace('/\.md$/', '', $target);
 
                 $path = $topicDir !== '' ? $topicDir . '/' . $target : $target;
                 $href = '/help/' . $section . ($path !== '' ? '/' . $path : '') . $fragment;
@@ -196,17 +209,17 @@ class Help {
                 $results = array_merge($results, $this->searchTree($full, $base, $q));
                 continue;
             }
-            if (!str_ends_with($entry, '.txt')) continue;
+            if (!str_ends_with($entry, '.md')) continue;
 
             $raw = file_get_contents($full);
             if (stripos($raw, $q) === false) continue;
 
             $title = $this->extractTitle($raw) ?: $this->slugToLabel(pathinfo($entry, PATHINFO_FILENAME));
 
-            // Mirror handleTopic's path resolution: index.txt resolves to its
+            // Mirror handleTopic's path resolution: index.md resolves to its
             // containing dir, standalone files resolve to dir/filename.
             $relDir = ltrim(substr($dir, strlen($base)), '/');
-            $topic  = $entry === 'index.txt'
+            $topic  = $entry === 'index.md'
                 ? $relDir
                 : ($relDir !== '' ? $relDir . '/' . pathinfo($entry, PATHINFO_FILENAME) : pathinfo($entry, PATHINFO_FILENAME));
 
@@ -246,7 +259,7 @@ class Help {
             $relPath = ltrim(substr($full, strlen($base)), '/');
 
             if (is_dir($full)) {
-                $hasContent = file_exists($full . '/index.txt');
+                $hasContent = file_exists($full . '/index.md');
                 $children   = $this->buildTree($full, $base, $section, $lang);
 
                 // Only include dirs that have content somewhere in the subtree
@@ -259,8 +272,8 @@ class Help {
                     'hasContent' => $hasContent,
                     'children'   => $children,
                 ];
-            } elseif ($entry !== 'index.txt' && str_ends_with($entry, '.txt')) {
-                // Standalone .txt file (not index)
+            } elseif ($entry !== 'index.md' && str_ends_with($entry, '.md')) {
+                // Standalone .md file (not index)
                 $slug    = pathinfo($entry, PATHINFO_FILENAME);
                 $raw     = file_get_contents($full);
                 $label   = $this->extractTitle($raw) ?: $this->slugToLabel($slug);

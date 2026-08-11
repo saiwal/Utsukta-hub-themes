@@ -4,10 +4,12 @@ namespace Theme\Solidified\Api\Handlers;
 
 use Theme\Solidified\Api\Response;
 use Theme\Solidified\Api\Concerns\FetchesRemoteActor;
+use Theme\Solidified\Api\Concerns\ResolvesConnection;
 
 class Xchan
 {
     use FetchesRemoteActor;
+    use ResolvesConnection;
     public function get(): void
     {
         $hash = $_GET['hash'] ?? null;
@@ -16,37 +18,22 @@ class Xchan
         require_once 'include/channel.php';
         require_once 'include/permissions.php';
 
-        // Look up xchan by URL first, then by hash
+        // Look up all xchan rows for this identity — the same channel can have
+        // more than one (protocol change, re-key, hub migration) sharing this
+        // url/hash but carrying a different xchan_hash each.
         $xchans = q(
-            "SELECT * FROM xchan WHERE xchan_url = '%s' LIMIT 1",
-            dbesc($hash)
+            "SELECT * FROM xchan WHERE xchan_url = '%s' OR xchan_hash = '%s'",
+            dbesc($hash), dbesc($hash)
         );
-        if (!$xchans) {
-            $xchans = q(
-                "SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
-                dbesc($hash)
-            );
-        }
         if (!$xchans) Response::error(404, 'Channel not found');
 
         $xchan = $xchans[0];
-        $ob_hash = get_observer_hash();
 
         // Connection status — only meaningful for local viewers
-        $is_connected = false;
-        $abook_id = null;
-        if ($ob_hash && local_channel()) {
-            $abook = q(
-                "SELECT abook_id FROM abook
-                 WHERE abook_channel = %d AND abook_xchan = '%s' LIMIT 1",
-                intval(local_channel()),
-                dbesc($xchan['xchan_hash'])
-            );
-            if ($abook) {
-                $is_connected = true;
-                $abook_id = intval($abook[0]['abook_id']);
-            }
-        }
+        [$is_connected, $abook_id] = $this->connectionFor(
+            local_channel(),
+            array_column($xchans, 'xchan_hash')
+        );
 
         // Enrich with full profile data if this is a local channel
         $profile_data = [];

@@ -1,0 +1,168 @@
+# Module System
+
+Every feature in the SPA is a self-contained **module**. A module declares its routes, navigation item, UI slot contributions, and (optionally) a Hubzilla app prerequisite.
+
+## Registering a Module
+
+Create `src/modules/<id>/index.ts` and call `registerModule()`:
+
+```typescript
+import { registerModule } from "@/shared/lib/module-registry";
+import { useI18n } from "@/i18n";
+
+registerModule({
+  id: "myfeature",
+  routes: [
+    { path: "/myfeature", component: () => import("./views/MyView") },
+    { path: "/myfeature/:nick", component: () => import("./views/MyView") },
+  ],
+  navItem: {
+    label: () => useI18n().t("nav.myfeature"),
+    icon: "star",
+    path: "/myfeature",
+    href: "/myfeature",
+    context: "owner",        // who sees this nav item
+  },
+  widgets: [
+    {
+      id: "myfeature.sidebar",         // stable, persisted — never rename once shipped
+      label: () => useI18n().t("widgets.myfeature_sidebar"),
+      loader: () => import("./widgets/MySidebarWidget"),
+      slot: "right",
+    },
+  ],
+  appName: "MyFeature",      // omit if no app prerequisite
+});
+```
+
+The file is auto-imported by `App.tsx` via `import.meta.glob("./modules/*/index.ts", { eager: true })`. You never need to update a central list.
+
+See `slot-system.txt` for the full `WidgetDef` reference (multi-instance widgets, config panels, global vs. module-local widgets, layout templates).
+
+## ModuleDef Interface
+
+```typescript
+interface ModuleDef {
+  id: string;                        // unique module identifier
+  routes: RouteDef[];                // SPA routes (lazy-loaded)
+  navItem?: NavItemDef;              // navigation entry (optional — some modules are widget-only, e.g. "blocks")
+  widgets?: WidgetDef[];             // widget contributions — see slot-system.txt
+  /** @deprecated Ignored by the registry; migrate to `widgets`. */
+  slots?: SlotsDef;
+  permissions?: string[];            // future use
+  appName?: string;                  // Hubzilla app gate (e.g. "Photos")
+  requiresAuth?: boolean;            // true = anonymous visitors are redirected to /login
+  /** Reactive accessor for the layout-template id assigned to the item the
+   * active route is showing (e.g. a webpage's assigned template). See
+   * "Layout templates" in slot-system.txt. */
+  pageTemplate?: () => string | null | undefined;
+}
+```
+
+`slots` is a deprecated, ignored field kept only for backward compatibility with older module code — new modules should declare sidebar/region content via `widgets`, not `slots`. A console warning fires if a module still sets a non-empty `slots` object.
+
+## NavItemDef
+
+```typescript
+interface NavItemDef {
+  label: string | (() => string);  // static string or reactive i18n accessor
+  icon: string;                    // icon key (see solid-icons / icon map)
+  path: string;                    // route path (for active-link matching)
+  href: string | (() => string);   // navigation target (can be reactive)
+  context?: NavContext | NavContext[];
+  hidden?: boolean;
+  /** Help-mode target ("nav.<topic>" form) — see help-mode.txt. */
+  helpTarget?: string;
+}
+
+type NavContext =
+  | "owner"      // logged-in user on their own channel
+  | "local"      // logged-in user on someone else's channel
+  | "remote"     // OWA / remote-authenticated visitor
+  | "anonymous"  // unauthenticated
+  | "admin"      // administrator
+  | "all";       // always visible
+```
+
+Use reactive `href` when the destination depends on the current channel nick:
+
+```typescript
+import { usePageNick } from "@/shared/store/site-config";
+
+href: () => `/photos/${usePageNick()()}`,
+```
+
+## App Gating (appName)
+
+When `appName` is set, the module is suppressed unless the Hubzilla app by that name is in the viewer's installed-apps list.
+
+- Routes redirect away (via `ModuleGuard` in `App.tsx`).
+- Slot widgets are not rendered (checked in `Slot.tsx`).
+- The nav item is filtered out by `useInstalledApps()`.
+
+The installed-apps list comes from `/spa/nav` and is an empty `Set` during the initial load — while the set is empty every module is treated as active (pass-through).
+
+```typescript
+// module-registry.ts
+export function isModuleActive(moduleId: string, installedApps: Set<string>): boolean {
+  const mod = modules.get(moduleId);
+  if (!mod) return false;
+  if (!mod.appName) return true;             // no gate
+  if (installedApps.size === 0) return true; // not yet loaded
+  return installedApps.has(mod.appName);
+}
+```
+
+## Recommended Folder Structure
+
+```
+src/modules/myfeature/
+├── index.ts        # registerModule() call
+├── views/
+│   └── MyView.tsx  # lazy-loaded page components
+├── api/
+│   └── api.ts      # fetch wrappers for this module
+├── store/
+│   └── store.ts    # module-local signals / resources
+└── widgets/
+    └── MySidebarWidget.tsx
+```
+
+## In-Component App Gating
+
+`appName` gates an entire module. To gate only a **section within a component** based on a Hubzilla app, use `useInstalledApps()` directly:
+
+```typescript
+import { useInstalledApps } from "@/shared/store/nav-store";
+
+const installedApps = useInstalledApps();
+const affinityInstalled = () => installedApps().has("Affinity Tool");
+```
+
+Then wrap the conditional UI in a `<Show>`:
+
+```tsx
+<Show when={affinityInstalled()}>
+  <AffinitySlider ... />
+</Show>
+```
+
+**Where this is used:**
+- `StreamFiltersWidget.tsx` — the Closeness / Affinity slider is hidden unless the "Affinity Tool" app is installed.
+- `StreamFiltersWidget.tsx` — Privacy Groups picker is hidden unless "Privacy Groups" is installed.
+
+The same empty-set pass-through rule applies here: `useInstalledApps()` returns an empty `Set` until `/spa/nav` responds, so the section is visible during the initial render. If you want to hide-by-default instead, guard with `installedApps().size > 0 && affinityInstalled()`.
+
+## Multiple Routes
+
+A module can register as many routes as needed. All share the same `moduleId`:
+
+```typescript
+routes: [
+  { path: "/articles",           component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick",     component: () => import("./views/ArticlesView") },
+  { path: "/articles/:nick/:uuid", component: () => import("./views/ArticleView") },
+],
+```
+
+`moduleId` is set automatically on every route by `registerModule()` — do not supply it manually.

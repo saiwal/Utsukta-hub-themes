@@ -5,10 +5,12 @@ namespace Theme\Solidified\Api\Handlers;
 use Theme\Solidified\Api\Auth;
 use Theme\Solidified\Api\Response;
 use Theme\Solidified\Api\Concerns\FetchesRemoteActor;
+use Theme\Solidified\Api\Concerns\ResolvesConnection;
 
 class Profile
 {
     use FetchesRemoteActor;
+    use ResolvesConnection;
     public function get(): void {
         $sub = \App::$argv[3] ?? null;
         if ($sub === 'connections') {
@@ -217,8 +219,10 @@ class Profile
         $ob_hash   = get_observer_hash();
         $local_uid = local_channel();
 
-        // xchan cache — this server may already know this actor
-        $xchan = q("SELECT * FROM xchan WHERE xchan_addr = '%s' LIMIT 1", dbesc($nick));
+        // xchan cache — this server may already know this actor. There can be
+        // more than one row for the same identity (protocol change, re-key),
+        // so keep them all for the connection check below.
+        $xchan = q("SELECT * FROM xchan WHERE xchan_addr = '%s'", dbesc($nick));
         $xrow  = $xchan ? $xchan[0] : null;
 
         $name   = Response::decodeEntities($xrow['xchan_name'] ?? '');
@@ -243,15 +247,7 @@ class Profile
         }
 
         // Connection status
-        $is_connected = false;
-        if ($local_uid && $xrow && !empty($xrow['xchan_hash'])) {
-            $ab = q(
-                "SELECT abook_id FROM abook WHERE abook_channel = %d AND abook_xchan = '%s' LIMIT 1",
-                intval($local_uid),
-                dbesc($xrow['xchan_hash'])
-            );
-            $is_connected = !empty($ab);
-        }
+        [$is_connected] = $this->connectionFor($local_uid, array_column($xchan ?: [], 'xchan_hash'));
 
         Response::send([
             'channel_name'    => $name,

@@ -132,11 +132,10 @@ class Webpages
             Response::send($this->formatDetail($p[0]));
         }
 
-        // ── List webpages — write access required ──────────────────────────────
-        // Listing requires write_pages (you need edit/delete capability to use the list)
-        Auth::requireLoggedIn();
-
-        if (!$perms['write_pages']) {
+        // ── List webpages — public, like Articles.php's list ────────────────────
+        // view_pages is enough to browse; item_permissions_sql() below still
+        // filters out any individual pages the observer can't see.
+        if (!$perms['view_pages']) {
             Response::error(403, 'Permission denied');
         }
 
