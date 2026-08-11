@@ -1,0 +1,407 @@
+# Slot & Widget System
+
+Modules inject UI widgets into named **slots** — predefined layout regions that the shell (`Layout.tsx`) renders. This keeps feature code decoupled from the layout.
+
+Every widget is registered with a **stable id** in a central widget registry (`module-registry.ts`). Ids are the addressable unit for user-configurable widget layouts, so they must never be renamed once shipped.
+
+## Available Slots
+
+| Slot key | Where rendered |
+|----------|---------------|
+| `right` | Right sidebar (desktop) |
+| `leftBottom` | Bottom of left sidebar |
+| `header` | Top of main content area, above `gridTop` — always full-width, single column |
+| `gridTop` | Top of main content area — masonry-packed via CSS columns, so widgets of different heights pack without grid dead space |
+| `contentTop` | Directly above the routed page content — always full-width, single column, same as `header` |
+| `footer` | Bottom of main content area, below the routed page — always full-width, single column, same as `header` |
+| `rightVisitor` | Right sidebar shown to visitors |
+
+## Declaring Widgets in a Module
+
+```typescript
+registerModule({
+  id: "network",
+  // …
+  widgets: [
+    {
+      id: "network.filters",            // stable, persisted — never rename
+      label: "Stream Filters",          // shown in the widget picker UI
+      loader: () => import("./widgets/StreamFiltersWidget"),
+      slot: "right",
+    },
+  ],
+});
+```
+
+`WidgetDef` fields (see `shared/types/module.types.ts`):
+
+- `id` — stable identifier, convention `"<moduleId>.<name>"`.
+- `label` — human-readable name (string or `() => string` for i18n).
+- `loader` — `() => Promise<{ default: Component }>`.
+- `slot` — which layout region the widget renders in.
+- `defaultModules` — module ids where the widget appears out of the box. Defaults to the registering module. Example: the channel widgets declare `["channel", "profile"]` so they also appear on profile pages.
+- `contexts` — module ids where a user may place the widget, or `"any"`. Defaults to `defaultModules`.
+- `global` — always mounted on every page, never torn down on navigation.
+- `visitorVisible` — `false` means only authenticated local users see the widget; set it on widgets showing viewer-private data (drafts, bookmarks) so visitors to public pages never mount them. Default `true`.
+
+## Global vs Module-Local Widgets
+
+By default widgets are **module-local**: rendered only while a module listed in `defaultModules` is active, and unmounted on navigation away.
+
+**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. In the user-facing edit UI these are described as "pinned": they render on every page, show no move/remove toolbar, and never appear in the Add-widget picker. The shared ones live in `shared/slots.ts`:
+
+```typescript
+// shared/slots.ts
+export const notificationsWidget: WidgetDef = {
+  id: "shared.notifications",
+  label: "Notifications",
+  loader: () => import("./widgets/notifications/NotificationsAside"),
+  slot: "right",
+  contexts: "any",
+  global: true,
+};
+```
+
+A widget id can only be registered once — duplicate registrations are ignored with a console warning.
+
+## User Layouts
+
+Users can override which widgets appear on which pages. The layout lives in pconfig (cat `spa`, key `widget_layout`) as JSON:
+
+```json
+{
+  "version": 1,
+  "modules": {
+    "hq":      { "right": ["shared.notifications", "network.savedSearch"] },
+    "channel": { "right": ["channel.archive", "channel.connections"] }
+  }
+}
+```
+
+- Absence of a module/slot entry → registry defaults apply.
+- An explicit empty array → the user removed every widget from that slot.
+- Saved via `POST /spa/widget-layout` (`{ layout: … }`, `{ layout: null }` resets everything); loaded at boot from `GET /spa/pconfig`.
+
+Client state is in `src/shared/store/widget-layout.ts`: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`. Saves are optimistic with rollback; localStorage (`hz-widget-layout`) caches the layout so sidebars don't flash defaults while pconfig loads. The server value — including its absence — always wins for local users.
+
+Stored ids that point at unknown, global, context-disallowed, or uninstalled-app widgets are silently dropped at render time: layouts outlive code changes.
+
+### Visitors see the owner's arrangement
+
+`widget_layout` is included in the per-channel prefs that `GET /spa/pconfig?channel=<nick>` exposes (`channelSpa()` in `Pconfig.php`), the same payload that carries the channel's theme. `useChannelTheme` feeds it into a separate `pageLayout` signal (`initPageWidgetLayout` / `pageLayoutFor`), cleared when leaving channel pages. `Slot` picks the source by viewer role: on your own pages (`viewerRole() === "owner"`) your layout applies; on anyone else's channel-scoped pages — including for logged-in local users — the page owner's layout applies. The page-owner layout is never persisted on the visitor's device.
+
+## Edit Mode
+
+Local users get a pencil toggle in the right-sidebar header (visible on all breakpoints — the sidebar is a drawer on mobile, a column on `xl`). While editing, each widget shows a header with move-up / move-down / remove controls and an inert, dimmed preview; below the list sit an "Add widget" picker (widgets allowed in the current module whose backing app is installed) and a "Reset to defaults" button (shown only when the page is customised). Every action saves immediately and optimistically via `saveSlotLayout`; failures roll back and raise an error toast.
+
+State: `editingWidgets` / `setEditingWidgets` in `widget-layout.ts`; only `<Slot>` instances rendered with the `editable` prop show edit chrome. Global widgets are not editable. The pencil and the edit chrome only appear on pages you own (`viewerRole() === "owner"`) — editing always targets your own layout, and edit mode auto-exits when navigating to someone else's page.
+
+## The Slot Component
+
+`src/shared/views/Slot.tsx` renders a slot by name:
+
+```tsx
+<Slot name="right" />
+<Slot name="right" moduleId="network" />  // explicit module override
+```
+
+If `moduleId` is omitted, the active module is inferred from the current URL path.
+
+Internally, `Slot` renders:
+
+1. All **global** widgets for the slot (always mounted, never torn down).
+2. **Local** widgets: the user's saved layout for the active module when one exists, otherwise widgets whose `defaultModules` include the active module (swapped on navigation).
+
+Local widgets are skipped when the active module's `appName` app is not installed; each widget is additionally gated by its *owning* module's app, and `visitorVisible: false` widgets are skipped for non-local viewers (this filter applies to global widgets too).
+
+## Layout templates (`templateId` / `ModuleDef.pageTemplate`)
+
+Layouts are normally keyed by module id alone, so every page within a module
+(e.g. every `/channel/:nick`) shares one saved arrangement. A module can opt a
+slot into **per-item** arrangements instead — e.g. each webpage can have its
+own sidebar, header, and footer — by assigning the item a reusable, **named
+template** rather than giving the item its own one-off saved list per slot.
+This mirrors classic Hubzilla's PDL `layout_mid`: an item points at 0 or 1
+named layout, so storage grows with the number of distinct templates an
+owner maintains, not with the number of items using them, and editing a
+template updates every item assigned to it at once. See "Multi-region
+templates" below for exactly which slots a template can cover.
+
+Templates live in a separate store, `src/shared/store/widget-templates.ts`
+(pconfig cat `spa`, key `widget_templates`):
+```json
+{ "version": 1, "templates": { "tpl_xxxxxx": { "name": "Docs page", "slots": { "right": [...] } } } }
+```
+A template's `slots` shape is identical to one entry of `widget_layout`'s
+`modules` map, so entry validation is shared. Templates are assigned from the
+page editor (`WebpageComposer.tsx`'s "Page layout" select, which can also
+create a new one inline) and managed — renamed, deleted, browsed by usage —
+from a dedicated screen (`/webpages/:nick/layouts`, `LayoutTemplatesView.tsx`).
+Neither of those places is where widgets get placed, though — see "Editing a
+templated slot" below.
+
+Two small hooks wire an item's template assignment into `Slot`:
+
+- `ModuleDef.pageTemplate?: () => string | null | undefined` — a reactive
+  accessor a module registers that returns the template id assigned to "the
+  specific item shown by the current route" (a webpage's `layout_template`,
+  set in its editor), or `null`/`undefined` when none is assigned or there's
+  no such item (list views, the editor itself, etc.).
+- `<Slot templateId="...">` — when set, this slot's `custom` entries resolve
+  from `templateEntriesFor`/`pageTemplateEntriesFor` (own vs. page-owner's
+  templates, mirroring `layoutFor`/`pageLayoutFor`) instead of the
+  module-level layout. Widget *eligibility* (`isModuleActive`,
+  `resolveModuleSlot`, `widgetAllowedIn`) still uses the real `moduleId`.
+
+`Layout.tsx` wires this together generically, with no per-module special
+casing — one `pageTemplateId` applied to every editable slot:
+
+```typescript
+const pageTemplateId = createMemo(() => getModule(activeModuleId())?.pageTemplate?.() ?? undefined);
+// ...
+<Slot name="right" moduleId={activeModuleId()} templateId={pageTemplateId()} editable />
+<Slot name="header" moduleId={activeModuleId()} templateId={pageTemplateId()} editable />
+// ...same for gridTop, contentTop, and footer
+```
+
+Templates ride to visitors the same way a module's own layout does (see
+"Visitors see the owner's arrangement" above) — `channelSpa()` in
+`Pconfig.php` includes `widget_templates` alongside `widget_layout`, so a
+visitor to one specific webpage sees that page's assigned template, not the
+module-level default. `webpages/index.ts` is the reference implementation: it
+registers `pageTemplate: () => currentPageTemplateId()`, backed by a signal
+that `PageView.tsx` sets/clears from the loaded page's `layout_template` field
+as it loads/unloads.
+
+### Multi-region templates
+
+A template isn't confined to the sidebar — it can place widgets in every
+slot `Layout.tsx` already treats as `editable`: `right`, `header`, `gridTop`,
+`contentTop`, `footer` (`leftBottom`/`rightVisitor` are left out — nav-sidebar
+and visitor-only content, not part of an item's own "layout"). `Layout.tsx`
+computes one `pageTemplateId` from `ModuleDef.pageTemplate` and passes it to
+all five `<Slot>`s — a template groups per-slot lists under one named entity
+(`WidgetTemplate.slots: Partial<Record<WidgetSlotName, LayoutEntry[]>>`), so
+the same assigned id applies to every region at once. Backward compatible:
+older templates only have `slots.right`, so their `header`/`gridTop`/`footer`
+simply fall through to registry defaults until entries are added there — no
+migration needed, and no changes were needed to `WidgetTemplates.php` or to
+how `Slot.tsx` *resolves* a slot's entries, both already per-slot generic.
+`Slot.tsx` did need two small changes to make these regions *editable*,
+covered next.
+
+### Editing a templated slot
+
+Placing widgets in a template works exactly like placing widgets anywhere
+else in this app — there is deliberately no separate template-editing
+screen or panel. Visit any page that has the template assigned, toggle the
+same "Edit layout" pencil any owner already has (`Layout.tsx`'s right
+sidebar header), and arrange widgets directly in the real rendered
+header/top-banner/sidebar/footer, same as editing `channel`'s or `hq`'s
+module-level layout. This was an earlier design's whole complication — a
+first pass built a separate boxed/tabbed `TemplateWidgetsEditor` component
+mounted in the composer and on `/webpages/:nick/layouts`, but that didn't
+match how every other module already works, so it was removed. `Slot.tsx`
+needed only two changes to support this:
+
+- `editing()` no longer excludes templated slots — it's just `props.editable
+  === true && editingWidgets() && isPageOwner()`, the same condition as any
+  module-level slot.
+- `persist()` branches on `props.templateId`: `saveTemplateSlots(templateId,
+  slot, entries)` instead of `saveSlotLayout(moduleId, slot, entries)`. Since
+  a template can be assigned to several pages, editing on any one of them
+  writes to the shared template and is visible on all of them.
+- The reset-to-defaults button is hidden for templated slots
+  (`isCustomised()` returns `false` when `props.templateId` is set) — there's
+  no "module default" to revert to once a slot belongs to an explicit
+  template; removing widgets one at a time already covers "make it empty."
+- Because edits can affect other pages silently, `Slot.tsx` shows a small
+  notice above the widget list whenever the assigned template is used by
+  more than one page (`templateUsageCount(id) > 1`), naming the template and
+  how many pages share it (`widgets.template_shared_notice`). This needs
+  `useTemplateUsage()` populated, which — unlike a template's own
+  name/entries — isn't part of the boot payload (see below), so `Layout.tsx`
+  fires `loadTemplates()` once when edit mode starts on a templated page:
+  ```typescript
+  createEffect(() => {
+    if (pageTemplateId() && editingWidgets()) void loadTemplates();
+  });
+  ```
+
+`WebpageComposer.tsx`'s "Page layout" select and inline "+ New template"
+(`TemplateNameForm.tsx`, still in `shared/views/` for reuse by any future
+per-item-template feature) only ever *assign*/*create* — there is no
+separate widget-placement UI in the composer at all; placing widgets is
+covered next. `LayoutTemplatesView.tsx`'s own responsibility is metadata:
+list, create, rename, delete, and the usage badge described below; rows are
+keyed by plain id string (`templateIds = createMemo(() =>
+Object.keys(templates()?.templates ?? {}))`), not a rebuilt object — `<For>`
+keys rows by *reference*, so an array of freshly-spread `{id, ...tpl}`
+objects would look "new" on every store update even when nothing changed for
+that particular template.
+
+### The composer drives the real page chrome while editing
+
+Placing widgets while writing a page, and seeing what a template looks like
+before saving, both fall out of one idea: `WebpageComposer.tsx` drives the
+same `currentPageTemplateId` signal `PageView.tsx` drives while viewing the
+live page (`src/modules/webpages/store.ts`). Since `webpages/index.ts`
+registers `pageTemplate: () => currentPageTemplateId() ?? undefined`
+generically — it doesn't know or care which view set the signal — and
+`Layout.tsx` already re-derives `pageTemplateId` and re-renders every
+`editable` `<Slot>` whenever it changes, the composer gets the real
+header/top-banner/sidebar/footer regions, in their real positions, showing
+the *currently selected* template's widgets, live, entirely for free:
+
+```typescript
+// WebpageComposer.tsx
+const [layoutTemplate, setLayoutTemplate] = createSignal(props.initial?.layout_template ?? "");
+createEffect(() => setCurrentPageTemplateId(layoutTemplate() || null));
+onCleanup(() => setCurrentPageTemplateId(null));
+```
+
+An earlier version of this took the opposite approach — a dedicated
+read-only preview component embedded in the composer's own form, rendering
+a second copy of the resolved widgets in a box. That was rejected in favor
+of this one: it's the *actual* page regions doing the previewing, so there's
+only one rendering path to maintain, and — since the owner already has the
+"Edit layout" pencil available on any page they own — those regions aren't
+just a preview, they're immediately editable too, at the same time as the
+page's title/body, using the exact same `<Slot editable>` mechanism as any
+other module (see "Editing a templated slot" above). The composer also puts
+a pencil/checkmark button of its own next to the "Page layout" select —
+identical in behavior to `Layout.tsx`'s sidebar toggle (same
+`editingWidgets`/`setEditingWidgets`, `widgets.edit_layout`/`done_editing`
+labels), just placed where the author is already looking instead of making
+them go find the sidebar header.
+
+`LayoutTemplatesView.tsx` uses the identical trick for templates that aren't
+attached to any page yet (or when it's just more convenient to jump straight
+to a template rather than finding a page that uses it): a local
+`selectedTemplateId` signal drives `currentPageTemplateId` the same way, and
+clicking a row's edit-widgets button also flips the global `editingWidgets`
+on — so the same real regions become editable right there, with a small
+banner naming which template is active and a "Done" button that clears both
+signals. Only one template can be "live" this way at a time, same as only
+one set of real regions exists on screen; deleting the currently-selected
+template also clears the selection. Switching the select
+mid-edit re-fires the effect, which updates `pageTemplateId`, which
+`Slot.tsx`'s `templateEntriesFor(props.templateId, ...)` call picks up
+reactively — the widgets shown update immediately, no save required.
+
+The `<select>` itself surfaced a real Solid gotcha, worth knowing before
+touching this file again: `<select value={someMemo()}>` looked correct but
+didn't reliably re-select the right `<option>` once the template list
+finished loading, because `createMemo` skips notifying dependents when the
+recomputed *value* is unchanged — and here the outer memo's output
+(`layoutTemplate()`) hadn't changed, only the `<option>` list underneath it
+had, so the DOM-setting effect never re-ran and the select stayed stuck on
+the first option ("Page default") even though the underlying signal held the
+right id all along. The fix was to stop relying on the declarative `value=`
+binding and set `select.value` imperatively inside a plain `createEffect`
+(no memoization to skip a "same value" update), tracking both the template
+list and the assigned id so it force-syncs on every relevant change:
+```typescript
+let selectRef: HTMLSelectElement | undefined;
+createEffect(() => {
+  templateList(); // track — re-sync once the matching <option> exists
+  const val = layoutTemplate();
+  if (selectRef && selectRef.value !== val) selectRef.value = val;
+});
+// <select ref={selectRef} onChange={...}> — no `value` prop
+```
+
+Deleting a template already removes it from the store; nothing automatically
+clears a page's `layout_template` if that template is later deleted (it just
+silently falls back to the module default — see "Known limitations" in the
+feature's design notes). What the screen *does* surface is **usage**, so an
+owner isn't guessing before deleting: `WidgetTemplates::get()` (the GET used
+by `loadTemplates()`) additionally runs a `COUNT(*) ... GROUP BY iconfig.v`
+over `iconfig`/`item` for `cat = 'spa', k = 'layout_template'`, returning a
+`usage: { "tpl_xxx": 3 }` map alongside `templates`. The client stores this in
+a small parallel signal (`useTemplateUsage`/`templateUsageCount` in
+`widget-templates.ts`) rather than folding it into `WidgetTemplates` itself,
+since usage is derived read-only data scoped to the management screen, not
+part of the template document that gets saved. Only the GET response includes
+it — create/rename/delete/save_slots responses don't, since none of those
+change any *page's* assignment (the only thing that changes usage).
+
+## Registry Lookups
+
+- `getWidget(id)` — a single registered widget, or `null`.
+- `getAllWidgets()` — every registered widget in registration order (picker UI, layout validation).
+- `resolveGlobalSlots(slot)` / `resolveModuleSlot(slot, moduleId)` — the `RegisteredWidget` lists `Slot` renders by default.
+- `widgetAllowedIn(widget, moduleId)` — whether a user may place the widget on that module's pages (`contexts` check).
+
+## Lazy Caching
+
+`getLazy(loader)` in `module-registry.ts` wraps each loader in `lazy()` exactly once, preventing Solid from remounting the component when reactive memos recompute:
+
+```typescript
+const lazyCache = new WeakMap<SlotLoader, Component>();
+export function getLazy(loader: SlotLoader): Component {
+  if (!lazyCache.has(loader)) lazyCache.set(loader, lazy(loader));
+  return lazyCache.get(loader)!;
+}
+```
+
+## Reactivity: widgetVersion
+
+`widgetVersion` is a signal that increments whenever a module registers widgets. The `Slot` component tracks it so that widgets registered after async module import are immediately reflected:
+
+```typescript
+const widgetVersion = getWidgetVersion();
+const globalWidgets = createMemo(() => {
+  widgetVersion(); // subscribe
+  return resolveGlobalSlots(props.name).map(getLazy);
+});
+```
+
+## Widget Instances (multiInstance)
+
+Widgets registered with `multiInstance: true` may be placed several times in
+the same slot, each placement carrying its own configuration:
+
+```typescript
+{
+  id: "cart.item_card",
+  label: () => useI18n().t("widgets.item_card"),
+  loader: () => import("./widgets/ItemCardWidget"),
+  slot: "right",
+  multiInstance: true,
+  configComponent: () => import("./widgets/ItemCardConfig"),
+}
+```
+
+In the saved layout, a slot entry is either a plain widget id (singletons) or
+an instance object:
+
+```json
+{ "id": "cart.item_card", "key": "cart.item_card#a1b2c3", "config": { "sku": "mug-01" } }
+```
+
+`key` is a unique instance key generated when the widget is added
+(`makeInstanceKey` in `widget-layout.ts`); `config` is an opaque JSON object
+(max 2 KB) handed to the widget component as its `config` prop:
+
+```typescript
+export default function ItemCardWidget(props: WidgetProps) {
+  const sku = () => String(props.config?.sku ?? "");
+  ...
+}
+```
+
+The picker keeps offering a `multiInstance` widget when instances are already
+present — each add creates a new instance. In edit mode, instances with a
+`configComponent` show a gear button that opens the settings form inline; the
+form receives `WidgetConfigProps` (`config`, `onSave`) and persisting closes
+the panel. Since layouts ride pconfig to visitors, instance config reaches
+visitors automatically.
+
+Singleton entries remain plain strings, so layouts saved before this feature
+parse unchanged; older clients simply drop instance entries they don't
+understand.
+
+## Legacy: `slots`
+
+The old `slots: { right: [loader] }` module field is deprecated and **ignored** by the registry (a console warning fires if non-empty). Migrate to `widgets`.
