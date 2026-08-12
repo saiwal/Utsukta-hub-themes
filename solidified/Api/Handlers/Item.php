@@ -529,7 +529,7 @@ class Item
                     $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
                     if ($r['success']) {
                         $attachments[] = [
-                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
                             'length'   => $r['data']['filesize'],
                             'type'     => $r['data']['filetype'],
                             'title'    => urlencode($r['data']['filename']),
@@ -788,7 +788,7 @@ class Item
                     $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
                     if ($r['success']) {
                         $attachments[] = [
-                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
                             'length'   => $r['data']['filesize'],
                             'type'     => $r['data']['filetype'],
                             'title'    => urlencode($r['data']['filename']),
@@ -1848,6 +1848,10 @@ class Item
         $attachRaw = $item['attach'] ?? '';
         $root = z_root();
         $attach = array_map(function (array $a) use ($root): array {
+            // Pre-fix rows may have been stored with 'url' instead of 'href'.
+            if (!isset($a['href']) && isset($a['url'])) {
+                $a['href'] = $a['url'];
+            }
             if (isset($a['href']) && str_starts_with($a['href'], '/')) {
                 $a['href'] = $root . $a['href'];
             }
