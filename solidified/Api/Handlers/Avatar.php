@@ -178,7 +178,7 @@ class Avatar
         q("UPDATE photo SET photo_usage = %d WHERE photo_usage = %d AND uid = %d",
             intval(PHOTO_NORMAL), intval(PHOTO_COVER), intval($uid));
 
-        $im->doScaleImage(1200, 435);
+        $im->doScaleImage(1920, 696);
         $r1 = $im->storeThumbnail($p, PHOTO_RES_COVER_1200);
         $im->doScaleImage(850, 310);
         $r2 = $im->storeThumbnail($p, PHOTO_RES_COVER_850);
