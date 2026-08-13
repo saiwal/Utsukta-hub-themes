@@ -87,7 +87,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | notices panel         | hq                                             | gridTop                                    | -      | -        |
 | notifications         | any                                            | right                                      | ✅     | -        |
 | pinned chat rooms     | any                                            | right                                      | ✅     | -        |
-| pomodoro              | any                                            | right                                      | -      | ✅       |
+| pomodoro              | any                                            | right, gridTop                             | -      | ✅       |
 | popular posts         | channel, profile, articles                     | right                                      | -      | -        |
 | popular articles      | channel, profile                               | right                                      | -      | -        |
 | quick compose buttons | any                                            | gridTop                                    | -      | -        |
