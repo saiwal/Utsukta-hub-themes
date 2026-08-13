@@ -115,11 +115,12 @@ class Drafts
         $scope    = trim($b['scope']    ?? 'post:new');
         $slug     = trim($b['slug']     ?? '');
         $category = trim($b['category'] ?? '');
+        $extra    = $b['extra'] ?? null;
 
         $uuid = item_message_id();
         $mid  = z_root() . '/item/' . $uuid;
         $now  = datetime_convert();
-        $meta = json_encode(['scope' => $scope, 'slug' => $slug, 'category' => $category]);
+        $meta = json_encode(['scope' => $scope, 'slug' => $slug, 'category' => $category, 'extra' => $extra]);
 
         $datarray = [
             'aid'             => $channel['channel_account_id'],
@@ -197,7 +198,8 @@ class Drafts
         $scope    = trim($b['scope']    ?? $existingMeta['scope']    ?? '');
         $slug     = trim($b['slug']     ?? $existingMeta['slug']     ?? '');
         $category = trim($b['category'] ?? $existingMeta['category'] ?? '');
-        $meta     = json_encode(['scope' => $scope, 'slug' => $slug, 'category' => $category]);
+        $extra    = array_key_exists('extra', $b) ? $b['extra'] : ($existingMeta['extra'] ?? null);
+        $meta     = json_encode(['scope' => $scope, 'slug' => $slug, 'category' => $category, 'extra' => $extra]);
 
         $now = datetime_convert();
         $iid = intval($row['id']);
@@ -268,6 +270,7 @@ class Drafts
             'scope'     => $meta['scope']    ?? 'post:new',
             'slug'      => $meta['slug']     ?? '',
             'category'  => $meta['category'] ?? '',
+            'extra'     => $meta['extra']    ?? null,
             'created'   => $created,
             'updated'   => $updated,
             'preview'   => $preview,
