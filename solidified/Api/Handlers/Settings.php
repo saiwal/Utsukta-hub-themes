@@ -124,6 +124,10 @@ class Settings
         $corner_radius = get_pconfig($uid, 'spa', 'corner_radius', 'default');
         if (!in_array($corner_radius, $valid_corner_radii, true)) $corner_radius = 'default';
 
+        $valid_comment_orders = ['oldest_first', 'newest_first'];
+        $comment_order = get_pconfig($uid, 'spa', 'comment_order', 'oldest_first');
+        if (!in_array($comment_order, $valid_comment_orders, true)) $comment_order = 'oldest_first';
+
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
@@ -141,6 +145,7 @@ class Settings
             'custom_theme_colors' => $custom_theme_colors,
             'scroll_style' => $scroll_style,
             'corner_radius' => $corner_radius,
+            'comment_order' => $comment_order,
             'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
         ]);
     }
@@ -982,6 +987,9 @@ class Settings
 
         if (isset($data['corner_radius']) && in_array($data['corner_radius'], ['none', 'sm', 'default', 'lg', 'xl'], true))
             set_pconfig($uid, 'spa', 'corner_radius', $data['corner_radius']);
+
+        if (isset($data['comment_order']) && in_array($data['comment_order'], ['oldest_first', 'newest_first'], true))
+            set_pconfig($uid, 'spa', 'comment_order', $data['comment_order']);
 
         if (isset($data['show_emoji_images']))
             set_pconfig($uid, 'system', 'no_smilies', 1 - intval($data['show_emoji_images']));

@@ -127,18 +127,15 @@ class Display
             Response::error(403, 'Permission denied');
         }
 
-        // ── Fetch thread ──────────────────────────────────────────────────────
+        // ── Fetch root item ──────────────────────────────────────────────────
+        // Comments are fetched separately via Item::getComments (paginated /
+        // sibling-window "around" modes) — this endpoint only resolves the root.
         $ids = ids_to_querystr($r, 'item_id');
 
         $items = dbq("SELECT item.*, " . ReactionCounts::subqueries() . "
             FROM item
             WHERE item.id IN ($ids)
-            OR (item.parent IN ($ids)
-                AND item.verb IN ('Create', 'Update', 'EmojiReact')
-                AND item.obj_type NOT IN ('Answer')
-                AND item.item_thread_top = 0
-                $item_normal)
-            ORDER BY item.created ASC");
+            $item_normal");
 
         if (!$items) {
             Response::error(404, 'Thread not found');
@@ -150,40 +147,24 @@ class Display
         // ── Viewer following state ────────────────────────────────────────────
         $this->applyViewerFollowing($items, $observer_hash);
 
-        // ── Split root from comments ──────────────────────────────────────────
-        $blocked   = $this->blockedXchans(local_channel());
-        $root_item = null;
-        $comments  = [];
+        $blocked = $this->blockedXchans(local_channel());
+        $item    = $items[0];
 
-        foreach ($items as $item) {
-            if (intval($item['item_thread_top'])) {
-                $isPinned = false;
-                if (!empty($item['uid']) && !empty($item['uuid'])) {
-                    $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
-                    $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
-                    $isPinned      = in_array($item['uuid'], $pinnedMids, true);
-                }
-                $root_item = $this->formatItem($item, $observer_hash, $isPinned);
-            } elseif (!$this->isBlockedHash($blocked, $item['author_xchan'] ?? null)
-                && !$this->isBlockedHash($blocked, $item['owner_xchan'] ?? null)) {
-                $comments[] = $this->formatItem($item, $observer_hash);
-            }
+        $isPinned = false;
+        if (!empty($item['uid']) && !empty($item['uuid'])) {
+            $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
+            $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
+            $isPinned      = in_array($item['uuid'], $pinnedMids, true);
         }
-
-        if (!$root_item) {
-            Response::error(404, 'Root item not found');
-        }
+        $root_item = $this->formatItem($item, $observer_hash, $isPinned);
 
         // Root stays visible even if blocked — flagged so the frontend can
         // swap in a placeholder instead of hard-hiding a direct permalink.
         $root_item['blocked'] = $this->isBlockedHash($blocked, $root_item['author']['hash'] ?? null)
             || (!empty($root_item['owner']) && $this->isBlockedHash($blocked, $root_item['owner']['hash'] ?? null));
 
-        $deletedStubs = $this->deletedParentStubs($comments, $root_item['mid']);
-
         Response::send([
-            'post'     => $root_item,
-            'comments' => array_merge($comments, $deletedStubs),
+            'post' => $root_item,
         ]);
     }
 }

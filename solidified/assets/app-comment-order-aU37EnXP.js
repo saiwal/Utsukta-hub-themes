@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-9kNHfgxH.js";var[t,n]=e(localStorage.getItem(`hz-comment-order`)??`oldest_first`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-comment-order`,e)}export{r as n,i as t};

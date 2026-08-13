@@ -29,7 +29,8 @@ class Item
     // GET  /api/item                         -> 400
     // GET  /api/item/:mid                    -> item + thread root details
     // GET  /api/item/:mid/comments           -> all comments
-    // GET  /api/item/:mid/comments/:count    -> recent N comments
+    // GET  /api/item/:mid/comments/:count    -> paginated comments (?offset, ?order)
+    //      /api/item/:mid/comments?around=X  -> ancestors + sibling window around comment X
     // GET  /api/item/:mid/likes              -> who liked
     // GET  /api/item/:mid/dislikes           -> who disliked
     // GET  /api/item/:mid/repeats            -> who repeated
@@ -268,6 +269,10 @@ class Item
 
     // GET /api/item/:mid/comments
     // GET /api/item/:mid/comments/:count   (:count = integer or "all")
+    //
+    // Query params:
+    //   offset, order=oldest_first|newest_first  -- pages through the thread (numeric :count only)
+    //   around=<mid|uuid>, before, after          -- ancestors + a sibling window around one comment
     private function getComments(string $mid, string $count): void
     {
         $ob_hash = get_observer_hash();
@@ -278,16 +283,50 @@ class Item
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
 
-        $rootId  = intval($root['id']);
-        $limit = ($count === 'all' || !is_numeric($count))
-            ? ''
-            : ' LIMIT ' . max(1, intval($count));
+        $rootId = intval($root['id']);
 
         $blocked = $this->blockedXchans(local_channel());
         $blocked_sql = $this->blockedSqlClause('item.author_xchan', $blocked)
             . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
-        // Fetch all thread children (direct replies + nested) — excludes reactions
+        $around = trim((string)($_GET['around'] ?? ''));
+        if ($around !== '') {
+            json_return_and_die(
+                $this->buildCommentContext($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $around)
+            );
+        }
+
+        $order = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
+        $offset = max(0, intval($_GET['offset'] ?? 0));
+        $isPaged = ($count !== 'all' && is_numeric($count));
+        $limitN = $isPaged ? max(1, intval($count)) : null;
+        $trailingSql = 'ORDER BY item.created ' . $order . ($limitN !== null ? " LIMIT $limitN OFFSET $offset" : '');
+
+        [$comments, $deletedStubs] = $this->fetchAndFormatComments($rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, $trailingSql);
+
+        $response = [
+            'mid'      => $root['mid'],
+            'total'    => count($comments),
+            'comments' => array_merge($comments, $deletedStubs),
+        ];
+
+        if ($isPaged) {
+            $response['offset']   = $offset;
+            $response['limit']    = $limitN;
+            $response['order']    = ($order === 'DESC') ? 'newest_first' : 'oldest_first';
+            $response['has_more'] = count($comments) >= $limitN;
+        }
+
+        json_return_and_die($response);
+    }
+
+    // Shared thread-comments fetch: same WHERE shape as the flat query above,
+    // with a caller-supplied trailing ORDER/LIMIT clause and optional extra
+    // filter (e.g. "AND item.mid IN (...)" for the context window below).
+    // Formats rows and resolves deleted-parent stubs. Used by both the flat
+    // and the sibling-window comment modes so they share one implementation.
+    private function fetchAndFormatComments(int $rootId, string $rootMid, string $ob_hash, string $item_normal, string $blocked_sql, string $trailingSql, string $extraWhere = ''): array
+    {
         $rows = dbq('SELECT item.*,
             ' . self::reactionSubqueries() . "
             FROM item
@@ -297,8 +336,8 @@ class Item
               AND item.item_thread_top = 0
               $item_normal
               $blocked_sql
-            ORDER BY item.created ASC
-            $limit");
+              $extraWhere
+            $trailingSql");
 
         if ($rows) {
             xchan_query($rows, true);
@@ -310,13 +349,105 @@ class Item
             $rows ?: []
         );
 
-        $deletedStubs = self::findDeletedParentStubs($comments, $root['mid']);
+        return [$comments, self::findDeletedParentStubs($comments, $rootMid)];
+    }
 
-        json_return_and_die([
-            'mid'      => $root['mid'],
-            'total'    => count($comments),
-            'comments' => array_merge($comments, $deletedStubs),
-        ]);
+    // around=<mid|uuid> mode: returns the target comment's ancestor chain up to
+    // the thread root, plus a window of sibling replies (comments sharing the
+    // target's immediate thr_parent) before/after it — not the whole thread.
+    //
+    // Two passes: a cheap thin query over the whole thread's id/mid/thr_parent
+    // shape (no reaction subqueries, no formatItem — so cost doesn't scale with
+    // thread size) to walk the ancestor chain and locate the sibling window in
+    // PHP, then a full formatItem-scoped query limited to just the mids needed.
+    private function buildCommentContext(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $target): array
+    {
+        $before = max(0, intval($_GET['before'] ?? 3));
+        $after  = max(0, intval($_GET['after'] ?? 3));
+
+        $thinRows = dbq("SELECT id, uuid, mid, thr_parent, created
+            FROM item
+            WHERE item.parent = $rootId
+              AND item.verb IN ('Create', 'Update', 'EmojiReact')
+              AND item.obj_type NOT IN ('Answer')
+              AND item.item_thread_top = 0
+              $item_normal
+              $blocked_sql
+            ORDER BY item.created ASC") ?: [];
+
+        $byMid = [];
+        $targetRow = null;
+        foreach ($thinRows as $row) {
+            $byMid[$row['mid']] = $row;
+            if ($row['mid'] === $target || $row['uuid'] === $target) {
+                $targetRow = $row;
+            }
+        }
+
+        if (!$targetRow) {
+            // Target missing (deleted, bad id, ...) — degrade to a normal first
+            // page rather than failing the whole view.
+            $limitN = 20;
+            [$comments, $deletedStubs] = $this->fetchAndFormatComments($rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, "ORDER BY item.created ASC LIMIT $limitN");
+            return [
+                'mode'         => 'context',
+                'mid'          => $root['mid'],
+                'total'        => count($comments),
+                'comments'     => array_merge($comments, $deletedStubs),
+                'target_mid'   => $target,
+                'target_found' => false,
+                'offset'       => 0,
+                'limit'        => $limitN,
+                'order'        => 'oldest_first',
+                'has_more'     => count($comments) >= $limitN,
+            ];
+        }
+
+        // Walk thr_parent up to the thread root, collecting ancestor mids
+        // (root-to-target order).
+        $ancestorMids = [];
+        $cur = $targetRow['thr_parent'] ?? '';
+        while ($cur !== '' && $cur !== $root['mid'] && isset($byMid[$cur])) {
+            $ancestorMids[] = $cur;
+            $cur = $byMid[$cur]['thr_parent'] ?? '';
+        }
+        $ancestorMids = array_reverse($ancestorMids);
+
+        // Sibling window: comments sharing the target's immediate parent.
+        $siblingParent = $targetRow['thr_parent'] ?? '';
+        $siblings = array_values(array_filter(
+            $thinRows,
+            fn($r) => ($r['thr_parent'] ?? '') === $siblingParent
+        ));
+        $idx = 0;
+        foreach ($siblings as $i => $s) {
+            if ($s['mid'] === $targetRow['mid']) {
+                $idx = $i;
+                break;
+            }
+        }
+        $start = max(0, $idx - $before);
+        $end   = min(count($siblings), $idx + $after + 1);
+        $windowMids = array_column(array_slice($siblings, $start, $end - $start), 'mid');
+
+        $neededMids = array_values(array_unique(array_merge($ancestorMids, [$targetRow['mid']], $windowMids)));
+        $inList = implode("','", array_map('dbesc', $neededMids));
+        $extraWhere = $neededMids ? "AND item.mid IN ('$inList')" : 'AND 1=0';
+
+        [$comments, $deletedStubs] = $this->fetchAndFormatComments($rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC', $extraWhere);
+
+        return [
+            'mode'               => 'context',
+            'mid'                => $root['mid'],
+            'total'              => count($comments),
+            'comments'           => array_merge($comments, $deletedStubs),
+            'target_mid'         => $targetRow['mid'],
+            'target_found'       => true,
+            'ancestor_mids'      => $ancestorMids,
+            'sibling_thr_parent' => $siblingParent,
+            'has_more_before'    => $start > 0,
+            'has_more_after'     => $end < count($siblings),
+        ];
     }
 
     // GET /api/item/:mid/likes|dislikes|repeats
