@@ -393,25 +393,33 @@ class Item
     }
 
     // All descendants of $mid (not including $mid itself), across every
-    // nesting level, sorted oldest-first. A reply can only be created after
-    // its parent exists, so this ordering guarantees a parent always precedes
-    // its children in the list — any PREFIX of it (offset 0..N, growing
+    // nesting level. Collected breadth-first — level by level, siblings
+    // within a level ordered oldest-first — so a node is only ever added
+    // AFTER its own parent has already been added. That's a STRUCTURAL
+    // guarantee from the traversal itself, not an assumption about `created`
+    // timestamps: any PREFIX of the returned list (offset 0..N, growing
     // monotonically across successive "load more" calls) is therefore always
-    // safe to fetch and attach on its own: a child's parent is never left
-    // out of an earlier page.
+    // safe to fetch and attach on its own, even if federation delivery delay,
+    // clock skew between servers, or equal-second timestamps would otherwise
+    // make a child's `created` value sort at or before its parent's.
     private function collectSubtree(string $mid, array $childrenOf): array
     {
         $result = [];
-        $queue = $childrenOf[$mid] ?? [];
+        $queue = $this->sortSiblings($childrenOf[$mid] ?? []);
         while ($queue) {
             $node = array_shift($queue);
             $result[] = $node;
-            foreach ($childrenOf[$node['mid']] ?? [] as $child) {
+            foreach ($this->sortSiblings($childrenOf[$node['mid']] ?? []) as $child) {
                 $queue[] = $child;
             }
         }
-        usort($result, fn($a, $b) => strcmp($a['created'], $b['created']) ?: ($a['id'] <=> $b['id']));
         return $result;
+    }
+
+    private function sortSiblings(array $rows): array
+    {
+        usort($rows, fn($a, $b) => strcmp($a['created'], $b['created']) ?: ($a['id'] <=> $b['id']));
+        return $rows;
     }
 
     // roots_offset/roots_limit mode: a page of TOP-LEVEL comments, each
