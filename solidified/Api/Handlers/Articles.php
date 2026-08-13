@@ -384,6 +384,18 @@ class Articles
         }
         $series = $seriesName !== null ? ['name' => $seriesName, 'order' => $seriesOrder] : null;
 
+        $attachRaw = $item['attach'] ?? '';
+        $root = z_root();
+        $attach = array_map(function (array $a) use ($root): array {
+            if (!isset($a['href']) && isset($a['url'])) {
+                $a['href'] = $a['url'];
+            }
+            if (isset($a['href']) && str_starts_with($a['href'], '/')) {
+                $a['href'] = $root . $a['href'];
+            }
+            return $a;
+        }, $attachRaw ? (json_decode($attachRaw, true) ?: []) : []);
+
         return [
             'uuid'            => $item['uuid'],
             'mid'             => $item['mid'],
@@ -445,6 +457,7 @@ class Articles
                 fn($t) => $t['term'],
                 array_filter($item['term'] ?? [], fn($t) => intval($t['ttype']) === TERM_HASHTAG)
             )),
+            'attach'          => $attach,
         ];
     }
 
@@ -544,6 +557,35 @@ class Articles
             $slug = str_replace('/', '-', strtolower(\URLify::transliterate($slug)));
         }
 
+        // ── Resolve ACL (same for create and edit) ──────────────────────────────
+        [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
+            $this->resolveAcl($input, $channel['channel_hash']);
+
+        // ── Extract [attachment] tags → attach array, strip them from body ──────
+        // Mirrors Item.php's create/comment handlers so uploaded files show up
+        // as native attachments (with a working preview/player) instead of raw
+        // bbcode text in the rendered article.
+        $attachments = [];
+        if ($mimetype === 'text/bbcode' && preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $body, $match)) {
+            require_once('include/attach.php');
+            fix_attached_permissions($uid, $body, $allow_cid, $allow_gid, $deny_cid, $deny_gid);
+            foreach ($match[2] as $i => $mtch) {
+                $hash = substr($mtch, 0, strpos($mtch, ','));
+                $rev  = intval(substr($mtch, strpos($mtch, ',')));
+                $r    = attach_by_hash_nodata($hash, $channel['channel_hash'], $rev);
+                if ($r['success']) {
+                    $attachments[] = [
+                        'href'     => z_root() . '/attach/' . $r['data']['hash'],
+                        'length'   => $r['data']['filesize'],
+                        'type'     => $r['data']['filetype'],
+                        'title'    => urlencode($r['data']['filename']),
+                        'revision' => $r['data']['revision'],
+                    ];
+                }
+                $body = str_replace($match[1][$i], '', $body);
+            }
+        }
+
         // ── Build category term tags ──────────────────────────────────────────
         $post_tags = [];
         if ($category) {
@@ -572,9 +614,6 @@ class Articles
                 Response::error(404, 'Article not found');
             }
 
-            [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-                $this->resolveAcl($input, $channel['channel_hash']);
-
             $datarray                   = $orig[0];
             $datarray['title']          = $title;
             $datarray['summary']        = $summary;
@@ -586,6 +625,7 @@ class Articles
             $datarray['edit']           = true;
             $datarray['id']             = $post_id;
             $datarray['term']           = $post_tags;
+            $datarray['attach']         = $attachments;
             $datarray['allow_cid']      = $allow_cid;
             $datarray['allow_gid']      = $allow_gid;
             $datarray['deny_cid']       = $deny_cid;
@@ -633,9 +673,6 @@ class Articles
         $uuid = item_message_id();
         $mid  = z_root() . '/item/' . $uuid;
         $now  = datetime_convert();
-
-        [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-            $this->resolveAcl($input, $channel['channel_hash']);
 
         // ── Translation group ────────────────────────────────────────────────
         // A new translation of an existing article shares a group id (the
@@ -704,6 +741,7 @@ class Articles
             'public_policy'   => $public_policy,
             'plink'           => $mid,
             'term'            => $post_tags,
+            'attach'          => $attachments,
         ];
 
         if ($slug) {

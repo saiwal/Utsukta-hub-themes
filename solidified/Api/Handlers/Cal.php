@@ -103,6 +103,13 @@ class Cal
         $adjust_start  = datetime_convert('UTC', date_default_timezone_get(), $start);
         $adjust_finish = datetime_convert('UTC', date_default_timezone_get(), $finish);
 
+        // Include unless explicitly disabled (pconfig = 0); false = key not
+        // set = default = enabled. Single-event lookups (?id=) bypass this —
+        // a direct link to an event should still resolve even if the
+        // channel calendar is toggled off in the widget.
+        $chcal_pval    = $is_owner ? get_pconfig($local_uid, 'cdav_calendar', 'channel_calendar') : false;
+        $chcal_enabled = !($chcal_pval !== false && intval($chcal_pval) === 0);
+
         $r = [];
         if (isset($_GET['id'])) {
             $r = q(
@@ -118,7 +125,7 @@ class Cal
                 intval($channel_id),
                 intval($_GET['id'])
             );
-        } else {
+        } elseif ($chcal_enabled) {
             $r = q(
                 "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
                         item.owner_xchan, item.id as item_id

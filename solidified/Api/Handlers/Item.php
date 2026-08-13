@@ -39,6 +39,7 @@ class Item
     // POST /api/item/:mid/repeat             -> toggle repeat
     // POST /api/item/:mid/star               -> toggle starred
     // POST /api/item/:mid/pin                -> toggle pinned (channel wall)
+    // POST /api/item/:mid/addtocal           -> import event into viewer's calendar
     // POST /api/item/:mid/comment            -> post a comment
     // POST /api/item/:mid/delete             -> delete item
     // POST /api/item/:mid/edit               -> edit item body/title
@@ -116,7 +117,7 @@ class Item
         $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
                        'tentativeaccept', 'star', 'pin', 'comment', 'delete',
                        'edit', 'reshare', 'saveto', 'vote',
-                       'follow', 'unfollow'];
+                       'follow', 'unfollow', 'addtocal'];
 
         $segs = array_slice(App::$argv, 2);
         $last = count($segs) ? $segs[count($segs) - 1] : '';
@@ -160,6 +161,9 @@ class Item
                 break;
             case 'pin':
                 $this->togglePin($mid);
+                break;
+            case 'addtocal':
+                $this->addToCalendar($mid);
                 break;
             case 'comment':
                 $this->createComment($mid);
@@ -525,7 +529,7 @@ class Item
                     $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
                     if ($r['success']) {
                         $attachments[] = [
-                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
                             'length'   => $r['data']['filesize'],
                             'type'     => $r['data']['filetype'],
                             'title'    => urlencode($r['data']['filename']),
@@ -784,7 +788,7 @@ class Item
                     $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
                     if ($r['success']) {
                         $attachments[] = [
-                            'url'      => z_root() . '/attach/' . $r['data']['hash'],
+                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
                             'length'   => $r['data']['filesize'],
                             'type'     => $r['data']['filetype'],
                             'title'    => urlencode($r['data']['filename']),
@@ -1023,6 +1027,33 @@ class Item
 
         $counts = $this->fetchReactionCounts($target['mid']);
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
+    }
+
+    // POST /api/item/:mid/addtocal
+    // Imports an Event item into the viewer's own calendar without recording
+    // an RSVP reaction (mirrors the Accept/TentativeAccept side effect in
+    // toggleRsvpReaction() above, callable directly from the stream's "more
+    // actions" menu).
+    private function addToCalendar(string $mid): void
+    {
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $uid = local_channel();
+        $channel = App::get_channel();
+        $ob_hash = $channel['channel_hash'];
+
+        $target = $this->resolveItem($mid, $ob_hash);
+        if (!$target) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+        if ($target['obj_type'] !== 'Event') {
+            json_return_and_die(['error' => 'Item is not an event']);
+        }
+
+        event_addtocal($target['id'], $uid);
+
+        json_return_and_die(['success' => true]);
     }
 
     // POST /api/item/:mid/star
@@ -1817,6 +1848,10 @@ class Item
         $attachRaw = $item['attach'] ?? '';
         $root = z_root();
         $attach = array_map(function (array $a) use ($root): array {
+            // Pre-fix rows may have been stored with 'url' instead of 'href'.
+            if (!isset($a['href']) && isset($a['url'])) {
+                $a['href'] = $a['url'];
+            }
             if (isset($a['href']) && str_starts_with($a['href'], '/')) {
                 $a['href'] = $root . $a['href'];
             }

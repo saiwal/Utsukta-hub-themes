@@ -63,6 +63,7 @@ class Router
         'directory'      => Handlers\Directory::class,
         'cart'           => Handlers\Cart::class,
         'rss-feed'       => Handlers\Rss::class,
+        'feed'           => Handlers\Feed::class,
         'weather'        => Handlers\Weather::class,
         'announcements'  => Handlers\Announcements::class,
         'blocklist'      => Handlers\Blocklist::class,

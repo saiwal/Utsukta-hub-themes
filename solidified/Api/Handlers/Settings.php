@@ -1321,6 +1321,11 @@ class Settings
         Response::error(400, 'Unknown action');
     }
 
+    // Feature groups/names not offered in the SPA (no corresponding UI, or
+    // superseded — e.g. emoji reactions are always on here).
+    private const EXCLUDED_FEATURE_GROUPS = ['channel_home', 'connections'];
+    private const EXCLUDED_FEATURES = ['emojis'];
+
     private function getFeaturesSettings(): void
     {
         $uid = local_channel();
@@ -1329,8 +1334,8 @@ class Settings
         $features_raw = get_features(false);
         $result = [];
 
-        foreach ($features_raw as $group) {
-            if (!is_array($group)) continue;
+        foreach ($features_raw as $group_key => $group) {
+            if (!is_array($group) || in_array($group_key, self::EXCLUDED_FEATURE_GROUPS, true)) continue;
             $group_label = '';
             foreach ($group as $idx => $item) {
                 if ($idx === 0) {
@@ -1340,7 +1345,7 @@ class Settings
                 if (!is_array($item) || count($item) < 2) continue;
 
                 $name = $item[0] ?? '';
-                if (!$name) continue;
+                if (!$name || in_array($name, self::EXCLUDED_FEATURES, true)) continue;
 
                 $result[] = [
                     'name'        => $name,
@@ -1364,11 +1369,14 @@ class Settings
 
         if (!$feature) Response::error(400, 'Feature name required');
 
-        // Validate the feature exists in the system feature list
+        // Validate the feature exists in the system feature list and isn't
+        // one the SPA excludes from its Features UI.
+        if (in_array($feature, self::EXCLUDED_FEATURES, true)) Response::error(400, 'Unknown feature');
+
         $features_raw = get_features(false);
         $valid = false;
-        foreach ($features_raw as $group) {
-            if (!is_array($group)) continue;
+        foreach ($features_raw as $group_key => $group) {
+            if (!is_array($group) || in_array($group_key, self::EXCLUDED_FEATURE_GROUPS, true)) continue;
             foreach ($group as $idx => $item) {
                 if ($idx === 0 || !is_array($item)) continue;
                 if (($item[0] ?? '') === $feature) {

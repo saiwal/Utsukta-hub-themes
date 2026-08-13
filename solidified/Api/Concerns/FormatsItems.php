@@ -198,6 +198,10 @@ trait FormatsItems
     {
         $root = z_root();
         return array_map(function (array $a) use ($root): array {
+            // Pre-fix rows may have been stored with 'url' instead of 'href'.
+            if (!isset($a['href']) && isset($a['url'])) {
+                $a['href'] = $a['url'];
+            }
             if (isset($a['href']) && str_starts_with($a['href'], '/')) {
                 $a['href'] = $root . $a['href'];
             }
