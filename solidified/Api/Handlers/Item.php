@@ -271,20 +271,21 @@ class Item
     // GET /api/item/:mid/comments/:count   (:count = integer or "all")
     //
     // Query params:
-    //   roots_offset, order=oldest_first|newest_first, branch_limit
+    //   roots_offset, order=oldest_first|newest_first
     //        -- pages through TOP-LEVEL comments (numeric :count = roots_limit);
-    //           each returned root comment also carries up to branch_limit of
-    //           its own earliest descendants (same fixed count by default), so
-    //           a comment and its initial replies always arrive in the SAME
-    //           response — never split across pages. That locality matters:
-    //           an earlier flat created-order pagination could return a reply
+    //           each returned root comment carries its ENTIRE reply subtree,
+    //           not just an initial slice — a branch is either not loaded at
+    //           all or fully loaded, never partially. Only the top level
+    //           (which root comments you have) is paginated. This is what
+    //           keeps both the threaded and flat/list comment views (the
+    //           toggle in PostCard) always internally consistent: an earlier
+    //           attempt at paginating WITHIN a branch too could return a reply
     //           on one page while its (real, non-deleted) parent comment was
     //           already shown on a previous page — the client had no way to
     //           tell "parent fetched earlier" from "parent deleted" and
-    //           rendered a false "[Comment deleted]" placeholder for it.
-    //   branch=<mid>, branch_offset, branch_limit
-    //        -- "load more replies" for ONE specific comment's own subtree,
-    //           continuing from branch_offset — independent of root paging.
+    //           rendered a false "[Comment deleted]" placeholder for it,
+    //           which is especially confusing in the flat list view where
+    //           there's no indentation to hint that something's missing.
     //   around=<mid|uuid>, before, after
     //        -- ancestors + a sibling window around one comment (permalink open)
     private function getComments(string $mid, string $count): void
@@ -307,13 +308,6 @@ class Item
         if ($around !== '') {
             json_return_and_die(
                 $this->buildCommentContext($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $around)
-            );
-        }
-
-        $branch = trim((string)($_GET['branch'] ?? ''));
-        if ($branch !== '') {
-            json_return_and_die(
-                $this->buildBranchPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $branch)
             );
         }
 
@@ -393,43 +387,28 @@ class Item
     }
 
     // All descendants of $mid (not including $mid itself), across every
-    // nesting level. Collected breadth-first — level by level, siblings
-    // within a level ordered oldest-first — so a node is only ever added
-    // AFTER its own parent has already been added. That's a STRUCTURAL
-    // guarantee from the traversal itself, not an assumption about `created`
-    // timestamps: any PREFIX of the returned list (offset 0..N, growing
-    // monotonically across successive "load more" calls) is therefore always
-    // safe to fetch and attach on its own, even if federation delivery delay,
-    // clock skew between servers, or equal-second timestamps would otherwise
-    // make a child's `created` value sort at or before its parent's.
+    // nesting level — the complete subtree, always fetched in full (see
+    // getComments()'s doc comment for why branches are never sliced).
     private function collectSubtree(string $mid, array $childrenOf): array
     {
         $result = [];
-        $queue = $this->sortSiblings($childrenOf[$mid] ?? []);
+        $queue = $childrenOf[$mid] ?? [];
         while ($queue) {
             $node = array_shift($queue);
             $result[] = $node;
-            foreach ($this->sortSiblings($childrenOf[$node['mid']] ?? []) as $child) {
+            foreach ($childrenOf[$node['mid']] ?? [] as $child) {
                 $queue[] = $child;
             }
         }
         return $result;
     }
 
-    private function sortSiblings(array $rows): array
-    {
-        usort($rows, fn($a, $b) => strcmp($a['created'], $b['created']) ?: ($a['id'] <=> $b['id']));
-        return $rows;
-    }
-
     // roots_offset/roots_limit mode: a page of TOP-LEVEL comments, each
-    // bundled with up to $branchLimit of its own earliest descendants (see
-    // getComments()'s doc comment for why that bundling matters).
+    // bundled with the ENTIRETY of its own reply subtree.
     private function buildRootsPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, int $rootsLimit): array
     {
         $order       = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
         $rootsOffset = max(0, intval($_GET['roots_offset'] ?? 0));
-        $branchLimit = max(1, intval($_GET['branch_limit'] ?? $rootsLimit));
 
         $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
         $childrenOf = $this->groupByParent($thin);
@@ -441,17 +420,8 @@ class Item
         $page = array_slice($rootComments, $rootsOffset, $rootsLimit);
 
         $neededMids = array_column($page, 'mid');
-        $branches = [];
         foreach ($page as $rc) {
-            $subtree = $this->collectSubtree($rc['mid'], $childrenOf);
-            $slice = array_slice($subtree, 0, $branchLimit);
-            $neededMids = array_merge($neededMids, array_column($slice, 'mid'));
-            $branches[$rc['mid']] = [
-                'fetched'     => count($slice),
-                'next_offset' => count($slice),
-                'total'       => count($subtree),
-                'has_more'    => count($subtree) > count($slice),
-            ];
+            $neededMids = array_merge($neededMids, array_column($this->collectSubtree($rc['mid'], $childrenOf), 'mid'));
         }
         $neededMids = array_values(array_unique($neededMids));
         $extraWhere = $neededMids
@@ -474,56 +444,6 @@ class Item
             'total_roots'       => $totalRoots,
             'order'             => ($order === 'DESC') ? 'newest_first' : 'oldest_first',
             'has_more_roots'    => $rootsOffset + count($page) < $totalRoots,
-            'branch_limit'      => $branchLimit,
-            'branches'          => $branches,
-        ];
-    }
-
-    // branch=<mid> mode: "load more replies" for one specific comment's own
-    // subtree, continuing from $branchOffset — independent of root paging.
-    private function buildBranchPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $branch): array
-    {
-        $branchOffset = max(0, intval($_GET['branch_offset'] ?? 0));
-        $branchLimit  = max(1, intval($_GET['branch_limit'] ?? 5));
-
-        $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
-        $childrenOf = $this->groupByParent($thin);
-
-        $byMid = [];
-        foreach ($thin as $row) {
-            $byMid[$row['mid']] = $row;
-        }
-
-        if (!isset($byMid[$branch])) {
-            return [
-                'mode' => 'branch', 'mid' => $root['mid'], 'branch' => $branch,
-                'comments' => [], 'branch_offset' => $branchOffset, 'branch_limit' => $branchLimit,
-                'fetched' => 0, 'next_branch_offset' => $branchOffset, 'total' => 0, 'has_more' => false,
-            ];
-        }
-
-        $subtree = $this->collectSubtree($branch, $childrenOf);
-        $slice = array_slice($subtree, $branchOffset, $branchLimit);
-        $neededMids = array_column($slice, 'mid');
-
-        [$comments, $deletedStubs] = $neededMids
-            ? $this->fetchAndFormatComments(
-                $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC',
-                "AND item.mid IN ('" . implode("','", array_map('dbesc', $neededMids)) . "')"
-            )
-            : [[], []];
-
-        return [
-            'mode'               => 'branch',
-            'mid'                => $root['mid'],
-            'branch'             => $branch,
-            'comments'           => array_merge($comments, $deletedStubs),
-            'branch_offset'      => $branchOffset,
-            'branch_limit'       => $branchLimit,
-            'fetched'            => count($slice),
-            'next_branch_offset' => $branchOffset + count($slice),
-            'total'              => count($subtree),
-            'has_more'           => $branchOffset + count($slice) < count($subtree),
         ];
     }
 
