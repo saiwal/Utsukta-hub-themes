@@ -271,8 +271,22 @@ class Item
     // GET /api/item/:mid/comments/:count   (:count = integer or "all")
     //
     // Query params:
-    //   offset, order=oldest_first|newest_first  -- pages through the thread (numeric :count only)
-    //   around=<mid|uuid>, before, after          -- ancestors + a sibling window around one comment
+    //   roots_offset, order=oldest_first|newest_first, branch_limit
+    //        -- pages through TOP-LEVEL comments (numeric :count = roots_limit);
+    //           each returned root comment also carries up to branch_limit of
+    //           its own earliest descendants (same fixed count by default), so
+    //           a comment and its initial replies always arrive in the SAME
+    //           response — never split across pages. That locality matters:
+    //           an earlier flat created-order pagination could return a reply
+    //           on one page while its (real, non-deleted) parent comment was
+    //           already shown on a previous page — the client had no way to
+    //           tell "parent fetched earlier" from "parent deleted" and
+    //           rendered a false "[Comment deleted]" placeholder for it.
+    //   branch=<mid>, branch_offset, branch_limit
+    //        -- "load more replies" for ONE specific comment's own subtree,
+    //           continuing from branch_offset — independent of root paging.
+    //   around=<mid|uuid>, before, after
+    //        -- ancestors + a sibling window around one comment (permalink open)
     private function getComments(string $mid, string $count): void
     {
         $ob_hash = get_observer_hash();
@@ -296,28 +310,27 @@ class Item
             );
         }
 
-        $order = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
-        $offset = max(0, intval($_GET['offset'] ?? 0));
-        $isPaged = ($count !== 'all' && is_numeric($count));
-        $limitN = $isPaged ? max(1, intval($count)) : null;
-        $trailingSql = 'ORDER BY item.created ' . $order . ($limitN !== null ? " LIMIT $limitN OFFSET $offset" : '');
-
-        [$comments, $deletedStubs] = $this->fetchAndFormatComments($rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, $trailingSql);
-
-        $response = [
-            'mid'      => $root['mid'],
-            'total'    => count($comments),
-            'comments' => array_merge($comments, $deletedStubs),
-        ];
-
-        if ($isPaged) {
-            $response['offset']   = $offset;
-            $response['limit']    = $limitN;
-            $response['order']    = ($order === 'DESC') ? 'newest_first' : 'oldest_first';
-            $response['has_more'] = count($comments) >= $limitN;
+        $branch = trim((string)($_GET['branch'] ?? ''));
+        if ($branch !== '') {
+            json_return_and_die(
+                $this->buildBranchPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $branch)
+            );
         }
 
-        json_return_and_die($response);
+        if ($count === 'all' || !is_numeric($count)) {
+            [$comments, $deletedStubs] = $this->fetchAndFormatComments(
+                $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC'
+            );
+            json_return_and_die([
+                'mid'      => $root['mid'],
+                'total'    => count($comments),
+                'comments' => array_merge($comments, $deletedStubs),
+            ]);
+        }
+
+        json_return_and_die(
+            $this->buildRootsPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, max(1, intval($count)))
+        );
     }
 
     // Shared thread-comments fetch: same WHERE shape as the flat query above,
@@ -352,20 +365,13 @@ class Item
         return [$comments, self::findDeletedParentStubs($comments, $rootMid)];
     }
 
-    // around=<mid|uuid> mode: returns the target comment's ancestor chain up to
-    // the thread root, plus a window of sibling replies (comments sharing the
-    // target's immediate thr_parent) before/after it — not the whole thread.
-    //
-    // Two passes: a cheap thin query over the whole thread's id/mid/thr_parent
-    // shape (no reaction subqueries, no formatItem — so cost doesn't scale with
-    // thread size) to walk the ancestor chain and locate the sibling window in
-    // PHP, then a full formatItem-scoped query limited to just the mids needed.
-    private function buildCommentContext(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $target): array
+    // Cheap whole-thread shape query (id/uuid/mid/thr_parent/created only, no
+    // reaction subqueries, no formatItem) — used to compute root/branch paging
+    // and the sibling-window context in PHP without formatting (and paying the
+    // per-row can_comment_on_post() permission check for) every row up front.
+    private function fetchThinThread(int $rootId, string $item_normal, string $blocked_sql): array
     {
-        $before = max(0, intval($_GET['before'] ?? 3));
-        $after  = max(0, intval($_GET['after'] ?? 3));
-
-        $thinRows = dbq("SELECT id, uuid, mid, thr_parent, created
+        return dbq("SELECT id, uuid, mid, thr_parent, created
             FROM item
             WHERE item.parent = $rootId
               AND item.verb IN ('Create', 'Update', 'EmojiReact')
@@ -373,7 +379,159 @@ class Item
               AND item.item_thread_top = 0
               $item_normal
               $blocked_sql
-            ORDER BY item.created ASC") ?: [];
+            ORDER BY item.created ASC, item.id ASC") ?: [];
+    }
+
+    // Groups thin rows by their immediate thr_parent mid.
+    private function groupByParent(array $thin): array
+    {
+        $out = [];
+        foreach ($thin as $row) {
+            $out[$row['thr_parent'] ?? ''][] = $row;
+        }
+        return $out;
+    }
+
+    // All descendants of $mid (not including $mid itself), across every
+    // nesting level, sorted oldest-first. A reply can only be created after
+    // its parent exists, so this ordering guarantees a parent always precedes
+    // its children in the list — any PREFIX of it (offset 0..N, growing
+    // monotonically across successive "load more" calls) is therefore always
+    // safe to fetch and attach on its own: a child's parent is never left
+    // out of an earlier page.
+    private function collectSubtree(string $mid, array $childrenOf): array
+    {
+        $result = [];
+        $queue = $childrenOf[$mid] ?? [];
+        while ($queue) {
+            $node = array_shift($queue);
+            $result[] = $node;
+            foreach ($childrenOf[$node['mid']] ?? [] as $child) {
+                $queue[] = $child;
+            }
+        }
+        usort($result, fn($a, $b) => strcmp($a['created'], $b['created']) ?: ($a['id'] <=> $b['id']));
+        return $result;
+    }
+
+    // roots_offset/roots_limit mode: a page of TOP-LEVEL comments, each
+    // bundled with up to $branchLimit of its own earliest descendants (see
+    // getComments()'s doc comment for why that bundling matters).
+    private function buildRootsPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, int $rootsLimit): array
+    {
+        $order       = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
+        $rootsOffset = max(0, intval($_GET['roots_offset'] ?? 0));
+        $branchLimit = max(1, intval($_GET['branch_limit'] ?? $rootsLimit));
+
+        $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
+        $childrenOf = $this->groupByParent($thin);
+
+        $rootComments = $childrenOf[$root['mid']] ?? [];
+        if ($order === 'DESC') $rootComments = array_reverse($rootComments);
+
+        $totalRoots = count($rootComments);
+        $page = array_slice($rootComments, $rootsOffset, $rootsLimit);
+
+        $neededMids = array_column($page, 'mid');
+        $branches = [];
+        foreach ($page as $rc) {
+            $subtree = $this->collectSubtree($rc['mid'], $childrenOf);
+            $slice = array_slice($subtree, 0, $branchLimit);
+            $neededMids = array_merge($neededMids, array_column($slice, 'mid'));
+            $branches[$rc['mid']] = [
+                'fetched'     => count($slice),
+                'next_offset' => count($slice),
+                'total'       => count($subtree),
+                'has_more'    => count($subtree) > count($slice),
+            ];
+        }
+        $neededMids = array_values(array_unique($neededMids));
+        $extraWhere = $neededMids
+            ? "AND item.mid IN ('" . implode("','", array_map('dbesc', $neededMids)) . "')"
+            : 'AND 1=0';
+
+        [$comments, $deletedStubs] = $this->fetchAndFormatComments(
+            $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC', $extraWhere
+        );
+
+        return [
+            'mode'              => 'roots',
+            'mid'               => $root['mid'],
+            'total'             => count($comments),
+            'comments'          => array_merge($comments, $deletedStubs),
+            'roots_offset'      => $rootsOffset,
+            'roots_limit'       => $rootsLimit,
+            'roots_fetched'     => count($page),
+            'next_roots_offset' => $rootsOffset + count($page),
+            'total_roots'       => $totalRoots,
+            'order'             => ($order === 'DESC') ? 'newest_first' : 'oldest_first',
+            'has_more_roots'    => $rootsOffset + count($page) < $totalRoots,
+            'branch_limit'      => $branchLimit,
+            'branches'          => $branches,
+        ];
+    }
+
+    // branch=<mid> mode: "load more replies" for one specific comment's own
+    // subtree, continuing from $branchOffset — independent of root paging.
+    private function buildBranchPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $branch): array
+    {
+        $branchOffset = max(0, intval($_GET['branch_offset'] ?? 0));
+        $branchLimit  = max(1, intval($_GET['branch_limit'] ?? 5));
+
+        $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
+        $childrenOf = $this->groupByParent($thin);
+
+        $byMid = [];
+        foreach ($thin as $row) {
+            $byMid[$row['mid']] = $row;
+        }
+
+        if (!isset($byMid[$branch])) {
+            return [
+                'mode' => 'branch', 'mid' => $root['mid'], 'branch' => $branch,
+                'comments' => [], 'branch_offset' => $branchOffset, 'branch_limit' => $branchLimit,
+                'fetched' => 0, 'next_branch_offset' => $branchOffset, 'total' => 0, 'has_more' => false,
+            ];
+        }
+
+        $subtree = $this->collectSubtree($branch, $childrenOf);
+        $slice = array_slice($subtree, $branchOffset, $branchLimit);
+        $neededMids = array_column($slice, 'mid');
+
+        [$comments, $deletedStubs] = $neededMids
+            ? $this->fetchAndFormatComments(
+                $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC',
+                "AND item.mid IN ('" . implode("','", array_map('dbesc', $neededMids)) . "')"
+            )
+            : [[], []];
+
+        return [
+            'mode'               => 'branch',
+            'mid'                => $root['mid'],
+            'branch'             => $branch,
+            'comments'           => array_merge($comments, $deletedStubs),
+            'branch_offset'      => $branchOffset,
+            'branch_limit'       => $branchLimit,
+            'fetched'            => count($slice),
+            'next_branch_offset' => $branchOffset + count($slice),
+            'total'              => count($subtree),
+            'has_more'           => $branchOffset + count($slice) < count($subtree),
+        ];
+    }
+
+    // around=<mid|uuid> mode: returns the target comment's ancestor chain up to
+    // the thread root, plus a window of sibling replies (comments sharing the
+    // target's immediate thr_parent) before/after it — not the whole thread.
+    //
+    // Two passes: the cheap thin query above (so cost doesn't scale with
+    // thread size) to walk the ancestor chain and locate the sibling window in
+    // PHP, then a full formatItem-scoped query limited to just the mids needed.
+    private function buildCommentContext(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $target): array
+    {
+        $before = max(0, intval($_GET['before'] ?? 3));
+        $after  = max(0, intval($_GET['after'] ?? 3));
+
+        $thinRows = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
 
         $byMid = [];
         $targetRow = null;
