@@ -270,22 +270,33 @@ class Item
     // GET /api/item/:mid/comments
     // GET /api/item/:mid/comments/:count   (:count = integer or "all")
     //
-    // Query params:
-    //   roots_offset, order=oldest_first|newest_first
-    //        -- pages through TOP-LEVEL comments (numeric :count = roots_limit);
-    //           each returned root comment carries its ENTIRE reply subtree,
-    //           not just an initial slice — a branch is either not loaded at
-    //           all or fully loaded, never partially. Only the top level
-    //           (which root comments you have) is paginated. This is what
-    //           keeps both the threaded and flat/list comment views (the
-    //           toggle in PostCard) always internally consistent: an earlier
-    //           attempt at paginating WITHIN a branch too could return a reply
-    //           on one page while its (real, non-deleted) parent comment was
-    //           already shown on a previous page — the client had no way to
-    //           tell "parent fetched earlier" from "parent deleted" and
-    //           rendered a false "[Comment deleted]" placeholder for it,
-    //           which is especially confusing in the flat list view where
-    //           there's no indentation to hint that something's missing.
+    // Comment view mode (the "thread_mode" display setting) picks between two
+    // shapes, both paginated:
+    //   roots_offset, order=oldest_first|newest_first, branch_limit
+    //        -- threaded mode: pages through TOP-LEVEL comments (numeric
+    //           :count = roots_limit); each returned root comment is bundled
+    //           with up to branch_limit of its own earliest descendants (same
+    //           fixed count by default). A comment's initial replies always
+    //           arrive in the SAME response as the comment itself — an
+    //           earlier attempt at slicing branches independently of their
+    //           root could return a reply on one page while its (real,
+    //           non-deleted) parent was already shown on a previous page,
+    //           and the client had no way to tell "parent fetched earlier"
+    //           from "parent deleted".
+    //   branch=<mid>, branch_offset, branch_limit
+    //        -- threaded mode: "load more replies" for ONE specific comment's
+    //           own subtree, continuing from branch_offset — independent of
+    //           root paging. Uses the same breadth-first collectSubtree()
+    //           traversal as the initial branch slice above, so a node is
+    //           only ever included once its own parent has already been
+    //           included (a structural guarantee, not a timestamp
+    //           assumption — see collectSubtree()'s doc comment).
+    //   flat=1, offset, order
+    //        -- list mode: simple pagination over ALL comments regardless of
+    //           nesting depth (numeric :count = limit) — no root/branch
+    //           structure at all, since the flat view doesn't render
+    //           parent/child relationships, there's nothing for a partial
+    //           fetch to get inconsistent about.
     //   around=<mid|uuid>, before, after
     //        -- ancestors + a sibling window around one comment (permalink open)
     private function getComments(string $mid, string $count): void
@@ -311,6 +322,13 @@ class Item
             );
         }
 
+        $branch = trim((string)($_GET['branch'] ?? ''));
+        if ($branch !== '') {
+            json_return_and_die(
+                $this->buildBranchPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $branch)
+            );
+        }
+
         if ($count === 'all' || !is_numeric($count)) {
             [$comments, $deletedStubs] = $this->fetchAndFormatComments(
                 $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC'
@@ -322,8 +340,16 @@ class Item
             ]);
         }
 
+        $limit = max(1, intval($count));
+
+        if (trim((string)($_GET['flat'] ?? '')) !== '') {
+            json_return_and_die(
+                $this->buildFlatPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $limit)
+            );
+        }
+
         json_return_and_die(
-            $this->buildRootsPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, max(1, intval($count)))
+            $this->buildRootsPage($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $limit)
         );
     }
 
@@ -403,12 +429,16 @@ class Item
         return $result;
     }
 
-    // roots_offset/roots_limit mode: a page of TOP-LEVEL comments, each
-    // bundled with the ENTIRETY of its own reply subtree.
+    // roots_offset/roots_limit mode (threaded view): a page of TOP-LEVEL
+    // comments, each bundled with up to branch_limit of its own earliest
+    // descendants — not the whole subtree. Each root comment's remaining
+    // replies (if any) page independently via buildBranchPage()'s branch=
+    // mode once the user expands that specific comment further.
     private function buildRootsPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, int $rootsLimit): array
     {
         $order       = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
         $rootsOffset = max(0, intval($_GET['roots_offset'] ?? 0));
+        $branchLimit = max(1, intval($_GET['branch_limit'] ?? $rootsLimit));
 
         $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
         $childrenOf = $this->groupByParent($thin);
@@ -420,8 +450,17 @@ class Item
         $page = array_slice($rootComments, $rootsOffset, $rootsLimit);
 
         $neededMids = array_column($page, 'mid');
+        $branches = [];
         foreach ($page as $rc) {
-            $neededMids = array_merge($neededMids, array_column($this->collectSubtree($rc['mid'], $childrenOf), 'mid'));
+            $subtree = $this->collectSubtree($rc['mid'], $childrenOf);
+            $slice = array_slice($subtree, 0, $branchLimit);
+            $neededMids = array_merge($neededMids, array_column($slice, 'mid'));
+            $branches[$rc['mid']] = [
+                'fetched'     => count($slice),
+                'next_offset' => count($slice),
+                'total'       => count($subtree),
+                'has_more'    => count($subtree) > count($slice),
+            ];
         }
         $neededMids = array_values(array_unique($neededMids));
         $extraWhere = $neededMids
@@ -444,6 +483,84 @@ class Item
             'total_roots'       => $totalRoots,
             'order'             => ($order === 'DESC') ? 'newest_first' : 'oldest_first',
             'has_more_roots'    => $rootsOffset + count($page) < $totalRoots,
+            'branch_limit'      => $branchLimit,
+            'branches'          => $branches,
+        ];
+    }
+
+    // branch=<mid> mode (threaded view): "load more replies" for one
+    // specific comment's own subtree, continuing from $branchOffset —
+    // independent of root paging.
+    private function buildBranchPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, string $branch): array
+    {
+        $branchOffset = max(0, intval($_GET['branch_offset'] ?? 0));
+        $branchLimit  = max(1, intval($_GET['branch_limit'] ?? 5));
+
+        $thin = $this->fetchThinThread($rootId, $item_normal, $blocked_sql);
+        $childrenOf = $this->groupByParent($thin);
+
+        $byMid = [];
+        foreach ($thin as $row) {
+            $byMid[$row['mid']] = $row;
+        }
+
+        if (!isset($byMid[$branch])) {
+            return [
+                'mode' => 'branch', 'mid' => $root['mid'], 'branch' => $branch,
+                'comments' => [], 'branch_offset' => $branchOffset, 'branch_limit' => $branchLimit,
+                'fetched' => 0, 'next_branch_offset' => $branchOffset, 'total' => 0, 'has_more' => false,
+            ];
+        }
+
+        $subtree = $this->collectSubtree($branch, $childrenOf);
+        $slice = array_slice($subtree, $branchOffset, $branchLimit);
+        $neededMids = array_column($slice, 'mid');
+
+        [$comments, $deletedStubs] = $neededMids
+            ? $this->fetchAndFormatComments(
+                $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql, 'ORDER BY item.created ASC',
+                "AND item.mid IN ('" . implode("','", array_map('dbesc', $neededMids)) . "')"
+            )
+            : [[], []];
+
+        return [
+            'mode'               => 'branch',
+            'mid'                => $root['mid'],
+            'branch'             => $branch,
+            'comments'           => array_merge($comments, $deletedStubs),
+            'branch_offset'      => $branchOffset,
+            'branch_limit'       => $branchLimit,
+            'fetched'            => count($slice),
+            'next_branch_offset' => $branchOffset + count($slice),
+            'total'              => count($subtree),
+            'has_more'           => $branchOffset + count($slice) < count($subtree),
+        ];
+    }
+
+    // flat=1 mode (list view): simple offset/limit pagination over ALL
+    // comments regardless of nesting depth — no root/branch structure. Safe
+    // to slice arbitrarily since the list view never renders parent/child
+    // relationships, so there's no tree consistency to preserve across pages.
+    private function buildFlatPage(array $root, int $rootId, string $ob_hash, string $item_normal, string $blocked_sql, int $limit): array
+    {
+        $order  = (($_GET['order'] ?? '') === 'newest_first') ? 'DESC' : 'ASC';
+        $offset = max(0, intval($_GET['offset'] ?? 0));
+
+        [$comments] = $this->fetchAndFormatComments(
+            $rootId, $root['mid'], $ob_hash, $item_normal, $blocked_sql,
+            "ORDER BY item.created $order LIMIT $limit OFFSET $offset"
+        );
+
+        return [
+            'mode'        => 'flat',
+            'mid'         => $root['mid'],
+            'total'       => count($comments),
+            'comments'    => $comments,
+            'offset'      => $offset,
+            'limit'       => $limit,
+            'next_offset' => $offset + count($comments),
+            'order'       => ($order === 'DESC') ? 'newest_first' : 'oldest_first',
+            'has_more'    => count($comments) >= $limit,
         ];
     }
 

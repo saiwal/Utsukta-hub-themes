@@ -128,6 +128,10 @@ class Settings
         $comment_order = get_pconfig($uid, 'spa', 'comment_order', 'oldest_first');
         if (!in_array($comment_order, $valid_comment_orders, true)) $comment_order = 'oldest_first';
 
+        $valid_thread_modes = ['threaded', 'flat'];
+        $thread_mode = get_pconfig($uid, 'spa', 'thread_mode', 'threaded');
+        if (!in_array($thread_mode, $valid_thread_modes, true)) $thread_mode = 'threaded';
+
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
             'update_interval' => intval(get_pconfig($uid, 'system', 'update_interval', 80000)) / 1000,
@@ -146,6 +150,7 @@ class Settings
             'scroll_style' => $scroll_style,
             'corner_radius' => $corner_radius,
             'comment_order' => $comment_order,
+            'thread_mode' => $thread_mode,
             'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
         ]);
     }
@@ -990,6 +995,9 @@ class Settings
 
         if (isset($data['comment_order']) && in_array($data['comment_order'], ['oldest_first', 'newest_first'], true))
             set_pconfig($uid, 'spa', 'comment_order', $data['comment_order']);
+
+        if (isset($data['thread_mode']) && in_array($data['thread_mode'], ['threaded', 'flat'], true))
+            set_pconfig($uid, 'spa', 'thread_mode', $data['thread_mode']);
 
         if (isset($data['show_emoji_images']))
             set_pconfig($uid, 'system', 'no_smilies', 1 - intval($data['show_emoji_images']));
