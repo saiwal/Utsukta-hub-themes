@@ -30,6 +30,7 @@ class Siteinfo
             $chan  = (int) ($props['total_channels']   ?? 0);
             $items = (int) ($props['total_items']      ?? 0);
             $ident = (int) ($props['total_identities'] ?? 0);
+            $price = (float) ($props['price'] ?? 0);
 
             $classes[] = [
                 'name'                => $name,
@@ -40,6 +41,7 @@ class Siteinfo
                 'total_channels'      => $chan  > 0 ? $chan  : null,
                 'total_items'         => $items > 0 ? $items : null,
                 'total_identities'    => $ident > 0 ? $ident : null,
+                'price'               => $price > 0 ? $price : null,
             ];
         }
 

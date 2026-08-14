@@ -56,6 +56,7 @@ class Admin
         'photo_upload_limit', 'attach_upload_limit', 'total_items', 'total_pages',
         'total_identities', 'total_channels', 'total_feeds',
         'minimum_feedcheck_minutes', 'chatrooms', 'chatters_inroom', 'access_tokens',
+        'price',
     ];
 
     // Core has no function that lists defined service_class names — load the
@@ -77,9 +78,10 @@ class Admin
         $out = [];
         foreach (self::SERVICE_CLASS_PROPS as $k) {
             if (!isset($raw[$k]) || $raw[$k] === '' || $raw[$k] === null) continue;
-            if (!is_numeric($raw[$k]) || intval($raw[$k]) < 0)
-                Response::error(400, "Property '{$k}' must be a non-negative integer");
-            $out[$k] = intval($raw[$k]);
+            if (!is_numeric($raw[$k]) || floatval($raw[$k]) < 0)
+                Response::error(400, "Property '{$k}' must be a non-negative number");
+            // price is a monthly cost (e.g. 9.99); every other prop is an integer quota
+            $out[$k] = $k === 'price' ? round(floatval($raw[$k]), 2) : intval($raw[$k]);
         }
         return $out;
     }
