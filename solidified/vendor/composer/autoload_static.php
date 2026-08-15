@@ -15,6 +15,10 @@ class ComposerStaticInit68f0501fde04b471249d293b58bf680b
     );
 
     public static $prefixLengthsPsr4 = array (
+        'U' =>
+        array (
+            'Utsukta\\SpaCore\\Api\\' => 20,
+        ),
         'S' =>
         array (
             'Symfony\\Polyfill\\Php83\\' => 23,
@@ -50,6 +54,10 @@ class ComposerStaticInit68f0501fde04b471249d293b58bf680b
     );
 
     public static $prefixDirsPsr4 = array (
+        'Utsukta\\SpaCore\\Api\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/utsukta/spa-core/Api',
+        ),
         'Symfony\\Polyfill\\Php83\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php83',

@@ -84,7 +84,7 @@ Any unmatched route renders `src/shared/views/NotFound.tsx`.
 | `/module/:nick/:id` | `/articles/alice/abc123` | Single item within a channel's module |
 | `/module/:nick/sub/:datum` | `/photos/alice/album/summer` | Sub-resource |
 
-The `:nick` segment is always the channel nickname. Use `useSubjectNick()` from `@/shared/store/site-config` to read it reactively in components.
+The `:nick` segment is always the channel nickname. Use `useSubjectNick()` from `@utsukta/spa-core/store/site-config` to read it reactively in components.
 
 ## Reactive Route List
 

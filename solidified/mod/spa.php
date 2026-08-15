@@ -1,20 +1,11 @@
 <?php
 namespace Zotlabs\Module;
 
-// Bootstrap autoloader before any Theme\Solidified\* class is referenced
-spl_autoload_register(function (string $class) {
-    // Matches Theme\Solidified\Api\Router → Api/Router.php
-    // Matches Theme\Solidified\Api\Handlers\Settings → Api/Handlers/Settings.php
-    if (!str_starts_with($class, 'Theme\\Solidified\\')) return;
+// Router/Handlers now live in the utsukta/spa-core Composer package (installed
+// via a path repository — see composer.json), not this theme's own tree.
+require_once __DIR__ . '/../vendor/autoload.php';
 
-    $base = __DIR__ . '/../';   // solidified/ root, one level up from mod/
-    $rel  = str_replace(['Theme\\Solidified\\', '\\'], ['', '/'], $class);
-    $file = $base . $rel . '.php';
-
-    if (file_exists($file)) require_once $file;
-});
-
-use Theme\Solidified\Api\Router;
+use Utsukta\SpaCore\Api\Router;
 
 class Spa extends \Zotlabs\Web\Controller {
 

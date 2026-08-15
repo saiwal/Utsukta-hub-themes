@@ -1,0 +1,10 @@
+{
+    "name": "utsukta/spa-core",
+    "description": "Shared Hubzilla SPA theme PHP API layer (Router + Handlers), reused across Utsukta theme packages.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Utsukta\\SpaCore\\Api\\": "Api/"
+        }
+    }
+}

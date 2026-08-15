@@ -1222,6 +1222,28 @@
             "install-path": "../symfony/polyfill-php83"
         },
         {
+            "name": "utsukta/spa-core",
+            "version": "dev-dev",
+            "version_normalized": "dev-dev",
+            "dist": {
+                "type": "path",
+                "url": "./spa-core",
+                "reference": "d2f931da840c298576aad5ad401e5010c80e3d08"
+            },
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Utsukta\\SpaCore\\Api\\": "Api/"
+                }
+            },
+            "description": "Shared Hubzilla SPA theme PHP API layer (Router + Handlers), reused across Utsukta theme packages.",
+            "transport-options": {
+                "relative": true
+            },
+            "install-path": "../utsukta/spa-core"
+        },
+        {
             "name": "web-token/jwt-library",
             "version": "4.1.7",
             "version_normalized": "4.1.7.0",
@@ -1314,6 +1336,6 @@
             "install-path": "../web-token/jwt-library"
         }
     ],
-    "dev": false,
+    "dev": true,
     "dev-package-names": []
 }

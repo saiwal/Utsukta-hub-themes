@@ -20,7 +20,7 @@ type AuthState = {
 
 **Usage:**
 ```typescript
-import { useAuth, isAdmin } from "@/shared/store/auth-store";
+import { useAuth, isAdmin } from "@utsukta/spa-core/store/auth-store";
 
 const auth = useAuth();     // () => AuthState | undefined
 const admin = isAdmin();    // boolean
@@ -43,7 +43,7 @@ import {
   useSystemApps,
   useInstalledApps,
   useChannelNav,
-} from "@/shared/store/nav-store";
+} from "@utsukta/spa-core/store/nav-store";
 
 const navData = useNavData();       // Resource<NavApiResponse>
 const pinned  = usePinnedApps();    // () => NavApp[]
@@ -59,7 +59,7 @@ Derives page context from the current URL and auth state — no API call needed.
 ### useSubjectNick
 
 ```typescript
-import { useSubjectNick } from "@/shared/store/site-config";
+import { useSubjectNick } from "@utsukta/spa-core/store/site-config";
 const nick = useSubjectNick(); // () => string — "" on pages without a nick
 ```
 
@@ -68,7 +68,7 @@ Returns the `:nick` URL segment for routes like `/channel/:nick`, `/photos/:nick
 ### useViewerRole
 
 ```typescript
-import { useViewerRole } from "@/shared/store/site-config";
+import { useViewerRole } from "@utsukta/spa-core/store/site-config";
 const role = useViewerRole(); // () => ViewerRole
 ```
 
@@ -84,7 +84,7 @@ Derives the viewer's relationship to the current page subject:
 ### usePageNick
 
 ```typescript
-import { usePageNick } from "@/shared/store/site-config";
+import { usePageNick } from "@utsukta/spa-core/store/site-config";
 const nick = usePageNick(); // () => string
 ```
 
