@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Brick\Math\Exception;
 
-use Throwable;
+use RuntimeException;
 
 /**
- * Base interface for all math exceptions.
+ * Base class for all math exceptions.
  */
-interface MathException extends Throwable
+class MathException extends RuntimeException
 {
 }
