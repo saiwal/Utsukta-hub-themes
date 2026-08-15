@@ -7,8 +7,8 @@ Every feature in the SPA is a self-contained **module**. A module declares its r
 Create `src/modules/<id>/index.ts` and call `registerModule()`:
 
 ```typescript
-import { registerModule } from "@/shared/lib/module-registry";
-import { useI18n } from "@/i18n";
+import { registerModule } from "@utsukta/spa-core/lib/module-registry";
+import { useI18n } from "@utsukta/spa-core/i18n";
 
 registerModule({
   id: "myfeature",
@@ -87,7 +87,7 @@ type NavContext =
 Use reactive `href` when the destination depends on the current channel nick:
 
 ```typescript
-import { usePageNick } from "@/shared/store/site-config";
+import { usePageNick } from "@utsukta/spa-core/store/site-config";
 
 href: () => `/photos/${usePageNick()()}`,
 ```
@@ -133,7 +133,7 @@ src/modules/myfeature/
 `appName` gates an entire module. To gate only a **section within a component** based on a Hubzilla app, use `useInstalledApps()` directly:
 
 ```typescript
-import { useInstalledApps } from "@/shared/store/nav-store";
+import { useInstalledApps } from "@utsukta/spa-core/store/nav-store";
 
 const installedApps = useInstalledApps();
 const affinityInstalled = () => installedApps().has("Affinity Tool");

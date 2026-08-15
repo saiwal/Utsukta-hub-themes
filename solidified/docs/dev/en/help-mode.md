@@ -35,7 +35,7 @@ of the element's normal click behavior (stopped via `preventDefault` /
 `stopPropagation`).
 
 ```tsx
-import { helpable } from "@/shared/lib/helpable";
+import { helpable } from "@utsukta/spa-core/lib/helpable";
 // Solid strips unused imports for JSX-only directives — this keeps it live:
 void helpable;
 

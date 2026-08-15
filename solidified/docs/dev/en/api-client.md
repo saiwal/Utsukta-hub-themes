@@ -14,7 +14,7 @@ These wrappers are the raw network layer. Most component code should not call th
 ## apiGet
 
 ```typescript
-import { apiGet } from "@/shared/lib/api";
+import { apiGet } from "@utsukta/spa-core/lib/api";
 
 const result = await apiGet<MyType>("channel/alice");
 // → GET /spa/z/1.0/channel/alice
@@ -25,7 +25,7 @@ Used for Hubzilla's native Zot API endpoints. Throws on non-2xx responses.
 ## moduleGet
 
 ```typescript
-import { moduleGet } from "@/shared/lib/api";
+import { moduleGet } from "@utsukta/spa-core/lib/api";
 
 const data = await moduleGet<MyType>("api/network?start=0");
 // → GET /spa/network?start=0
@@ -36,7 +36,7 @@ Used for the SPA-specific PHP API handlers.
 ## modulePost
 
 ```typescript
-import { modulePost } from "@/shared/lib/api";
+import { modulePost } from "@utsukta/spa-core/lib/api";
 
 const result = await modulePost<MyType>("api/item/abc123/like", {});
 // → POST /spa/item/abc123/like
@@ -57,7 +57,7 @@ File: `src/shared/lib/csrf.ts`
 The PHP API requires a CSRF token for all state-changing POST requests. The token is fetched once from `/spa/csrf` and cached for 30 minutes.
 
 ```typescript
-import { getCsrfToken, resetCsrfToken } from "@/shared/lib/csrf";
+import { getCsrfToken, resetCsrfToken } from "@utsukta/spa-core/lib/csrf";
 
 // Fetch (or return cached) token
 const token = await getCsrfToken();

@@ -1,0 +1,382 @@
+<?php
+// packages/spa-core/php/Api/Handlers/Network.php
+
+namespace Utsukta\SpaCore\Api\Handlers;
+
+use Utsukta\SpaCore\Api\Concerns\FormatsItems;
+use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
+use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
+use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Response;
+
+require_once ('include/items.php');
+require_once ('include/conversation.php');
+require_once ('include/acl_selectors.php');
+
+class Network
+{
+    use FormatsItems;
+    use FiltersBlockedChannels;
+
+    public function get(): void
+    {
+        Auth::RequireLocalGet();
+
+        $uid = local_channel();
+        $channel = \App::get_channel();
+        $item_normal = item_normal($uid);
+        $observer_xchan = get_observer_hash();
+        $abook_uids = ' and abook.abook_channel = ' . $uid . ' ';
+        $uids = ' and item.uid = ' . $uid . ' ';
+
+        // ── Pagination ────────────────────────────────────────────────────────
+        $itemspage = max(1, min(30, intval(get_pconfig($uid, 'system', 'itemspage') ?: 10)));
+        $offset = max(0, intval($_GET['start'] ?? 0));
+        $pager_sql = " LIMIT $itemspage OFFSET $offset ";
+
+        // ── Ordering ──────────────────────────────────────────────────────────
+        // Deliberately not falling back to the 'mod_network'/'order' pconfig here:
+        // that value is only ever written by classic Hubzilla's legacy Activity_order
+        // widget, which the SPA has no UI for — honoring it would silently apply a
+        // stale preference from a page the user can't see or change.
+        $get_order = $_GET['order'] ?? 'created';
+
+        $nouveau = false;
+        $ordering = 'created';
+
+        switch ($get_order) {
+            case 'commented':
+                $ordering = 'commented';
+                break;
+            case 'unthreaded':
+                $nouveau = true;
+                $ordering = 'created';
+                break;
+            default:
+                $ordering = 'created';
+        }
+
+        // ── Filter params ─────────────────────────────────────────────────────
+        $star = intval($_GET['star'] ?? 0);
+        $liked = intval($_GET['liked'] ?? 0);
+        $conv = intval($_GET['conv'] ?? 0);
+        $dm = intval($_GET['dm'] ?? 0);
+        $spam = intval($_GET['spam'] ?? 0);
+        $nouveau = $nouveau || (bool) intval($_GET['nouveau'] ?? 0);
+        $unseen = $_GET['unseen'] ?? '';
+        $pf = intval($_GET['pf'] ?? 0);
+        $gid = intval($_GET['gid'] ?? 0);
+        $cid = intval($_GET['cid'] ?? 0);
+        $xchan = $_GET['xchan'] ?? '';
+        $net = $_GET['net'] ?? '';
+        $search = $_GET['search'] ?? '';
+        $hashtags = $_GET['tag'] ?? '';
+        $category = $_GET['cat'] ?? '';
+        $verb = $_GET['verb'] ?? '';
+        $file = $_GET['file'] ?? '';
+
+        $datequery = (isset($_GET['dend']) && is_a_date_arg($_GET['dend']))
+            ? notags($_GET['dend'])
+            : '';
+        $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
+            ? notags($_GET['dbegin'])
+            : '';
+
+        // Affinity (disabled when app not installed → -1)
+        $cmin = array_key_exists('cmin', $_GET) ? intval($_GET['cmin']) : -1;
+        $cmax = array_key_exists('cmax', $_GET) ? intval($_GET['cmax']) : -1;
+
+        // Hashtag shorthand in search
+        if ($search && str_starts_with($search, '#')) {
+            $hashtags = substr($search, 1);
+            $search = '';
+        }
+
+        // Filters that force nouveau (flat) mode — forum/channel (cid), group (gid),
+        // and xchan filters intentionally stay threaded (posts only) unless the user
+        // explicitly picks order=unthreaded; only these filters force a flat listing.
+        if ($search || $file || $hashtags || $verb || $category || $conv || $unseen) {
+            $nouveau = true;
+        }
+
+        if ($datequery) {
+            $ordering = 'created';
+        }
+
+        // ── SQL fragments ─────────────────────────────────────────────────────
+        $sql_options = $star ? ' and item_starred = 1 ' : '';
+        $blocked = $this->blockedXchans($uid);
+        $sql_extra = $this->blockedSqlClause('item.author_xchan', $blocked)
+            . $this->blockedSqlClause('item.owner_xchan', $blocked);
+        $item_thread_top = ' AND item_thread_top = 1 ';
+
+        // Privacy group
+        if ($gid) {
+            $r = q('SELECT * FROM pgrp WHERE id = %d AND uid = %d LIMIT 1',
+                intval($gid), $uid);
+            if (!$r) {
+                self::die(['error' => 'No such group']);
+            }
+            $group_hash = $r[0]['hash'];
+            $contacts = \Zotlabs\Lib\AccessList::members($uid, $gid);
+            $contact_str = $contacts ? ids_to_querystr($contacts, 'xchan', true) : " '0' ";
+
+            $item_thread_top = '';
+            $sql_extra .= " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE true $sql_options
+                AND (( author_xchan IN ($contact_str) OR owner_xchan IN ($contact_str))
+                     OR allow_gid LIKE '" . protect_sprintf('%<' . dbesc($group_hash) . '>%') . "')
+                AND id = parent $item_normal
+            ) ";
+        }
+
+        // Abook contact
+        if ($cid) {
+            $cid_r = q('SELECT abook_xchan FROM abook
+                        WHERE abook_id = %d AND abook_channel = %d AND abook_blocked = 0 LIMIT 1',
+                intval($cid), $uid);
+            if (!$cid_r) {
+                self::die(['error' => 'No such channel']);
+            }
+            $cid_xchan = $cid_r[0]['abook_xchan'];
+            $item_thread_top = '';
+
+            $sql_extra .= " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE uid = $uid
+                AND ( author_xchan = '" . dbesc($cid_xchan) . "'
+                   OR owner_xchan  = '" . dbesc($cid_xchan) . "')
+                $item_normal
+            ) ";
+        }
+
+        // xchan
+        if ($xchan) {
+            $item_thread_top = '';
+            $sql_extra .= " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE true $sql_options AND uid = $uid
+                AND ( author_xchan = '" . dbesc($xchan) . "'
+                   OR owner_xchan  = '" . dbesc($xchan) . "')
+                $item_normal
+            ) ";
+        }
+
+        // Category / hashtag / search / verb / file
+        if ($category) {
+            $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
+        }
+        if ($hashtags) {
+            $sql_extra .= protect_sprintf(term_query('item', $hashtags, TERM_HASHTAG, TERM_COMMUNITYTAG));
+        }
+        if ($search) {
+            $sql_extra .= sprintf(
+                " AND (item.body LIKE '%s' OR item.title LIKE '%s') ",
+                dbesc(protect_sprintf('%' . $search . '%')),
+                dbesc(protect_sprintf('%' . $search . '%'))
+            );
+        }
+        if ($verb) {
+            if (str_starts_with($verb, '.')) {
+                $sql_extra .= sprintf(
+                    " AND item.obj_type = '%s' AND item.verb IN ('Create','Update','Invite') ",
+                    dbesc(protect_sprintf(substr($verb, 1)))
+                );
+            } else {
+                $sql_extra .= sprintf(
+                    " AND item.verb = '%s' ",
+                    dbesc(protect_sprintf($verb))
+                );
+            }
+        }
+        if ($file) {
+            $sql_extra .= term_query('item', $file, TERM_FILE);
+        }
+
+        // Privacy fence
+        $dismiss_privacy_filter = array_intersect(
+            ['cid', 'star', 'conv', 'file', 'verb', 'cat', 'search'],
+            array_keys($_GET)
+        );
+        if (!$dismiss_privacy_filter) {
+            $sql_extra .= $dm
+                ? ' AND item.item_private = 2 '
+                : ' AND item.item_private IN (0, 1) ';
+        }
+
+        // Conversation (mentions + authored)
+        if ($conv) {
+            $item_thread_top = '';
+            $sql_extra .= " AND ( author_xchan = '" . dbesc($channel['channel_hash']) . "'"
+                . ' OR item_mentionsme = 1 ) ';
+        }
+
+        // Unseen
+        if ($unseen) {
+            $sql_extra .= ' AND item_unseen = 1 ';
+        }
+
+        // Liked threads
+        if ($liked) {
+            $item_thread_top = '';
+            $sql_extra .= " AND item.parent IN (
+                SELECT DISTINCT parent FROM item
+                WHERE uid = $uid AND verb = 'Like'
+                AND author_xchan = '" . dbesc($channel['channel_hash']) . "'
+                $item_normal
+            ) ";
+        }
+
+        // Spam
+        if ($spam) {
+            $sql_extra .= ' AND item_spam = 1 ';
+        }
+
+        // Followed threads (pf=1). Mirrors viewer_following in FormatsItems::
+        // applyViewerFollowing() — an explicit Follow (with no later Ignore)
+        // counts, and so does having commented on a thread with no explicit
+        // Follow/Ignore at all, since core's own notifier already treats
+        // authoring an item in a thread as opting into its notifications.
+        if ($pf && $observer_xchan) {
+            $obs = dbesc($observer_xchan);
+            $sql_extra .= " AND item.parent IN (
+                SELECT f.parent
+                FROM item f
+                WHERE f.author_xchan = '$obs'
+                  AND f.verb = 'Follow'
+                  AND f.item_deleted = 0
+                  AND NOT EXISTS (
+                    SELECT 1 FROM item i
+                    WHERE i.parent = f.parent
+                      AND i.author_xchan = '$obs'
+                      AND i.verb = 'Ignore'
+                      AND i.item_deleted = 0
+                      AND i.created > f.created
+                  )
+                UNION
+                SELECT c.parent
+                FROM item c
+                WHERE c.uid = $uid
+                  AND c.author_xchan = '$obs'
+                  AND c.verb NOT IN ('Follow', 'Ignore')
+                  AND c.item_deleted = 0
+                  AND NOT EXISTS (
+                    SELECT 1 FROM item i
+                    WHERE i.parent = c.parent
+                      AND i.author_xchan = '$obs'
+                      AND i.verb IN ('Follow', 'Ignore')
+                      AND i.item_deleted = 0
+                  )
+            ) ";
+        }
+
+        // Date range
+        $sql_date = '';
+        if ($datequery) {
+            $sql_date .= " AND item.created <= '"
+                . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery)) . "' ";
+        }
+        if ($datequery2) {
+            $sql_date .= " AND item.created >= '"
+                . dbesc(datetime_convert(date_default_timezone_get(), '', $datequery2)) . "' ";
+        }
+        // In threaded mode date filter goes on the parent query only
+        $sql_extra3 = $nouveau ? '' : $sql_date;
+
+        // Affinity
+        $sql_nets = '';
+        if ($cmin !== -1 || $cmax !== -1) {
+            $sql_nets .= ' AND ';
+            if ($cmax === 99)
+                $sql_nets .= ' ( ';
+            $sql_nets .= "( abook.abook_closeness >= $cmin AND abook.abook_closeness <= $cmax ) ";
+            if ($cmax === 99)
+                $sql_nets .= ' OR abook.abook_closeness IS NULL ) ';
+        }
+
+        // Network / protocol filter
+        $net_query = $net ? ' left join xchan on xchan_hash = author_xchan ' : '';
+        $net_query2 = $net ? " and xchan_network = '" . protect_sprintf(dbesc($net)) . "' " : '';
+
+        // ── Shared reaction subqueries ─────────────────────────────────────────
+        $reaction_subqueries = ReactionCounts::subqueries();
+
+        // ── Fetch items ───────────────────────────────────────────────────────
+        $items = [];
+        $rootCount = 0;
+
+        if ($nouveau) {
+            // Flat / unthreaded
+            $items = dbq("SELECT item.*, item.id AS item_id, $reaction_subqueries
+                FROM item
+                LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
+                $net_query
+                WHERE true $uids $item_normal
+                AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
+                AND item.verb NOT IN ('Add', 'Remove')
+                $sql_extra $sql_options $sql_nets $sql_date
+                $net_query2
+                ORDER BY item.created DESC $pager_sql");
+
+            $rootCount = count($items ?: []);
+
+            if ($items) {
+                xchan_query($items, true);
+                $items = fetch_post_tags($items, true);
+            }
+        } else {
+            // Threaded — two-step: parent ids then full threads
+            $r = dbq("SELECT item.parent AS item_id FROM item
+                LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
+                $net_query
+                WHERE true $uids $item_thread_top $item_normal
+                AND item.mid = item.parent_mid
+                AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
+                $sql_extra3 $sql_extra $sql_options $sql_nets
+                $net_query2
+                ORDER BY $ordering DESC $pager_sql");
+
+            $rootCount = count($r ?: []);
+
+            if ($r) {
+                $ids = ids_to_querystr($r, 'item_id');
+
+                $items = dbq("SELECT item.*, $reaction_subqueries
+                    FROM item
+                    WHERE item.id IN ($ids)
+                    ORDER BY item.created ASC");
+
+                if ($items) {
+                    xchan_query($items, true);
+                    $items = fetch_post_tags($items, true);
+                    $ordered_parents = array_map('intval', array_column($r, 'item_id'));
+
+                    usort($items, function ($a, $b) use ($ordered_parents) {
+                        $ia = array_search(intval($a['id']), $ordered_parents);
+                        $ib = array_search(intval($b['id']), $ordered_parents);
+                        return $ia - $ib;
+                    });
+                }
+            }
+        }
+
+        // ── Viewer following state ────────────────────────────────────────────
+        $this->applyViewerFollowing($items, $observer_xchan);
+
+        // ── Format and respond ────────────────────────────────────────────────
+        $out = [];
+        $out = array_map(
+            fn($item) => $this->formatItem($item, $observer_xchan),
+            $items
+        );
+
+        Response::paginate(
+            $out,
+            $offset,
+            $itemspage,
+            $rootCount,
+            $nouveau,
+        );
+    }
+}

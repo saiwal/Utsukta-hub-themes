@@ -17,6 +17,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Data-fetching](data-fetching) — TanStack Query caching, createQueryResource, mutations
 - [Php-api](php-api) — Backend PHP API: router, auth, response, handlers
 - [I18n](i18n) — Internationalization (i18n) system
+- [Theme-scaffold](theme-scaffold) — Generating a new, independently-branded theme package from `@utsukta/spa-core`
 - [Todo](todo) — Planned-but-not-yet-built work, with design decisions and implementation shape
 
 ## Quick Start

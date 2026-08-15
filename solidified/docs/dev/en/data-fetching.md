@@ -29,7 +29,7 @@ File: `src/shared/lib/createQueryResource.ts`
 A drop-in replacement for Solid's `createResource`, backed by the query cache. Same tuple shape, same reactive semantics, plus caching and request dedup.
 
 ```typescript
-import { createQueryResource } from "@/shared/lib/createQueryResource";
+import { createQueryResource } from "@utsukta/spa-core/lib/createQueryResource";
 
 // Fetcher only — cached under ["pubsites"]
 const [sites] = createQueryResource("pubsites", fetchPubsites);
@@ -79,7 +79,7 @@ const save = useMutation(() => ({
 }));
 ```
 
-`queryClient` is available via `useQueryClient()` inside components, or imported from `@/shared/lib/query-client` in store code that runs outside component context (e.g. `refetchNavData()` in `nav-store.ts`).
+`queryClient` is available via `useQueryClient()` inside components, or imported from `@utsukta/spa-core/lib/query-client` in store code that runs outside component context (e.g. `refetchNavData()` in `nav-store.ts`).
 
 ## Nav Data
 

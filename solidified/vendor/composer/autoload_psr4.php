@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Utsukta\\SpaCore\\Api\\' => array($vendorDir . '/utsukta/spa-core/Api'),
     'Symfony\\Polyfill\\Php83\\' => array($vendorDir . '/symfony/polyfill-php83'),
     'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'SpomkyLabs\\Pki\\' => array($vendorDir . '/spomky-labs/pki-framework/src'),

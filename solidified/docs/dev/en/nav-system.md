@@ -16,8 +16,8 @@ The result depends on the **viewer role** and the current **subject nick** (chan
 `src/shared/lib/useNav.ts` — the main hook for computing the nav list.
 
 ```typescript
-import { useNav } from "@/shared/lib/useNav";
-import { useSubjectNick } from "@/shared/store/site-config";
+import { useNav } from "@utsukta/spa-core/lib/useNav";
+import { useSubjectNick } from "@utsukta/spa-core/store/site-config";
 
 const subjectNick = useSubjectNick();
 const navItems = useNav(subjectNick);  // () => NavItemDef[]
@@ -45,7 +45,7 @@ Deduplication: `dedupByHref()` removes items with identical `href` values.
 Returns contextual action items (settings, manage, login, logout, etc.) filtered by viewer role:
 
 ```typescript
-import { useNavActionItems } from "@/shared/lib/useNav";
+import { useNavActionItems } from "@utsukta/spa-core/lib/useNav";
 
 const actionItems = useNavActionItems(); // () => NavItemDef[]
 ```
