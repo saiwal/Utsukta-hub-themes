@@ -190,6 +190,7 @@ class Settings
             'ocap_enabled' => intval(get_pconfig($uid, 'system', 'ocap_enabled')),
             'nsfw_installed' => \Zotlabs\Lib\Apps::system_app_installed($uid, 'NSFW'),
             'nsfw_words' => (string) get_pconfig($uid, 'nsfw', 'words', 'nsfw,contentwarning'),
+            'local_only_posts' => intval(get_pconfig($uid, 'spa', 'local_only_posts')),
         ]);
     }
 
@@ -1021,6 +1022,12 @@ class Settings
 
         if (isset($data['nsfw_words']))
             set_pconfig($uid, 'nsfw', 'words', notags(trim((string) $data['nsfw_words'])));
+
+        // Composer opt-in: post a "wall only" item that skips Notifier
+        // delivery entirely. Not a core feature, so it lives in the SPA's own
+        // 'spa' pconfig cat rather than the toggles loop above.
+        if (isset($data['local_only_posts']))
+            set_pconfig($uid, 'spa', 'local_only_posts', ((intval($data['local_only_posts']) == 1) ? 1 : 0));
 
         Master::Summon(['Directory', $uid]);
         Libsync::build_sync_packet();
