@@ -133,13 +133,18 @@ class Profile
                          WHERE abook_channel = %d AND abook_self = 0",
             intval($uid));
 
+        // This is the *viewed* channel's abook row for the observer, so its
+        // abook_pending tells us they haven't approved the observer's request
+        // yet — the connection exists but isn't live.
         $is_connected = false;
+        $is_pending   = false;
         if ($ob_hash) {
-            $existing = q("SELECT abook_id FROM abook
+            $existing = q("SELECT abook_pending FROM abook
                            WHERE abook_channel = %d AND abook_xchan = '%s' LIMIT 1",
                 intval($uid),
                 dbesc($ob_hash));
             $is_connected = !empty($existing);
+            $is_pending   = $is_connected && intval($existing[0]['abook_pending']);
         }
 
         $location_parts = array_filter([
@@ -152,6 +157,7 @@ class Profile
             'channel_name'    => Response::decodeEntities($profile['channel_name']),
             'channel_address' => $profile['channel_address'],
             'xchan_addr'      => $channel['xchan_addr'] ?? '',
+            'channel_hash'    => $channel['channel_hash'] ?? '',
             'channel_photo_l' => $channel['xchan_photo_l'] ?? '',
             'channel_cover'   => $cover_url,
             'profile_name'    => $profile['profile_name'],
@@ -185,6 +191,7 @@ class Profile
             'hide_friends'    => (bool) ($profile['hide_friends'] ?? false),
             'connections'     => intval($conn_count[0]['total']   ?? 0),
             'is_connected'    => $is_connected,
+            'is_pending'      => $is_pending,
             'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $channel['xchan_addr'] ?? ''),
             'feed_url'        => z_root() . '/feed/' . $profile['channel_address'],
             'viewer_xchan'    => $ob_hash,
@@ -253,6 +260,7 @@ class Profile
             'channel_name'    => $name,
             'channel_address' => $user,
             'xchan_addr'      => $nick,
+            'channel_hash'    => $xrow['xchan_hash'] ?? '',
             'channel_photo_l' => $photo,
             'channel_cover'   => $cover,
             'pdesc'           => '',
