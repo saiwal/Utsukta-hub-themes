@@ -75,13 +75,18 @@ class HqMessages
         // wrote to them (where we're the author and they're in the ACL).
         // allow_cid stores hashes as '<hash>', and a hash is base64url so it
         // carries no LIKE wildcards.
-        // protect_sprintf: q() passes the SQL through sprintf, so the LIKE
-        // wildcards have to survive as literal '%'.
+        // Comma-separated: one identity can own several xchan rows (see
+        // Xchan.php's xchan_hashes). protect_sprintf keeps the LIKE wildcards
+        // alive through the sprintf inside q().
         $xchan_sql = '';
         if ($xchan !== '') {
-            $h    = dbesc($xchan);
-            $like = protect_sprintf('%<' . $h . '>%');
-            $xchan_sql = " AND ( i.author_xchan = '$h' OR i.allow_cid LIKE '$like' ) ";
+            $hashes = array_filter(array_map('trim', explode(',', $xchan)));
+            $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
+            $likes = [];
+            foreach ($hashes as $h) {
+                $likes[] = "i.allow_cid LIKE '" . protect_sprintf('%<' . dbesc($h) . '>%') . "'";
+            }
+            $xchan_sql = " AND ( i.author_xchan IN ($in) OR " . implode(' OR ', $likes) . " ) ";
         }
 
         $dummy_order_sql = '';

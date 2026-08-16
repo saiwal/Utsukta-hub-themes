@@ -100,6 +100,11 @@ class Xchan
 
         Response::send(array_merge([
             'xchan_hash'   => $xchan['xchan_hash'],
+            // Every hash this identity is known by. Items are stored under
+            // whichever row delivered them (the zot6 row for a channel also
+            // seen over ActivityPub), so anything filtering by author/owner
+            // has to match them all, not just the first row.
+            'xchan_hashes' => array_values(array_unique(array_column($xchans, 'xchan_hash'))),
             'name'         => Response::decodeEntities($xchan['xchan_name']),
             'address'      => $xchan['xchan_addr'],
             'url'          => $xchan['xchan_url'],

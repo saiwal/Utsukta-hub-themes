@@ -151,14 +151,17 @@ class Network
             ) ";
         }
 
-        // xchan
+        // xchan — comma-separated: one identity can own several xchan rows
+        // (a zot6 channel also known over ActivityPub), and its items sit
+        // under whichever hash delivered them.
         if ($xchan) {
+            $hashes = array_filter(array_map('trim', explode(',', $xchan)));
+            $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
             $item_thread_top = '';
             $sql_extra .= " AND item.parent IN (
                 SELECT DISTINCT parent FROM item
                 WHERE true $sql_options AND uid = $uid
-                AND ( author_xchan = '" . dbesc($xchan) . "'
-                   OR owner_xchan  = '" . dbesc($xchan) . "')
+                AND ( author_xchan IN ($in) OR owner_xchan IN ($in) )
                 $item_normal
             ) ";
         }
