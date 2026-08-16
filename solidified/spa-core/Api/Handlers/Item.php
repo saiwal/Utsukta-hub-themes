@@ -733,6 +733,15 @@ class Item
         $nocomment  = !empty($body['nocomment']) ? 1 : 0;
         $createdRaw = trim($body['created'] ?? '');
 
+        // "Local-only" post: stored with a real ACL (so item_permissions_sql()
+        // still grants access to visitors it allows) but never handed to the
+        // Notifier — it only surfaces by visiting this channel directly, never
+        // in anyone's Network stream or notifications. Gated server-side on
+        // the poster's own pconfig opt-in (Settings → Privacy) — the client
+        // flag alone is not trusted, so a disabled toggle can't be bypassed
+        // by calling the API directly.
+        $localOnly = (!empty($body['local_only']) && get_pconfig($uid, 'spa', 'local_only_posts')) ? 1 : 0;
+
         if (!$content) {
             Response::error(400, 'body is required');
         }
@@ -1011,6 +1020,10 @@ class Item
             Response::error(500, 'Failed to create post');
         }
 
+        if ($localOnly) {
+            set_iconfig(intval($post['item_id']), 'spa', 'local_only', 1);
+        }
+
         // Notify wall owner when someone posts on their wall (wall-to-wall)
         if ($wallToWall) {
             Enotify::submit([
@@ -1031,8 +1044,9 @@ class Item
         $datarray['id'] = $post['item_id'];
         call_hooks('post_local_end', $datarray);
 
-        // Delayed items are delivered by Daemon\Cron at publish time
-        if (!$delayed) {
+        // Delayed items are delivered by Daemon\Cron at publish time. Local-only
+        // items are never delivered at all (see $localOnly above).
+        if (!$delayed && !$localOnly) {
             Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
         }
 
@@ -1689,7 +1703,11 @@ class Item
                 dbesc($slug), $iid);
         }
 
-        Master::Summon(['Notifier', 'edit_post', $iid]);
+        // Local-only posts (see createPost()) never federate — including edits,
+        // which would otherwise be the first thing ever delivered for them.
+        if (!get_iconfig($iid, 'spa', 'local_only')) {
+            Master::Summon(['Notifier', 'edit_post', $iid]);
+        }
 
         Response::send(['success' => true]);
     }
@@ -1771,7 +1789,12 @@ class Item
 
         tag_deliver($primary['uid'], $primary['id']);
 
-        if (intval($primary['item_wall']) || $primary['mid'] !== $primary['parent_mid']) {
+        // A local-only post was never delivered to its ACL'd recipients in the
+        // first place — summoning a 'drop' here would deliver a Delete to
+        // people who never received the Create, leaking that a hidden post
+        // existed.
+        $wasLocalOnly = (bool) get_iconfig($primary['id'], 'spa', 'local_only');
+        if (!$wasLocalOnly && (intval($primary['item_wall']) || $primary['mid'] !== $primary['parent_mid'])) {
             Master::Summon(['Notifier', 'drop', $primary['id']]);
         }
 
