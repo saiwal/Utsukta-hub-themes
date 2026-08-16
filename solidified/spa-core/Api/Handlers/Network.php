@@ -157,13 +157,9 @@ class Network
         if ($xchan) {
             $hashes = array_filter(array_map('trim', explode(',', $xchan)));
             $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
-            $item_thread_top = '';
-            $sql_extra .= " AND item.parent IN (
-                SELECT DISTINCT parent FROM item
-                WHERE true $sql_options AND uid = $uid
-                AND ( author_xchan IN ($in) OR owner_xchan IN ($in) )
-                $item_normal
-            ) ";
+            // Their own posts only. Matching the thread instead (item.parent IN
+            // …) also drags in every conversation they merely commented on.
+            $sql_extra .= " AND ( item.author_xchan IN ($in) OR item.owner_xchan IN ($in) ) ";
         }
 
         // Category / hashtag / search / verb / file
