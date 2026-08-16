@@ -10,6 +10,10 @@ Hubzilla का नेविगेशन तीन जगह मिलता ह
 
 आपकी stream: आपके सभी कनेक्शन की पोस्ट, stars, mentions, direct messages, saved searches जैसे फ़िल्टर के साथ।
 
+## Inbox
+
+आपके संदेशों, direct बातचीत, starred पोस्ट और filed folders के लिए mail जैसा reader — और यही एक जगह है जो ऑफ़लाइन पढ़ने के लिए पूरी लोकल कॉपी रखती है।
+
 ## Channel
 
 आपकी अपनी channel wall और प्रोफ़ाइल — जो visitor आपका पेज देखने पर दिखता है।

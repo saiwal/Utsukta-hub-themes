@@ -25,6 +25,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Nav](nav) — What each nav link, account-menu item, and mobile button does
 - [Hq](hq) — Your HQ dashboard: composer, events, messages, drafts
 - [Network](network) — Network stream: filters, view modes, searching
+- [Inbox](inbox) — Mail-style message reader, and reading offline
 - [Channel](channel) — Channel and profile pages
 - [Composing-posts](composing-posts) — Writing posts, formatting, privacy controls, reactions
 - [Photos](photos) — Photo albums and image viewer
