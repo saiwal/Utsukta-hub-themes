@@ -2,6 +2,8 @@
 
 Welcome to Hubzilla *Solidified* - a fast, modern interface for your Hubzilla hub. Same channel, same connections, same federated network underneath. A completely reimagined way to use it on top.
 
+![screenshot](./index/ss.png)
+
 ## What is Solidified?
 
 Solidified replaces the classic page-reload interface with a single-page app: pages switch instantly, your feed updates in the background, and the whole thing works offline-capable as an installable app on your phone or desktop.
