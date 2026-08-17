@@ -10,6 +10,10 @@ Your personal home base after logging in — a dashboard combining your composer
 
 Your stream: posts from everyone you're connected to, with filters for stars, mentions, direct messages, saved searches, and more.
 
+## Inbox
+
+A mail-style reader for your messages, direct conversations, starred posts and filed folders — and the one place that keeps a full local copy for reading offline.
+
 ## Channel
 
 Your own channel wall and profile — what visitors see when they view your page.

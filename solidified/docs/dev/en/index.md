@@ -15,6 +15,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Api-client](api-client) — Frontend API utilities and CSRF handling
 - [Api-reference](api-reference) — Frontend API reference
 - [Data-fetching](data-fetching) — TanStack Query caching, createQueryResource, mutations
+- [Offline](offline) — Service worker, fetch fallback, and the local message store
 - [Php-api](php-api) — Backend PHP API: router, auth, response, handlers
 - [I18n](i18n) — Internationalization (i18n) system
 - [Theme-scaffold](theme-scaffold) — Generating a new, independently-branded theme package from `@utsukta/spa-core`

@@ -33,6 +33,7 @@ class HqMessages
         $type = $_GET['type'] ?? '';
         $file = $_GET['file'] ?? '';
         $search = trim($_GET['search'] ?? '');
+        $xchan  = trim($_GET['xchan'] ?? '');
 
         if ($type === 'notification') {
             $this->sendNotices($uid, $offset, $search);
@@ -70,6 +71,24 @@ class HqMessages
             ) ";
         }
 
+        // Conversation with one channel: threads they wrote, plus the ones we
+        // wrote to them (where we're the author and they're in the ACL).
+        // allow_cid stores hashes as '<hash>', and a hash is base64url so it
+        // carries no LIKE wildcards.
+        // Comma-separated: one identity can own several xchan rows (see
+        // Xchan.php's xchan_hashes). protect_sprintf keeps the LIKE wildcards
+        // alive through the sprintf inside q().
+        $xchan_sql = '';
+        if ($xchan !== '') {
+            $hashes = array_filter(array_map('trim', explode(',', $xchan)));
+            $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
+            $likes = [];
+            foreach ($hashes as $h) {
+                $likes[] = "i.allow_cid LIKE '" . protect_sprintf('%<' . dbesc($h) . '>%') . "'";
+            }
+            $xchan_sql = " AND ( i.author_xchan IN ($in) OR " . implode(' OR ', $likes) . " ) ";
+        }
+
         $dummy_order_sql = '';
         // Sort by last thread activity ("commented", bumped by item_store()
         // on every new reply) rather than thread-creation time, so a DM
@@ -99,6 +118,7 @@ class HqMessages
             AND i.created <= '%s'
             $type_sql
             $search_sql
+            $xchan_sql
             $item_normal_i
             ORDER BY i.$order_col DESC $dummy_order_sql
             LIMIT $limit OFFSET $offset",

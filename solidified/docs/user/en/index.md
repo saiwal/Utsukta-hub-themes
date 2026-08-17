@@ -2,6 +2,8 @@
 
 Welcome to Hubzilla *Solidified* - a fast, modern interface for your Hubzilla hub. Same channel, same connections, same federated network underneath. A completely reimagined way to use it on top.
 
+![screenshot](./index/ss.png)
+
 ## What is Solidified?
 
 Solidified replaces the classic page-reload interface with a single-page app: pages switch instantly, your feed updates in the background, and the whole thing works offline-capable as an installable app on your phone or desktop.
@@ -23,6 +25,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Nav](nav) — What each nav link, account-menu item, and mobile button does
 - [Hq](hq) — Your HQ dashboard: composer, events, messages, drafts
 - [Network](network) — Network stream: filters, view modes, searching
+- [Inbox](inbox) — Mail-style message reader, and reading offline
 - [Channel](channel) — Channel and profile pages
 - [Composing-posts](composing-posts) — Writing posts, formatting, privacy controls, reactions
 - [Photos](photos) — Photo albums and image viewer
