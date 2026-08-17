@@ -15,6 +15,7 @@ require_once('include/items.php');
  *   ?start=2026-05-01&end=2026-06-01
  *   ?id=<event_id>                            — single event detail
  *   ?export=ical                              — download as iCal (.ics)
+ *   ?cat=<name>                               — filter by category (channel calendar only)
  *
  * POST /api/cal                               — create event (JSON body)
  * POST /api/cal/import                        — import iCal (JSON body: { ical: "..." })
@@ -103,6 +104,13 @@ class Cal
         $adjust_start  = datetime_convert('UTC', date_default_timezone_get(), $start);
         $adjust_finish = datetime_convert('UTC', date_default_timezone_get(), $finish);
 
+        // Category filter. Kept out of $sql_extra deliberately — that also feeds
+        // exportIcal() and the ?id= single-event branch, neither of which should be
+        // narrowed. The item join is a LEFT JOIN, so events with no companion item
+        // have item.id IS NULL and drop out, which is what we want here.
+        $cat       = trim((string) ($_GET['cat'] ?? ''));
+        $cat_extra = $cat ? protect_sprintf(term_query('item', $cat, TERM_CATEGORY)) : '';
+
         // Include unless explicitly disabled (pconfig = 0); false = key not
         // set = default = enabled. Single-event lookups (?id=) bypass this —
         // a direct link to an event should still resolve even if the
@@ -140,7 +148,7 @@ class Cal
                        OR (event.adjust = 1
                            AND ( event.dtend >= '%s' OR event.nofinish = 1 )
                            AND event.dtstart <= '%s' ))
-                 $sql_extra",
+                 $sql_extra $cat_extra",
                 intval($channel_id),
                 dbesc($start),
                 dbesc($finish),
@@ -191,6 +199,13 @@ class Cal
                 'rw'          => true,
                 'plink'       => $rr['plink'] ?? '',
                 'html'        => $html,
+                // fetch_post_tags() above already hydrated $rr['term']. Emitted as an
+                // array of names (the SPA's shape, cf. Articles.php); the write side
+                // takes core's comma-separated string. Not gated on
+                // feature_enabled(uid,'categories') — the SPA doesn't gate post
+                // categories on it either (see caps.category in editor.types.ts).
+                'categories'  => array_values(array_column(
+                    get_terms_oftype($rr['term'] ?? [], TERM_CATEGORY), 'term')),
                 'author'      => [
                     'name'   => Response::decodeEntities($rr['xchan_name'] ?? ''),
                     'avatar' => $rr['xchan_photo_s'] ?? '',
@@ -217,8 +232,10 @@ class Cal
             $events[] = $event;
         }
 
-        // Merge CalDAV events for the channel owner (range queries only — skip for ?id=)
-        if ($is_owner && !isset($_GET['id'])) {
+        // Merge CalDAV events for the channel owner (range queries only — skip for ?id=).
+        // Also skipped when filtering by category: CalDAV events have no companion item
+        // and so no categories, and would otherwise leak unfiltered into the results.
+        if ($is_owner && !isset($_GET['id']) && !$cat) {
             $cdav = $this->fetchCalDavEventsForRange(
                 intval($local_uid),
                 $channelx,
@@ -343,6 +360,11 @@ class Cal
             Response::error(500, 'Failed to create event');
         }
 
+        // Categories live as term rows on the companion item, never on the event
+        // row. Attached after event_store_event() and before event_store_item(),
+        // the same ordering core uses (Channel_calendar.php ~175-181).
+        $datarray['term'] = $this->categoryTerms($uid, $channel, (string) ($body['categories'] ?? ''));
+
         $post = event_store_item($datarray, $event);
 
         if (!empty($post['item_id'])) {
@@ -414,6 +436,44 @@ class Cal
                 'deny_gid'  => $existing['deny_gid'],
             ];
 
+        // Terms (categories, hashtags, mentions) live on the companion item, and
+        // item_store_update() rebuilds them from $datarray['term'] — running an
+        // unconditional "delete from term where oid = ... and otype = ..." first and
+        // only re-inserting when the value is an array. Omitting the key is not
+        // neutral: event_store_item()'s update branch assigns $arr['term'] unguarded
+        // (include/event.php:1325), so the key arrives set-but-null and every term
+        // row for the event is wiped. So always re-submit the complete set.
+        $ir     = q("SELECT id FROM item
+                     WHERE resource_id = '%s' AND resource_type = 'event' AND uid = %d
+                     LIMIT 1",
+            dbesc($existing['event_hash']), intval($uid));
+        $itemId = $ir ? intval($ir[0]['id']) : 0;
+
+        // Read the raw stored rows. Deliberately not fetch_post_tags($x, true) —
+        // that rewrites TERM_MENTION urls through chanlink_url() (include/items.php
+        // ~4402), which would corrupt them on the way back in.
+        $existingTerms = $itemId
+            ? q("SELECT * FROM term WHERE oid = %d AND otype = %d", $itemId, intval(TERM_OBJ_POST))
+            : [];
+        $existingTerms = $existingTerms ?: [];
+
+        // Same authoritative-key convention as $body['scope'] above (and Item.php's
+        // $catsGiven): key absent = keep what's stored, '' = clear.
+        $catsGiven = array_key_exists('categories', $body);
+        $terms = $catsGiven
+            ? array_values(array_filter(
+                $existingTerms,
+                fn($t) => intval($t['ttype']) !== TERM_CATEGORY
+            ))
+            : $existingTerms;
+
+        if ($catsGiven) {
+            $terms = array_merge(
+                $terms,
+                $this->categoryTerms($uid, $channel, (string) $body['categories'])
+            );
+        }
+
         $datarray = [
             'id'               => $eventId,
             'uid'              => intval($uid),
@@ -446,13 +506,61 @@ class Cal
             Response::error(500, 'Failed to update event');
         }
 
+        // Attached only after event_store_event(), the same ordering core uses
+        // (Channel_calendar.php ~175-181) — the event table has no term column.
+        // Always set, even when empty: [] is an array, so item_store_update() takes
+        // the honest delete-then-reinsert path. See the note above.
+        $datarray['term'] = $terms;
+
         $post = event_store_item($datarray, $event);
+
+        // item_store_update() also deletes iconfig unconditionally, and
+        // event_store_item()'s update branch never re-sets it (only its insert
+        // branch does, include/event.php ~1405) — so without this the event's
+        // timezone is lost on every edit and reads back as UTC.
+        $iid = intval($post['item_id'] ?? 0);
+        if ($iid) {
+            set_iconfig($iid, 'event', 'timezone', $timezone, true);
+        }
 
         if (!empty($post['item_id'])) {
             \Zotlabs\Daemon\Master::Summon(['Notifier', 'edit_post', $post['item_id']]);
         }
 
         Response::send(['success' => true]);
+    }
+
+    // Build TERM_CATEGORY rows for the event's companion item from a
+    // comma-separated string, mirroring core's event path exactly
+    // (Zotlabs/Module/Channel_calendar.php ~136-146) so rows written here are
+    // indistinguishable from rows written by core's own calendar UI.
+    //
+    // The '?f=&cat=' url format is core's *event* convention and differs from the
+    // SPA's post convention ('?cat=', see Item.php). Keep core's here: store_item_tag()
+    // dedupes on (term, url), so a mismatch would produce duplicate rows for one
+    // category when an event is edited in both UIs, and encode_item_terms() exports
+    // url verbatim to clones and remote sites.
+    private function categoryTerms(int $uid, array $channel, string $categories): array
+    {
+        $categories = escape_tags(trim($categories));
+        if (!strlen($categories)) {
+            return [];
+        }
+
+        $base = $channel['xchan_url'] ?: channel_url($channel);
+        $out  = [];
+
+        foreach (array_filter(array_map('trim', explode(',', $categories))) as $cat) {
+            $out[] = [
+                'uid'   => $uid,
+                'ttype' => TERM_CATEGORY,
+                'otype' => TERM_OBJ_POST,
+                'term'  => $cat,
+                'url'   => $base . '?f=&cat=' . urlencode($cat),
+            ];
+        }
+
+        return $out;
     }
 
     // Same scope-string convention (public/private/connections/custom) and
@@ -827,6 +935,9 @@ class Cal
                         'rw'            => $editable && !$recurrent,
                         'plink'         => '',
                         'html'          => '',
+                        // CalDAV events have no companion item, so no term rows.
+                        // Always present so the client never has to special-case it.
+                        'categories'    => [],
                         'calendarId'    => $calId,
                         'calendarColor' => $color,
                         'calendarName'  => $displayname,

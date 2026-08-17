@@ -536,7 +536,10 @@ class Articles
         $title    = escape_tags(trim($input['title']    ?? ''));
         $summary  = escape_tags(trim($input['summary']  ?? ''));
         $slug     = trim($input['slug']     ?? '');
-        $category = trim($input['category'] ?? '');
+        $category  = trim($input['category'] ?? '');
+        // Presence is authoritative (same convention as Item.php's editItem):
+        // key absent = keep the article's stored categories, '' = clear them.
+        $catsGiven = array_key_exists('category', $input);
         $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
         $post_id  = intval($input['post_id'] ?? 0);
         $lang     = trim($input['lang']     ?? '');
@@ -624,7 +627,22 @@ class Articles
             $datarray['commented']      = datetime_convert();
             $datarray['edit']           = true;
             $datarray['id']             = $post_id;
-            $datarray['term']           = $post_tags;
+
+            // item_store_update() rebuilds terms from $datarray['term'] behind an
+            // unconditional "delete from term where oid = ... and otype = ..." that
+            // is NOT filtered by ttype. $post_tags only ever holds categories, so
+            // assigning it raw destroyed the article's hashtags and mentions too —
+            // and, whenever the client sent category='', its categories as well.
+            // Same hazard the iconfig pre-load below already guards against.
+            $existingTerms = dbq("SELECT * FROM term WHERE oid = " . intval($post_id)
+                . " AND otype = " . intval(TERM_OBJ_POST)) ?: [];
+            $keptTerms = array_values(array_filter(
+                $existingTerms,
+                fn($t) => intval($t['ttype']) !== TERM_CATEGORY
+            ));
+            $datarray['term'] = $catsGiven
+                ? array_merge($keptTerms, $post_tags)
+                : $existingTerms;
             $datarray['attach']         = $attachments;
             $datarray['allow_cid']      = $allow_cid;
             $datarray['allow_gid']      = $allow_gid;

@@ -375,6 +375,14 @@ trait FormatsItems
             'can_comment' => (bool) can_comment_on_post($observer_xchan, $item),
             'attach' => self::normalizeAttach($item['attach'] ? json_decode($item['attach'], true) : []),
             'poll'   => self::extractPoll($item, $observer_xchan),
+            // Categories live on the term table, so this needs $item['term'] —
+            // every caller already batch-hydrates it via fetch_post_tags(), which
+            // is why this costs no extra query. Deliberately NOT gated on
+            // feature_enabled(uid,'categories'): that flag is core's own display
+            // switch (jot.tpl / Editpost.php), defaults off, and gating on it would
+            // make categories invisible in the SPA for most channels.
+            'categories' => array_values(array_column(
+                get_terms_oftype($item['term'] ?? [], TERM_CATEGORY), 'term')),
         ];
     }
 }

@@ -2313,6 +2313,12 @@ class Item
             'can_comment'      => (bool) can_comment_on_post($ob_hash, $item),
             'attach'           => $attach,
             'poll'             => self::extractPoll($item, $ob_hash),
+            // Mirrors Concerns\FormatsItems::formatItem() — this handler has its own
+            // copy rather than using that trait, so the field has to be added twice
+            // or the single-item view would show no categories while the streams do.
+            // Callers hydrate $item['term'] via fetch_post_tags(), so no extra query.
+            'categories'       => array_values(array_column(
+                get_terms_oftype($item['term'] ?? [], TERM_CATEGORY), 'term')),
         ];
     }
 
