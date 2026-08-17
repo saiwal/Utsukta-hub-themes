@@ -124,6 +124,9 @@ class Moderate
             'iid'      => intval($item['id']),
             'uuid'     => $item['uuid'],
             'mid'      => $item['mid'],
+            // For a reaction this is the mid of the post/comment reacted to —
+            // lets the client show the flag icon only where something's queued.
+            'thr_parent' => $item['thr_parent'],
             'verb'     => $item['verb'],
             'obj_type' => $item['obj_type'],
             'created'  => $item['created'],

@@ -1125,11 +1125,17 @@ class Settings
         if ($action === 'toggle-frontend') {
             $id = notags(trim($data['id'] ?? ''));
             if (!$id) Response::error(400, 'Invalid request');
+            // The list holds modules whose state the user flipped away from the
+            // module's default; only the client knows those defaults, so it sends
+            // `override`. `enabled` is the pre-defaults fallback for old bundles.
+            $override = array_key_exists('override', $data)
+                ? !empty($data['override'])
+                : empty($data['enabled']);
             $raw = get_pconfig($uid, 'spa', 'disabled_frontend_modules', '');
             $disabled = $raw ? (json_decode($raw, true) ?? []) : [];
             if (!is_array($disabled)) $disabled = [];
             $disabled = array_values(array_diff($disabled, [$id]));
-            if (empty($data['enabled'])) $disabled[] = $id;
+            if ($override) $disabled[] = $id;
             set_pconfig($uid, 'spa', 'disabled_frontend_modules', json_encode($disabled));
             Response::send(['status' => 'ok']);
         }
