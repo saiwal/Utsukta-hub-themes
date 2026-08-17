@@ -1607,8 +1607,13 @@ class Item
     }
 
     // POST /api/item/:mid/edit
-    // JSON body: { body, title?, summary?, mimetype?, pagetitle? }
+    // JSON body: { body, title?, summary?, mimetype?, pagetitle?, category? }
     // Only the item owner can edit.
+    //
+    // `category` is authoritative when present: the edit composer round-trips
+    // the item's existing categories, so sending "" means "remove them all".
+    // Callers that don't send the key at all (the inline comment editor) leave
+    // the item's categories untouched — see the term rebuild below.
     private function editItem(string $mid): void
     {
         $uid      = Auth::requireLocalJson();
@@ -1617,6 +1622,8 @@ class Item
         $summary  = trim(Auth::$parsedBody['summary']   ?? '');
         $mimetype = trim(Auth::$parsedBody['mimetype']  ?? 'text/bbcode');
         $slug     = trim(Auth::$parsedBody['pagetitle'] ?? '');
+        $catsGiven = array_key_exists('category', Auth::$parsedBody);
+        $category  = trim(Auth::$parsedBody['category'] ?? '');
 
         if (!$content) {
             Response::error(400, 'body is required');
@@ -1689,7 +1696,33 @@ class Item
         // groups, emoji) — same delete+reinsert approach core's own
         // item_store_update() uses (include/items.php ~2400-2418), since this
         // handler updates the item row directly rather than going through it.
-        q("DELETE FROM term WHERE oid = %d AND otype = %d", $iid, intval(TERM_OBJ_POST));
+        // Categories → term records, same shape as createPost() so they
+        // federate identically. Only rebuilt when the caller sent the key.
+        if ($catsGiven && $category) {
+            require_once('include/channel.php');
+            $ownerChannel = channelx_by_n($uid);
+            foreach (array_filter(array_map('trim', explode(',', $category))) as $cat) {
+                $postTags[] = [
+                    'uid'   => $uid,
+                    'ttype' => TERM_CATEGORY,
+                    'otype' => TERM_OBJ_POST,
+                    'term'  => $cat,
+                    'url'   => channel_url($ownerChannel) . '?cat=' . urlencode($cat),
+                ];
+            }
+        }
+
+        // Terms not derived from the body must survive the rebuild. Core's
+        // editor keeps them by re-submitting $_POST['category'] and re-reading
+        // TERM_UNKNOWN/TERM_FILE/TERM_COMMUNITYTAG off the original post
+        // (Zotlabs/Module/Item.php ~180 and ~776). Categories are preserved the
+        // same way *unless* the caller supplied the key, in which case the
+        // payload is authoritative and stale category rows must go.
+        $keep = [TERM_UNKNOWN, TERM_PCATEGORY, TERM_FILE, TERM_COMMUNITYTAG];
+        if (!$catsGiven) $keep[] = TERM_CATEGORY;
+        q("DELETE FROM term WHERE oid = %d AND otype = %d AND ttype NOT IN (" .
+            implode(',', array_map('intval', $keep)) . ")",
+            $iid, intval(TERM_OBJ_POST));
         foreach ($postTags as $t) {
             q("INSERT INTO term (uid, oid, otype, ttype, term, url, imgurl)
                 VALUES (%d, %d, %d, %d, '%s', '%s', '%s')",
@@ -2518,12 +2551,18 @@ class Item
             $body = $this->collapseShareTags($body, $ob_hash);
         }
 
+        // Categories come off the term table, not the item row — the composer
+        // needs them to round-trip, otherwise saving would wipe them.
+        $cats = q("SELECT term FROM term WHERE oid = %d AND otype = %d AND ttype = %d ORDER BY term ASC",
+            intval($item['id']), intval(TERM_OBJ_POST), intval(TERM_CATEGORY));
+
         json_return_and_die([
             'success'  => true,
             'body'     => $body,
             'title'    => $item['title'],
             'summary'  => $item['summary'],
             'mimetype' => $item['mimetype'],
+            'category' => $cats ? implode(',', array_column($cats, 'term')) : '',
         ]);
     }
 
