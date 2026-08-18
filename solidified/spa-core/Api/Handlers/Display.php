@@ -77,11 +77,17 @@ class Display
         //    any channel the observer has view_stream permission for.
         $r = [];
 
+        //    view_stream alone is NOT enough — it gates the channel, not the
+        //    post, so item_permissions_sql() must still match the row's ACL
+        //    (anonymous → item_private = 0), otherwise DMs and other private
+        //    posts leak to anyone holding the permalink.
         if ($owner_uid) {
             $perms = get_all_perms($owner_uid, $observer_hash);
             if ($perms['view_stream']) {
+                $owner_permission_sql = item_permissions_sql($owner_uid, $observer_hash);
                 $r = q("SELECT item.id AS item_id FROM item
-                        WHERE uid = %d AND mid = '%s' $item_normal LIMIT 1",
+                        WHERE uid = %d AND mid = '%s'
+                        $owner_permission_sql $item_normal LIMIT 1",
                     $owner_uid,
                     dbesc($target_item['parent_mid']));
             }

@@ -302,12 +302,18 @@ class Item
     private function getComments(string $mid, string $count): void
     {
         $ob_hash = get_observer_hash();
-        $item_normal = item_normal();
 
         $root = $this->resolveItem($mid, $ob_hash);
         if (!$root) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
+
+        // A viewable root does not make its children viewable — a comment can
+        // carry a narrower ACL than the thread it hangs off. Core applies the
+        // same clause to the children (items_by_parent_ids' $permission_sql).
+        // Folded into $item_normal because every comment mode below already
+        // threads that fragment into its query.
+        $item_normal = item_normal() . item_permissions_sql(intval($root['uid']), $ob_hash);
 
         $rootId = intval($root['id']);
 
@@ -658,12 +664,14 @@ class Item
     private function getReactions(string $mid, string $activityVerb): void
     {
         $ob_hash = get_observer_hash();
-        $item_normal = item_normal();
 
         $root = $this->resolveItem($mid, $ob_hash);
         if (!$root) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
+
+        // Same as getComments(): reactions inherit no visibility from the root.
+        $item_normal = item_normal() . item_permissions_sql(intval($root['uid']), $ob_hash);
 
         $rootMid = dbesc($root['mid']);
         $rootUid = intval($root['uid']);
