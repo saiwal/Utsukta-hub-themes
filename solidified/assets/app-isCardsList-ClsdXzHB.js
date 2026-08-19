@@ -1,0 +1,1 @@
+import{d as e}from"./app-routing-BV7Kukwf.js";function t(){let t=e();return()=>{let e=t.pathname.split(`/`).filter(Boolean);return e[0]===`cards`&&e.length<=2}}export{t};

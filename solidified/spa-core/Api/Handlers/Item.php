@@ -17,12 +17,14 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
+use Utsukta\SpaCore\Api\Concerns\EmbedsCards;
 use Utsukta\SpaCore\Api\Response;
 
 class Item
 {
     use FiltersBlockedChannels;
     use EnforcesServiceClass;
+    use EmbedsCards;
 
     // ── Entry points ──────────────────────────────────────────────────────────
     //
@@ -55,7 +57,7 @@ class Item
         // contain "/" characters. When not percent-encoded by the caller, the path
         // is split across multiple argv segments. Reconstruct the mid by detecting
         // the known verb at the end; for comments the optional count sits after it.
-        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery', 'compose', 'sharepreview'];
+        $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery', 'compose', 'sharepreview', 'cardpreview'];
         $segs  = array_slice(App::$argv, 2);
         $n     = count($segs);
         $verb  = '';
@@ -103,6 +105,9 @@ class Item
                 break;
             case 'sharepreview':
                 $this->getSharePreview($mid);
+                break;
+            case 'cardpreview':
+                $this->getCardPreview($mid);
                 break;
             default:
                 $this->getItem($mid);
@@ -892,6 +897,7 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+            $content = $this->expandCardTags($content);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
@@ -1156,6 +1162,7 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+            $content = $this->expandCardTags($content);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
@@ -1662,6 +1669,7 @@ class Item
             }
 
             $content = $this->expandShareTags($content);
+            $content = $this->expandCardTags($content);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($uid, $content));
         } else {
@@ -2563,6 +2571,7 @@ class Item
         $body = $item['body'];
         if ($item['mimetype'] === 'text/bbcode') {
             $body = $this->collapseShareTags($body, $ob_hash);
+            $body = $this->collapseCardTags($body, fn(string $mid) => $this->resolveItem($mid, $ob_hash));
         }
 
         // Categories come off the term table, not the item row — the composer
@@ -2603,6 +2612,33 @@ class Item
 
         if (!$bb) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        json_return_and_die(['success' => true, 'bbcode' => $bb]);
+    }
+
+    // GET /api/item/:id/cardpreview   (:id = numeric item id)
+    // Returns the expanded [card …][/card] block for a compact [card=<id>] tag
+    // so the composer can render the embedded card inside the WYSIWYG.
+    // Display-only, same as getSharePreview above: the preview may render any
+    // card the viewer can already see, since nothing is stored.
+    private function getCardPreview(string $id): void
+    {
+        Auth::requireLocalGet();
+
+        $bb = '';
+        $r = q("SELECT * FROM item WHERE id = %d AND item_type = %d LIMIT 1",
+            intval($id), intval(ITEM_TYPE_CARD));
+        if ($r) {
+            $sql_extra = item_permissions_sql(intval($r[0]['uid']));
+            $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
+            if ($v) {
+                $bb = $this->buildCardBlock($v[0], forDisplay: true);
+            }
+        }
+
+        if (!$bb) {
+            json_return_and_die(['error' => 'Card not found or permission denied']);
         }
 
         json_return_and_die(['success' => true, 'bbcode' => $bb]);

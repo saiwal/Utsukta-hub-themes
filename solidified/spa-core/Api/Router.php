@@ -32,6 +32,7 @@ class Router
         'item-source' => Handlers\Itemsrc::class,
         'privacy-groups' => Handlers\PrivacyGroups::class,
         'articles' => Handlers\Articles::class,
+        'cards' => Handlers\Cards::class,
         'network' => Handlers\Network::class,
         'hq-messages' => Handlers\HqMessages::class,
         'channel' => Handlers\Channel::class,

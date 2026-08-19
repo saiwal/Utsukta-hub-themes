@@ -157,21 +157,34 @@ class StreamWidgets
     }
 
     // ── /api/stream-widgets/series ───────────────────────────────────────────
-    // Distinct article series for the channel, with member counts. Only
-    // meaningful for type=articles — series is an articles-only concept.
+    // Distinct ordered groupings for the channel, with member counts. Only
+    // meaningful for the two types that have them: type=articles (series,
+    // iconfig cat 'article'/'series') and type=cards (decks, cat 'card'/'deck').
+    // Any other type has no grouping concept and returns an empty list.
 
     private function getSeries(): void
     {
         $uid            = $this->resolveUid();
         $permission_sql = item_permissions_sql($uid);
+        $type           = $this->itemType();
+
+        [$cfg_cat, $cfg_key] = match ($type) {
+            'articles' => ['article', 'series'],
+            'cards'    => ['card', 'deck'],
+            default    => ['', ''],
+        };
+
+        if (!$cfg_cat) {
+            Response::send(['series' => []]);
+        }
 
         $rows = dbq(
             "SELECT s.v AS name, COUNT(*) AS total
              FROM iconfig s
              INNER JOIN item ON item.id = s.iid
-             WHERE s.cat = 'article' AND s.k = 'series'
+             WHERE s.cat = '$cfg_cat' AND s.k = '$cfg_key'
                AND item.uid          = " . intval($uid) . "
-               AND item.item_type    = " . ITEM_TYPE_ARTICLE . "
+               AND item.item_type    = " . $this->itemTypeValue($type) . "
                AND item.item_deleted = 0
                $permission_sql
              GROUP BY s.v
@@ -326,12 +339,12 @@ class StreamWidgets
     }
 
     /**
-     * Read ?type= param. Returns 'articles', 'notes', or 'posts' (default).
+     * Read ?type= param. Returns 'articles', 'cards', 'notes', or 'posts' (default).
      */
     private function itemType(): string
     {
         $type = $_GET['type'] ?? '';
-        return in_array($type, ['articles', 'notes'], true) ? $type : 'posts';
+        return in_array($type, ['articles', 'cards', 'notes'], true) ? $type : 'posts';
     }
 
     /**
@@ -341,6 +354,7 @@ class StreamWidgets
     {
         return match ($type) {
             'articles' => ITEM_TYPE_ARTICLE,
+            'cards'    => ITEM_TYPE_CARD,
             'notes'    => ITEM_TYPE_CUSTOM,
             default    => ITEM_TYPE_POST,
         };

@@ -2,7 +2,7 @@
 
 A [Solid.js](https://www.solidjs.com/) single-page application (SPA) that ships as the **Solidified** theme for [Hubzilla](https://framagit.org/hubzilla/core), a federated social networking platform. It replaces the classic server-rendered UI with a fast, reactive client-side experience while staying fully integrated with Hubzilla's PHP backend.
 
-> The theme source is available at **[saiwal/Hubzilla-Solidified-Source](https://github.com/saiwal/Hubzilla-Solidified-Source)** on GitHub.
+> The theme source is available at **[saiwal/Solidified-Source](https://github.com/saiwal/Solidified-Source)** on GitHub.
 
 ---
 

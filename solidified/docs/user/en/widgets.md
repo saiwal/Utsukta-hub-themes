@@ -169,6 +169,16 @@ A single-article preview card showing the title, a short excerpt, and a read-mor
 ### Bookmarked Rooms
 
 Lists the chatrooms you've bookmarked for quick access, with a way to jump straight into a room or remove a bookmark.
+<!-- card_deck -->
+
+### Card Deck
+
+Lists the channel's card decks with a count for each, drawn as a small stack. Clicking a deck opens its own ordered page; the shuffle button jumps straight to a random card from it, which is the quicker way in when the order doesn't matter.
+<!-- card_showcase -->
+
+### Card Showcase
+
+A single card, rendered as the real thing rather than a text preview — it flips to its back on hover, or on tap where there's no pointer. Add one per card you want to highlight.
 <!-- categories_list -->
 
 ### Categories (list)
@@ -294,6 +304,11 @@ Lists the channel's posts with the most engagement (likes and comments), as a wa
 ### Popular Articles
 
 Lists the channel's articles with the most engagement, surfacing the most-read or most-discussed writing.
+<!-- popular_cards -->
+
+### Popular Cards
+
+Lists the channel's cards with the most engagement, surfacing the ones people have reacted to or discussed most.
 <!-- quick_compose_btns -->
 
 ### Quick Compose
