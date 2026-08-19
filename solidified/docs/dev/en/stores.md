@@ -2,7 +2,7 @@
 
 State is managed with **Solid's reactive primitives** (signals, memos, resources). There is no centralised store — state is scoped to where it is needed. The shared stores cover cross-cutting concerns: authentication, navigation data, and page context.
 
-## Auth Store (`src/shared/store/auth-store.ts`)
+## Auth Store (`packages/spa-core/src/store/auth-store.ts`)
 
 Fetches viewer identity once at startup from `/spa/pconfig`.
 
@@ -28,7 +28,7 @@ const admin = isAdmin();    // boolean
 
 On load the store also reads `spa` preferences from the pconfig response and applies typography, background, and theme settings immediately.
 
-## Nav Store (`src/shared/store/nav-store.ts`)
+## Nav Store (`packages/spa-core/src/store/nav-store.ts`)
 
 Fetches `/spa/nav` (optionally with `?channel_nick=<nick>`) whenever the subject channel changes. Returns viewer identity, pinned/featured apps, channel tabs, installed app names, and system apps.
 
@@ -52,7 +52,7 @@ const installed = useInstalledApps(); // () => Set<string>
 
 `useChannelNav(subjectNick)` returns a resource that includes `channel_tabs` — only populated when a nick is provided.
 
-## Site Config Store (`src/shared/store/site-config.ts`)
+## Site Config Store (`packages/spa-core/src/store/site-config.ts`)
 
 Derives page context from the current URL and auth state — no API call needed.
 
@@ -98,10 +98,15 @@ Returns the nick to use for API calls:
 Each module typically has its own `store/store.ts` using `createResource` for data fetching:
 
 ```typescript
-// Example pattern
+// Example pattern — module-level stores stay on createResource because they
+// have no component context. Inside components, prefer createQueryResource.
 const [posts, { refetch }] = createResource(
-  () => `network?start=${offset()}`,
-  (key) => moduleGet(`api/${key}`)
+  () => `/spa/network?start=${offset()}`,
+  async (url) => {
+    const res = await apiFetch(url);
+    if (!res.ok) throw await apiError(res);
+    return (await res.json()).data;
+  },
 );
 ```
 

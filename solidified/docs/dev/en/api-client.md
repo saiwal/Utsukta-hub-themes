@@ -2,101 +2,119 @@
 
 ## Overview
 
-All API communication goes through thin fetch wrappers. There are two sets:
+All API communication goes through one thin wrapper, `apiFetch`, in
+`packages/spa-core/src/lib/fetch.ts`. It returns the raw `Response` — it does
+not unwrap the JSON envelope — so call sites stay explicit about status
+handling.
 
-- **`apiGet`** — Hubzilla's built-in REST API at `/spa/z/1.0/`
-- **`moduleGet` / `modulePost`** — The SPA's own PHP API at `/spa/*`
+> An older `api.ts` exported `apiGet` / `moduleGet` / `modulePost` against
+> `/spa/z/1.0/`. Those were removed; nothing in the tree uses them. If you find
+> them referenced anywhere, that reference is stale.
 
-File: `src/shared/lib/api.ts`
+Most component code should not call the network layer directly for GETs — reads
+go through the TanStack Query cache instead; see
+[data-fetching.md](data-fetching.md).
 
-These wrappers are the raw network layer. Most component code should not call them directly for GETs — reads go through the TanStack Query cache instead; see [data-fetching.txt](data-fetching.txt).
-
-## apiGet
-
-```typescript
-import { apiGet } from "@utsukta/spa-core/lib/api";
-
-const result = await apiGet<MyType>("channel/alice");
-// → GET /spa/z/1.0/channel/alice
-```
-
-Used for Hubzilla's native Zot API endpoints. Throws on non-2xx responses.
-
-## moduleGet
+## apiFetch
 
 ```typescript
-import { moduleGet } from "@utsukta/spa-core/lib/api";
+import { apiFetch, apiError } from "@utsukta/spa-core/lib/fetch";
 
-const data = await moduleGet<MyType>("api/network?start=0");
-// → GET /spa/network?start=0
+const res = await apiFetch("/spa/network?start=0");
+if (!res.ok) throw await apiError(res);
+const { data } = await res.json();
 ```
 
-Used for the SPA-specific PHP API handlers.
+It adds, on every request:
 
-## modulePost
+- `credentials: "include"`
+- `Content-Type: application/json`
+
+and on `POST` / `PUT` / `PATCH` / `DELETE`:
+
+- `X-CSRF-Token`, fetched via `getCsrfToken()`
+
+Any headers you pass in `init.headers` are merged in, and the CSRF header is
+applied last so it can't be accidentally overwritten.
+
+### Automatic CSRF retry
+
+If a mutating request comes back `403` and the body is a CSRF error
+(`error.code === "csrf_invalid"` or `error.message === "Invalid CSRF token"`),
+`apiFetch` calls `resetCsrfToken()` and retries the request **once** with a
+fresh token. This is the main reason to prefer it over a hand-rolled `fetch` —
+a session that outlives the 30-minute token cache otherwise fails a save.
+
+### Writing a mutation
 
 ```typescript
-import { modulePost } from "@utsukta/spa-core/lib/api";
-
-const result = await modulePost<MyType>("api/item/abc123/like", {});
-// → POST /spa/item/abc123/like
-//   Content-Type: application/json
-//   body: {}
+export async function renameThing(id: number, name: string) {
+  const res = await apiFetch(`/spa/thing/${id}/edit`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw await apiError(res);
+  return (await res.json()).data;
+}
 ```
 
-All POST requests to the PHP API must:
-1. Use `Content-Type: application/json`
-2. Include a valid CSRF token (see below)
+## When to use raw `fetch` instead
 
-`modulePost` sets the content type header but does **not** automatically attach a CSRF token — callers must fetch one and include it when the PHP handler checks for it (via `Auth::requireLocalJson()`).
+`apiFetch` always sets a JSON content type, so two cases must bypass it:
+
+- **Multipart uploads** — build a `FormData` and set `X-CSRF-Token` yourself
+  (`Avatar.php`, `Photos.php` and the vCard/iCal import paths do this).
+- **File downloads** — use a plain `<a href>`; the handler writes its own
+  headers and `exit`s rather than returning an envelope (see `Cal.php`'s
+  `?export=ical` and `Files.php`).
+
+Both still work offline-safely: the fetch fallback in
+`packages/spa-core/src/lib/offline-fallback.ts` wraps `window.fetch` globally,
+beneath every call site.
+
+## Error Handling
+
+`apiError(res, label?)` builds an `Error` from the response, preferring the
+server's `error.message` over the bare status code, and truncating it to 200
+characters (server messages can carry a PHP stack trace).
+
+```typescript
+import { apiError, truncateError } from "@utsukta/spa-core/lib/fetch";
+```
+
+The house pattern for surfacing one:
+
+```typescript
+import { toast } from "@utsukta/spa-core/store/toast";
+
+try {
+  await renameThing(id, name);
+} catch (err) {
+  toast.error(err instanceof Error ? err.message : "Rename failed");
+}
+```
 
 ## CSRF Token Management
 
-File: `src/shared/lib/csrf.ts`
+File: `packages/spa-core/src/lib/csrf.ts`
 
-The PHP API requires a CSRF token for all state-changing POST requests. The token is fetched once from `/spa/csrf` and cached for 30 minutes.
+The token is fetched once from `/spa/csrf` and cached for 30 minutes.
+`apiFetch` handles this for you; call it directly only in the raw-`fetch` cases
+above.
 
 ```typescript
 import { getCsrfToken, resetCsrfToken } from "@utsukta/spa-core/lib/csrf";
 
-// Fetch (or return cached) token
-const token = await getCsrfToken();
-
-// Invalidate cache (e.g. after a 403)
-resetCsrfToken();
+const token = await getCsrfToken();  // cached, or fetched
+resetCsrfToken();                    // invalidate (e.g. after a 403)
 ```
 
-The token should be included as a request header or body field depending on what the PHP handler expects. The standard pattern used in this codebase is to pass it as a header:
-
-```typescript
-const token = await getCsrfToken();
-const res = await fetch("/spa/item", {
-  method: "POST",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json",
-    "X-CSRF-Token": token,
-  },
-  body: JSON.stringify(payload),
-});
-```
-
-## Error Handling
-
-The fetch wrappers throw a plain `Error` with the HTTP status code in the message on non-2xx responses. Module-level code is responsible for catching errors and updating UI state accordingly.
-
-```typescript
-try {
-  const data = await moduleGet<Post[]>("api/network");
-} catch (err) {
-  console.error("Failed to load network:", err);
-  setError("Could not load posts.");
-}
-```
+Server side, `Auth::requireLocalJson()` validates the header against
+`$_SESSION['solidified_csrf']`.
 
 ## API Response Envelope
 
-All PHP API responses use a consistent envelope (see [php-api.txt](php-api.txt)):
+All PHP API responses use a consistent envelope (see [php-api.md](php-api.md)):
 
 ```json
 { "data": <payload> }
@@ -104,12 +122,19 @@ All PHP API responses use a consistent envelope (see [php-api.txt](php-api.txt))
 { "error": { "status": 404, "message": "Not found" } }
 ```
 
-The `data` field is what you typically destructure in fetch callers.
+Unwrap `data` in the module's `api.ts`, so views and widgets never see the
+envelope.
 
 ## Dev Proxy
 
-During development the Vite dev server proxies requests:
-- `/spa/*` → `https://hz-ddev.ddev.site/spa/*`
-- `/perfstats` → same target
+The Vite dev server proxies to `https://hz-ddev.ddev.site`, so module code can
+use relative `/spa/` URLs in both dev and production.
 
-This means module code can use relative `/spa/` URLs in both dev and production.
+Proxied outright: `/spa`, `/perfstats`, `/cloud`, `/photo`, `/attach`,
+`/wall_upload`, `/wall_attach`, `/item`, `/acl`, `/follow`, `/subthread`,
+`/sse_bs`, `/starred`, `/smilies`.
+
+`/hq`, `/notify`, `/notifications` and `/cdav` are **also SPA routes**, so they
+are proxied only for the app's own `fetch()`es — browser navigations
+(`sec-fetch-mode: navigate`) fall through to the dev server, so a hard reload
+still opens the SPA rather than the legacy theme.

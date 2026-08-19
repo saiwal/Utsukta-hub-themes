@@ -8,7 +8,7 @@ decisions already made (so they don't need re-litigating) and the concrete imple
 **Status: planned, not started.**
 
 A "Report" action any logged-in viewer can take on a post/comment, distinct from the existing
-pending-moderation queue (`src/Api/Handlers/Moderate.php`, `/moderate` page): that mechanism hides
+pending-moderation queue (`packages/spa-core/php/Api/Handlers/Moderate.php`, `/moderate` page): that mechanism hides
 content Hubzilla itself auto-flags on arrival (unsolicited comments/reactions from non-contacts).
 Reports need the opposite property — reported content is usually from an already-trusted contact and
 must stay visible to everyone while under review, not get hidden by `item_blocked`.
@@ -62,7 +62,7 @@ design decision — not every report fans out everywhere, and it isn't owner-onl
   need for cart's dual MySQL/Postgres branches. `item_report_uninstall()` intentionally leaves the
   table in place (reports are moderation history, not disposable addon state). The addon owns *only*
   the table lifecycle — no routes/hooks/UI; all read/write logic stays in this repo's
-  `src/Api/Handlers/*.php`, same as every other core table.
+  `packages/spa-core/php/Api/Handlers/*.php`, same as every other core table.
 
 - **Owner notification**: a direct `INSERT INTO notify`, not `Enotify::submit()` — its `NOTIFY_SYSTEM`
   branch is an empty stub in core (`Zotlabs/Lib/Enotify.php`), so nothing sets the notify text there.
@@ -78,21 +78,21 @@ design decision — not every report fans out everywhere, and it isn't owner-onl
 
 Backend (this repo):
 
-1. `src/Api/Handlers/Item.php` — new `POST /item/:mid/report` (add `'report'` to `$POST_VERBS` + the
+1. `packages/spa-core/php/Api/Handlers/Item.php` — new `POST /item/:mid/report` (add `'report'` to `$POST_VERBS` + the
    dispatch switch, same pattern as `star`/`pin`). Body: `{ reason, note?, targets: ("owner"|"admin")[] }`.
    Reuses `resolveItem($mid, $ob_hash)` for the visibility gate; blocks reporting your own item. One
    `item_report` row per selected target; the direct `notify` insert described above when `owner` is
    selected.
-2. `src/Api/Handlers/Reports.php` (new) — owner-facing queue, mirrors `Moderate.php`'s shape exactly
+2. `packages/spa-core/php/Api/Handlers/Reports.php` (new) — owner-facing queue, mirrors `Moderate.php`'s shape exactly
    (`Auth::requireLocalGet()`/`requireLocalJson()`, hand-rolled DTO, `Response::send()`):
    `GET /spa/reports` (pending, `target='owner'`, scoped to `local_channel()`),
    `POST /spa/reports/:id/dismiss`, `POST /spa/reports/:id/delete` (→ `drop_item()`, then mark all
    `item_report` rows for that `iid` `'actioned'`).
-3. `src/Api/Handlers/Admin.php` — add `case 'reports':` to both the `get()`/`post()` switches
+3. `packages/spa-core/php/Api/Handlers/Admin.php` — add `case 'reports':` to both the `get()`/`post()` switches
    (`getChannels()`/`postChannels()` is the closest existing shape to mirror), gated by the existing
    `requireAdmin()`. Lists all `item_report` rows where `target='admin' AND status='pending'`,
    site-wide.
-4. `src/Api/Router.php` — register `'reports' => Handlers\Reports::class`.
+4. `packages/spa-core/php/Api/Router.php` — register `'reports' => Handlers\Reports::class`.
 
 Frontend:
 

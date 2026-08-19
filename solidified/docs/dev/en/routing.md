@@ -16,18 +16,24 @@ The SPA uses **@solidjs/router** (Solid Router). The root route wraps all pages 
   {(route) => {
     const Comp = lazy(route.component);
     const mid = route.moduleId;
-    if (mid && getModule(mid)?.appName) {
-      const Guarded = () => (
-        <ModuleGuard moduleId={mid}>
-          <Comp />
-        </ModuleGuard>
-      );
-      return <Route path={route.path} component={Guarded} />;
+    const mod = mid ? getModule(mid) : null;
+
+    let Rendered: Component = Comp;
+    if (mod?.appUrlSlug || mod?.frontendFeature) {
+      const Inner = Rendered;
+      Rendered = () => <ModuleGuard moduleId={mid!}><Inner /></ModuleGuard>;
     }
-    return <Route path={route.path} component={Comp} />;
+    if (mod?.requiresAuth) {
+      const Inner = Rendered;
+      Rendered = () => <AuthGuard><Inner /></AuthGuard>;
+    }
+    return <Route path={route.path} component={Rendered} />;
   }}
 </For>
 ```
+
+The guards nest rather than branch, so a module can be both app-gated and
+auth-gated.
 
 ## Lazy Loading
 
@@ -41,13 +47,15 @@ component: () => import("./views/MyView")
 
 ## ModuleGuard
 
-When a module declares an `appName`, its routes are wrapped in `ModuleGuard`:
+When a module declares an `appUrlSlug` (or a `frontendFeature`), its routes are wrapped in `ModuleGuard`:
 
 ```typescript
 const ModuleGuard: ParentComponent<{ moduleId: string }> = (props) => {
   const installedApps = useInstalledApps();
   const navigate = useNavigate();
-  const active = createMemo(() => isModuleActive(props.moduleId, installedApps()));
+  const active = createMemo(() =>
+    isModuleActive(props.moduleId, installedApps(), disabledFrontendModules()),
+  );
 
   createEffect(() => {
     if (!active()) navigate("/", { replace: true });

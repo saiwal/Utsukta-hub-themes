@@ -7,7 +7,7 @@ help-enabled element to open a modal rendering the relevant section of the
 
 ## Turning It On
 
-`src/shared/store/help-mode.ts` holds the state as plain signals:
+`packages/spa-core/src/store/help-mode.ts` holds the state as plain signals:
 
 ```typescript
 export function useHelpMode() {
@@ -28,7 +28,7 @@ export function useHelpMode() {
 
 ## Marking an Element Helpable
 
-The `use:helpable` directive (`src/shared/lib/helpable.ts`) wires an element
+The `use:helpable` directive (`packages/spa-core/src/lib/helpable.ts`) wires an element
 up to help mode: while help mode is armed, hovering the element outlines it
 and hovering shows a "help" cursor; clicking it calls `pick(target)` instead
 of the element's normal click behavior (stopped via `preventDefault` /

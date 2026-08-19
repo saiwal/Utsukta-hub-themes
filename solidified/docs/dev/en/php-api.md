@@ -1,6 +1,6 @@
 # PHP API
 
-The `src/Api/` directory is a PHP backend that lives inside the Hubzilla theme as `Theme\Solidified\Api`. It is deployed alongside the theme and provides the SPA's own JSON API at `/spa/*`.
+The `packages/spa-core/php/Api/` directory is a PHP backend that lives inside the Hubzilla theme as `Utsukta\SpaCore\Api`. It is deployed alongside the theme and provides the SPA's own JSON API at `/spa/*`.
 
 ## Router
 
@@ -113,14 +113,14 @@ attach[]
 
 ## Writing a New Handler
 
-1. Create `src/Api/Handlers/MyResource.php`:
+1. Create `packages/spa-core/php/Api/Handlers/MyResource.php`:
 
 ```php
 <?php
-namespace Theme\Solidified\Api\Handlers;
+namespace Utsukta\SpaCore\Api\Handlers;
 
-use Theme\Solidified\Api\Auth;
-use Theme\Solidified\Api\Response;
+use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Response;
 
 class MyResource
 {

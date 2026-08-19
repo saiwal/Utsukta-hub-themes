@@ -13,7 +13,7 @@ The result depends on the **viewer role** and the current **subject nick** (chan
 
 ## useNav
 
-`src/shared/lib/useNav.ts` — the main hook for computing the nav list.
+`packages/spa-core/src/lib/useNav.ts` — the main hook for computing the nav list.
 
 ```typescript
 import { useNav } from "@utsukta/spa-core/lib/useNav";
@@ -56,7 +56,7 @@ Actions that have SPA routes (`/admin`, `/settings`, `/manage`) use in-app navig
 
 ## Viewer Role
 
-`useViewerRole()` from `src/shared/store/site-config.ts` returns the viewer's relationship to the current page:
+`useViewerRole()` from `packages/spa-core/src/store/site-config.ts` returns the viewer's relationship to the current page:
 
 ```typescript
 type ViewerRole = "owner" | "local" | "remote" | "anonymous";

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-**hubzilla-spa** is a Solid.js SPA that replaces the server-rendered Hubzilla UI. It talks to a custom PHP API layer (`src/Api/`) that is deployed as part of the Hubzilla theme and lives at `/spa/*`.
+**hubzilla-spa** is a Solid.js SPA that replaces the server-rendered Hubzilla UI. It talks to a custom PHP API layer (`packages/spa-core/php/Api/`) that is deployed as part of the Hubzilla theme and lives at `/spa/*`.
 
 ## Tech Stack
 
@@ -58,7 +58,7 @@ The Vite build writes to:
 ```
 
 Outputs: `app.js`, `app-[name].js` (code-split chunks), `app.css`.
-Static `src/docs/` and `src/Api/` are copied verbatim alongside.
+Static `src/docs/` and `packages/spa-core/php/Api/` are copied verbatim alongside.
 
 ## Dev Proxy
 

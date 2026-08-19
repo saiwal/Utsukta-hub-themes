@@ -1,7 +1,9 @@
 # Solidified SPA — PHP API Reference
 
-Source: `src/Api/` in [saiwal/Hubzilla-Solidified-Source](https://github.com/saiwal/Hubzilla-Solidified-Source)
-Namespace: `Theme\Solidified\Api`. All routes are dispatched by `Router.php` from `/api/<resource>[/...]`, where `<resource>` selects a handler class and the handler's `get()` / `post()` / `delete()` method runs based on HTTP verb. Unknown resource → `404`; unsupported verb on a known resource → `405`.
+Source: `packages/spa-core/php/Api/` in [saiwal/Hubzilla-Solidified-Source](https://github.com/saiwal/Hubzilla-Solidified-Source)
+Namespace: `Utsukta\SpaCore\Api`. All routes are dispatched by `Router.php` from `/spa/<resource>[/...]`, where `<resource>` selects a handler class and the handler's `get()` / `post()` / `delete()` method runs based on HTTP verb. Unknown resource → `404`; unsupported verb on a known resource → `405`.
+
+> The URL prefix is `/spa/`, not `/api/` — deliberately, so the theme's route registration doesn't shadow Hubzilla's classic `/api/z/1.0/` surface. Many handler docblocks still write `/api/…`; that is a cosmetic leftover, the routes are `/spa/…`.
 
 ## Response Envelope (global, from `Response.php`)
 
@@ -18,7 +20,7 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 
 ## Endpoints by Handler
 
-| Resource (`/api/…`) | Method & Path | Description | Response `data` |
+| Resource (`/spa/…`) | Method & Path | Description | Response `data` |
 |---|---|---|---|
 | **csrf** | `GET /csrf` | Issue a CSRF token for subsequent mutations | `{ token }` |
 | **login** | `GET /login` | Issue login form token | `{ token }` |
@@ -125,8 +127,8 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 
 ### Notes
 
-- **Auth model**: most `/api/*` GET/POST calls require an active local-channel session; a handful (`csrf`, `login`, `register`, `regate`, `password-reset`, `pubsites`, `pubstream`, `announcements` GET, `directory`, `siteinfo`, `manifest`, `sw`, `rss-feed`, `weather`, `search`) are public or work for anonymous/remote visitors.
+- **Auth model**: most `/spa/*` GET/POST calls require an active local-channel session; a handful (`csrf`, `login`, `register`, `regate`, `password-reset`, `pubsites`, `pubstream`, `announcements` GET, `directory`, `siteinfo`, `manifest`, `sw`, `rss-feed`, `weather`, `search`) are public or work for anonymous/remote visitors.
 - **Pagination**: list-heavy endpoints (`network`, `articles` comments, item comments, etc.) use `Response::paginate()`, returning `offset`, `limit`, `count`, `root_count`, and `has_more` in `meta`.
-- **CSRF**: all state-changing (`POST`/`DELETE`) endpoints validate a CSRF token obtained from `GET /api/csrf` (or a form-specific token, e.g. `spa_login_tok`, `spa_pwreset_tok`).
+- **CSRF**: all state-changing (`POST`/`DELETE`) endpoints validate a CSRF token obtained from `GET /spa/csrf` (or a form-specific token, e.g. `spa_login_tok`, `spa_pwreset_tok`).
 - **Rate limiting**: `login`, `register`, `regate`, and `password-reset` enforce per-IP attempt limits before returning `429`.
-- Full route-level comments live at the top of each file in `src/Api/Handlers/`.
+- Full route-level comments live at the top of each file in `packages/spa-core/php/Api/Handlers/`.

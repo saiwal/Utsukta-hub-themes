@@ -4,11 +4,11 @@
 
 Server data is fetched through **TanStack Solid Query** (`@tanstack/solid-query`). Every GET response is cached in memory under a **query key**; components reading the same key share one request and one cache entry. Revisiting a page renders instantly from cache while the data revalidates in the background ("stale-while-revalidate").
 
-The raw fetch wrappers (`apiGet`, `moduleGet`, `modulePost` — see [api-client.txt](api-client.txt)) are still the network layer. TanStack Query wraps them; it does not replace them.
+`apiFetch` (see [api-client.md](api-client.md)) is still the network layer underneath. TanStack Query wraps it; it does not replace it.
 
 ## Cache Configuration
 
-File: `src/shared/lib/query-client.ts` — a single shared `QueryClient`, mounted via `QueryClientProvider` in `App.tsx`.
+File: `packages/spa-core/src/lib/query-client.ts` — a single shared `QueryClient`, mounted via `QueryClientProvider` in `App.tsx`.
 
 | Option | Value | Meaning |
 |---|---|---|
@@ -24,7 +24,7 @@ In dev builds a floating TanStack Query devtools panel shows every cached key, i
 
 ## Reading Data: createQueryResource
 
-File: `src/shared/lib/createQueryResource.ts`
+File: `packages/spa-core/src/lib/createQueryResource.ts`
 
 A drop-in replacement for Solid's `createResource`, backed by the query cache. Same tuple shape, same reactive semantics, plus caching and request dedup.
 
@@ -83,7 +83,7 @@ const save = useMutation(() => ({
 
 ## Nav Data
 
-`src/shared/store/nav-store.ts` caches `/spa/nav` under `["nav", nick]`. All nav hooks (`useNavData`, `useInstalledApps`, …) share it. After installing/uninstalling an app call `refetchNavData()` — it invalidates every nav variant.
+`packages/spa-core/src/store/nav-store.ts` caches `/spa/nav` under `["nav", nick]`. All nav hooks (`useNavData`, `useInstalledApps`, …) share it. After installing/uninstalling an app call `refetchNavData()` — it invalidates every nav variant.
 
 ## What NOT to Convert
 

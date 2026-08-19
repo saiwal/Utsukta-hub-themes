@@ -33,7 +33,7 @@ registerModule({
 });
 ```
 
-`WidgetDef` fields (see `shared/types/module.types.ts`):
+`WidgetDef` fields (see `packages/spa-core/src/types/module.types.ts`):
 
 - `id` — stable identifier, convention `"<moduleId>.<name>"`.
 - `label` — human-readable name (string or `() => string` for i18n).
@@ -48,18 +48,22 @@ registerModule({
 
 By default widgets are **module-local**: rendered only while a module listed in `defaultModules` is active, and unmounted on navigation away.
 
-**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. In the user-facing edit UI these are described as "pinned": they render on every page, show no move/remove toolbar, and never appear in the Add-widget picker. The shared ones live in `shared/slots.ts`:
+**Global widgets** (`global: true`) stay mounted for the entire session — they survive navigation. In the user-facing edit UI these are described as "pinned": they render on every page, show no move/remove toolbar, and never appear in the Add-widget picker. There is no central file for them — each is registered by the module that owns it (currently `notify` and `chat`):
 
 ```typescript
-// shared/slots.ts
-export const notificationsWidget: WidgetDef = {
+// src/modules/notify/index.ts
+{
+  // Id predates this module (it was "shared.notifications" in the old
+  // src/shared/slots.ts) — kept as-is, since widget ids are persisted
+  // in user layouts and must never be renamed.
   id: "shared.notifications",
-  label: "Notifications",
-  loader: () => import("./widgets/notifications/NotificationsAside"),
+  label: () => useI18n().t("widgets.notifications"),
+  loader: () => import("./widgets/NotificationsAside"),
   slot: "right",
   contexts: "any",
   global: true,
-};
+  helpTarget: "notifications",
+}
 ```
 
 A widget id can only be registered once — duplicate registrations are ignored with a console warning.
@@ -82,7 +86,7 @@ Users can override which widgets appear on which pages. The layout lives in pcon
 - An explicit empty array → the user removed every widget from that slot.
 - Saved via `POST /spa/widget-layout` (`{ layout: … }`, `{ layout: null }` resets everything); loaded at boot from `GET /spa/pconfig`.
 
-Client state is in `src/shared/store/widget-layout.ts`: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`. Saves are optimistic with rollback; localStorage (`hz-widget-layout`) caches the layout so sidebars don't flash defaults while pconfig loads. The server value — including its absence — always wins for local users.
+Client state is in `packages/spa-core/src/store/widget-layout.ts`: `layoutFor(moduleId, slot)`, `saveSlotLayout(moduleId, slot, ids | null)`, `saveWidgetLayout(layout | null)`. Saves are optimistic with rollback; localStorage (`hz-widget-layout`) caches the layout so sidebars don't flash defaults while pconfig loads. The server value — including its absence — always wins for local users.
 
 Stored ids that point at unknown, global, context-disallowed, or uninstalled-app widgets are silently dropped at render time: layouts outlive code changes.
 
@@ -112,7 +116,7 @@ Internally, `Slot` renders:
 1. All **global** widgets for the slot (always mounted, never torn down).
 2. **Local** widgets: the user's saved layout for the active module when one exists, otherwise widgets whose `defaultModules` include the active module (swapped on navigation).
 
-Local widgets are skipped when the active module's `appName` app is not installed; each widget is additionally gated by its *owning* module's app, and `visitorVisible: false` widgets are skipped for non-local viewers (this filter applies to global widgets too).
+Local widgets are skipped when the active module's `appUrlSlug` app is not installed; each widget is additionally gated by its *owning* module's app, and `visitorVisible: false` widgets are skipped for non-local viewers (this filter applies to global widgets too).
 
 ## Layout templates (`templateId` / `ModuleDef.pageTemplate`)
 
@@ -127,7 +131,7 @@ owner maintains, not with the number of items using them, and editing a
 template updates every item assigned to it at once. See "Multi-region
 templates" below for exactly which slots a template can cover.
 
-Templates live in a separate store, `src/shared/store/widget-templates.ts`
+Templates live in a separate store, `packages/spa-core/src/store/widget-templates.ts`
 (pconfig cat `spa`, key `widget_templates`):
 ```json
 { "version": 1, "templates": { "tpl_xxxxxx": { "name": "Docs page", "slots": { "right": [...] } } } }

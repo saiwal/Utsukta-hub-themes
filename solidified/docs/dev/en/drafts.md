@@ -10,7 +10,7 @@ A draft is just an `item` row that never got published:
 - `route` holds a small JSON blob: `{"scope": "...", "slug": "...", "category": "..."}` — the one non-generic field, `scope`, is what the listing query filters on and what the client uses to route a draft back to the right composer.
 - `mid`/`uuid` are freshly minted at creation (`item_message_id()`), independent of any "real" item — an edit-draft's `scope` carries the *target* item's own id (uuid/mid) separately; the draft row itself is a throwaway container for body/title/summary text.
 
-Backend: `src/Api/Handlers/Drafts.php`.
+Backend: `packages/spa-core/php/Api/Handlers/Drafts.php`.
 
 ```
 GET  /spa/drafts[?type=post,article,...]   list drafts, one or more comma-separated scope-prefixes

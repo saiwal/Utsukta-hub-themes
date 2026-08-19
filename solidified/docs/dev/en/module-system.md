@@ -7,7 +7,7 @@ Every feature in the SPA is a self-contained **module**. A module declares its r
 Create `src/modules/<id>/index.ts` and call `registerModule()`:
 
 ```typescript
-import { registerModule } from "@utsukta/spa-core/lib/module-registry";
+import { registerModule } from "@utsukta/spa-core/module-registry";
 import { useI18n } from "@utsukta/spa-core/i18n";
 
 registerModule({
@@ -31,13 +31,13 @@ registerModule({
       slot: "right",
     },
   ],
-  appName: "MyFeature",      // omit if no app prerequisite
+  appUrlSlug: "/myfeature",  // omit if no Hubzilla app prerequisite
 });
 ```
 
 The file is auto-imported by `App.tsx` via `import.meta.glob("./modules/*/index.ts", { eager: true })`. You never need to update a central list.
 
-See `slot-system.txt` for the full `WidgetDef` reference (multi-instance widgets, config panels, global vs. module-local widgets, layout templates).
+See `slot-system.md` for the full `WidgetDef` reference (multi-instance widgets, config panels, global vs. module-local widgets, layout templates).
 
 ## ModuleDef Interface
 
@@ -46,16 +46,30 @@ interface ModuleDef {
   id: string;                        // unique module identifier
   routes: RouteDef[];                // SPA routes (lazy-loaded)
   navItem?: NavItemDef;              // navigation entry (optional — some modules are widget-only, e.g. "blocks")
-  widgets?: WidgetDef[];             // widget contributions — see slot-system.txt
+  widgets?: WidgetDef[];             // widget contributions — see slot-system.md
   /** @deprecated Ignored by the registry; migrate to `widgets`. */
   slots?: SlotsDef;
-  permissions?: string[];            // future use
-  appName?: string;                  // Hubzilla app gate (e.g. "Photos")
+  permissions?: string[];            // declared but nothing reads it yet
+  /** Stable URL fragment from the app's .apd (e.g. "/articles/", "/cdav/addressbook").
+   *  Matched against installed app *urls*, not display names. */
+  appUrlSlug?: string;
+  /** SPA-only feature with no backing Hubzilla app — appears as a toggle in
+   *  Settings → Integrations, gated off a pconfig list. */
+  frontendFeature?: {
+    label: string | (() => string);
+    description?: string | (() => string);
+    defaultEnabled?: boolean;        // false = opt-in. Defaults to true.
+  };
   requiresAuth?: boolean;            // true = anonymous visitors are redirected to /login
   /** Reactive accessor for the layout-template id assigned to the item the
    * active route is showing (e.g. a webpage's assigned template). See
-   * "Layout templates" in slot-system.txt. */
+   * "Layout templates" in slot-system.md. */
   pageTemplate?: () => string | null | undefined;
+  /** Reactive chrome mode for the item the active route is showing.
+   *  "zen" hides all chrome; "focus" keeps header/gridTop/contentTop/footer;
+   *  "wide" hides only the right sidebar; "compact" hides the nav rail and
+   *  mobile bars. See slot-system.md. */
+  pageChrome?: () => "default" | "zen" | "focus" | "wide" | "compact" | undefined;
 }
 ```
 
@@ -71,7 +85,7 @@ interface NavItemDef {
   href: string | (() => string);   // navigation target (can be reactive)
   context?: NavContext | NavContext[];
   hidden?: boolean;
-  /** Help-mode target ("nav.<topic>" form) — see help-mode.txt. */
+  /** Help-mode target ("nav.<topic>" form) — see help-mode.md. */
   helpTarget?: string;
 }
 
@@ -92,51 +106,76 @@ import { usePageNick } from "@utsukta/spa-core/store/site-config";
 href: () => `/photos/${usePageNick()()}`,
 ```
 
-## App Gating (appName)
+## App Gating (appUrlSlug)
 
-When `appName` is set, the module is suppressed unless the Hubzilla app by that name is in the viewer's installed-apps list.
+When `appUrlSlug` is set, the module is suppressed unless an installed Hubzilla app's **url** contains that fragment.
+
+> **Match on url, never on app name.** `app_name` is a translated string that can stay frozen at whatever it was when an old channel installed the app, so name matching silently fails on non-English or long-lived channels. The url is never translated. The value comes from the app's `.apd` — e.g. `carddav.apd` has `url: $baseurl/cdav/addressbook`, so the slug is `/cdav/addressbook`.
 
 - Routes redirect away (via `ModuleGuard` in `App.tsx`).
 - Slot widgets are not rendered (checked in `Slot.tsx`).
-- The nav item is filtered out by `useInstalledApps()`.
+- The nav item comes from the server's app list and is resolved back to the module by `moduleIdForPath()`, so the module should register a route at the app url itself.
 
-The installed-apps list comes from `/spa/nav` and is an empty `Set` during the initial load — while the set is empty every module is treated as active (pass-through).
+The installed-apps list comes from `/spa/nav` (it holds raw app urls) and is an empty `Set` during the initial load — while the set is empty every gated module is treated as active (pass-through).
 
 ```typescript
 // module-registry.ts
-export function isModuleActive(moduleId: string, installedApps: Set<string>): boolean {
+export function isAppInstalled(installedApps: Set<string>, urlSlug: string): boolean {
+  for (const url of installedApps) if (url.includes(urlSlug)) return true;
+  return false;
+}
+
+export function isModuleActive(
+  moduleId: string,
+  installedApps: Set<string>,
+  disabledFrontendModules?: Set<string>,
+): boolean {
   const mod = modules.get(moduleId);
   if (!mod) return false;
-  if (!mod.appName) return true;             // no gate
+  if (!frontendFeatureEnabled(mod.frontendFeature, moduleId, disabledFrontendModules)) return false;
+  if (!mod.appUrlSlug) return true;          // no gate
   if (installedApps.size === 0) return true; // not yet loaded
-  return installedApps.has(mod.appName);
+  return isAppInstalled(installedApps, mod.appUrlSlug);
 }
 ```
+
+`frontendFeature` modules are gated by the same function, off the persisted
+disabled-module list rather than the installed-apps set. The stored list holds
+ids whose state *differs* from the module's default, so the effective state is
+`default XOR override` (`frontendFeatureEnabled`).
 
 ## Recommended Folder Structure
 
 ```
 src/modules/myfeature/
-├── index.ts        # registerModule() call
+├── index.ts        # registerModule() call — the only auto-imported file
+├── api.ts          # typed fetch wrappers (apiFetch + apiError)
+├── store.ts        # module-local signals, only if state outlives one component
 ├── views/
 │   └── MyView.tsx  # lazy-loaded page components
-├── api/
-│   └── api.ts      # fetch wrappers for this module
-├── store/
-│   └── store.ts    # module-local signals / resources
 └── widgets/
     └── MySidebarWidget.tsx
 ```
 
+Newer modules keep `api.ts` and `store.ts` as flat files rather than
+`api/api.ts` + `store/store.ts`; both spellings exist in the tree. Skip
+`store.ts` entirely unless state genuinely has to outlive a single component —
+prefer `createQueryResource` + `useMutation` with query invalidation.
+
+A module also needs i18n entries before it will compile: a `nav.<id>` label, its
+own namespace in `packages/spa-core/packages/spa-core/src/i18n/locales/` (types.ts + all three
+locales), and a `widgets.*` label per registered widget.
+
 ## In-Component App Gating
 
-`appName` gates an entire module. To gate only a **section within a component** based on a Hubzilla app, use `useInstalledApps()` directly:
+`appUrlSlug` gates an entire module. To gate only a **section within a component**, combine `useInstalledApps()` with `isAppInstalled()` — never `installedApps().has(name)`, for the same reason the module gate matches on url:
 
 ```typescript
 import { useInstalledApps } from "@utsukta/spa-core/store/nav-store";
+import { isAppInstalled } from "@utsukta/spa-core/module-registry";
 
 const installedApps = useInstalledApps();
-const affinityInstalled = () => installedApps().has("Affinity Tool");
+const affinityInstalled = () => isAppInstalled(installedApps(), "/affinity");
 ```
 
 Then wrap the conditional UI in a `<Show>`:
@@ -148,8 +187,8 @@ Then wrap the conditional UI in a `<Show>`:
 ```
 
 **Where this is used:**
-- `StreamFiltersWidget.tsx` — the Closeness / Affinity slider is hidden unless the "Affinity Tool" app is installed.
-- `StreamFiltersWidget.tsx` — Privacy Groups picker is hidden unless "Privacy Groups" is installed.
+- `StreamFiltersWidget.tsx` — the Closeness / Affinity slider (`/affinity`) and the Privacy Groups picker (`/group`).
+- `SubPageLayout.tsx` — sub-nav items carry a `requiresApp` slug, checked the same way.
 
 The same empty-set pass-through rule applies here: `useInstalledApps()` returns an empty `Set` until `/spa/nav` responds, so the section is visible during the initial render. If you want to hide-by-default instead, guard with `installedApps().size > 0 && affinityInstalled()`.
 
