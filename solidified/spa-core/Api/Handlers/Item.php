@@ -327,6 +327,10 @@ class Item
             . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
         $around = trim((string)($_GET['around'] ?? ''));
+        // Permalinks from classic notifications carry a b64.-encoded mid.
+        if (str_starts_with($around, 'b64.')) {
+            $around = (string) unpack_link_id($around);
+        }
         if ($around !== '') {
             json_return_and_die(
                 $this->buildCommentContext($root, $rootId, $ob_hash, $item_normal, $blocked_sql, $around)
