@@ -1,1 +1,0 @@
-import{t as e}from"./app-vendor-dompurify-D-kBbLew.js";import{t}from"./app-bbcode-B_-TD0Zc.js";function n(n,r){switch(r){case`text/bbcode`:return e.sanitize(t(n));case`text/html`:return e.sanitize(n);case`text/markdown`:return`<pre class="whitespace-pre-wrap">${e.sanitize(n)}</pre>`;default:return e.sanitize(n)}}export{n as t};
