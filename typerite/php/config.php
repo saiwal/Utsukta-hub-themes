@@ -39,7 +39,7 @@ class typeriteConfig {
 			return;
 		}
 
-		set_pconfig(local_channel(), 'typerite', 'schema', $_POST['schema']);
+		/* set_pconfig(local_channel(), 'typerite', 'schema', $_POST['schema']); */
 		set_pconfig(local_channel(), 'system', 'style_update', time());
 	}
 

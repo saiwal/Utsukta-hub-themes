@@ -41,7 +41,7 @@ class keepitsimpleConfig {
 			return;
 		}
 
-		set_pconfig(local_channel(), 'keepitsimple', 'schema', $_POST['schema']);
+		/* set_pconfig(local_channel(), 'keepitsimple', 'schema', $_POST['schema']); */
 		set_pconfig(local_channel(), 'system', 'style_update', time());
 		if (isset($_POST['keepitsimple-settings-submit'])) {
 			set_pconfig(local_channel(), 'keepitsimple', 'banner_image', $_POST['keepitsimple_banner_image']);
