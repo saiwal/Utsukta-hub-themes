@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-9kNHfgxH.js";import{ra as t}from"./app-BjLYipEO.js";import{t as n}from"./app-TagListWidget-C80kQGF5.js";import{f as r,i}from"./app-store-CtB8gCAF.js";function a(){return e(n,{get channelNick(){return t()()},type:`cards`,get activeTag(){return i()},onTagClick:e=>r(`tag`,e)})}export{a as default};
