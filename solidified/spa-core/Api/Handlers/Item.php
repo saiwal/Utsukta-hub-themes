@@ -2575,7 +2575,6 @@ class Item
         $body = $item['body'];
         if ($item['mimetype'] === 'text/bbcode') {
             $body = $this->collapseShareTags($body, $ob_hash);
-            $body = $this->collapseCardTags($body, fn(string $mid) => $this->resolveItem($mid, $ob_hash));
         }
 
         // Categories come off the term table, not the item row — the composer
@@ -2713,15 +2712,31 @@ class Item
 
             // message_id must come from the outer block's attributes (before
             // the first ']'), never from a nested block's attributes.
-            // Only collapse when save-time expandShareTags could re-expand the
-            // tag (non-private bbcode target) — otherwise the stored block
-            // would be lost on the next save. Unresolvable blocks stay
-            // verbatim; the editor renders them from their own attributes.
+            // Only collapse when the matching save-time expander could
+            // re-expand the tag — otherwise the stored block would be lost on
+            // the next save. Unresolvable blocks stay verbatim; the editor
+            // renders them from their own attributes.
+            //
+            // A card embed is stored as a share block too (see
+            // Concerns\EmbedsCards), so this one scan serves both: an
+            // ITEM_TYPE_CARD target collapses to [card=<id>] for
+            // expandCardTags, anything else to [share=<id>] for
+            // expandShareTags.
             $collapsed = $block;
             if (preg_match("/^\[share\s[^\]]*message_id='([^']+)'/is", $block, $mm)) {
                 $target = $this->resolveItem($mm[1], $ob_hash);
-                if ($target && !intval($target['item_private']) && $target['mimetype'] === 'text/bbcode') {
-                    $collapsed = '[share=' . intval($target['id']) . '][/share]';
+                if ($target && $target['mimetype'] === 'text/bbcode') {
+                    $isCard = intval($target['item_type']) === ITEM_TYPE_CARD;
+                    // Cards additionally allow the owner's own private ones —
+                    // buildCardBlock()'s gate, mirrored here so the two
+                    // directions agree about what is embeddable.
+                    $embeddable = !intval($target['item_private'])
+                        || ($isCard && intval($target['uid']) === intval(local_channel()));
+                    if ($embeddable) {
+                        $collapsed = $isCard
+                            ? '[card=' . intval($target['id']) . '][/card]'
+                            : '[share=' . intval($target['id']) . '][/share]';
+                    }
                 }
             }
 

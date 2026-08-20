@@ -1,30 +1,29 @@
 <?php
 /**
- * Self-check for the [card] token regexes in Api/Concerns/EmbedsCards.php.
+ * Self-check for the [card] token patterns.
  *
  * Pure string logic — no DB and no Hubzilla bootstrap, so unlike
  * event-terms-test.php this runs standalone in one process:
  *
  *   php packages/spa-core/php/tests/card-bbcode-test.php
  *
- * Exits non-zero on failure. Covers the compact/expanded token forms and the
- * malformed-input cases: non-numeric ids, the compact form leaking into the
- * collapse pass, a hostile title, and unterminated input (backtracking).
+ * Exits non-zero on failure.
+ *
+ * Scope note: a *stored* card embed is a [share] block (see
+ * Api/Concerns/EmbedsCards.php), so collapsing it back is Item.php's
+ * collapseShareTags — covered by its own share-block scan, not here. What is
+ * card-specific, and what this file covers, is the compact [card=<id>] token
+ * expandCardTags matches: it must accept only well-formed numeric ids and
+ * never hand anything else to the database lookup.
  *
  * The patterns below mirror the trait; if you change one, change both.
  */
 declare(strict_types=1);
 
-// Mirrors of the three patterns used by the trait.
-const EXPAND   = '/(\[card=(\d+)\](.*?)\[\/card\])/ism';
-const COLLAPSE = '/\[card\s[^\]]*\]\s*\[\/card\]/is';
-const MIDATTR  = "/\smid='([^']*)'/is";
+const EXPAND = '/(\[card=(\d+)\](.*?)\[\/card\])/ism';
 
 function expandIds(string $body): array {
     return preg_match_all(EXPAND, $body, $m) ? $m[2] : [];
-}
-function collapseBlocks(string $body): array {
-    return preg_match_all(COLLAPSE, $body, $m) ? $m[0] : [];
 }
 
 $fail = 0;
@@ -34,43 +33,28 @@ function check(string $name, $got, $want) {
     else printf("ok   %s\n", $name);
 }
 
-// ── expand side ──────────────────────────────────────────────────────────────
+// ── well-formed tokens ───────────────────────────────────────────────────────
 check('plain token', expandIds('hi [card=42][/card] there'), ['42']);
-check('two tokens', expandIds('[card=1][/card][card=2][/card]'), ['1','2']);
-// Non-numeric id must not match at all — it is left as literal text, never
-// passed to the DB lookup.
+check('two tokens', expandIds('[card=1][/card][card=2][/card]'), ['1', '2']);
+check('token beside a share', expandIds('[share=7][/share] [card=8][/card]'), ['8']);
+
+// ── malformed ids never reach the DB lookup ──────────────────────────────────
 check('non-numeric id ignored', expandIds('[card=abc][/card]'), []);
 check('negative id ignored', expandIds('[card=-1][/card]'), []);
 check('empty id ignored', expandIds('[card=][/card]'), []);
+check('unterminated ignored', expandIds('[card=42] no closer'), []);
 
-// ── collapse side ────────────────────────────────────────────────────────────
-$block = "[card\n\tmid='https%3A%2F%2Fh%2Fitem%2Fabc'\n\ttitle='Hi'\n][/card]";
-check('block matched', collapseBlocks($block), [$block]);
-preg_match(MIDATTR, $block, $mm);
-check('mid extracted', urldecode($mm[1]), 'https://h/item/abc');
+// A stored embed is a [share] block, so the expander must not touch one —
+// otherwise a re-save would try to re-expand already-expanded content.
+check('stored share block untouched', expandIds("[share author='x' link='/cards/a/b']body[/share]"), []);
 
-// The compact form must NOT be picked up by the collapse pattern (it requires
-// whitespace after "[card"), so a body mid-edit is never double-collapsed.
-check('compact not collapsed', collapseBlocks('[card=42][/card]'), []);
+// ── pathological input must terminate, not backtrack ─────────────────────────
+$t = microtime(true);
+expandIds('[card=' . str_repeat('1', 100000));
+check('unterminated is fast', (microtime(true) - $t) < 1.0, true);
 
-// A title containing bracket/quote characters cannot break out, because
-// buildCardBlock urlencode()s every value. Simulate a hostile title.
-$hostile = "[card\n\tmid='x'\n\ttitle='" . urlencode("]['card= \" ' evil") . "'\n][/card]";
-check('hostile title: one block', collapseBlocks($hostile), [$hostile]);
-preg_match(MIDATTR, $hostile, $hm);
-check('hostile title: mid intact', $hm[1], 'x');
-
-// Nested-looking input must terminate and not recurse (regex, so it cannot
-// hang) — the inner literal is urlencoded in real output, but check the raw
-// pathological case anyway.
-$t0 = microtime(true);
-$nested = "[card mid='a' title='[card mid=b][/card]'][/card]";
-$got = collapseBlocks($nested);
-check('nested-ish terminates', count($got) >= 1 && (microtime(true) - $t0) < 1.0, true);
-
-// Long pathological input must not blow up (catastrophic backtracking guard).
-$t1 = microtime(true);
-collapseBlocks('[card ' . str_repeat('a', 200000));
-check('unterminated is fast', (microtime(true) - $t1) < 1.0, true);
+$t = microtime(true);
+expandIds(str_repeat('[card=1][/card]', 5000));
+check('many tokens are fast', (microtime(true) - $t) < 1.0, true);
 
 exit($fail ? 1 : 0);

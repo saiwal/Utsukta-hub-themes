@@ -5,14 +5,22 @@ use Utsukta\SpaCore\Api\Response;
 
 /**
  * The [card] embed: a compact [card=<item id>][/card] token the composer
- * inserts, expanded at save time into a self-contained attribute block that
- * renders without a further fetch, and collapsed back to the compact form
- * when an item is reopened for editing.
+ * inserts, expanded at save time into a stored block and collapsed back to the
+ * compact form when an item is reopened for editing.
  *
- * Structurally this mirrors Item.php's [share] machinery (expandShareTags /
- * collapseShareTags / buildShareBlock), with two deliberate differences noted
- * at their call sites below: card blocks carry no body, and every attribute
- * value is urlencode()d.
+ * The stored form is a plain [share …]…[/share] block whose link points at
+ * /cards/<nick>/<slug>. That is deliberate: a bespoke [card …] block rendered
+ * as literal bracket text in every theme but this one. Both core
+ * (include/bbcode.php bb_ShareAttributes) and the SPA (bbcode.ts
+ * bbShareAttributes) already special-case a share link containing "/cards/"
+ * and label the block a card, so reusing the share format renders correctly in
+ * redbasic and over federation for free — the same portability argument that
+ * put the authoring templates on core bbcode.
+ *
+ * Only the compact [card=<id>] token is card-specific, and it never survives a
+ * save. Collapsing back is handled by Item::collapseShareTags, which emits
+ * [card=<id>] when the block resolves to an ITEM_TYPE_CARD — one scanner for
+ * both, since a stored card embed *is* a share block.
  *
  * Shared by Item.php (posts and comments) and Handlers\Cards (a card body
  * embedding another card).
@@ -20,11 +28,12 @@ use Utsukta\SpaCore\Api\Response;
 trait EmbedsCards
 {
     /**
-     * Build the canonical self-contained [card …][/card] block for an item.
+     * Build the stored [share …]…[/share] block for a card.
      *
-     * $forDisplay mirrors buildShareBlock(): composer previews may render a
-     * private card the viewer can already see, save-time expansion may not
-     * embed one that isn't theirs.
+     * Mirrors Item::buildShareBlock, including its escaping convention — core
+     * urldecodes only `author`, so every other attribute goes in raw — and its
+     * $forDisplay flag: composer previews may render a private card the viewer
+     * can already see, save-time expansion may not embed one that isn't theirs.
      */
     protected function buildCardBlock(array $item, bool $forDisplay = false): string
     {
@@ -34,65 +43,51 @@ trait EmbedsCards
 
         // ponytail: owner-only gate on private cards — looser than [share],
         // which refuses item_private outright. A private card embedded into a
-        // more widely addressed post puts its title/teaser/cover in front of a
-        // larger audience than the card's own ACL, and travels on with any
-        // reshare. Upgrade path: compare the host post's ACL against the
-        // card's here and refuse on widening.
+        // more widely addressed post puts its content in front of a larger
+        // audience than the card's own ACL, and travels on with any reshare.
+        // Upgrade path: compare the host post's ACL against the card's here
+        // and refuse on widening. Item::collapseShareTags applies the same
+        // rule, so the two directions agree about what is embeddable.
         if (intval($item['item_private']) && !$forDisplay
             && intval($item['uid']) !== intval(local_channel())) {
             return '';
         }
 
-        $nick = '';
-        $c = q("SELECT channel_address FROM channel WHERE channel_id = %d LIMIT 1",
-            intval($item['uid']));
-        if ($c) {
-            $nick = $c[0]['channel_address'];
-        }
-        if (!$nick) {
+        $link = self::cardLink($item);
+        if (!$link) {
             return '';
         }
 
-        [$slug, $deck, $template] = self::cardIconfig(intval($item['id']));
-
         $rows = [$item];
         xchan_query($rows, true);
-        $author = $rows[0]['author'] ?? [];
+        $author  = $rows[0]['author'] ?? [];
+        $network = $author['xchan_network'] ?? '';
 
-        $link = z_root() . '/cards/' . $nick . '/' . ($slug ?: $item['uuid']);
+        $bb  = "[share author='" . urlencode($author['xchan_name'] ?? '') . "'\n";
+        $bb .= "\tprofile='" . ($author['xchan_url'] ?? '') . "'\n";
+        $bb .= "\tavatar='" . ($author['xchan_photo_s'] ?? '') . "'\n";
+        // The card's app URL, not its plink — this is what makes both bbcode
+        // renderers label the block a card rather than a post.
+        $bb .= "\tlink='" . $link . "'\n";
+        $bb .= "\tauth='" . ($network === 'zot6' ? 'true' : 'false') . "'\n";
+        $bb .= "\tposted='" . ($item['created'] ?? '') . "'\n";
+        $bb .= "\tmessage_id='" . ($item['mid'] ?? '') . "'\n";
+        $bb .= ']';
 
-        // Every value is urlencode()d — bbcode.ts's attr() helper
-        // decodeURIComponent()s it back, and it keeps quotes and brackets in a
-        // title from breaking the attribute string (which is also why
-        // collapseCardTags below needs no depth-aware scan).
-        $attrs = [
-            'mid'         => $item['mid'] ?? '',
-            'nick'        => $nick,
-            'uuid'        => $item['uuid'] ?? '',
-            'title'       => Response::decodeEntities($item['title'] ?? ''),
-            'teaser'      => self::cardTeaser($item),
-            'cover'       => self::cardCover($item),
-            'deck'        => $deck ?? '',
-            'template'    => $template ?: 'freeform',
-            'author'      => $author['xchan_name'] ?? '',
-            'authorurl'   => $author['xchan_url'] ?? '',
-            'authorphoto' => $author['xchan_photo_s'] ?? '',
-            'link'        => $link,
-        ];
-
-        $bb = '[card';
-        foreach ($attrs as $k => $v) {
-            $bb .= "\n\t$k='" . urlencode((string) $v) . "'";
+        if ($item['title']) {
+            $bb .= '[h3][b]' . $item['title'] . '[/b][/h3]' . "\r\n";
         }
-        $bb .= '][/card]';
+
+        $bb .= $item['body'];
+        $bb .= '[/share]';
 
         return $bb;
     }
 
     /**
-     * Expand compact [card=<item id>][/card] tags into the canonical block
-     * before storing — the same mechanism (and the same 422-on-failure
-     * discipline) as Item.php's expandShareTags.
+     * Expand compact [card=<item id>][/card] tags into the stored block before
+     * storing — the same mechanism (and the same 422-on-failure discipline) as
+     * Item::expandShareTags.
      */
     protected function expandCardTags(string $body): string
     {
@@ -130,83 +125,25 @@ trait EmbedsCards
     }
 
     /**
-     * Inverse of expandCardTags for the edit composer: replace each stored
-     * [card …mid='…'…][/card] block with [card=<id>][/card].
-     *
-     * $resolve is a permission-aware mid -> ?array lookup (Item.php's
-     * resolveItem), passed in so this trait doesn't have to own one.
-     *
-     * Unlike collapseShareTags this needs no depth-aware walk: a card block
-     * carries no body, and buildCardBlock urlencode()s every attribute, so no
-     * '[', ']' or nested '[card' can occur inside one.
+     * A card's human-facing app URL, /cards/<nick>/<slug-or-uuid>, or '' when
+     * the owning channel can't be resolved. Distinct from the item's plink,
+     * which is the mid-based federation identity.
      */
-    protected function collapseCardTags(string $body, callable $resolve): string
+    protected static function cardLink(array $item): string
     {
-        return preg_replace_callback(
-            '/\[card\s[^\]]*\]\s*\[\/card\]/is',
-            function (array $m) use ($resolve): string {
-                if (!preg_match("/\smid='([^']*)'/is", $m[0], $mm)) {
-                    return $m[0];
-                }
-                $target = $resolve(urldecode($mm[1]));
-                // Only collapse when expandCardTags could re-expand it —
-                // otherwise the stored block would be lost on the next save.
-                if (!$target
-                    || intval($target['item_type']) !== ITEM_TYPE_CARD
-                    || $target['mimetype'] !== 'text/bbcode') {
-                    return $m[0];
-                }
-                return '[card=' . intval($target['id']) . '][/card]';
-            },
-            $body
-        ) ?? $body;
-    }
+        $c = q("SELECT channel_address FROM channel WHERE channel_id = %d LIMIT 1",
+            intval($item['uid']));
+        if (!$c || !$c[0]['channel_address']) {
+            return '';
+        }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    /** [slug, deck, template] for an item, read straight off iconfig. */
-    private static function cardIconfig(int $iid): array
-    {
         $slug = '';
-        $deck = null;
-        $template = '';
-
-        $rows = q("SELECT cat, k, v FROM iconfig WHERE iid = %d", intval($iid)) ?: [];
-        foreach ($rows as $cfg) {
-            if ($cfg['cat'] === 'system' && $cfg['k'] === item_type_to_namespace(ITEM_TYPE_CARD)) {
-                $slug = urldecode($cfg['v']);
-            } elseif ($cfg['cat'] === 'card' && $cfg['k'] === 'deck') {
-                $deck = $cfg['v'];
-            } elseif ($cfg['cat'] === 'card' && $cfg['k'] === 'template') {
-                $template = $cfg['v'];
-            }
+        $cfg = q("SELECT v FROM iconfig WHERE iid = %d AND cat = 'system' AND k = '%s' LIMIT 1",
+            intval($item['id']), dbesc(item_type_to_namespace(ITEM_TYPE_CARD)));
+        if ($cfg) {
+            $slug = urldecode($cfg[0]['v']);
         }
 
-        return [$slug, $deck, $template];
-    }
-
-    /** Short plain-text teaser: the summary when set, else a body excerpt. */
-    private static function cardTeaser(array $item): string
-    {
-        $src = trim(Response::decodeEntities($item['summary'] ?? ''));
-        if (!$src) {
-            $src = trim((string) ($item['body'] ?? ''));
-            // Drop bbcode tags rather than render them — this is an attribute
-            // value, not markup.
-            $src = preg_replace('/\[[^\]]{0,60}\]/', '', $src) ?? $src;
-        }
-        $src = trim(preg_replace('/\s+/', ' ', $src) ?? $src);
-
-        return mb_strlen($src) > 200 ? mb_substr($src, 0, 200) . '…' : $src;
-    }
-
-    /** First image in the body, if any — used as the card's cover. */
-    private static function cardCover(array $item): string
-    {
-        $body = (string) ($item['body'] ?? '');
-        if (preg_match('/\[z?img[^\]]*\](.*?)\[\/z?img\]/is', $body, $m)) {
-            return trim($m[1]);
-        }
-        return '';
+        return z_root() . '/cards/' . $c[0]['channel_address'] . '/' . ($slug ?: $item['uuid']);
     }
 }
