@@ -78,6 +78,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | event card            | channel, profile, cal                          | right                                      | -      | ✅       |
 | federation            | siteinfo*                                      | contentTop                                 | -      | -        |
 | filters               | network                                        | right                                      | -      | -        |
+| guided tours          | help                                           | right                                      | -      | -        |
 | html block            | any                                            | right, footer, gridTop, contentTop, header | -      | ✅       |
 | links list            | any                                            | right, footer                              | -      | ✅       |
 | menu_bar              | any                                            | header                                     | -      | ✅       |
@@ -244,6 +245,11 @@ Shows which federation protocol(s) power the hub and links to the underlying pro
 ### Stream Filters
 
 Sidebar filter panel for the network stream — narrow posts by connection, group, conversation type, tag, date range, and more, with a clear-all option.
+<!-- guided_tours -->
+
+### Guided Tours
+
+Lists the interactive, step-by-step tours available in the app. Click **Start** next to a tour to launch it — the app navigates to the right page if needed, then walks you through it one spotlighted element at a time with Back/Next controls. Click the **✕** on a step, or click outside it, to stop the tour early.
 <!-- html_block -->
 
 ### HTML Block Widget

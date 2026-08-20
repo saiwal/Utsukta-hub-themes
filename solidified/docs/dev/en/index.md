@@ -9,6 +9,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Slot-system](slot-system) — Injecting widgets into layout regions
 - [Drafts](drafts) — Draft storage, the composer autosave/pending-draft mechanism, and the HQ DraftsWidget
 - [Help-mode](help-mode) — The click-to-see-docs contextual help overlay
+- [Tours](tours) — The shepherd.js-based guided-tour registry
 - [Routing](routing) — SPA routing, lazy loading, and the ModuleGuard
 - [Stores](stores) — Reactive state: auth, nav, site-config
 - [Nav-system](nav-system) — Navigation computation and viewer roles
@@ -19,6 +20,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Php-api](php-api) — Backend PHP API: router, auth, response, handlers
 - [I18n](i18n) — Internationalization (i18n) system
 - [Theme-scaffold](theme-scaffold) — Generating a new, independently-branded theme package from `@utsukta/spa-core`
+- [Excalidraw](excalidraw) — The React-in-Solid Excalidraw whiteboard integration
 - [Todo](todo) — Planned-but-not-yet-built work, with design decisions and implementation shape
 
 ## Quick Start

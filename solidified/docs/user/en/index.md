@@ -42,6 +42,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Widgets](widgets) — Customizing sidebar widgets: adding, removing, reordering, pinned widgets
 - [Settings](settings) — All settings: display, profile, privacy, notifications, account
 - [Games](games) — Puzzle games: overview, controls, and per-game descriptions
+- [Excalidraw](excalidraw) — Hand-drawn-style whiteboard for sketches and diagrams
 
 ## Quick Tips
 
