@@ -251,7 +251,9 @@ class Photos
         $sql_extra = permissions_sql($owner_uid, $ob_hash, 'photo');
         $sql_attach = permissions_sql($owner_uid, $ob_hash, 'attach');
         $sql_item = item_permissions_sql($owner_uid, $ob_hash);
-        $item_normal = item_normal();
+        // Pass $owner_uid so item_normal() recognizes the channel owner and
+        // includes their own delayed/moderated comments (see Channel.php).
+        $item_normal = item_normal($owner_uid);
 
         $ph_drv = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();

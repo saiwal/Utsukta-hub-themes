@@ -40,7 +40,7 @@ class StreamWidgets
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
         $item_type_val = $this->itemTypeValue($type);
-        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $item_normal   = item_normal($uid, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
         $rows = dbq(
@@ -73,7 +73,7 @@ class StreamWidgets
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
         $item_type_val = $this->itemTypeValue($type);
-        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $item_normal   = item_normal($uid, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
         $rows = dbq(
@@ -110,9 +110,9 @@ class StreamWidgets
         $type          = $this->itemType();
         $limit         = min(20, max(1, (int) ($_GET['limit'] ?? 5)));
         $observer_hash = get_observer_hash();
-        $item_normal   = item_normal();
 
         $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_normal   = item_normal($uid, 'item', $item_type_val);
 
         $permission_sql = item_permissions_sql($uid, $observer_hash);
 
@@ -206,7 +206,7 @@ class StreamWidgets
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
         $item_type_val = $this->itemTypeValue($type);
-        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $item_normal   = item_normal($uid, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
         // item.created is stored in UTC, but the widget's dbegin/dend click
@@ -259,7 +259,7 @@ class StreamWidgets
         $uid           = $this->resolveUid();
         $type          = $this->itemType();
         $item_type_val = $this->itemTypeValue($type);
-        $item_normal   = item_normal(null, 'item', $item_type_val);
+        $item_normal   = item_normal($uid, 'item', $item_type_val);
         $perm_sql      = item_permissions_sql($uid);
 
         $year  = (int) ($_GET['year']  ?? 0);

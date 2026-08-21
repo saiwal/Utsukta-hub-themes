@@ -36,13 +36,23 @@ class Cards
 
         $permission_sql = item_permissions_sql($profile_uid);
 
+        // item_normal() excludes hidden/unpublished/pending-remove items and,
+        // for non-owners, blocked/delayed ones too (see Articles.php, which
+        // had the same gap — a scheduled/moderation-pending card leaked to
+        // visitors via getList/getDeck* while the categories widget, which
+        // does call item_normal(), correctly hid it). Not applied to
+        // getSingle() below — its thread query also pulls in comments, which
+        // are always item_type = ITEM_TYPE_POST regardless of the parent's
+        // type, so item_normal()'s item_type match would drop every reply.
+        $item_normal = item_normal($profile_uid, 'item', ITEM_TYPE_CARD);
+
         $sub = \App::$argv[3] ?? '';
         if ($sub === 'deck') {
             $deckName = \App::$argv[4] ?? '';
             if ($deckName) {
-                $this->getDeckDetail($deckName, $profile_uid, $ob_hash, $permission_sql, $nick);
+                $this->getDeckDetail($deckName, $profile_uid, $ob_hash, $permission_sql . $item_normal, $nick);
             }
-            $this->getDeckOverview($profile_uid, $permission_sql);
+            $this->getDeckOverview($profile_uid, $permission_sql . $item_normal);
         }
 
         $identifier = $sub ?: ($_GET['uuid'] ?? '');
@@ -50,7 +60,7 @@ class Cards
             $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
         }
 
-        $this->getList($profile_uid, $ob_hash, $permission_sql, $nick);
+        $this->getList($profile_uid, $ob_hash, $permission_sql . $item_normal, $nick);
     }
 
     // -------------------------------------------------------------------------

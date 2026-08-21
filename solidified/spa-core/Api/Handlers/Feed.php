@@ -54,7 +54,9 @@ class Feed
             $term_join = "AND item.id IN (SELECT oid FROM term WHERE uid = $uid AND ttype = " . TERM_HASHTAG . " AND term = '" . dbesc($tag) . "')";
         }
 
-        $item_normal = item_normal(null, 'item', $item_type_val);
+        // Pass $uid so item_normal() includes the owner's own delayed/moderated
+        // posts when they fetch their own feed (see Channel.php).
+        $item_normal = item_normal($uid, 'item', $item_type_val);
         $perm_sql = item_permissions_sql($uid, $observer_hash);
 
         $rows = dbq(

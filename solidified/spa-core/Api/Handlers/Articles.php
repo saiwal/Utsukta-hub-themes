@@ -33,13 +33,25 @@ class Articles
 
         $permission_sql = item_permissions_sql($profile_uid);
 
+        // item_normal() excludes hidden/unpublished/pending-remove items and,
+        // for non-owners, blocked/delayed ones too. None of the root-item
+        // queries below checked this on their own, so a scheduled or
+        // moderation-pending article (and its categories) leaked to any
+        // ACL-permitted visitor even though the categories widget (which does
+        // call item_normal()) correctly hid it, producing a card/widget
+        // mismatch. Only applied where the query is root-items-only — the
+        // thread query in getSingle() also pulls in comments, which are
+        // always item_type = ITEM_TYPE_POST regardless of the parent's type,
+        // so item_normal()'s item_type match would wrongly drop every reply.
+        $item_normal = item_normal($profile_uid, 'item', ITEM_TYPE_ARTICLE);
+
         $sub = \App::$argv[3] ?? '';
         if ($sub === 'series') {
             $seriesName = \App::$argv[4] ?? '';
             if ($seriesName) {
-                $this->getSeriesDetail($seriesName, $profile_uid, $ob_hash, $permission_sql, $nick);
+                $this->getSeriesDetail($seriesName, $profile_uid, $ob_hash, $permission_sql . $item_normal, $nick);
             }
-            $this->getSeriesOverview($profile_uid, $permission_sql);
+            $this->getSeriesOverview($profile_uid, $permission_sql . $item_normal);
         }
 
         $identifier = $sub ?: ($_GET['uuid'] ?? '');
@@ -47,7 +59,7 @@ class Articles
             $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
         }
 
-        $this->getList($profile_uid, $ob_hash, $permission_sql, $nick);
+        $this->getList($profile_uid, $ob_hash, $permission_sql . $item_normal, $nick);
     }
 
     // -------------------------------------------------------------------------

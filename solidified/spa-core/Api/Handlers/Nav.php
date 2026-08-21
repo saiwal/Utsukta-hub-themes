@@ -248,6 +248,15 @@ class Nav
                         'icon' => 'articles',
                     ];
 
+                if (!empty($p['view_pages']) &&
+                    \Zotlabs\Lib\Apps::addon_app_installed($puid, 'cards'))
+                    $channel_tabs[] = [
+                        'id' => 'cards-tab',
+                        'label' => t('Cards'),
+                        'url' => z_root() . '/cards/' . $subject_nick,
+                        'icon' => 'cards',
+                    ];
+
                 if (!empty($p['view_storage'])) {
                     $channel_tabs[] = [
                         'id' => 'photos',

@@ -135,8 +135,10 @@ class Notes
         $limit = min(50, max(1, intval($_GET['limit'] ?? 20)));
         $start = max(0, intval($_GET['start'] ?? 0));
 
-        // Use item_normal() with ITEM_TYPE_CUSTOM to get the correct SQL fragment
-        $item_normal = item_normal(null, 'item', ITEM_TYPE_CUSTOM);
+        // Use item_normal() with ITEM_TYPE_CUSTOM to get the correct SQL fragment.
+        // Pass $uid so item_normal() recognizes the requester as owner and
+        // includes their own delayed/moderated notes (see Channel.php).
+        $item_normal = item_normal($uid, 'item', ITEM_TYPE_CUSTOM);
 
         $sql_extra = '';
         $tag = trim($_GET['tag'] ?? '');

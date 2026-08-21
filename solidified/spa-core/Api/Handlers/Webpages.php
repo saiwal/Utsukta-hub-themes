@@ -139,7 +139,13 @@ class Webpages
             Response::error(403, 'Permission denied');
         }
 
-        $sql_extra = item_permissions_sql($owner);
+        // item_normal() excludes hidden/unpublished/pending-remove pages and,
+        // for non-owners, blocked/delayed ones too — item_permissions_sql()
+        // alone (the ACL check) doesn't cover any of that, so a scheduled or
+        // moderation-pending page leaked to any ACL-permitted visitor (same
+        // gap found and fixed in Articles.php/Cards.php).
+        $sql_extra = item_permissions_sql($owner)
+            . item_normal($owner, 'item', ITEM_TYPE_WEBPAGE);
 
         $rows = q(
             "SELECT iconfig.iid, iconfig.v AS pagelink,

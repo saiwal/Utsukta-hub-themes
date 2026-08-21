@@ -42,7 +42,9 @@ class HqMessages
 
         $limit = 30;
 
-        $item_normal = item_normal();
+        // Pass $uid so item_normal() recognizes the requester as owner and
+        // includes their own delayed/moderated items (see Channel.php).
+        $item_normal = item_normal($uid);
         // Filter internal follow activities and stream add/remove activities.
         $item_normal .= " and item.verb not in ('Add', 'Remove', 'Follow', 'Ignore', '" . ACTIVITY_FOLLOW . "') ";
         $item_normal_i = str_replace('item.', 'i.', $item_normal);

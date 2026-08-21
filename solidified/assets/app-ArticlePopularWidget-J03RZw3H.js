@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-9kNHfgxH.js";import{ia as t}from"./app-DAqmoCEP.js";import{t as n}from"./app-PopularPostsWidget-o_0bZTOl.js";function r(){return e(n,{get channelNick(){return t()()},type:`articles`})}export{r as default};
