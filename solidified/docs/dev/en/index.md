@@ -21,6 +21,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [I18n](i18n) — Internationalization (i18n) system
 - [Theme-scaffold](theme-scaffold) — Generating a new, independently-branded theme package from `@utsukta/spa-core`
 - [Excalidraw](excalidraw) — The React-in-Solid Excalidraw whiteboard integration
+- [File-preview](file-preview) — Inline preview for image/pdf/epub/video/audio/text/markdown files
 - [Todo](todo) — Planned-but-not-yet-built work, with design decisions and implementation shape
 
 ## Quick Start

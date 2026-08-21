@@ -61,6 +61,7 @@ class Router
         'site-logo'      => Handlers\SiteLogo::class,
         'folders'        => Handlers\Folders::class,
         'xchan'          => Handlers\Xchan::class,
+        'nodeinfo'       => Handlers\Nodeinfo::class,
         'connections'    => Handlers\Connections::class,
         'directory'      => Handlers\Directory::class,
         'cart'           => Handlers\Cart::class,
