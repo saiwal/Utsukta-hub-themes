@@ -68,7 +68,7 @@ class Xchan
                     'location'    => $block ? '' : implode(', ', $location_parts),
                     'homepage'    => $block ? '' : ($p['homepage'] ?? ''),
                     'keywords'    => $block ? [] : array_values(
-                        array_filter(explode(' ', $p['keywords'] ?? ''))
+                        array_filter(array_map('trim', explode(',', $p['keywords'] ?? '')))
                     ),
                     'connections' => intval($conn_count[0]['total'] ?? 0),
                     'cover'       => get_cover_photo(intval($p['profile_uid']), 'url', PHOTO_RES_COVER_1200) ?? '',
