@@ -68,6 +68,7 @@ class Router
         'rss-feed'       => Handlers\Rss::class,
         'feed'           => Handlers\Feed::class,
         'weather'        => Handlers\Weather::class,
+        'link-meta'      => Handlers\Linkmeta::class,
         'announcements'  => Handlers\Announcements::class,
         'blocklist'      => Handlers\Blocklist::class,
         'notify'         => Handlers\Notify::class,
