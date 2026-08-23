@@ -46,7 +46,7 @@ class AdminlteConfig {
 			return;
 		}
 
-		set_pconfig(local_channel(), 'adminlte', 'schema', $_POST['schema']);
+		/* set_pconfig(local_channel(), 'adminlte', 'schema', $_POST['schema']); */
 		set_pconfig(local_channel(), 'system', 'style_update', time());
 		if (isset($_POST['adminlte-settings-submit'])) {
 	
