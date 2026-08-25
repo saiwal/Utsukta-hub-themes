@@ -1,0 +1,1 @@
+import{m as e,s as t}from"./app-web-BeXRvOD7.js";import{Ma as n}from"./app-DYGtfrw-.js";var r=e(`<div class="max-w-5xl mx-auto flex items-center gap-3"><h1 class="text-lg font-semibold text-txt">`);function i(){let{t:e}=n();return(()=>{var n=r(),i=n.firstChild;return t(i,()=>e(`nav.calendar`)),n})()}export{i as default};
