@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-BeXRvOD7.js";import{na as t}from"./app-t3HHsQtM.js";import{a as n,m as r}from"./app-store-DU1DBgbM.js";import{t as i}from"./app-TagListWidget-CvDZONlr.js";function a(){return e(i,{get channelNick(){return t()()},type:`articles`,get activeTag(){return n()},onTagClick:e=>r(`tag`,e)})}export{a as default};
