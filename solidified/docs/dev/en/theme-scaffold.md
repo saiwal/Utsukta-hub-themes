@@ -55,7 +55,8 @@ copy of solidified's full UI. Concretely:
   package for every theme, installed via the path repository in
   `composer.json` (`utsukta/spa-core`, resolved against the `spa-core/`
   folder `vite.config.ts` copies in alongside this theme's own deployed
-  output — see the `viteStaticCopy` target with `rename: "spa-core"`).
+  output — see the `viteStaticCopy` target copying `packages/spa-core/php`
+  to `../spa-core`).
 - **`src/index.tsx`, `src/App.tsx`, `src/router.tsx`** — generic app
   bootstrap (query client, i18n provider, router, auth/module guards). Zero
   branding in these; copied verbatim.

@@ -9,7 +9,7 @@
 | लेयर | टेक्नोलॉजी |
 |------|-----------|
 | UI फ्रेमवर्क | Solid.js v1.9 |
-| रूटिंग | @solidjs/router v0.15 |
+| रूटिंग | @solidjs/router v1 |
 | स्टाइलिंग | Tailwind CSS v4 |
 | बिल्ड | Vite + vite-plugin-solid |
 | i18n | @solid-primitives/i18n |

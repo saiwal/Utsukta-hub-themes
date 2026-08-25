@@ -9,7 +9,7 @@
 | Layer | Technology |
 |-------|-----------|
 | UI framework | Solid.js v1.9 |
-| Routing | @solidjs/router v0.16 |
+| Routing | @solidjs/router v1 |
 | Data fetching | @tanstack/solid-query v5, @tanstack/solid-virtual v3 |
 | Styling | Tailwind CSS v4 |
 | Build | Vite v8 + vite-plugin-solid |

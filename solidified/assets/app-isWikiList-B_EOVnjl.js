@@ -1,0 +1,1 @@
+import{d as e}from"./app-routing-DXOCapzW.js";function t(){let t=e();return()=>{let e=t.pathname.split(`/`).filter(Boolean);return e[0]===`wiki`&&e.length<=2}}export{t};

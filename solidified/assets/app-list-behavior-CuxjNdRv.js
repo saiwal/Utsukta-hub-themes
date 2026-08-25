@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-BeXRvOD7.js";var[t,n]=e(localStorage.getItem(`hz-list-behavior`)??`list`);function r(){return t}function i(e){n(e),localStorage.setItem(`hz-list-behavior`,e)}export{r as n,i as t};
