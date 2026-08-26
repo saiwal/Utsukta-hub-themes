@@ -114,6 +114,10 @@ class Manage
                          AND xchan_orphan = 0',
                 intval($ch['channel_id']));
 
+            $notices = q('SELECT COUNT(id) AS total FROM notify
+                          WHERE uid = %d AND seen = 0',
+                intval($ch['channel_id']));
+
             $channels[] = [
                 'channel_id' => intval($ch['channel_id']),
                 'channel_name' => Response::decodeEntities($ch['channel_name']),
@@ -124,6 +128,7 @@ class Manage
                 'photo' => $ch['xchan_photo_m'] ?? '',
                 'url' => $ch['xchan_url'] ?? '',
                 'intros' => intval($intr[0]['total'] ?? 0),
+                'notices' => intval($notices[0]['total'] ?? 0),
             ];
         }
 

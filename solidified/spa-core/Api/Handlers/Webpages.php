@@ -490,6 +490,7 @@ class Webpages
         }
 
         return [
+            'iid'             => intval($item['id']),
             'uuid'            => $item['uuid'],
             'mid'             => $item['mid'],
             'title'           => $item['title'],

@@ -36,6 +36,7 @@ class Router
         'network' => Handlers\Network::class,
         'hq-messages' => Handlers\HqMessages::class,
         'channel' => Handlers\Channel::class,
+        'channel-activities' => Handlers\ChannelActivities::class,
         'profile' => Handlers\Profile::class,
         'profiles' => Handlers\Profiles::class,
         'photos' => Handlers\Photos::class,
