@@ -473,3 +473,136 @@ dry-run branch. No `Router.php` change — the section name comes from `\App::$a
 - Dry-run a delete rule → the reported count matches what actually disappears once it is enabled.
 - `npx tsc -b` clean (catches any missing i18n key), `npm run build` clean, deployed PHP handlers
   match source (`diff` check).
+
+## Collaborative editing (Yjs + y-websocket)
+
+**Status: planned, not started.** This entry covers the transport and authorization layer only —
+no editor is bound to it. Wiring an actual surface is a follow-up per surface.
+
+Several editing surfaces are single-user today (notepad, wiki, articles, webpages, excalidraw
+scenes) and two people cannot edit the same document at once. Hubzilla's backend is PHP with no
+realtime transport — the app currently fakes liveness with 3s polling (`src/modules/chat/store.ts`)
+and an SSE endpoint for notifications (`NotificationsAside.tsx:974`).
+
+### Design decisions already made
+
+- **y-websocket, not a polling provider.** Two cheaper rungs were considered and rejected: (a)
+  mtime polling with a "someone else is editing" banner and a save-conflict merge, ~40 lines and no
+  CRDT at all; (b) a custom Yjs provider riding HTTP polling against a PHP blob-store endpoint, no
+  new process. Sub-100ms sync was the requirement, so rung (c) won. The cost is real and stays
+  written down here: a Node process to run, supervise, and TLS-terminate alongside PHP, in dev and
+  in production.
+- **Node knows nothing about Hubzilla permissions.** PHP mints a short-lived HMAC token; Node
+  verifies it. One `hash_hmac` line each side — no shared DB, no per-connection PHP round-trip, no
+  cookie forwarding across ports.
+
+  ```
+  browser                     PHP (/spa)                  Node (:1234)
+     │  GET /spa/collab/token?doc=wiki:abc
+     │─────────────────────────►│ requireLoggedIn()
+     │                          │ resolve doc → perm check
+     │◄─── {url, room, token,   │ HMAC(room|xchan|exp|write)
+     │      user:{name,color}}  │
+     │  ws://…/collab?room=…&token=…                     │
+     │──────────────────────────────────────────────────►│ verify HMAC
+     │                          │◄── GET /spa/collab/content (seed, server token)
+     │◄═══════ y-protocol sync + awareness ═════════════►│
+     │                          │◄── POST /spa/collab/persist (5s debounce)
+  ```
+
+- **Rooms are seeded server-side, not client-side.** Node fetches the current content from PHP on
+  room creation and applies it before accepting any client. If clients seeded, two simultaneous
+  first-joiners would each insert the document body and Yjs would faithfully merge both copies.
+- **Hubzilla stays the source of truth.** The Y.Doc is live editing state only. On a 5s debounce
+  after the last edit Node POSTs the flattened content back to PHP, which writes it through the
+  owning resource's normal save path — so the classic web UI, federation, and every non-SPA client
+  see the result.
+- **Read-only is enforced in Node**, not the client: a connection whose token carries `write:false`
+  receives sync messages but its inbound update frames are dropped.
+- **Awareness (live cursors, presence) is free** — it ships with Yjs, no extra work.
+- **`y-indexeddb` gives offline-first for free** and composes with the existing offline layer:
+  edits made while the daemon is down merge on reconnect rather than being lost.
+
+### Implementation shape
+
+**New workspace package `packages/collab-server/`** (`packages/*` is already globbed by the root
+`workspaces` field):
+
+- `package.json` — deps `yjs`, `y-websocket`, `ws`, `y-leveldb`; a `start` script.
+- `src/server.mjs`, ~150 lines:
+  - `ws` server; on `upgrade`, parse `room` + `token`, verify HMAC against
+    `process.env.COLLAB_SECRET`, reject 401 on bad signature or expiry.
+  - `setupWSConnection` from `y-websocket/bin/utils.js` for the protocol itself.
+  - `y-leveldb` persistence so a crash doesn't lose in-flight CRDT state.
+  - Room-create hook seeding from `GET {HUB_URL}/spa/collab/content?room=…` with a server-signed
+    token; debounced `POST {HUB_URL}/spa/collab/persist`.
+- `README.md` — env vars, a systemd unit, and the nginx `location /collab` upgrade block.
+
+**New handler `packages/spa-core/php/Api/Handlers/Collab.php`** — follows the existing shape
+(`Handlers/Notes.php` for style, `Api/Auth.php` + `Api/Response.php` for the helpers):
+
+- `GET /spa/collab/token?doc=<type>:<id>` — `Auth::requireLoggedIn()`, resolve the doc ref through
+  the owning resource's existing permission check, return
+  `{ url, room, token, exp, write, user: { xchan, name, color } }`.
+- `GET /spa/collab/content?room=…` and `POST /spa/collab/persist` — server-token only.
+- Secret from `Config::Get('spa','collab_secret')`, auto-generated with `random_bytes(32)` on first
+  read; `Config::Get('spa','collab_url')` for the ws endpoint. Both admin-settable.
+- A `DOC_TYPES` map (`wiki`, `notes`, `webpages`, …) pairing each doc type with its resolver and
+  permission check, so adding a surface later is one array entry rather than a new endpoint.
+
+**Edits:**
+
+- `packages/spa-core/php/Api/Router.php` — one line, `'collab' => Handlers\Collab::class`.
+- `packages/spa-core/src/lib/collab.ts` (new) — `createCollabDoc(docRef)` → `{ ydoc, awareness,
+  status }`, fetching the token via the existing `apiFetch` (`lib/fetch.ts`), wiring
+  `WebsocketProvider` + `IndexeddbPersistence`, registering `onCleanup`. Reachable as
+  `@utsukta/spa-core/lib/collab` — the existing `./lib/*` export glob already covers it, so
+  `packages/spa-core/package.json` needs no change.
+- Root `package.json` — add `yjs`, `y-websocket`, `y-indexeddb`; a `collab:dev` script.
+- `vite.config.ts` — add `"/collab": { ...hubProxy, ws: true }` to `server.proxy`.
+- `build-sw.mjs` — `/spa/collab/token` must be `NetworkOnly` (short-lived tokens must never be
+  served from cache), alongside the existing `POLL_URL` NetworkOnly entry.
+- `hz-ddev/.ddev/config.yaml` — bump `nodejs_version` from `"16"` to `"20"` (y-websocket needs it),
+  add `web_extra_daemons` for the server and `web_extra_exposed_ports` for 1234.
+- `hz-ddev/.ddev/nginx_full/nginx-site.conf` — `location /collab` with `proxy_pass`,
+  `Upgrade`/`Connection` headers, and a long `proxy_read_timeout`.
+- `src/docs/dev/en/collab.md` (new) + a link in `src/docs/dev/en/index.md`.
+
+### Known ceilings (deliberate — mark with `ponytail:` comments when built)
+
+- A Node process is now a hard runtime dependency of the feature. If it is down, collaborative
+  surfaces must degrade to single-user editing rather than breaking — the client needs that
+  fallback path, and it is the main reason not to bind an editor in the same pass.
+- Persistence is a 5s debounce, so a crash can lose up to 5s of edits from Hubzilla's DB (not from
+  the CRDT — `y-leveldb` still has them). Upgrade path: shorten the debounce or persist on last
+  client disconnect too.
+- No per-document locking against non-SPA writers. Someone editing the same wiki page from the
+  classic web UI while a room is live will have their write clobbered by the next debounce.
+  Upgrade path: compare-and-swap on the resource's revision in `persist`.
+- Only Yjs-bindable formats can ever be collaborative: text, code, markdown, and (with
+  hand-written glue) excalidraw. Spreadsheets, docx, pdf, epub and 3D have no binding and stay
+  read-only.
+
+### Follow-ups (increasing cost)
+
+- CodeMirror 6 + `y-codemirror.next` for notepad and wiki — the cheap one, a real binding exists.
+- Hand-written glue for excalidraw scenes via `updateScene` + `onChange` — no official binding.
+- ProseMirror/TipTap for the BBCode composer in `src/shared/editor` — biggest payoff, but means
+  replacing the editor core.
+
+### Verification (when this gets picked up)
+
+- `ddev restart`, confirm the daemon is up: `ddev exec curl -sI localhost:1234`.
+- Token endpoint rejects an anonymous caller (401) and returns a signed token for a logged-in one:
+  `ddev exec curl -s '…/spa/collab/token?doc=notes:1'`.
+- Tamper check — flip one byte of the token, confirm the ws upgrade is refused with 401.
+- Convergence: a scratch page opening two `createCollabDoc("notes:1")` instances against the same
+  room in two tabs; type in one, assert the other's `ytext.toString()` matches within 200ms and
+  that both awareness states list two users.
+- Persistence: edit, wait 6s, confirm the note body changed in the DB
+  (`ddev mysql -e "select body from item where …"`), and that a hard reload with the room evicted
+  from Node re-seeds the same content.
+- Offline: kill the daemon mid-edit, keep typing, restart it, confirm the offline edits merge in
+  rather than being lost.
+- Read-only: mint a token with `write:false`, confirm remote edits arrive but local ones never
+  propagate.
