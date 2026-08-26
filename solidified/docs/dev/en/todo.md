@@ -125,3 +125,351 @@ Frontend:
 - Delete-via-report (either queue) → item actually removed (`drop_item()`) and all report rows for
   that item flip to `actioned`.
 - `npx tsc -b` and `npm run build` clean; deployed PHP handlers match source (`diff` check).
+
+## Bayesian spam filter for incoming posts
+
+**Status: planned, not started.**
+
+A naive-Bayes classifier that learns each user's spam from their own "mark as spam" feedback,
+in the style of an email client. Complementary to the report entry above — that one routes a
+*human* judgement to a moderator; this one is an automatic, per-user, no-moderator filter over
+the incoming stream.
+
+Nothing like it exists today. Core dropped its `spam` table in `Zotlabs/Update/_1170.php`, there
+is no `item_spam` column in this schema, and core's only content filter is
+`Zotlabs/Lib/MessageFilter` (static word/regex lists — what the `nsfw` addon and this repo's
+`packages/spa-core/src/lib/nsfw.ts` are built on).
+
+**Fixes a latent bug on the way in:** `packages/spa-core/php/Api/Handlers/Network.php:230-233`
+emits `AND item_spam = 1` when `?spam=1` is passed — a guaranteed SQL error against a column
+that does not exist in this schema. It is dormant only because nothing sends it
+(`parseNetworkParams()` in `src/modules/network/api.ts` never reads `params.spam`, despite
+`spam?: 1` being declared in `NetworkParams`). This work gives the param a real meaning rather
+than deleting it: it becomes the **Spam folder** query.
+
+### Design decisions already made
+
+- **Classifier runs server-side in PHP**, not client-side in TS. Per-account by construction
+  (training on a laptop helps the phone), works for any client, and leaves an upgrade path to
+  SQL-level filtering. The client-side alternative — token counts in IndexedDB next to
+  `hz-inbox-*` — is smaller but per-device.
+
+- **Flagged posts are hidden entirely**, not collapsed behind a reveal toggle like the NSFW
+  path. A Spam folder view makes them inspectable, which is what makes hiding safe.
+
+- **No schema migration.** Unlike the report feature above, nothing here needs a new table:
+  verdicts fit `iconfig` (one scalar per `(iid, cat, k)` is exactly one verdict per item) and
+  the token model fits a single `pconfig` row. So no addon, no `_install()` hook.
+
+- **Classification is lazy at read time and cached in `iconfig`**, not hook-driven at write
+  time. A `post_remote_end`-style hook would only ever see newly arriving items and leave the
+  entire backlog unclassified; classifying on first read means a page classifies what it shows,
+  once, and every later read is a cache hit.
+
+- **The verdict rides out in the existing `flags[]` array** built by
+  `Concerns/FormatsItems.php:303-315`, which the client already round-trips. No response-shape
+  change, no new field.
+
+- **Only `item_thread_top` items are classified.** Dropping a comment while keeping its root is
+  incoherent.
+
+- **Cold-start guard**: the classifier returns "unknown" (never flags) until the model holds at
+  least 10 spam and 10 ham messages, so a fresh install and a single mis-click can't empty
+  someone's stream.
+
+### Implementation shape
+
+**1. `packages/spa-core/php/Api/SpamClassifier.php` (new) — pure math, no Hubzilla
+dependencies.** Kept free of globals/DB specifically so it is unit-testable without
+bootstrapping core.
+
+- `tokenize(string $body, array $meta): array` — strip BBCode/HTML, lowercase,
+  `[a-z0-9'$!-]{2,20}`; plus `from:<author_addr>` and `tag:<hashtag>` tokens.
+- `train(array $model, array $tokens, bool $isSpam, int $sign): array` — pure
+  increment/decrement over the counts map; `$sign = -1` untrains.
+- `score(array $model, array $tokens): ?float` — Graham's *A Plan for Spam*: per-token
+  `p = (s/S) / (s/S + 2*(h/H))` (the ×2 ham weight biases against false positives), clamped to
+  `[0.01, 0.99]`, tokens seen fewer than 5 times treated as unknown (`p = 0.4`), the 15 most
+  interesting tokens by `|p - 0.5|` combined as `prod / (prod + prod(1-p))`. Returns `null`
+  below the 10-spam/10-ham cold-start threshold.
+- `prune(array $model, int $cap = 2000)` — drop lowest-total tokens.
+
+Spam threshold: `0.9`.
+
+**2. `packages/spa-core/php/Api/Concerns/ClassifiesSpam.php` (new) — storage glue.** Modelled
+directly on `Concerns/FiltersBlockedChannels.php` (same shape: read per-user config, emit a SQL
+clause, expose a PHP-side check), so it drops into other handlers later.
+
+- Model: `pconfig` cat `spa` key `spam_model` — one JSON row
+  `{tokens: {w: [spam, ham]}, spam: N, ham: M}`, pruned to 2000 tokens (~40KB). One row, so
+  `load_pconfig()` cost stays a single fetch.
+- Verdict: `iconfig` cat `spa` key `spam` (`'1'`/`'0'`), via core's `set_iconfig(&$item, …)` /
+  `get_iconfig()` (`include/config.php:181-189`).
+- Training label: `iconfig` cat `spa` key `spam_trained`, so retraining the same item untrains
+  the previous label first and stays idempotent.
+- `classifyItems(array &$items, int $uid)` — for `item_thread_top` items lacking a verdict:
+  tokenize, score, `set_iconfig`.
+- `spamSqlClause(bool $wantSpam)` — `AND item.id [NOT] IN (SELECT iid FROM iconfig WHERE
+  cat='spa' AND k='spam' AND v='1')`.
+
+**3. `packages/spa-core/php/Api/Handlers/Network.php`**
+
+- Replace the broken `item_spam = 1` branch (`:230-233`) with
+  `$sql_extra .= $this->spamSqlClause(true)` — this is the Spam folder query.
+- Call `classifyItems($items, $uid)` after `applyViewerFollowing()` (`:364`), before the
+  `formatItem` map (`:368-371`); append `'spam'` to the item's `flags[]` in that map.
+- Leave `$sql_extra` unfiltered in the *normal* view — filtering spam in SQL there would wrongly
+  exclude never-yet-classified items and would break `$rootCount`. The client-side drop below
+  handles it.
+
+**4. `packages/spa-core/php/Api/Handlers/Spam.php` (new) + `Router.php`** —
+`POST /spa/spam` `{mid, spam: bool}`: untrain the prior label, train the new one, update the
+item's verdict. `Auth::requireLocalJson()`. Register in `Router.php`'s table.
+
+**5. Client**
+
+- `src/modules/network/api.ts` — add `flags.includes('spam')` to `shouldDisplay()` (`:6-14`),
+  gated so it does *not* apply when `params.spam` is set. `fetchDisplayablePage()` in
+  `src/shared/stream/store/createStreamStore.ts:128-146` already loops up to 10 pages to refill
+  client-filtered pages, so pagination survives without touching `rootCount`. Same file: make
+  `parseNetworkParams()` (`:91-111`) actually read `spam`, and pass it through in
+  `fetchNetworkStream()`.
+- `packages/spa-core/src/lib/spam-api.ts` (new) — `markSpam(mid, isSpam)`, mirroring
+  `packages/spa-core/src/lib/blocklist-api.ts`.
+- `src/shared/stream/components/PostCard.tsx` — "Mark as spam" / "Not spam" in the existing
+  "more" (⋮) dropdown next to the delete entry. **Two copies of this menu exist** (~`:1535-1548`
+  and ~`:2332`); both need it. Invalidate the stream query on success so the post disappears.
+- Spam folder — a "Spam" chip setting `?spam=1` in `src/modules/network/views/StreamFilters.tsx`
+  and `src/modules/network/widgets/StreamFiltersWidget.tsx`, alongside the existing
+  star/dm/conv chips. No new module or route.
+- i18n: `post.mark_spam`, `post.not_spam`, `network.spam` across `en`/`de`/`hi` plus
+  `locales/namespaces/types.ts` — a key missing from one locale is a build error here, not a
+  runtime warning.
+
+### Known ceilings (deliberate — mark with `ponytail:` comments when built)
+
+- Token model in one capped (2000-token) `pconfig` JSON row. Upgrade path: a real token table if
+  vocabulary or write concurrency demands it.
+- Up to ~30 `iconfig` INSERTs on a cold page — one-time per item, cache hit thereafter.
+- No SQL-level exclusion in the normal stream. Upgrade path once volume makes client-side
+  dropping insufficient; it costs the same `rootCount` accounting problem blocked channels
+  already have.
+- Not wired into `Channel.php` / `Pubstream.php` — the trait is shaped so it's two lines each
+  when wanted.
+
+### Verification (when this gets picked up)
+
+- `php packages/spa-core/php/Api/SpamClassifier.test.php` — assert-based self-check on the pure
+  class, no Hubzilla bootstrap: tokenizer output; cold start returns `null`; after 10 obvious
+  spam / 10 obvious ham a spam-like body scores `> 0.9` and a ham-like one `< 0.5`;
+  train-then-untrain restores the model exactly; `prune()` respects the cap.
+- `npx tsc -b` clean (catches any missing i18n key), `npm run build` clean.
+- In the browser: mark ~10 posts spam and ~10 not-spam; confirm nothing is hidden before the
+  10/10 threshold is crossed, then confirm a matching post drops out of `/network` and appears
+  under the Spam chip.
+- `GET /spa/network?spam=1` returns JSON rather than erroring — it currently would error.
+
+## Post filter rules (Thunderbird-style)
+
+**Status: planned, not started.**
+
+An ordered list of named, user-authored rules — each a set of match conditions plus a set of actions —
+evaluated automatically against incoming posts, in the shape of Thunderbird's Message Filters. Today
+the SPA has four separate filtering mechanisms and none of them compose: per-connection regex
+(`abook_incl`/`abook_excl`, stored by `Handlers/Connections.php:400-401`, surfaced in
+`ConnectionEditorModal.tsx:478-502`, enforced only by core on delivery), a channel-wide
+include/exclude expression (`Settings.php:274`, `ChannelSection.tsx:170-175`), an NSFW keyword list
+(`packages/spa-core/src/lib/nsfw.ts`), and a per-viewer block list
+(`Concerns/FiltersBlockedChannels.php`). None can express "posts from X mentioning Y → file into
+folder Z, and stop".
+
+**The engine already exists.** Core ships `Zotlabs\Lib\MessageFilter` — a production rule evaluator
+with `&&` / `||` / newline composition, an include/exclude split, and rule forms for body substring,
+`/regex/`, `#hashtag`, `@mention`, `$category`, `lang=`, `until=`, and a generic `?field OP value`
+tester (`~=`, `==`, `!=`, `//`, `>=`, `<`, `&`, `{}`, …) over any item column. That is the entire
+conditions half of a Thunderbird filter, already written, already exercised by core's delivery path
+(`post_is_importable()`, `include/items.php:3633`), and already user-facing in this app. This feature
+writes no matcher of its own — it writes a compiler from a friendly UI down to that DSL, and an
+action executor on the other side.
+
+### Design decisions already made
+
+- **Matching engine: core's `MessageFilter`, not a new matcher.** A bespoke matcher was rejected —
+  the DSL is shipped, tested by core, and these users already type it in Settings ▸ Channel. Its
+  include/exclude split gives us **negation for free**: positive conditions compile into the
+  `include` string, negated ones into `exclude`, and `evaluate()` returns `false` the moment any
+  exclude rule matches.
+
+- **`?field` is flat-key only.** `test_condition()` does `$item[trim($key)]` with no dot-path
+  support, so `?author.xchan_name` silently evaluates the empty string — an easy and invisible
+  mistake. Before evaluating, the trait injects flat helper keys onto a *copy* of the item row:
+  `filter_author_name`, `filter_author_addr`, `filter_owner_addr`, `filter_source`
+  (`author.site_project`, the same fallback `MessageFilter` itself uses to populate `app`), and
+  `filter_host` (`parse_url($item['plink'], PHP_URL_HOST)`). Six lines, no core patch. The condition
+  builder's field dropdown maps onto these plus the native `#`/`@`/`$`/`lang=` forms.
+
+- **Rules evaluate at read time, in the SPA's own endpoints.** Consistent with
+  `FiltersBlockedChannels.php`'s stated stance ("filtering here is native to the SPA's own read
+  endpoints and never goes through the addon's hook pipeline") and with the spam-filter section
+  above. An `item_stored` addon hook was rejected: it needs a new addon in `utsukta-hub-addons`,
+  never applies to posts already in the DB, and needs a backfill job every time a rule is edited.
+  Read-time evaluation is retroactive by construction.
+
+- **Storage: `pconfig` cat `spa` key `filters`, one JSON array.** Same shape as
+  `Handlers/WidgetLayout.php` — const-guarded private `validate()`, `set_pconfig(…, json_encode())`,
+  `del_pconfig` on empty — and cat `spa` is already dumped wholesale to the client at boot by
+  `Handlers/Pconfig.php`, so the rule list reaches the UI with no extra fetch. Caps:
+  `MAX_RULES = 16`, `MAX_CONDITIONS = 8`, `MAX_ACTIONS = 4`, value strings 256 bytes.
+
+  ```json
+  {
+    "id": "r1", "name": "Mute politics", "enabled": true, "stop": true,
+    "match": "all",
+    "conditions": [
+      { "field": "hashtag", "op": "is",       "value": "politics" },
+      { "field": "author",  "op": "contains", "value": "bot", "negate": true }
+    ],
+    "actions": [ { "type": "file", "value": "Politics" }, { "type": "hide" } ]
+  }
+  ```
+
+  A sibling `rev` integer is bumped on every save — see the verdict cache.
+
+- **Verdict cache: `iconfig` cat `spa`** — `filter_rev` (the `rev` the item was scored under),
+  `filter_hidden` (`'1'`/`'0'`), `filter_by` (name of the rule that fired), via core's
+  `set_iconfig(&$item, …)` / `get_iconfig()` (`include/config.php:181-189`), same as the spam
+  section. The `rev` comparison is what makes an edited rule re-apply without a backfill job, and
+  what stops the one-shot actions (star/file/delete) re-firing on every page load.
+
+- **Ordering and `stop`.** Rules run top to bottom; `stop: true` ends processing for that item
+  (Thunderbird's "Stop filter execution"). Without it later rules still apply, so a post can be both
+  filed and hidden.
+
+- **Structured condition builder, not a raw expression box.** The rule is stored as the structured
+  JSON above and compiled to the DSL **server-side**, so the client never needs to know the DSL and
+  there is exactly one compiler. The cost is that the builder can only express what the dropdowns
+  cover; the raw-expression escape hatch was rejected as two code paths for one feature.
+
+- **Delete is guarded, not banned.** Three guards: it reuses `Handlers/Item.php`'s existing
+  `case 'delete'` path (`:177`) so ownership and federation stay correct; the rule editor requires a
+  second confirm before a delete action can be saved; and saving is gated on a mandatory **dry run**
+  reporting how many of the last 200 stream items the rule would have destroyed.
+
+- **The dry run rides on the existing settings POST**, not a new route:
+  `POST /spa/settings/filters` with `{ test: <rule> }` evaluates the rule against the caller's most
+  recent 200 network items and returns `{ count, samples: [{ mid, title, author, created }] }`
+  without saving. One branch, no `Router.php` change.
+
+### Implementation shape
+
+**1. `packages/spa-core/php/Api/Concerns/AppliesPostFilters.php` (new) — engine glue.** Modelled on
+`Concerns/FiltersBlockedChannels.php` (read per-user config → emit a SQL clause → expose a PHP-side
+check), so it drops into other handlers later.
+
+- `filterRules(int $uid): array` — decode and validate the pconfig blob. The no-rules path must cost
+  one `get_pconfig` and nothing else.
+- `compileRule(array $rule): array` — the whole builder → DSL compiler, returning
+  `[$include, $exclude]`. Roughly one line per field: `body/contains → ?body ~= v`,
+  `body/regex → ?body // v`, `title → ?title ~= v`, `author → ?filter_author_name ~= v`,
+  `author_addr → ?filter_author_addr == v`, `hashtag → #v`, `mention → @v`, `category → $v`,
+  `language → lang=v`, `source → ?filter_source ~= v`, `host → ?filter_host == v`,
+  `type → ?obj_type == Event|Question|Note`, `is_dm → ?item_private == 2`,
+  `is_private → ?item_private > 0`. Conditions joined with ` && ` (match=all) or ` || `
+  (match=any); `negate: true` conditions go to `$exclude` instead.
+- `applyFilters(array &$items, int $uid)` — for each `item_thread_top` item whose `filter_rev` is
+  missing or stale: build the flat-key copy, run each enabled rule through
+  `new MessageFilter($copy, $inc, $exc, ['plaintext' => …])->evaluate()`, execute the actions of
+  matching rules, write the verdict, honour `stop`. Delete actions splice the item out of `$items`.
+- Action execution reuses what exists — **star**: the `item_starred` update from `Item.php`'s
+  `case 'star'`; **file** / **category**:
+  `store_item_tag($uid, $iid, TERM_OBJ_POST, TERM_FILE|TERM_CATEGORY, $name, '')`, exactly as
+  `Item.php:1912` (`saveto`) does, so filed posts are immediately reachable through the stream's
+  existing `?file=` / `?cat=` filters; **delete**: `Item.php`'s delete path; **hide**: verdict only.
+- `filteredSqlClause(): string` — `AND item.id IN (SELECT iid FROM iconfig WHERE cat='spa' AND
+  k='filter_hidden' AND v='1')`, for the review view.
+
+**2. `packages/spa-core/php/Api/Handlers/Network.php`**
+
+- Call `applyFilters($items, $uid)` after `applyViewerFollowing()` (`:364`) and before the
+  `formatItem` map (`:368-371`) — `fetch_post_tags()` has already run by then, so `$item['term']` is
+  populated and `MessageFilter`'s `#`/`@`/`$` forms actually work.
+- New `?filtered=1` param → `$sql_extra .= $this->filteredSqlClause()`; that is the review view.
+- Leave `$sql_extra` unfiltered in the *normal* view — a SQL exclusion there would wrongly drop
+  never-yet-scored items and would break `$rootCount`. Same trade-off, same reasoning as the spam
+  section; the client-side drop below handles it.
+
+**3. `packages/spa-core/php/Api/Concerns/FormatsItems.php`** — append `'filtered'` to the `flags[]`
+array (`:303-315`) when `filter_hidden` is set, plus a `filtered_by` string field. `flags[]` is
+already round-tripped verbatim to the client, so no response-shape change is needed.
+
+**4. `packages/spa-core/php/Api/Handlers/Settings.php`** — one `case 'filters':` in each switch
+(`get()` at `:26`, `post()` at `:895`) plus `getFilters()` / `postFilters(int $uid, array $data)`.
+The POST covers both the save path (validate → `set_pconfig`, bump `rev`) and the `{ test: … }`
+dry-run branch. No `Router.php` change — the section name comes from `\App::$argv[2]`.
+
+**5. Client — settings**
+
+- `src/modules/settings/index.ts` — one entry in `SETTINGS_ITEMS`
+  (`{ path: "filters", label: () => useI18n().t("settings.title_filters") }`); routes derive from
+  that array automatically.
+- `src/modules/settings/views/SettingsView.tsx:9-22` — add
+  `filters: lazy(() => import("./sections/FiltersSection"))` to `SECTIONS`.
+- `src/modules/settings/views/sections/FiltersSection.tsx` (new) — follows
+  `BlockedChannelsSection.tsx`'s hand-rolled `createQueryResource` + optimistic-mutate shape, not
+  `useSectionForm` (this is a list editor, not a flat form). Rule cards with enable toggle, reorder,
+  edit, delete; the editor is a `<For>` over condition rows (`[field ▾] [operator ▾] [value] (±)`)
+  and action rows, with a match-all/any selector. Reuse `inputClass` from
+  `src/modules/settings/store/FormHelpers.tsx` and `SubPageContent`.
+- `src/modules/settings/api/api.ts` — `fetchFilters()`, `saveFilters()`, `testFilter()`.
+
+**6. Client — stream**
+
+- `src/modules/network/api.ts` — add `flags.includes('filtered')` to `shouldDisplay()` (`:6-14`),
+  suppressed when `params.filtered` is set. `fetchDisplayablePage()`
+  (`src/shared/stream/store/createStreamStore.ts:123-146`) already loops up to 10 backend pages to
+  refill pages emptied by client-side filtering, so pagination survives without touching
+  `rootCount`.
+- Same file: make `parseNetworkParams()` (`:91-111`) actually read `filtered`. Note that this
+  function already silently drops several params declared on `NetworkParams` (`verb`, `cat`,
+  `xchan`, `net`, `unseen`, `liked`) — easy to add one more, equally easy to forget.
+- `src/modules/network/widgets/StreamFiltersWidget.tsx` — one entry in the `CHIPS` array
+  (`{ key: 'filtered', labelKey, Icon }`), alongside `star`/`pf`/`conv`/`dm`.
+- `src/shared/stream/components/PostCard.tsx` — in the review view, a small "Filtered by *rule
+  name*" badge fed by `filtered_by`. **Two copies of the post chrome exist in this file**; both need
+  it.
+- i18n: a new `filters` namespace across `en`/`de`/`hi` plus `locales/namespaces/types.ts` — a key
+  missing from one locale is a build error here, not a runtime warning.
+
+### Known ceilings (deliberate — mark with `ponytail:` comments when built)
+
+- Negated conditions only compose correctly under **match=all**. `MessageFilter`'s exclude list
+  short-circuits the whole evaluation, which is right for AND and wrong for OR. The editor greys out
+  the negate toggle in "match any" mode. Upgrade path: evaluate negatives as a second `MessageFilter`
+  pass and combine the results in PHP.
+- Read-time only: a rule never fires for a post you never load, and its effects appear the first time
+  you view it rather than on arrival. Upgrade path: the `item_stored` addon hook, with this trait as
+  the shared implementation.
+- Rules live in one capped (16-rule) `pconfig` JSON row. Upgrade path: a real table if anyone hits
+  the cap.
+- Up to ~30 `iconfig` writes on a cold page — one-time per item, cache hit thereafter. Same profile
+  as the spam section, and the two share that cost when both ship.
+- Only `Network.php` is wired. `Channel.php` / `Pubstream.php` are two lines each when wanted.
+- Delete is irreversible and federates. The dry run is the only safety net — no undo, no quarantine.
+- No "run filters now" button; bumping `rev` makes the next stream load do it.
+
+### Verification (when this gets picked up)
+
+- `php packages/spa-core/php/Api/AppliesPostFilters.test.php` — assert-based self-check on
+  `compileRule()` alone, no Hubzilla bootstrap: each field/operator pair produces the expected DSL
+  string; negated conditions land in `exclude`; match=all vs match=any pick the right joiner;
+  over-cap rules are rejected by `validate()`.
+- One `MessageFilter` round-trip check against a fixture item array (needs the core autoloader): a
+  `#hashtag` rule matches, a `?filter_author_name ~=` rule matches, a negated rule blocks.
+- In the browser: create "author contains X → file as Testing", load `/network`, confirm the post
+  shows under the Testing folder chip (`?file=Testing`) and that a second page load performs no
+  further writes. Edit the rule and confirm the `rev` bump forces re-evaluation.
+- Create a hide rule → the post disappears from `/network` and reappears under the Filtered chip
+  with the correct rule-name badge.
+- Dry-run a delete rule → the reported count matches what actually disappears once it is enabled.
+- `npx tsc -b` clean (catches any missing i18n key), `npm run build` clean, deployed PHP handlers
+  match source (`diff` check).
