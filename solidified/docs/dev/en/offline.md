@@ -49,7 +49,7 @@ Two of these deserve explanation:
 /spa/nav       -> theme-api    nav-store's query — the chrome needs nothing else
 ```
 
-A failed warm is swallowed: no service worker at all is far worse than a cold cache.
+The shell is rebuilt as a fresh `Response` before being stored: `/hq` redirects for a logged-out install, and a response carrying the redirect flag cannot be handed to a navigation's `respondWith()` — the browser throws and the launch fails with "unable to open". A failed warm is swallowed: no service worker at all is far worse than a cold cache.
 
 **Navigation fallback.** The navigation route carries a `handlerDidError` plugin returning the warmed `/hq` shell, so a navigation with nothing cached for its own URL still boots — deep links (`/network`, `/channel/bob`) included. This is deliberately *not* workbox's `navigateFallback`, which would serve the shell for every navigation even when online and hijack the real Hubzilla endpoints still served by navigation (`/cloud/:nick` downloads, classic pages, OWA). `handlerDidError` fires only when the network genuinely failed.
 
