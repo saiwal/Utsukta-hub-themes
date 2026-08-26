@@ -3,7 +3,7 @@
 /**
  *   * Name: Solidified
  *   * Description: SolidJS based theme
- *   * Version: 0.1.2-beta
+ *   * Version: 0.1.3-beta
  *   * MinVersion: 11.0
  *   * MaxVersion: 12.0
  *   * Author: Saiwal sk@utsukta.org
