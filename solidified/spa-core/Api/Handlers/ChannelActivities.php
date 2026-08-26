@@ -192,12 +192,21 @@ class ChannelActivities
 
         $i = [];
         foreach ($r as $rr) {
+            // Core links /cloud/<nick>/<path>#<id>, which the SPA's file view
+            // cannot honour — it holds folder state client-side and keys it by
+            // folder hash, so a path in the URL just lands on the root. Pass
+            // the parent folder's hash (attach.folder) instead; the path rides
+            // along only as the breadcrumb label.
             // dirname(), not core's rtrim($display_path, $filename) — that is a
             // charlist trim and eats trailing characters off the folder name.
             $dir = dirname($rr['display_path']);
-            $dir = ($dir === '.' || $dir === '/') ? '' : $dir . '/';
+            $dir = ($dir === '.' || $dir === '/') ? '' : $dir;
+            $url = z_root() . '/cloud/' . $this->nick;
+            if ($rr['folder'])
+                $url .= '?folder=' . urlencode($rr['folder']) . '&path=' . urlencode($dir);
+
             $i[] = [
-                'url' => z_root() . '/cloud/' . $this->nick . '/' . $dir . '#' . $rr['id'],
+                'url' => $url,
                 'title' => $rr['filename'],
                 'summary' => '',
                 'footer' => datetime_convert('UTC', date_default_timezone_get(), $rr['edited']),
