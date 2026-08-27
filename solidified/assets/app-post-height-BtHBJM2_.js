@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-BeXRvOD7.js";var t=e=>e<=0?0:Math.min(Math.max(e,100),5e3),[n,r]=e(t(Number(localStorage.getItem(`hz-post-height`)??310)));function i(){return n}var a=n;function o(e){let n=t(Number.isFinite(e)?e:310);r(n),localStorage.setItem(`hz-post-height`,String(n))}export{o as n,i as r,a as t};

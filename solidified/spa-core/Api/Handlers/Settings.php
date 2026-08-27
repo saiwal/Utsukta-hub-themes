@@ -120,6 +120,11 @@ class Settings
         $scroll_style = get_pconfig($uid, 'spa', 'scroll_style', 'endless');
         if (!in_array($scroll_style, $valid_scroll_styles, true)) $scroll_style = 'endless';
 
+        // Collapsed post-body height in px; 0 = never collapse.
+        $post_height = intval(get_pconfig($uid, 'spa', 'post_height', 310));
+        if ($post_height > 0) $post_height = min(max($post_height, 100), 5000);
+        else $post_height = 0;
+
         $valid_corner_radii = ['none', 'sm', 'default', 'lg', 'xl'];
         $corner_radius = get_pconfig($uid, 'spa', 'corner_radius', 'default');
         if (!in_array($corner_radius, $valid_corner_radii, true)) $corner_radius = 'default';
@@ -148,6 +153,7 @@ class Settings
             'color_scheme' => $color_scheme,
             'custom_theme_colors' => $custom_theme_colors,
             'scroll_style' => $scroll_style,
+            'post_height' => $post_height,
             'corner_radius' => $corner_radius,
             'comment_order' => $comment_order,
             'thread_mode' => $thread_mode,
@@ -990,6 +996,11 @@ class Settings
 
         if (isset($data['scroll_style']) && in_array($data['scroll_style'], ['endless', 'load_more'], true))
             set_pconfig($uid, 'spa', 'scroll_style', $data['scroll_style']);
+
+        if (isset($data['post_height'])) {
+            $ph = intval($data['post_height']);
+            set_pconfig($uid, 'spa', 'post_height', $ph > 0 ? min(max($ph, 100), 5000) : 0);
+        }
 
         if (isset($data['corner_radius']) && in_array($data['corner_radius'], ['none', 'sm', 'default', 'lg', 'xl'], true))
             set_pconfig($uid, 'spa', 'corner_radius', $data['corner_radius']);
