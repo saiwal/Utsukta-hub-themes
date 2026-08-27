@@ -27,20 +27,31 @@ class Xchan
         );
         if (!$xchans) Response::error(404, 'Channel not found');
 
-        $xchan = $xchans[0];
-
         // Connection status — only meaningful for local viewers
-        [$is_connected, $abook_id] = $this->connectionFor(
+        [$is_connected, $abook_id, $connected_hash] = $this->connectionFor(
             local_channel(),
             array_column($xchans, 'xchan_hash')
         );
 
+        // Pick which row represents the identity: the native zot6 row wins
+        // (it carries the local channel link and magic-auth capability), then
+        // whichever row this viewer's abook holds. Row order out of the query
+        // is undefined, so without this a zot6 channel that is also visible
+        // over ActivityPub is reported as an AP contact — which loses the
+        // ?zid= on its profile link and, for a channel on this hub, the
+        // channel_hash match below that yields local_nick.
+        $xchan = $xchans[0];
+        foreach ($xchans as $row) {
+            if ($row['xchan_network'] === 'zot6') { $xchan = $row; break; }
+            if ($connected_hash && $row['xchan_hash'] === $connected_hash) { $xchan = $row; }
+        }
+
         // Enrich with full profile data if this is a local channel
         $profile_data = [];
         $local_nick = null;
+        $hash_in = "'" . implode("','", array_map('dbesc', array_column($xchans, 'xchan_hash'))) . "'";
         $channel_row = q(
-            "SELECT channel_address FROM channel WHERE channel_hash = '%s' LIMIT 1",
-            dbesc($xchan['xchan_hash'])
+            "SELECT channel_address FROM channel WHERE channel_hash IN ($hash_in) LIMIT 1"
         );
         if ($channel_row) {
             $local_nick = $channel_row[0]['channel_address'];
