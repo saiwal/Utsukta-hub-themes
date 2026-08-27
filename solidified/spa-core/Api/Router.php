@@ -56,6 +56,7 @@ class Router
         'regate'   => Handlers\Regate::class,
         'password-reset' => Handlers\PasswordReset::class,
         'search' => Handlers\Search::class,
+        'share' => Handlers\Share::class,
         'saved-searches' => Handlers\SavedSearches::class,
         'bookmarks'      => Handlers\Bookmarks::class,
         'avatar'         => Handlers\Avatar::class,
