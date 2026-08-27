@@ -58,6 +58,26 @@ class Share
             Response::error(400, 'Note is too long');
         }
 
+        // Optional guest-access token. Appended here rather than accepting a
+        // client-supplied full URL, so the same-origin check above still
+        // governs where the link points. The token must be one of this
+        // channel's own and not expired — never a value echoed back to us.
+        $zat = trim((string) ($body['zat'] ?? ''));
+        if ($zat !== '') {
+            $t = q("SELECT atoken_expires FROM atoken WHERE atoken_uid = %d AND atoken_token = '%s' LIMIT 1",
+                intval($uid),
+                dbesc($zat)
+            );
+            if (!$t) {
+                Response::error(400, 'Unknown guest token');
+            }
+            $expires = $t[0]['atoken_expires'];
+            if ($expires > \DBA::$dba->get_null_date() && strtotime($expires . 'Z') < time()) {
+                Response::error(400, 'That guest token has expired');
+            }
+            $url .= (str_contains($url, '?') ? '&' : '?') . 'zat=' . rawurlencode($zat);
+        }
+
         $throttleKey = 'spa_share_email:' . $uid;
         $count = (int) Cache::get($throttleKey, self::REQUEST_WINDOW);
         if ($count + count($recipients) > self::MAX_REQUESTS) {
