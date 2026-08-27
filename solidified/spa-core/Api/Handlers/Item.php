@@ -2509,11 +2509,15 @@ class Item
 
         $iid = intval($item['id']);
 
-        $share = new \Zotlabs\Lib\Share($iid);
-        $shareBlock = $share->bbcode();
+        // Same split as expandShareTags: app items (articles, cards) must not go
+        // through core Share::bbcode(), which would link the block at the
+        // item's plink instead of its app page.
+        $shareBlock = self::isAppItem($item)
+            ? ''
+            : (new \Zotlabs\Lib\Share($iid))->bbcode();
 
-        // Core Share::bbcode() refuses to wrap posts whose body already contains
-        // [/share] (i.e. reshares). Build the block ourselves in that case.
+        // Core Share::bbcode() also refuses to wrap posts whose body already
+        // contains [/share] (i.e. reshares). Build the block ourselves then.
         if (!$shareBlock) {
             $shareBlock = $this->buildShareBlock($item);
         }
@@ -2659,19 +2663,27 @@ class Item
         }
 
         foreach ($match[2] as $i => $id) {
-            $share = new \Zotlabs\Lib\Share(intval($id));
-            $bb = $share->bbcode();
+            $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
+
+            // Core Share::bbcode() hardcodes the item's plink as the block's
+            // link, which would render an article or card embed as a generic
+            // post pointing at /item/<uuid>. App items skip it and build the
+            // block below, where appItemLink() supplies the /articles/ or
+            // /cards/ URL both bbcode renderers key off.
+            $bb = ($r && self::isAppItem($r[0]))
+                ? ''
+                : (new \Zotlabs\Lib\Share(intval($id)))->bbcode();
 
             if (!$bb) {
-                // Share::bbcode() refuses posts that already contain [/share]
-                // (nested reshares). Rebuild the block ourselves with the same
-                // visibility rules Lib\Share applies.
-                $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
+                // App items, and posts Share::bbcode() refuses because their
+                // body already contains [/share] (nested reshares). Rebuild
+                // the block ourselves with the same visibility rules
+                // Lib\Share applies.
                 if ($r && !intval($r[0]['item_private'])) {
                     $sql_extra = item_permissions_sql($r[0]['uid']);
-                    $r = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
-                    if ($r) {
-                        $bb = $this->buildShareBlock($r[0]);
+                    $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
+                    if ($v) {
+                        $bb = $this->buildShareBlock($v[0]);
                     }
                 }
             }
@@ -2784,12 +2796,23 @@ class Item
         xchan_query($rows, true);
         $author  = $rows[0]['author'] ?? [];
         $network = $author['xchan_network'] ?? '';
-        $quote   = in_array($network, ['zot6', 'activitypub']) ? "quote='true'" : '';
+        // quote='true' tells Activity::encode_item to strip the block and
+        // federate it as quoteUrl = the block's link attribute (Lib/Activity.php
+        // ~677). That only works when the link is an AS-resolvable object, i.e.
+        // an ordinary post's plink. An app item's link is its HTML app page, so
+        // quoting it federates as an unfetchable "RE: <url>" and the remote
+        // renders bare text — send the block inline instead, which is also what
+        // buildCardBlock has always done.
+        $quote = (!self::isAppItem($item) && in_array($network, ['zot6', 'activitypub']))
+            ? "quote='true'"
+            : '';
 
         $bb  = "[share author='" . urlencode($author['xchan_name'] ?? '') . "'\n";
         $bb .= "\tprofile='" . ($author['xchan_url'] ?? '') . "'\n";
         $bb .= "\tavatar='" . ($author['xchan_photo_s'] ?? '') . "'\n";
-        $bb .= "\tlink='" . ($item['plink'] ?? '') . "'\n";
+        // App items (articles, cards) link to their own page, not their plink:
+        // that is what makes both bbcode renderers label the block correctly.
+        $bb .= "\tlink='" . (self::appItemLink($item) ?: ($item['plink'] ?? '')) . "'\n";
         $bb .= "\tauth='" . ($network === 'zot6' ? 'true' : 'false') . "'\n";
         $bb .= "\tposted='" . ($item['created'] ?? '') . "'\n";
         $bb .= "\tmessage_id='" . ($item['mid'] ?? '') . "'\n";

@@ -53,7 +53,7 @@ trait EmbedsCards
             return '';
         }
 
-        $link = self::cardLink($item);
+        $link = self::appItemLink($item);
         if (!$link) {
             return '';
         }
@@ -125,12 +125,36 @@ trait EmbedsCards
     }
 
     /**
-     * A card's human-facing app URL, /cards/<nick>/<slug-or-uuid>, or '' when
-     * the owning channel can't be resolved. Distinct from the item's plink,
-     * which is the mid-based federation identity.
+     * Whether this item's [share] block should link to its app page rather
+     * than its plink. Keeps the type list in one place beside appItemLink().
      */
-    protected static function cardLink(array $item): string
+    protected static function isAppItem(array $item): bool
     {
+        return in_array(intval($item['item_type'] ?? 0),
+            [ITEM_TYPE_CARD, ITEM_TYPE_ARTICLE], true);
+    }
+
+    /**
+     * A shareable app item's human-facing URL — /cards/<nick>/<slug-or-uuid>
+     * or /articles/<nick>/<slug-or-uuid> — or '' for an ordinary post (whose
+     * plink already is its display URL) or when the owning channel can't be
+     * resolved. Distinct from the item's plink, which is the mid-based
+     * federation identity: this is the attribute both bbcode renderers read to
+     * label a [share] block a card or an article rather than a post
+     * (include/bbcode.php bb_ShareAttributes, bbcode.ts bbShareAttributes).
+     */
+    protected static function appItemLink(array $item): string
+    {
+        $type = intval($item['item_type'] ?? 0);
+        $seg = match ($type) {
+            ITEM_TYPE_CARD    => 'cards',
+            ITEM_TYPE_ARTICLE => 'articles',
+            default           => '',
+        };
+        if (!$seg) {
+            return '';
+        }
+
         $c = q("SELECT channel_address FROM channel WHERE channel_id = %d LIMIT 1",
             intval($item['uid']));
         if (!$c || !$c[0]['channel_address']) {
@@ -139,11 +163,11 @@ trait EmbedsCards
 
         $slug = '';
         $cfg = q("SELECT v FROM iconfig WHERE iid = %d AND cat = 'system' AND k = '%s' LIMIT 1",
-            intval($item['id']), dbesc(item_type_to_namespace(ITEM_TYPE_CARD)));
+            intval($item['id']), dbesc(item_type_to_namespace($type)));
         if ($cfg) {
             $slug = urldecode($cfg[0]['v']);
         }
 
-        return z_root() . '/cards/' . $c[0]['channel_address'] . '/' . ($slug ?: $item['uuid']);
+        return z_root() . '/' . $seg . '/' . $c[0]['channel_address'] . '/' . ($slug ?: $item['uuid']);
     }
 }
