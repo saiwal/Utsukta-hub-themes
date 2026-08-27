@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-BeXRvOD7.js";import{Ma as t}from"./app-mI8JrnuG.js";function n(){return e(t,{href:`/directory/guest-access`})}export{n as default};
