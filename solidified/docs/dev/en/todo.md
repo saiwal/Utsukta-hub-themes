@@ -606,3 +606,191 @@ and an SSE endpoint for notifications (`NotificationsAside.tsx:974`).
   rather than being lost.
 - Read-only: mint a token with `write:false`, confirm remote edits arrive but local ones never
   propagate.
+
+## Per-user SMTP credentials for share/invite email
+
+**Status: planned, not started.** Researched in depth; deliberately not built.
+
+Share and invite email currently goes out through the site mailer — `z_mail()` → `Zotlabs\Lib\Mailer`
+→ the `email_send` hook, which the bundled `phpmailer` addon implements with site-wide SMTP
+(`config` family `phpmailer`) — with the sending user's address as `Reply-To`
+(`packages/spa-core/php/Api/Handlers/Share.php`). That needs no credentials and is what ships today.
+
+The open question is whether a user should be able to supply **their own** SMTP server so the mail
+genuinely originates from their mailbox (the practical driver is deliverability: a `From:` on a
+domain the hub isn't authorised to send for fails SPF/DMARC and lands in spam). Doing that means
+storing a reusable credential, which is why this is written down rather than built.
+
+**Read the three findings below before designing anything** — each one contradicts the obvious
+approach, and two of them are invisible unless you go looking in core.
+
+### Findings that constrain the design
+
+**1. Hubzilla built this, then removed it.** `Zotlabs/Update/_1242.php` is a migration that finds
+every `pconfig` key matching `%password%` holding an encrypted envelope, decrypts it with
+`Config::Get('system','prvkey')`, and rewrites it with `obscurify()`:
+
+```php
+$v = crypto_unencapsulate($a, Config::Get('system', 'prvkey'));
+set_pconfig($pp['uid'], $pp['cat'], $pp['k'], obscurify($v));
+```
+
+`obscurify()` is `str_rot47(base64url_encode($s))` (`include/text.php:4127`). ROT47 — keyless,
+trivially reversible, anti-shoulder-surfing only. So site-key encryption of pconfig secrets was
+*deliberately reverted*. Every credential-storing addon (`dwpost`, `ljpost`, `wppost`, `ijpost`)
+uses `obscurify()`; the OAuth addons (`twitter`, `statusnet`, `pumpio`) store tokens in plain text.
+That is the de-facto bar. Clearing it is fine — recreating the design core walked away from is not.
+
+**2. pconfig replicates to every clone hub, with no sensitive-key filter.**
+
+- Outbound: `Libsync.php:90-95` ships `App::$config[$uid]['transient']`, which `PConfig::Set`
+  stages on *every* `set_pconfig()` call (`PConfig.php:225-234`).
+- Inbound: `Libsync.php:241-273` writes each cat/key straight back via `set_pconfig()`.
+- `include/import.php:166` copies the whole `pconfig` table on channel import.
+
+There is no allowlist or denylist. Directly below, at `Libsync.php:102-110`, the *channel* record
+strips `channel_prvkey`, `channel_password` and `channel_salt` via a `$disallowed` array — so the
+exclusion mechanism exists and is pointedly not applied to config. A plaintext secret in pconfig is
+therefore handed to the admin of every hub hosting a clone of that channel. This is almost certainly
+*why* `_1242` exists: an envelope encrypted to hub A's key is undecryptable garbage on hub B, so
+site-key encryption broke clone sync by construction.
+
+**3. The `email_send` hook carries no uid, so it cannot be used.** `Mailer.php:60` and
+`Enotify.php:787` both pass only `fromEmail, fromName, replyTo, additionalMailHeader, toEmail,
+messageSubject, htmlVersion, textVersion, sent, result`. `toEmail` is the recipient's
+`account_email` (`Enotify.php:756`), not the sender. `Enotify` even has `$recip['channel_id']` in
+scope — it assigns it to `$datarray['uid']` at `:525` — and still doesn't pass it into the mail
+params. A per-user mailer hook literally cannot tell whose credentials to use, so call the mailer
+directly from the share path instead of hooking.
+
+### Design decisions already made
+
+- **Scope: share/invite mail only.** Password reset (`Handlers/PasswordReset.php`), notifications
+  (`Enotify`) and all system mail stay on the site mailer. This is a security boundary, not just
+  scope — a misconfigured or hostile user SMTP server must never be able to intercept or silently
+  drop account-recovery email.
+- **Providers: arbitrary/self-hosted SMTP**, which is what forces a stored password. If the provider
+  mix ever narrows to Gmail/Outlook, **OAuth2 (XOAUTH2, supported by PHPMailer) is the better
+  answer** — a refresh token is revocable from the provider, scoped send-only, and not a reusable
+  account password.
+- **Key location: `.htconfig.php`**, alongside `$db_pass`, never the database. `system.prvkey` lives
+  in the `config` table (`include/channel.php:113-118` → `Config::Set`), so encrypting with it gives
+  *zero* protection against a DB dump: ciphertext and key come out of the same file.
+
+### Implementation shape
+
+**The `.htconfig.php` scope trap.** `.htconfig.php` is `@include`d **inside `function sys_boot()`**
+(`boot.php:669`), so a plain `$smtp_master_key = '…'` there is function-scoped and unreachable from
+handler code. It must be written as a superglobal:
+
+```php
+// .htconfig.php — 32 random bytes, base64
+$GLOBALS['utsukta_smtp_key'] = '…';
+```
+
+Do **not** use `App::$config['system'][...]`: that file's own header documents DB values overriding
+config keys set there, which would let anyone with a `config`-table write swap the key.
+
+**No key configured ⇒ the feature is disabled and the UI says so.** Never fall back to plaintext.
+
+**Storage.** pconfig cat `spa`, key `smtp` — deliberately *not* containing the word `password`, so a
+future core migration doing `WHERE k LIKE '%password%'` (as `_1242` did) can't mangle it. The value
+is `v1:` + base64 of `nonce || ciphertext` over a JSON object holding *all* fields together
+(`host, port, security, username, password, verified_host`), so a clone hub receives one opaque
+value that leaks nothing — not even the hostname.
+
+- Cipher: `sodium_crypto_aead_xchacha20poly1305_ietf_encrypt()`. Verified available on the target
+  (`sodium=1`, `openssl=1`, PHP 8.3.31).
+- AAD: `uid . ':v1'`, so a ciphertext row can't be replayed into another user's account.
+- Clone semantics: credentials are hub-local and re-entered per hub. That's correct anyway — SMTP
+  config is hub infrastructure, not channel identity. Say so in the UI.
+
+**Handler** — `Handlers/SmtpSettings.php` + a Router entry:
+
+```
+GET    /spa/smtp          → { configured, host, port, security, username, verified_at }  ← never the password
+POST   /spa/smtp          → save + verify  { host, port, security, username, password? }
+POST   /spa/smtp/test     → verify only, persist nothing
+POST   /spa/smtp/delete   → clear
+```
+
+Every one of these is load-bearing:
+
+- **Write-only secret.** GET returns `configured: true` and metadata; the password never leaves the
+  server. An empty `password` on POST means "keep the stored one".
+- **SSRF.** Reuse the existing `Concerns/ValidatesRemoteHost` trait — it already rejects
+  private/loopback/link-local ranges *including* IPv4-mapped IPv6 (`::ffff:10.0.0.1`), the case
+  naive checks miss.
+- **DNS rebinding.** `ValidatesRemoteHost` resolves an IP, but PHPMailer re-resolves on connect — a
+  TOCTOU. Connect to the *validated IP* and pin the hostname for cert verification via
+  `SMTPOptions => ['ssl' => ['peer_name' => $host]]`.
+- **Port allowlist**: 587 and 465 only.
+- **TLS mandatory**; `security` ∈ {`tls`, `ssl`}. Never expose the phpmailer addon's `noverify`
+  option per-user — disabling cert verification is defensible as a site-admin choice, never as a
+  user-supplied one.
+- **Credential-theft-on-host-change** — the non-obvious attack. An attacker who can change the
+  stored host (CSRF/XSS) and trigger a send makes the hub `AUTH LOGIN` the victim's stored password
+  to *their* server. Keep `verified_host` in the blob and **clear the stored password whenever
+  host/port/username changes**; never send a secret to a host it wasn't verified against.
+- **Auth-failure backoff.** Repeated wrong-password sends can get the user's real mailbox locked by
+  their provider. Track consecutive failures in `Cache` and stop until they re-save.
+- Relay abuse is already covered by `Share.php`'s existing 20/hour per-uid throttle, and the blast
+  radius is the user's own mailbox.
+
+**Sending.** Add `phpmailer/phpmailer` to `src/composer.json` (which already carries real deps such
+as `minishlink/web-push`) rather than reaching into `addon/phpmailer/PHPMailer/src/` — the feature
+must not depend on an addon being installed. In `Share.php`, after the existing same-origin and
+recipient validation: if the sender has verified SMTP config, send via their server with `From` =
+their address; otherwise fall back to the current `z_mail()` path unchanged.
+
+**UI.** A dedicated settings section (not Integrations — that page is app install/uninstall), built
+on `useSectionForm` (`src/modules/settings/store/useSectionForm.ts`); note its rule that queries
+seeding uncontrolled inputs must set `refetchOnWindowFocus: false` or a background refetch clobbers
+unsaved edits. The password field renders empty with a "configured" indicator, never a masked stored
+value. Two notices, because users will otherwise assume more protection than exists:
+
+- *Use an app-specific password, not your main account password.*
+- *This hub can technically decrypt these credentials — the key is on the server. Encryption
+  protects against a database leak, not against this hub's administrator.*
+
+### What this protects against, and what it doesn't
+
+| Threat | Protected? |
+|---|---|
+| DB dump / SQLi exfiltration | **Yes** — key is outside the DB |
+| Credentials leaking to clone-hub admins | **Yes** — they hold undecryptable ciphertext |
+| API / response leakage | **Yes** — write-only, never returned |
+| SSRF into the internal network | **Yes** — `ValidatesRemoteHost` + port allowlist |
+| Password stolen by an attacker-controlled host | **Yes** — re-verification required on host change |
+| Full server compromise | **No** — the key is on the box |
+| Malicious hub administrator | **No** — same reason |
+
+If either of the last two matters for your users, the answer is not better storage — it's OAuth2,
+which was ruled out only because arbitrary/self-hosted SMTP has to work.
+
+### Known ceilings (deliberate — mark with `ponytail:` comments when built)
+
+- `ponytail: ciphertext still rides the clone sync (Libsync.php:90-95). Harmless — no clone can
+  decrypt it — but a dedicated non-synced table is the upgrade if it must never leave the hub.`
+- `ponytail: one master key, no rotation. The v1: prefix is the version hook; add re-encrypt-on-read
+  when a second key version exists.`
+- Password-only auth. XOAUTH2 is the upgrade path when the provider mix allows it.
+
+### Verification (when this gets picked up)
+
+- With no `$GLOBALS['utsukta_smtp_key']` set: the settings section renders disabled and POST 403s —
+  never silently stores plaintext.
+- Round-trip a save, then read the raw row
+  (`ddev mysql -e "select v from pconfig where cat='spa' and k='smtp'"`) and confirm it is opaque
+  `v1:` base64 with no hostname or password visible.
+- AAD binding: copy one user's ciphertext into another uid and confirm decryption *fails* rather
+  than yielding the first user's credentials.
+- `GET /spa/smtp` contains no password field under any input.
+- SSRF cases, via the ddev CLI harness (one case per process — `Response::error()` exits; see the
+  `share_test.php` pattern): `localhost`, `127.0.0.1`, `10.0.0.5`, `::ffff:127.0.0.1`, and a public
+  hostname with a private A record must all be rejected; port 2525 rejected, 587/465 accepted.
+- Host-change invalidation: save verified config, change only the host, confirm the stored password
+  is cleared and sending is refused until it's re-entered.
+- End-to-end against a local catcher (MailHog/Mailpit) on an allowlisted port: share email arrives
+  with the user's `From`; delete the config and confirm the same share falls back to `z_mail()`.
+- Scope isolation: trigger a password reset and confirm it still goes through the site mailer.
