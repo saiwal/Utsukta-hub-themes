@@ -65,7 +65,12 @@ class Channel
         $uids            = ' AND item.uid = ' . $channel_uid . ' ';
         $item_thread_top = ' AND item_thread_top = 1 ';
         $blocked         = $this->blockedXchans($uid);
-        $sql_extra       = ' AND item.item_wall = 1 '
+        // dm=1 shows the whole DM conversation with this channel, so it must
+        // include the channel's *received* copies (item_wall = 0) as well as
+        // what it sent. item_permissions_sql() below is what fences visitors:
+        // a received copy carries an empty allow_cid, so it only ever matches
+        // for the observer who authored it, or for the channel owner.
+        $sql_extra       = ($dm ? '' : ' AND item.item_wall = 1 ')
             . $this->blockedSqlClause('item.author_xchan', $blocked)
             . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
