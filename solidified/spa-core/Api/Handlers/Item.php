@@ -1706,10 +1706,45 @@ class Item
         $iid = intval($item[0]['id']);
         $now = datetime_convert();
 
+        // Files attached while editing arrive as [attachment] tags appended to
+        // the body, exactly as in createPost(). Extract and strip them the same
+        // way, then merge on top of the attachments the item already has —
+        // those were stripped from the body at create time and live only in
+        // item.attach, so they are not in the edited body to re-extract.
+        $attachments = json_decode($item[0]['attach'] ?? '', true) ?: [];
+        if ($mimetype === 'text/bbcode'
+            && preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
+            require_once('include/attach.php');
+            $ob_hash = get_observer_hash();
+            $seen    = array_column($attachments, 'href');
+            foreach ($match[2] as $i => $mtch) {
+                $hash = substr($mtch, 0, strpos($mtch, ','));
+                $rev  = intval(substr($mtch, strpos($mtch, ',')));
+                $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
+                if ($r['success'] && !in_array(z_root() . '/attach/' . $r['data']['hash'], $seen, true)) {
+                    $attachments[] = [
+                        'href'     => z_root() . '/attach/' . $r['data']['hash'],
+                        'length'   => $r['data']['filesize'],
+                        'type'     => $r['data']['filetype'],
+                        'title'    => urlencode($r['data']['filename']),
+                        'revision' => $r['data']['revision'],
+                    ];
+                    $seen[] = z_root() . '/attach/' . $r['data']['hash'];
+                }
+                $content = str_replace($match[1][$i], '', $content);
+            }
+            // Newly attached files/photos inherit the post's existing ACL, so a
+            // private file can't leak onto a public post (and vice versa).
+            fix_attached_permissions($uid, $content,
+                $item[0]['allow_cid'], $item[0]['allow_gid'],
+                $item[0]['deny_cid'],  $item[0]['deny_gid']);
+        }
+
         q("UPDATE item SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
-                           edited = '%s', changed = '%s'
+                           attach = '%s', edited = '%s', changed = '%s'
            WHERE id = %d AND uid = %d",
             dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
+            dbesc($attachments ? json_encode($attachments) : ''),
             dbesc($now), dbesc($now), $iid, $uid);
 
         // Rebuild term records to match the edited body (mentions, hashtags,

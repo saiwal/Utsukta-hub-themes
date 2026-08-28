@@ -354,6 +354,23 @@ class Nav
             }
         }
 
+        // Site config of the openstreetmap addon, or null when it isn't enabled
+        // — the SPA's map feature keys off this being present. Deliberately NOT
+        // a pseudo-entry in $installed_apps: that list is per-channel and
+        // isModuleActive() reads an empty set as "not loaded yet", so a
+        // site-level entry would make the set non-empty for anonymous/
+        // subject-less requests and wrongly gate off every other app module.
+        // The tile server travels with it because sysadmins may self-host one,
+        // and the SPA must embed maps from that same server.
+        $osm = null;
+        if (plugin_is_installed('openstreetmap')) {
+            $osm = [
+                'tmsserver' => (string) (get_config('openstreetmap', 'tmsserver', 'https://www.openstreetmap.org') ?: 'https://www.openstreetmap.org'),
+                'zoom'      => intval(get_config('openstreetmap', 'zoom', 16)),
+                'marker'    => intval(get_config('openstreetmap', 'marker', 1)),
+            ];
+        }
+
         Response::send([
             'viewer'           => $viewer,
             'actions'          => $actions,
@@ -368,6 +385,7 @@ class Nav
             'channel_tabs'     => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
             'installed_apps'   => $installed_apps,
+            'osm'              => $osm,
             // Effective language for this request/session — browser-detected
             // (get_best_language()) or explicitly set via classic redbasic's
             // language selector ($_SESSION['language']). Lets the SPA seed its

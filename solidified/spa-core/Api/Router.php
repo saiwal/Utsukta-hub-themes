@@ -72,6 +72,7 @@ class Router
         'rss-feed'       => Handlers\Rss::class,
         'feed'           => Handlers\Feed::class,
         'weather'        => Handlers\Weather::class,
+        'geocode'        => Handlers\Geocode::class,
         'link-meta'      => Handlers\Linkmeta::class,
         'announcements'  => Handlers\Announcements::class,
         'blocklist'      => Handlers\Blocklist::class,
