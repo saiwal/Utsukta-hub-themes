@@ -95,17 +95,27 @@ class Photos
         $ph_drv = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
-        $r = dbq('SELECT resource_id, filename, mimetype, imgscale, title, description, is_nsfw, album, created
+        $uid = intval($channel['channel_id']);
+
+        // Over-fetch: the folder-visibility filter below runs after the limit.
+        $r = dbq("SELECT photo.resource_id, photo.filename, photo.mimetype, photo.imgscale,
+                         photo.title, photo.description, photo.is_nsfw, photo.album, photo.created,
+                         photo.allow_cid, photo.allow_gid, photo.deny_cid, photo.deny_gid,
+                         COALESCE(a.folder, '') AS fhash
               FROM photo
-              WHERE uid = ' . intval($channel['channel_id']) . '
-                AND photo_usage IN (' . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
-                AND imgscale = 2
+              LEFT JOIN attach a ON a.hash = photo.resource_id AND a.uid = $uid
+              WHERE photo.uid = $uid
+                AND photo.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
+                AND photo.imgscale = 2
                 $sql_extra
-              ORDER BY created DESC
-              LIMIT 8");
+              ORDER BY photo.created DESC
+              LIMIT 40");
 
         $out = [];
         foreach (($r ?: []) as $row) {
+            if (count($out) >= 8) break;
+            $fhash = (string) $row['fhash'];
+            if ($fhash !== '' && !$this->canViewFolder($uid, $ob_hash, $fhash)) continue;
             $ext = $phototypes[$row['mimetype']] ?? 'jpg';
             $out[] = [
                 'resource_id' => $row['resource_id'],
@@ -113,6 +123,7 @@ class Photos
                 'title' => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
                 'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
+                'is_private' => $this->rowIsPrivate($row, $uid, $fhash),
                 'album' => $row['album'],
                 'created' => $row['created'],
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -157,13 +168,16 @@ class Photos
             $fhash = (string) $row['fhash'];
             $total = intval($row['cnt']);
             if ($total === 0) continue;
+            // The photo rows may be public while the album folder is not —
+            // core would refuse to serve them, so don't list them either.
+            if ($fhash !== '' && !$this->canViewFolder($uid, $ob_hash, $fhash)) continue;
 
             $thumb = null;
             if ($fhash !== '') {
                 $t = dbq(
                     "SELECT p.resource_id, p.mimetype, p.imgscale
                      FROM photo p
-                     INNER JOIN attach a ON a.hash = p.resource_id
+                     INNER JOIN attach a ON a.hash = p.resource_id AND a.uid = $uid
                      WHERE a.folder = '" . dbesc($fhash) . "'
                        AND p.uid = $uid
                        AND p.imgscale = 2
@@ -211,9 +225,10 @@ class Photos
         $phototypes = $ph_drv->supportedTypes();
 
         $r = dbq("SELECT p.resource_id, p.filename, p.mimetype, p.imgscale,
-                     p.title, p.description, p.is_nsfw, p.album, p.created
+                     p.title, p.description, p.is_nsfw, p.album, p.created,
+                     p.allow_cid, p.allow_gid, p.deny_cid, p.deny_gid
               FROM photo p
-              INNER JOIN attach a ON a.hash = p.resource_id
+              INNER JOIN attach a ON a.hash = p.resource_id AND a.uid = " . intval($channel['channel_id']) . "
               WHERE a.folder = '" . dbesc($albumHash) . "'
                 AND p.uid = " . intval($channel['channel_id']) . '
                 AND p.imgscale = 2
@@ -230,6 +245,7 @@ class Photos
                 'title' => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
                 'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
+                'is_private' => $this->rowIsPrivate($row, intval($channel['channel_id']), $albumHash),
                 'album' => $row['album'],
                 'created' => $row['created'],
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -273,24 +289,32 @@ class Photos
             Response::error(404, 'Photo not found or permission denied');
 
         // ── Verify attach visibility ──────────────────────────────────────────
+        // attach_can_view() checks the file's own ACL *and* walks the folder
+        // chain — the exact gate core's /photo applies, so we never hand back
+        // an image URL that then 403s.
+        require_once 'include/attach.php';
+        if (!attach_can_view($owner_uid, $ob_hash, $resourceId))
+            Response::error(403, 'Permission denied');
+
         $x = dbq("SELECT folder FROM attach
                   WHERE hash = '" . dbesc($resourceId) . "'
                     AND uid = $owner_uid
-                    $sql_attach
                   LIMIT 1");
-
-        if (!$x)
-            Response::error(403, 'Permission denied');
 
         $ext = $phototypes[$ph[0]['mimetype']] ?? 'jpg';
         $hires = $ph[0];
         $lores = $ph[1] ?? $ph[0];
 
+        // Effective privacy, not just the row's own ACL: a cover photo is public
+        // in the photo table yet unreachable if its album folder is not. Asked
+        // against an anonymous observer, which is the question the share sheet
+        // needs answered — "will anyone I post this to be able to load it?"
         $is_private = (
             strlen($ph[0]['allow_cid']) ||
             strlen($ph[0]['allow_gid']) ||
             strlen($ph[0]['deny_cid']) ||
-            strlen($ph[0]['deny_gid'])
+            strlen($ph[0]['deny_gid']) ||
+            ($x && $x[0]['folder'] && !$this->canViewFolder($owner_uid, '', $x[0]['folder']))
         );
 
         // ── Linked item — reactions + comments ────────────────────────────────
@@ -800,9 +824,10 @@ class Photos
         $phototypes = $ph_drv->supportedTypes();
 
         $r = dbq("SELECT p.resource_id, p.filename, p.mimetype, p.imgscale,
-                         p.title, p.description, p.is_nsfw, p.album, p.created
+                         p.title, p.description, p.is_nsfw, p.album, p.created,
+                         p.allow_cid, p.allow_gid, p.deny_cid, p.deny_gid
                   FROM photo p
-                  INNER JOIN attach a ON a.hash = p.resource_id
+                  INNER JOIN attach a ON a.hash = p.resource_id AND a.uid = " . intval($channel['channel_id']) . "
                   WHERE a.folder = ''
                     AND p.uid = " . intval($channel['channel_id']) . '
                     AND p.imgscale = 2
@@ -819,6 +844,7 @@ class Photos
                 'title'       => $row['title'] ?? '',
                 'description' => $row['description'] ?? '',
                 'is_nsfw'     => (bool) intval($row['is_nsfw'] ?? 0),
+                'is_private'  => $this->rowIsPrivate($row, intval($channel['channel_id']), ''),
                 'album'       => $row['album'],
                 'created'     => $row['created'],
                 'src'         => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
@@ -830,6 +856,39 @@ class Photos
     }
 
     // ── ACL helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * Can the observer reach this folder (and every folder above it)?
+     * This is the gate core's /photo applies via attach_can_view(); listings
+     * that skip it advertise thumbnails that then 403. Memoised per request.
+     */
+    private array $folderVisible = [];
+
+    private function canViewFolder(int $uid, string $ob_hash, string $folder): bool
+    {
+        require_once 'include/attach.php';
+        // Keyed by observer too — the same request asks both "can the viewer
+        // see this?" and "could an anonymous visitor?" (the is_private flag).
+        $key = $folder . '|' . $ob_hash;
+        return $this->folderVisible[$key] ??= attach_can_view_folder($uid, $ob_hash, $folder);
+    }
+
+    /**
+     * Would an anonymous visitor be refused this photo? The row's own ACL is
+     * not the whole answer — a cover photo is public in the photo table but
+     * unreachable when its album folder is not. Drives the `is_private` flag,
+     * which the share sheet uses to warn before embedding a URL that will 403.
+     */
+    private function rowIsPrivate(array $row, int $uid, string $folder): bool
+    {
+        return (bool) (
+            strlen($row['allow_cid'] ?? '') ||
+            strlen($row['allow_gid'] ?? '') ||
+            strlen($row['deny_cid'] ?? '') ||
+            strlen($row['deny_gid'] ?? '') ||
+            ($folder !== '' && !$this->canViewFolder($uid, '', $folder))
+        );
+    }
 
     private function parseAclField(string $field): array
     {
@@ -913,26 +972,20 @@ class Photos
             $deny_cid  = $this->buildAclField($body['deny_cid']  ?? []);
         }
 
-        if ($type === 'image') {
-            if (!$datum) Response::error(400, 'resource_id required');
-            q("UPDATE photo SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
-               WHERE uid = %d AND resource_id = '%s'",
-                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
-                intval($uid), dbesc($datum));
-            q("UPDATE attach SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
-               WHERE uid = %d AND hash = '%s'",
-                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
-                intval($uid), dbesc($datum));
-        } else {
-            if (!$datum) Response::error(400, 'folder hash required');
-            q("UPDATE attach SET allow_gid = '%s', allow_cid = '%s', deny_gid = '%s', deny_cid = '%s'
-               WHERE uid = %d AND hash = '%s' AND is_dir = 1",
-                dbesc($allow_gid), dbesc($allow_cid), dbesc($deny_gid), dbesc($deny_cid),
-                intval($uid), dbesc($datum));
+        if (!$datum) {
+            Response::error(400, $type === 'image' ? 'resource_id required' : 'folder hash required');
         }
 
-        $sync = attach_export_data($channel, $datum, false);
-        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+        // Core's helper writes both the attach and photo rows, preserves any
+        // existing guest tokens, and syncs. Albums recurse: without that the
+        // contained photo rows keep their old (often public) ACL while core's
+        // /photo denies them via the folder chain — a public photo that 403s.
+        attach_change_permissions(
+            $uid, $datum,
+            $allow_cid, $allow_gid, $deny_cid, $deny_gid,
+            $type === 'album',
+            true
+        );
 
         Response::send(['ok' => true]);
     }

@@ -67,6 +67,7 @@ class Router
         'xchan'          => Handlers\Xchan::class,
         'nodeinfo'       => Handlers\Nodeinfo::class,
         'connections'    => Handlers\Connections::class,
+        'sources'        => Handlers\Sources::class,
         'directory'      => Handlers\Directory::class,
         'cart'           => Handlers\Cart::class,
         'rss-feed'       => Handlers\Rss::class,

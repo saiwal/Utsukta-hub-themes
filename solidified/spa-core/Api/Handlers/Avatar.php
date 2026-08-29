@@ -191,6 +191,22 @@ class Avatar
             Response::error(500, 'Cover resize failed.');
         }
 
+        // A cover is public at scales 7-9 no matter what — core's /photo
+        // hardcodes the PHOTO_COVER bypass, and explicitly refuses it below
+        // scale 7 — so the remaining scales have to be reachable too, or
+        // anything that links one (a reshare, an [img] embed) 403s. Core does
+        // the same for the default profile photo via photo_profile_setperms().
+        attach_change_permissions($uid, $hash, '', '', '', '', false, true);
+
+        // ...and the album folder gates them all, whatever the photo rows say.
+        // Not recursive: this clears the folder row only, leaving the other
+        // photos in the album with the ACLs they already have.
+        $f = q("SELECT folder FROM attach WHERE hash = '%s' AND uid = %d LIMIT 1",
+            dbesc($hash), intval($uid));
+        if ($f && $f[0]['folder']) {
+            attach_change_permissions($uid, $f[0]['folder'], '', '', '', '', false, true);
+        }
+
         \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
 
         Response::send([
