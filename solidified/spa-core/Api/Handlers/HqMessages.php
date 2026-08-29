@@ -170,10 +170,12 @@ class HqMessages
                 }
             }
 
-            $summary = $item['title'];
-            if (!$summary) {
-                $summary = $item['summary'];
-            }
+            // The title is a subject line (a DM's, most often) — sent as its
+            // own field so the list can show it above the body excerpt rather
+            // than in place of it.
+            $title = $item['title'] ? substr_words($item['title'], 140) : '';
+
+            $summary = $item['summary'];
             if (!$summary) {
                 $summary = html2plain(bbcode($item['body'], ['drop_media' => true, 'tryoembed' => false]), 75, true);
                 if ($summary) {
@@ -181,7 +183,7 @@ class HqMessages
                 }
             }
             if (!$summary) {
-                $summary = '...';
+                $summary = $title ? '' : '...';
             } else {
                 $summary = substr_words($summary, 140);
             }
@@ -203,6 +205,7 @@ class HqMessages
                 'author_img' => $item['author']['xchan_photo_s'],
                 'info' => $info,
                 'created' => datetime_convert('UTC', date_default_timezone_get(), $item[$order_col]),
+                'title' => $title,
                 'summary' => $summary,
                 'b64mid' => $item['uuid'],
                 'href' => z_root() . '/hq/' . $item['uuid'],
@@ -251,6 +254,7 @@ class HqMessages
                 'author_img' => $notice['photo'],
                 'info' => '',
                 'created' => datetime_convert('UTC', date_default_timezone_get(), $notice['created']),
+                'title' => '',
                 'summary' => $summary,
                 'b64mid' => $isIntro ? '' : $hashLink,
                 'href' => $isIntro ? $notice['link'] : z_root() . '/hq/' . $hashLink,
