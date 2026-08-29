@@ -1,1 +1,0 @@
-import{t as e}from"./app-fetch-3QFnbqY2.js";async function t(t,n){let r=await e(`/spa/lockview/${t}/${n}`);if(!r.ok)return null;let{data:i}=await r.json();return i}export{t};

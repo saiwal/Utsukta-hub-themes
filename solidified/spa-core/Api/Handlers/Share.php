@@ -63,8 +63,9 @@ class Share
         // governs where the link points. The token must be one of this
         // channel's own and not expired — never a value echoed back to us.
         $zat = trim((string) ($body['zat'] ?? ''));
+        $guestLines = [];
         if ($zat !== '') {
-            $t = q("SELECT atoken_expires FROM atoken WHERE atoken_uid = %d AND atoken_token = '%s' LIMIT 1",
+            $t = q("SELECT atoken_name, atoken_expires FROM atoken WHERE atoken_uid = %d AND atoken_token = '%s' LIMIT 1",
                 intval($uid),
                 dbesc($zat)
             );
@@ -76,6 +77,16 @@ class Share
                 Response::error(400, 'That guest token has expired');
             }
             $url .= (str_contains($url, '?') ? '&' : '?') . 'zat=' . rawurlencode($zat);
+
+            // Say what the link is. Without this the recipient gets an opaque
+            // URL and no idea it is a credential that stops working one day.
+            $guestLines[] = sprintf(
+                'This link signs you in as guest "%s" - treat it like a password.',
+                $t[0]['atoken_name']
+            );
+            if ($expires > \DBA::$dba->get_null_date()) {
+                $guestLines[] = 'Guest access expires: ' . $expires . ' UTC';
+            }
         }
 
         $throttleKey = 'spa_share_email:' . $uid;
@@ -98,6 +109,9 @@ class Share
             $lines[] = $title;
         }
         $lines[] = $url;
+        foreach ($guestLines as $gl) {
+            $lines[] = $gl;
+        }
         if ($note !== '') {
             $lines[] = '';
             $lines[] = $note;
