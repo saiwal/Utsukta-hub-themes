@@ -673,7 +673,7 @@ class Settings
 
             $apps[] = [
                 'name'        => $name,
-                'description' => $app['description'] ?? '',
+                'description' => self::appDesc($app),
                 'photo'       => $app['photo'] ?? '',
                 'requires'    => $app['requires'] ?? '',
                 'installed'   => $inst !== null,
@@ -689,7 +689,7 @@ class Settings
             $categories = $inst['categories'] ?? '';
             $apps[] = [
                 'name'        => $name,
-                'description' => $inst['description'] ?? '',
+                'description' => self::appDesc($inst),
                 'photo'       => $inst['photo'] ?? '',
                 'requires'    => $inst['requires'] ?? '',
                 'installed'   => true,
@@ -703,7 +703,19 @@ class Settings
         $nav_order_raw = get_pconfig($uid, 'spa', 'nav_order', '');
         $nav_order = $nav_order_raw ? (json_decode($nav_order_raw, true) ?? []) : [];
 
-        Response::send(['apps' => $apps, 'nav_order' => array_values((array) $nav_order)]);
+        Response::send([
+            'apps'      => $apps,
+            'nav_order' => array_values((array) $nav_order),
+            'kanban'    => intval(get_pconfig($uid, 'spa', 'kanban')),
+        ]);
+    }
+
+    // .apd files and app_encode() both spell it 'desc'; core escapes quotes into
+    // entities (including the typo'd '&dquot;'), so undo that for JSON consumers.
+    private static function appDesc(array $app): string
+    {
+        $d = $app['desc'] ?? $app['description'] ?? '';
+        return str_replace(['&#39;', '&dquot;', '&quot;'], ["'", '"', '"'], $d);
     }
 
     private function getLocationsSettings(): void
@@ -1119,8 +1131,15 @@ class Settings
     {
         $action = $data['action'] ?? '';
 
-        if (!in_array($action, ['install', 'uninstall', 'nav', 'reorder', 'toggle-frontend'], true))
+        if (!in_array($action, ['install', 'uninstall', 'nav', 'reorder', 'toggle-frontend', 'kanban'], true))
             Response::error(400, 'Invalid request');
+
+        // The cards module's kanban board — a plain per-user flag rather than an
+        // app, since it switches a view inside an app that's already installed.
+        if ($action === 'kanban') {
+            set_pconfig($uid, 'spa', 'kanban', intval($data['enabled'] ?? 0) === 1 ? 1 : 0);
+            Response::send(['status' => 'ok']);
+        }
 
         if ($action === 'reorder') {
             $raw = $data['order'] ?? null;

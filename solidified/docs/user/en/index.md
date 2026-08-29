@@ -31,6 +31,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Photos](photos) — Photo albums and image viewer
 - [Files](files) — Cloud file storage
 - [Articles](articles) — Articles app: writing and reading long-form content
+- [Cards](cards) — Cards app: short notes, decks, and kanban boards
 - [Wiki](wiki) — Wiki: collaborative pages
 - [Calendar](calendar) — Calendar and events
 - [Chat](chat) — Chatrooms

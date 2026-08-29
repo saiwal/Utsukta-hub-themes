@@ -55,12 +55,73 @@ class Cards
             $this->getDeckOverview($profile_uid, $permission_sql . $item_normal);
         }
 
+        if ($sub === 'kanban') {
+            $this->getKanban($profile_uid);
+        }
+
         $identifier = $sub ?: ($_GET['uuid'] ?? '');
         if ($identifier) {
             $this->getSingle($identifier, $profile_uid, $ob_hash, $permission_sql, $nick);
         }
 
         $this->getList($profile_uid, $ob_hash, $permission_sql . $item_normal, $nick);
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/cards/:nick/kanban -> { enabled, boards: [{ name, columns }] }
+    //
+    // A board IS a category: its cards are the ones carrying `name` as a
+    // category term, and its columns are their decks. Board config only — the
+    // cards come from the ordinary card list (?cat=<board>), which is already
+    // permission-filtered, so a visitor sees the columns but only the cards
+    // they may see. Board and column names are public metadata, same as the
+    // deck names in the deck overview.
+    // -------------------------------------------------------------------------
+
+    /** The board every channel has before it configures any (also the legacy one). */
+    private const DEFAULT_BOARD = 'kanban';
+
+    private function getKanban(int $profile_uid): never
+    {
+        $raw = get_pconfig($profile_uid, 'spa', 'kanban_boards', '');
+        $boards = $this->normalizeBoards($raw ? (json_decode($raw, true) ?? []) : []);
+
+        if (!$boards) {
+            // Pre-multi-board channels stored one column list and no board list.
+            // Read it as the default board rather than migrating anything.
+            $legacy = get_pconfig($profile_uid, 'spa', 'kanban_columns', '');
+            $boards = $this->normalizeBoards([[
+                'name'    => self::DEFAULT_BOARD,
+                'columns' => $legacy ? (json_decode($legacy, true) ?? []) : [],
+            ]]);
+        }
+
+        Response::send([
+            'enabled' => intval(get_pconfig($profile_uid, 'spa', 'kanban')) === 1,
+            'boards'  => $boards,
+        ]);
+    }
+
+    /** Drops anything malformed and de-duplicates by board name. */
+    private function normalizeBoards(array $raw): array
+    {
+        $boards = [];
+        $seen   = [];
+        foreach ($raw as $b) {
+            if (!is_array($b)) continue;
+            $name = is_string($b['name'] ?? null) ? notags(trim($b['name'])) : '';
+            if ($name === '' || in_array($name, $seen, true)) continue;
+            $seen[] = $name;
+
+            $columns = [];
+            foreach ((array) ($b['columns'] ?? []) as $c) {
+                if (!is_string($c)) continue;
+                $c = notags(trim($c));
+                if ($c !== '' && !in_array($c, $columns, true)) $columns[] = $c;
+            }
+            $boards[] = ['name' => $name, 'columns' => $columns];
+        }
+        return $boards;
     }
 
     // -------------------------------------------------------------------------
@@ -523,6 +584,15 @@ class Cards
         if ($action === 'deck-reorder') {
             $this->reorderDeck($uid, $input);
         }
+        if ($action === 'deck-move') {
+            $this->moveCard($uid, $input);
+        }
+        if ($action === 'kanban-boards') {
+            $this->saveKanbanBoards($uid, $input);
+        }
+        if ($action === 'board-rename') {
+            $this->renameBoard($uid, $input);
+        }
 
         $body     = trim($input['body']     ?? '');
         $title    = escape_tags(trim($input['title']    ?? ''));
@@ -800,6 +870,84 @@ class Cards
         }
 
         Response::send(['deck' => $deck, 'order' => array_values($order)]);
+    }
+
+    /**
+     * Move one card to a deck (kanban: to a column), or out of every deck when
+     * $deck is ''. Deliberately not the full card POST above: that wants a
+     * whole card payload and runs item_store_update() — a term rebuild, a
+     * notifier summon and a fresh edited timestamp — for what is two iconfig
+     * rows. A drag is not an edit of the card.
+     */
+    private function moveCard(int $uid, array $input): never
+    {
+        $uuid  = trim($input['uuid'] ?? '');
+        $deck  = trim($input['deck'] ?? '');
+        $order = intval($input['order'] ?? 0);
+
+        if (!$uuid) {
+            Response::error(400, 'uuid is required');
+        }
+
+        $r = dbq("SELECT id FROM item
+            WHERE uid = " . intval($uid) . "
+            AND uuid = '" . dbesc($uuid) . "'
+            AND item_type = " . ITEM_TYPE_CARD . " LIMIT 1");
+        if (!$r) {
+            Response::error(404, 'Card not found');
+        }
+
+        $iid = intval($r[0]['id']);
+        if ($deck) {
+            \Zotlabs\Lib\IConfig::Set($iid, 'card', 'deck', $deck);
+            \Zotlabs\Lib\IConfig::Set($iid, 'card', 'deck_order', $order);
+        } else {
+            \Zotlabs\Lib\IConfig::Delete($iid, 'card', 'deck');
+            \Zotlabs\Lib\IConfig::Delete($iid, 'card', 'deck_order');
+        }
+
+        Response::send(['uuid' => $uuid, 'deck' => $deck, 'order' => $order]);
+    }
+
+    /**
+     * Rename a board = retag its cards, since a board IS a category. The
+     * board list itself is rewritten by the client's following kanban-boards
+     * save; this only touches the term rows, and only on cards.
+     */
+    private function renameBoard(int $uid, array $input): never
+    {
+        $from = trim($input['from'] ?? '');
+        $to   = trim($input['to']   ?? '');
+
+        if (!$from || !$to) {
+            Response::error(400, 'from and to are required');
+        }
+
+        $channel = channelx_by_n($uid);
+        $url = channel_url($channel) . '?cat=' . urlencode($to);
+
+        q("UPDATE term SET term = '%s', url = '%s'
+            WHERE uid = %d AND otype = %d AND ttype = %d AND term = '%s'
+            AND oid IN (SELECT id FROM item WHERE uid = %d AND item_type = %d)",
+            dbesc($to), dbesc($url), intval($uid), intval(TERM_OBJ_POST),
+            intval(TERM_CATEGORY), dbesc($from), intval($uid), intval(ITEM_TYPE_CARD)
+        );
+
+        Response::send(['name' => $to]);
+    }
+
+    /** The channel's boards and their ordered columns (pconfig spa/kanban_boards). */
+    private function saveKanbanBoards(int $uid, array $input): never
+    {
+        $raw = $input['boards'] ?? null;
+        if (!is_array($raw)) {
+            Response::error(400, 'boards must be an array');
+        }
+
+        $boards = $this->normalizeBoards($raw);
+        set_pconfig($uid, 'spa', 'kanban_boards', json_encode($boards));
+
+        Response::send(['boards' => $boards]);
     }
 
 

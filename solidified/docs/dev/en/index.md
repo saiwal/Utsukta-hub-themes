@@ -8,6 +8,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Module-system](module-system) — Creating, registering, and gating feature modules
 - [Slot-system](slot-system) — Injecting widgets into layout regions
 - [Drafts](drafts) — Draft storage, the composer autosave/pending-draft mechanism, and the HQ DraftsWidget
+- [Cards-kanban](cards-kanban) — Card metadata, the card face, and the kanban board (boards as categories, columns as decks)
 - [Help-mode](help-mode) — The click-to-see-docs contextual help overlay
 - [Tours](tours) — The shepherd.js-based guided-tour registry
 - [Routing](routing) — SPA routing, lazy loading, and the ModuleGuard

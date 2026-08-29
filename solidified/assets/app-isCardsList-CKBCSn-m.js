@@ -1,0 +1,1 @@
+import{I as e}from"./app-web-BeXRvOD7.js";import{d as t}from"./app-routing-DXOCapzW.js";var n=`kanban`,r=`hz-cards-view`,[i,a]=e(localStorage.getItem(r)===`kanban`?`kanban`:`board`);function o(e){localStorage.setItem(r,e),a(e)}function s(){let e=t();return()=>{let t=e.pathname.split(`/`).filter(Boolean);return t[0]===`cards`&&t.length<=2}}export{o as i,n,i as r,s as t};
