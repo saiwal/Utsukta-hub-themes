@@ -1,0 +1,2 @@
+import{O as e,m as t,s as n}from"./app-web-BeXRvOD7.js";import{Fa as r,P as i,Ra as a}from"./app-BUizqpcT.js";var o=t(`<div class="flex items-center justify-between"><h1 class="text-xl font-bold">`);function s(){let{t}=a(),s=i();return(()=>{var i=o(),a=i.firstChild;return n(a,()=>t(`manage.channels`)),n(i,e(r,{get href(){return s()?.create_url??`/new_channel`},class:`px-3 py-1.5 text-sm rounded-md font-medium
+               bg-accent text-accent-fg hover:opacity-90 transition-opacity`,get children(){return t(`manage.new_channel`)}}),null),i})()}export{s as default};
