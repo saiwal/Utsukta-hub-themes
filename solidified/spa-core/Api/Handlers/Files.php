@@ -166,7 +166,15 @@ class Files
             $items[] = $this->formatRow($row);
         }
 
-        Response::send($items, ['folder' => $folder_hash, 'can_write' => $can_write]);
+        Response::send($items, [
+            'folder'      => $folder_hash,
+            'can_write'   => $can_write,
+            // The channel's default ACL, i.e. what scope "contacts" writes.
+            // attach has no public_policy column, so "Connections" is stored as
+            // this exact ACL and is indistinguishable from picking the same
+            // group by hand — the client compares against this to label it.
+            'default_acl' => $this->defaultAcl($uid),
+        ]);
     }
 
     // ── Single file metadata ──────────────────────────────────────────────────
@@ -210,17 +218,42 @@ class Files
         );
         if (!$r) Response::error(404, 'File not found');
 
-        if (($data['scope'] ?? null) === 'private') {
-            $channel   = \App::get_channel();
-            $allow_gid = '';
-            $allow_cid = '<' . $channel['channel_hash'] . '>';
-            $deny_gid  = '';
-            $deny_cid  = '';
-        } else {
-            $allow_gid = $this->packAcl($data['group_allow']   ?? []);
-            $allow_cid = $this->packAcl($data['contact_allow'] ?? []);
-            $deny_gid  = $this->packAcl($data['group_deny']    ?? []);
-            $deny_cid  = $this->packAcl($data['contact_deny']  ?? []);
+        // An explicit scope wins over the arrays. 'contacts' has to be its own
+        // branch: it and 'public' both arrive with empty arrays, so inferring the
+        // audience from emptiness alone silently turns "connections" into "public"
+        // and unshares the file. Mirrors Item::scopeToAcl().
+        switch ($data['scope'] ?? null) {
+            case 'private':
+                $channel   = \App::get_channel();
+                $allow_cid = '<' . $channel['channel_hash'] . '>';
+                $allow_gid = $deny_cid = $deny_gid = '';
+                break;
+
+            case 'contacts':
+                $acl = (new \Zotlabs\Access\AccessList(\App::get_channel()))->get();
+                $allow_cid = $acl['allow_cid'];
+                $allow_gid = $acl['allow_gid'];
+                $deny_cid  = $acl['deny_cid'];
+                $deny_gid  = $acl['deny_gid'];
+                // A channel with no default ACL (a fully public channel) cannot
+                // express "connections" on an attach row — there is no
+                // public_policy column to fall back on the way item has. Say so
+                // rather than writing an empty ACL, which reads as public.
+                if (!$allow_cid && !$allow_gid) {
+                    Response::error(400, 'This channel has no default privacy group, so "Connections" cannot be applied to a file. Pick specific connections instead.');
+                }
+                break;
+
+            case 'public':
+                $allow_cid = $allow_gid = $deny_cid = $deny_gid = '';
+                break;
+
+            default:
+                // No scope: an older client, or 'custom'. Take the arrays as given.
+                $allow_gid = $this->packAcl($data['group_allow']   ?? []);
+                $allow_cid = $this->packAcl($data['contact_allow'] ?? []);
+                $deny_gid  = $this->packAcl($data['group_deny']    ?? []);
+                $deny_cid  = $this->packAcl($data['contact_deny']  ?? []);
         }
 
         attach_change_permissions($uid, $hash, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $recurse, true);
@@ -507,6 +540,21 @@ class Files
             if ($v) $out .= '<' . $v . '>';
         }
         return $out;
+    }
+
+    /** The channel's own default ACL, as arrays — what scope "contacts" writes. */
+    private function defaultAcl(int $uid): array
+    {
+        $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', intval($uid));
+        if (!$r) return ['allow_cid' => [], 'allow_gid' => [], 'deny_cid' => [], 'deny_gid' => []];
+
+        $acl = (new \Zotlabs\Access\AccessList($r[0]))->get();
+        return [
+            'allow_cid' => $this->expandAcl($acl['allow_cid']),
+            'allow_gid' => $this->expandAcl($acl['allow_gid']),
+            'deny_cid'  => $this->expandAcl($acl['deny_cid']),
+            'deny_gid'  => $this->expandAcl($acl['deny_gid']),
+        ];
     }
 
     /** Expand stored ACL "<a><b>" → ["a","b"] */

@@ -12,6 +12,14 @@ class Xchan
     use ResolvesConnection;
     public function get(): void
     {
+        // Batch name lookup: ?hashes=a,b,c — just enough to label ACL chips.
+        // Deliberately short-circuits before the profile_load / WebFinger
+        // enrichment below, which is per-identity and far too heavy to run
+        // once per hash in an audience list.
+        if (isset($_GET['hashes'])) {
+            $this->names((string) $_GET['hashes']);
+        }
+
         $hash = $_GET['hash'] ?? null;
         if (!$hash) Response::error(400, 'hash required');
 
@@ -128,4 +136,36 @@ class Xchan
             'actor_fields' => $actor_fields,
         ], $profile_data));
     }
+
+    /**
+     * Names/photos for a set of xchan hashes, for labelling ACL chips.
+     *
+     * Owner-only: the caller is editing their own audience, and this would
+     * otherwise let anyone turn a hash into a name. The owner's own hash is
+     * included on purpose — /acl excludes abook_self, so it is the one entry
+     * an audience list can never resolve from the connections endpoint.
+     */
+    private function names(string $csv): void
+    {
+        \Utsukta\SpaCore\Api\Auth::requireLocalGet();
+
+        $hashes = array_values(array_unique(array_filter(
+            array_map('trim', explode(',', $csv))
+        )));
+        if (!$hashes) Response::send([]);
+        // Bounded so a hand-crafted query string can't ask for the whole table.
+        $hashes = array_slice($hashes, 0, 100);
+
+        $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
+        $rows = q("SELECT xchan_hash, xchan_name, xchan_addr, xchan_photo_m
+                   FROM xchan WHERE xchan_hash IN ($in)");
+
+        Response::send(array_map(fn($r) => [
+            'xid'   => $r['xchan_hash'],
+            'name'  => Response::decodeEntities($r['xchan_name']),
+            'link'  => $r['xchan_addr'],
+            'photo' => $r['xchan_photo_m'],
+        ], $rows ?: []));
+    }
+
 }

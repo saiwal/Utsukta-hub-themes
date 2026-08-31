@@ -24,6 +24,10 @@ use Utsukta\SpaCore\Api\Response;
  */
 class WidgetTemplates
 {
+    // 'gridTop' is retired client-side (its widgets are folded into contentTop
+    // on parse) but stays accepted here: rejecting it would 400 a save from a
+    // client still running the old bundle. The next save from a current client
+    // drops the key on its own.
     private const SLOTS = ['right', 'leftBottom', 'gridTop', 'rightVisitor', 'header', 'footer', 'contentTop'];
     private const MAX_TEMPLATES = 32;
     private const MAX_WIDGETS_PER_SLOT = 32;
@@ -272,6 +276,13 @@ class WidgetTemplates
             if ($entry['config']) {
                 $clean['config'] = $entry['config'];
             }
+        }
+
+        // Widget width in 12ths for the grid-laid-out slots. Out-of-range or
+        // non-integer values are dropped rather than rejected — absent means
+        // full width, which is the safe fallback.
+        if (isset($entry['span']) && is_int($entry['span']) && $entry['span'] >= 1 && $entry['span'] <= 12) {
+            $clean['span'] = $entry['span'];
         }
 
         return $clean;

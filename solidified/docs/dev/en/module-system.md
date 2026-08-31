@@ -66,7 +66,7 @@ interface ModuleDef {
    * "Layout templates" in slot-system.md. */
   pageTemplate?: () => string | null | undefined;
   /** Reactive chrome mode for the item the active route is showing.
-   *  "zen" hides all chrome; "focus" keeps header/gridTop/contentTop/footer;
+   *  "zen" hides all chrome; "focus" keeps header/contentTop/footer;
    *  "wide" hides only the right sidebar; "compact" hides the nav rail and
    *  mobile bars. See slot-system.md. */
   pageChrome?: () => "default" | "zen" | "focus" | "wide" | "compact" | undefined;

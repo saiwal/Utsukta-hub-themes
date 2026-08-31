@@ -35,6 +35,10 @@ class Nav
             'is_admin'    => $is_local && is_site_admin(),
             'is_owner'    => $is_owner,
             'nick'        => $channel['channel_address'] ?? '',
+            // The observer's own xchan hash. "Only me" is stored as
+            // allow_cid = <this>, so without it the client cannot tell an
+            // owner-private ACL from a one-contact custom one.
+            'hash'        => $ob_hash,
             'name'        => Response::decodeEntities($observer['xchan_name'] ?? ''),
             'addr'        => $observer['xchan_addr'] ?? '',
             'avatar'      => $observer['xchan_photo_m'] ?? '',

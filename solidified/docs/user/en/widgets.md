@@ -55,7 +55,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | Widget                | Modules                                        | Regions (slots)                            | Global | Multiple |
 | --------------------- | ---------------------------------------------- | ------------------------------------------ | ------ | -------- |
 | about site            | siteinfo*                                      | contentTop                                 | -      | -        |
-| activity heatmap      | channel, profile, hq                           | right, gridTop                             | -      | -        |
+| activity heatmap      | channel, profile, hq                           | right, contentTop                             | -      | -        |
 | addons info           | siteinfo*                                      | contentTop                                 | -      | -        |
 | admin info            | siteinfo*                                      | contentTop                                 | -      | -        |
 | album strip           | channel, profile, photos                       | right                                      | -      | ✅       |
@@ -68,34 +68,34 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | categories (list)     | articles, channel, profile                     | right                                      | -      | -        |
 | categories (cloud)    | articles, channel                              | right, footer                              | -      | -        |
 | chat room card        | channel, profile, chat                         | right                                      | -      | ✅       |
-| clock                 | any                                            | right, gridTop                             | -      | ✅       |
+| clock                 | any                                            | right, contentTop                             | -      | ✅       |
 | connections           | channel, profile                               | right                                      | -      | -        |
 | contact card          | any                                            | right                                      | -      | -        |
 | chronological feed    | channel                                        | contentTop                                 | -      | -        |
-| direct message panel  | hq*                                            | gridTop                                    | -      | -        |
+| direct message panel  | hq*                                            | contentTop                                    | -      | -        |
 | drafts                | articles, hq, wiki, webpages, notepad, network | right                                      | -      | -        |
-| embed                 | any                                            | right, gridTop, footer                     | -      | ✅       |
+| embed                 | any                                            | right, contentTop, footer                     | -      | ✅       |
 | event card            | channel, profile, cal                          | right                                      | -      | ✅       |
 | federation            | siteinfo*                                      | contentTop                                 | -      | -        |
 | filters               | network                                        | right                                      | -      | -        |
 | guided tours          | help                                           | right                                      | -      | -        |
-| html block            | any                                            | right, footer, gridTop, contentTop, header | -      | ✅       |
+| html block            | any                                            | right, footer, contentTop, header | -      | ✅       |
 | links list            | any                                            | right, footer                              | -      | ✅       |
 | menu_bar              | any                                            | header                                     | -      | ✅       |
 | menu_tree             | any                                            | right, footer                              | -      | ✅       |
 | navigation tree       | help*                                          | right                                      | -      | -        |
 | newspaper feed        | channel                                        | contentTop                                 | -      | -        |
-| notices panel         | hq                                             | gridTop                                    | -      | -        |
+| notices panel         | hq                                             | contentTop                                    | -      | -        |
 | notifications         | any                                            | right                                      | ✅     | -        |
 | pinned chat rooms     | any                                            | right                                      | ✅     | -        |
-| pomodoro              | any                                            | right, gridTop                             | -      | ✅       |
+| pomodoro              | any                                            | right, contentTop                             | -      | ✅       |
 | popular posts         | channel, profile, articles                     | right                                      | -      | -        |
 | popular articles      | channel, profile                               | right                                      | -      | -        |
-| quick compose buttons | any                                            | gridTop                                    | -      | -        |
-| quick composer        | any (hq*, network*)                            | gridTop                                    | -      | -        |
+| quick compose buttons | any                                            | contentTop                                    | -      | -        |
+| quick composer        | any (hq*, network*)                            | contentTop                                    | -      | -        |
 | quick note            | any (hq*)                                      | right                                      | -      | -        |
-| quotes                | any                                            | right, gridTop, footer                     | -      | ✅       |
-| recent posts          | hq*                                            | gridTop                                    | -      | -        |
+| quotes                | any                                            | right, contentTop, footer                     | -      | ✅       |
+| recent posts          | hq*                                            | contentTop                                    | -      | -        |
 | rss                   | any                                            | right                                      | -      | ✅       |
 | saved search          | network                                        | right                                      | -      | -        |
 | scheduled posts       | any (hq*)                                      | right                                      | -      | -        |
@@ -106,9 +106,10 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | tags list             | articles, channel, notepad                     | right, footer                              | -      | -        |
 | themes info           | siteinfo*                                      | contentTop                                 | -      | -        |
 | timeline feed         | channel                                        | contentTop                                 | -      | -        |
-| upcoming events       | hq*                                            | gridTop                                    | -      | -        |
-| usage quotas          | hq                                             | gridTop                                    | -      | -        |
-| weather               | any                                            | right, gridTop                             | -      | ✅       |
+| upcoming events       | hq*                                            | contentTop                                    | -      | -        |
+| usage quotas          | hq                                             | contentTop                                    | -      | -        |
+| welcome               | hq*                                            | header                                     | -      | -        |
+| weather               | any                                            | right, contentTop                             | -      | ✅       |
 | wiki list             | any (wiki*)                                    | right                                      | -      | -        |
 
 \* : _placed in this module by default_
@@ -395,6 +396,12 @@ Lists your events for the next 30 days, with quick access to view details or cre
 ### Usage & Quotas
 
 Shows your account's resource usage at a glance — storage, channels, connections, and other service-class limits — with a link to the full Account settings page for more detail.
+<!-- welcome -->
+
+### Welcome
+
+Greets you by your channel's display name. Shown only to you — visitors to your
+channel never see it.
 <!-- weather -->
 
 ### Weather

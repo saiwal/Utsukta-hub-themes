@@ -1,0 +1,1 @@
+import{I as e,M as t}from"./app-web-BeXRvOD7.js";import{t as n}from"./app-widget-layout-2qj_LTNY.js";var[r,i]=e(localStorage.getItem(`hz-scroll-style`)??`endless`),a=t(()=>n()?`load_more`:r());function o(){return a}function s(){return r}function c(e){i(e),localStorage.setItem(`hz-scroll-style`,e)}export{c as n,o as r,s as t};
