@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-BeXRvOD7.js";import{la as t}from"./app-BfOEveCO.js";import{t as n}from"./app-CategoryCloudWidget-5fOwCUhG.js";import{f as r,t as i}from"./app-store-NkCf-ijV.js";function a(){return e(n,{get channelNick(){return t()()},type:`cards`,get activeSlug(){return i()},onCategoryClick:e=>r(`cat`,e)})}export{a as default};
