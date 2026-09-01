@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Articles
 {
@@ -419,7 +420,8 @@ class Articles
             'series'          => $series,
             'translation_group' => $translationGroup,
             'title'           => Response::decodeEntities($item['title']),
-            'body'            => $item['body'],
+            'body'            => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'mimetype'        => $item['mimetype'] ?? '',
             'summary'         => Response::decodeEntities($item['summary'] ?? ''),
             'slug'            => $slug,
             // Human-facing app URL (slug when set, uuid otherwise) — distinct
@@ -552,7 +554,7 @@ class Articles
         // Presence is authoritative (same convention as Item.php's editItem):
         // key absent = keep the article's stored categories, '' = clear them.
         $catsGiven = array_key_exists('category', $input);
-        $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
+        $mimetype = ContentTypes::validate($input['mimetype'] ?? null);
         $post_id  = intval($input['post_id'] ?? 0);
         $lang     = trim($input['lang']     ?? '');
         $series   = trim($input['series']   ?? '');
@@ -564,9 +566,6 @@ class Articles
         }
         if (!$lang) {
             Response::error(400, 'Language is required');
-        }
-        if (!in_array($mimetype, ['text/bbcode', 'text/html', 'text/plain', 'text/markdown'], true)) {
-            $mimetype = 'text/bbcode';
         }
         if ($slug) {
             $slug = str_replace('/', '-', strtolower(\URLify::transliterate($slug)));

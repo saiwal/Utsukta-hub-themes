@@ -4,6 +4,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Concerns\EmbedsCards;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Cards
 {
@@ -460,7 +461,8 @@ class Cards
             // plain core bbcode, so this can't be re-derived from them.
             'template'        => $template ?: 'freeform',
             'title'           => Response::decodeEntities($item['title']),
-            'body'            => $item['body'],
+            'body'            => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'mimetype'        => $item['mimetype'] ?? '',
             'summary'         => Response::decodeEntities($item['summary'] ?? ''),
             'slug'            => $slug,
             // Human-facing app URL (slug when set, uuid otherwise) — distinct
@@ -602,7 +604,7 @@ class Cards
         // Presence is authoritative (same convention as Item.php's editItem):
         // key absent = keep the card's stored categories, '' = clear them.
         $catsGiven = array_key_exists('category', $input);
-        $mimetype = trim($input['mimetype'] ?? 'text/bbcode');
+        $mimetype = ContentTypes::validate($input['mimetype'] ?? null);
         $post_id  = intval($input['post_id'] ?? 0);
         $deck      = trim($input['deck'] ?? '');
         $deckOrder = isset($input['deck_order']) ? intval($input['deck_order']) : null;
@@ -613,9 +615,6 @@ class Cards
         }
         if (!in_array($template, ['freeform', 'quote', 'definition', 'link'], true)) {
             $template = 'freeform';
-        }
-        if (!in_array($mimetype, ['text/bbcode', 'text/html', 'text/plain', 'text/markdown'], true)) {
-            $mimetype = 'text/bbcode';
         }
         if ($slug) {
             $slug = str_replace('/', '-', strtolower(\URLify::transliterate($slug)));
@@ -655,14 +654,13 @@ class Cards
         // so the same save-time expansion Item.php applies to posts and
         // comments has to run here too — otherwise the raw compact token is
         // stored and only ever renders as the fallback chip.
+        // Only bbcode carries [card=…] tokens. Non-bbcode bodies need no
+        // sanitizing here: this handler saves through item_store() /
+        // item_store_update(), both of which run z_input_filter() on the body
+        // themselves (include/items.php:1702, :2192). Filtering again would
+        // htmlspecialchars-escape a text/markdown body twice.
         if ($mimetype === 'text/bbcode') {
             $body = $this->expandCardTags($body);
-        } else {
-            // This handler writes $body through item_store*() without core's
-            // own editor gate, so apply the same z_input_filter() sanitization
-            // Item.php's editItem() applies on its non-bbcode branch —
-            // prepare_text() does no sanitizing at display time for text/html.
-            $body = z_input_filter($body, $mimetype, channel_codeallowed($uid));
         }
 
         // ── Build category term tags ──────────────────────────────────────────

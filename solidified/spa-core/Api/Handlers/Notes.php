@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Notes
 {
@@ -22,7 +23,7 @@ class Notes
         $b        = Auth::$parsedBody;
 
         $content  = $b['body']     ?? '';
-        $mimetype = $b['mimetype'] ?? 'text/bbcode';
+        $mimetype = ContentTypes::validate($b['mimetype'] ?? null);
 
         if (!trim($content)) {
             Response::error(400, 'Body is required');
@@ -197,7 +198,7 @@ class Notes
                 'id'       => intval($row['id']),
                 'mid'      => $row['mid'],
                 'uuid'     => $row['uuid'],
-                'body'     => $row['body'],
+                'body'     => ContentTypes::decode($row['body'], $row['mimetype'] ?? ''),
                 'created'  => $row['created'],
                 'edited'   => $row['edited'],
                 'mimetype' => $row['mimetype'],

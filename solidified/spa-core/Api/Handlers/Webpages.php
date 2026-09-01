@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
 
 require_once 'include/items.php';
@@ -263,7 +264,7 @@ class Webpages
         $title     = trim($body['title']     ?? '');
         $summary   = trim($body['summary']   ?? '');
         $content   = trim($body['body']      ?? '');
-        $mimetype  = $body['mimetype']        ?? 'text/bbcode';
+        $mimetype  = ContentTypes::validate($body['mimetype'] ?? null);
         $pagetitle = trim($body['pagetitle'] ?? '');
         $scope     = $body['scope']           ?? 'public';
 
@@ -364,7 +365,7 @@ class Webpages
         $content   = trim($body['body']      ?? '');
         $title     = trim($body['title']     ?? '');
         $summary   = trim($body['summary']   ?? '');
-        $mimetype  = $body['mimetype']        ?? 'text/bbcode';
+        $mimetype  = ContentTypes::validate($body['mimetype'] ?? null);
         $pagetitle = trim($body['pagetitle'] ?? '');
         $scope     = $body['scope']           ?? null;
 
@@ -495,7 +496,7 @@ class Webpages
             'mid'             => $item['mid'],
             'title'           => $item['title'],
             'summary'         => $item['summary'] ?? '',
-            'body'            => $item['body'],
+            'body'            => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
             'mimetype'        => $item['mimetype'],
             'slug'            => $pagelink,
             'created'         => $item['created'],

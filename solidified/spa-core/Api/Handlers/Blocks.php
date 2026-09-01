@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 require_once 'include/items.php';
 
@@ -212,7 +213,7 @@ class Blocks
         // ITEM_TYPE_BLOCK-counting mode to that trait if block quotas matter.
         $title    = trim($body['title'] ?? '');
         $content  = trim($body['body']  ?? '');
-        $mimetype = $body['mimetype']    ?? 'text/bbcode';
+        $mimetype = ContentTypes::validate($body['mimetype'] ?? null);
         $name     = trim($body['name']  ?? '');
         $scope    = $body['scope']       ?? 'public';
 
@@ -284,7 +285,7 @@ class Blocks
         $uuid     = trim($body['uuid']  ?? '');
         $content  = trim($body['body']  ?? '');
         $title    = trim($body['title'] ?? '');
-        $mimetype = $body['mimetype']    ?? 'text/bbcode';
+        $mimetype = ContentTypes::validate($body['mimetype'] ?? null);
         $name     = trim($body['name']  ?? '');
         $scope    = $body['scope']       ?? null;
 
@@ -398,7 +399,7 @@ class Blocks
             'uuid'          => $item['uuid'],
             'mid'           => $item['mid'],
             'title'         => $item['title'],
-            'body'          => $item['body'],
+            'body'          => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
             'mimetype'      => $item['mimetype'],
             'name'          => $name,
             'created'       => $item['created'],

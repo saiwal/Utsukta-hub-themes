@@ -22,6 +22,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 use Zotlabs\Lib\Apps;
 use Michelf\MarkdownExtra;
 use Zotlabs\Lib\MarkdownSoap;
@@ -54,6 +55,12 @@ class Wiki
     /**
      * Resolve wiki resource row.  $wikiName is the human-readable wiki name
      * (URL-decoded by the caller).
+     *
+     * exists_by_name() yields only ['id', 'resource_id']; the wiki's name,
+     * content format and typelock live in iconfig cat 'wiki' and need
+     * get_wiki(). Merged here rather than at each call site — without it
+     * formatWiki() reports defaults for every field, and the page-save path
+     * silently falls back to text/bbcode on a markdown wiki.
      */
     private function resolveWiki(array $owner, string $wikiName): array
     {
@@ -61,6 +68,17 @@ class Wiki
         if (!$w || !$w['resource_id']) {
             Response::error(404, 'Wiki not found');
         }
+
+        $meta = \NativeWiki::get_wiki($owner['channel_id'], get_observer_hash(), $w['resource_id']);
+        if (!empty($meta['wiki'])) {
+            $w += [
+                'urlName'  => $meta['urlName']  ?? '',
+                'htmlName' => $meta['htmlName'] ?? '',
+                'mimeType' => $meta['mimeType'] ?? '',
+                'typelock' => $meta['typelock'] ?? '',
+            ];
+        }
+
         return $w;
     }
 
@@ -109,7 +127,8 @@ class Wiki
             'url_name'    => $w['urlName']    ?? '',
             'html_name'   => $w['htmlName']   ?? '',
             'mime_type'   => $w['mimeType']   ?? 'text/bbcode',
-            'type_lock'   => (bool) ($w['typeLock'] ?? false),
+            // iconfig key is lowercase 'typelock' (NativeWiki.php:130).
+            'type_lock'   => (bool) ($w['typelock'] ?? false),
         ];
     }
 
@@ -326,12 +345,16 @@ class Wiki
             Response::error(404, 'Page not found');
         }
 
-        // The SPA has no per-page format picker — every page in a wiki is
-        // authored in the wiki's configured mimetype. Trust that over the
-        // item's own stored mimetype, which can be stale (e.g. left over
-        // from before a wiki's format was finalized) and would otherwise run
-        // bbcode content through the markdown pipeline.
-        $mimeType = $p['mimeType'] ?? 'text/bbcode';
+        // A wiki carries a default format (iconfig wiki/mimeType) and a
+        // 'typelock' flag saying whether pages may deviate from it. When
+        // pages are locked, the wiki's format wins; otherwise the page's own
+        // item.mimetype does, which is what core renders from
+        // (Mod_Wiki.php:326 uses $p['pageMimeType']). Falling back to the
+        // wiki default covers pages whose stored mimetype is empty or was
+        // left stale from before the wiki's format was finalized.
+        $wikiMime = $p['mimeType'] ?? 'text/bbcode';
+        $pageMime = $p['pageMimeType'] ?? '';
+        $mimeType = (!empty($w['typelock']) || !$pageMime) ? $wikiMime : $pageMime;
         $raw      = $p['content'] ?? '';
 
         $hookinfo = ['content' => $raw, 'mimetype' => $mimeType];
@@ -376,7 +399,11 @@ class Wiki
             }
 
             $wiki_name = trim($data['name'] ?? '');
-            $mime_type = 'text/bbcode';
+            // Core's wiki addon offers a narrower list than the item picker
+            // (Mod_Wiki.php:221) and defaults new pages to markdown
+            // (NativeWikiPage::create_page). Keep bbcode as the SPA's default
+            // so existing behaviour is unchanged when the client sends nothing.
+            $mime_type = ContentTypes::validate($data['mime_type'] ?? null, ContentTypes::WIKI);
             $type_lock = (bool) ($data['type_lock'] ?? false);
 
             if (!$wiki_name) {
@@ -540,7 +567,11 @@ class Wiki
         $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
         $content     = $data['content']    ?? '';
         $commit_msg  = $data['commit_msg'] ?? '';
-        $mime_type   = $data['mime_type']  ?? ($w['mimeType'] ?? 'text/bbcode');
+        // A typelocked wiki forces every page to its own format; otherwise the
+        // client may pick one, falling back to the wiki's default.
+        $mime_type   = (!empty($w['typelock']) || !isset($data['mime_type']))
+            ? ($w['mimeType'] ?: 'text/bbcode')
+            : ContentTypes::validate($data['mime_type'], ContentTypes::WIKI);
 
         $pageArgs = [
             'channel_id'    => $uid,

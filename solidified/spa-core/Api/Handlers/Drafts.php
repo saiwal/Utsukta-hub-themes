@@ -6,6 +6,7 @@ require_once('include/items.php');
 use App;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Drafts
 {
@@ -111,7 +112,7 @@ class Drafts
         $content  = $b['body']     ?? '';
         $title    = trim($b['title']    ?? '');
         $summary  = trim($b['summary']  ?? '');
-        $mimetype = $b['mimetype'] ?? 'text/bbcode';
+        $mimetype = ContentTypes::validate($b['mimetype'] ?? null);
         $scope    = trim($b['scope']    ?? 'post:new');
         $slug     = trim($b['slug']     ?? '');
         $category = trim($b['category'] ?? '');
@@ -189,10 +190,16 @@ class Drafts
         $row = $existing[0];
         $b   = Auth::$parsedBody;
 
-        $content  = array_key_exists('body',     $b) ? $b['body']              : $row['body'];
+        $content  = array_key_exists('body',     $b)
+            ? $b['body']
+            // Stored markdown is htmlspecialchars-escaped; z_input_filter() below
+            // would escape it a second time if we passed the raw column through.
+            : ContentTypes::decode($row['body'], $row['mimetype'] ?? '');
         $title    = array_key_exists('title',    $b) ? trim($b['title'])       : $row['title'];
         $summary  = array_key_exists('summary',  $b) ? trim($b['summary'])     : $row['summary'];
-        $mimetype = array_key_exists('mimetype', $b) ? $b['mimetype']          : $row['mimetype'];
+        $mimetype = array_key_exists('mimetype', $b)
+            ? ContentTypes::validate($b['mimetype'])
+            : $row['mimetype'];
 
         $existingMeta = json_decode($row['route'] ?? '{}', true) ?? [];
         $scope    = trim($b['scope']    ?? $existingMeta['scope']    ?? '');
@@ -256,7 +263,7 @@ class Drafts
         $meta     = json_decode($item['route'] ?? '{}', true) ?? [];
         $created  = (int)(strtotime($item['created']) * 1000);
         $updated  = (int)(strtotime($item['edited'])  * 1000);
-        $body     = $item['body'] ?? '';
+        $body     = ContentTypes::decode($item['body'] ?? '', $item['mimetype'] ?? '');
 
         $preview  = mb_substr(
             trim(preg_replace('/\s+/', ' ',

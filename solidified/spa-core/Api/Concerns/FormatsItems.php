@@ -2,6 +2,7 @@
 // Api/Concerns/FormatsItems.php
 namespace Utsukta\SpaCore\Api\Concerns;
 
+use Utsukta\SpaCore\Api\ContentTypes;
 use Zotlabs\Lib\IConfig;
 
 trait FormatsItems
@@ -288,7 +289,15 @@ trait FormatsItems
             'edited' => $item['edited'],
             'commented' => $item['commented'],
             'title' => $item['title'],
-            'body' => $item['body'],
+            // Raw body in its own authoring format, paired with the mimetype
+            // that says how to render it — the client mirrors core's
+            // prepare_text() switch in spa-core/src/lib/renderBody.ts.
+            // ContentTypes::decode() reverses the htmlspecialchars escaping
+            // that z_input_filter() applies to markdown at save time.
+            // item.mimetype defaults to '' in the schema and core treats that
+            // as bbcode, so pass it through rather than normalising here.
+            'body' => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'mimetype' => $item['mimetype'] ?? '',
             'verb' => $item['verb'],
             'obj_type' => $item['obj_type'],
             'like_count' => intval($item['like_count'] ?? 0),

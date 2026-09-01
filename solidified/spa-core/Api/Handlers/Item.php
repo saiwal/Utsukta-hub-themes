@@ -14,6 +14,7 @@ use Zotlabs\Lib\Enotify;
 use Zotlabs\Access\PermissionLimits;
 use App;
 use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\ContentTypes;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
@@ -743,7 +744,7 @@ class Item
         $category   = trim($body['category']    ?? '');
         $profileUid = intval($body['profile_uid'] ?? $uid);
         $scope      = $body['scope']    ?? 'contacts';
-        $mimetype   = $body['mimetype'] ?? 'text/bbcode';
+        $mimetype   = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
         $expire     = trim($body['expire']      ?? '');
         $location   = escape_tags(trim($body['location'] ?? ''));
         $coord      = escape_tags(trim($body['coord']    ?? ''));
@@ -845,6 +846,15 @@ class Item
                         'deny_cid'  => $strContactDeny,  'deny_gid'  => $strGroupDeny])) {
             $publicPolicy = '';
         }
+
+        // Markdown is an input format here, not a storage format: convert
+        // before the bbcode branch below so the result still gets
+        // cleanup_bbcode(), tag linkification and its term rows.
+        // Keep the Markdown the author typed so editing reopens in Markdown
+        // rather than the converted bbcode — stored after the save below,
+        // once there is an item id. '' when this was not Markdown.
+        $mdSource = ($mimetype === 'text/markdown') ? $content : '';
+        [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
 
         $postTags    = [];
         $attachments = [];
@@ -1042,6 +1052,10 @@ class Item
             set_iconfig(intval($post['item_id']), 'spa', 'local_only', 1);
         }
 
+        if ($mdSource !== '') {
+            ContentTypes::rememberMarkdown(intval($post['item_id']), $mdSource, $content);
+        }
+
         // Notify wall owner when someone posts on their wall (wall-to-wall)
         if ($wallToWall) {
             Enotify::submit([
@@ -1110,7 +1124,16 @@ class Item
         }
 
         $profileUid = intval($parent['uid']);
-        $mimetype   = $body['mimetype'] ?? 'text/bbcode';
+        $mimetype   = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
+
+        // Markdown is an input format here, not a storage format: convert
+        // before the bbcode branch below so the result still gets
+        // cleanup_bbcode(), tag linkification and its term rows.
+        // Keep the Markdown the author typed so editing reopens in Markdown
+        // rather than the converted bbcode — stored after the save below,
+        // once there is an item id. '' when this was not Markdown.
+        $mdSource = ($mimetype === 'text/markdown') ? $content : '';
+        [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
 
         $postTags    = [];
         $attachments = [];
@@ -1203,6 +1226,10 @@ class Item
 
         $datarray['id'] = $post['item_id'];
         call_hooks('post_local_end', $datarray);
+
+        if ($mdSource !== '') {
+            ContentTypes::rememberMarkdown(intval($post['item_id']), $mdSource, $content);
+        }
 
         Master::Summon(['Notifier', 'comment-new', $post['item_id']]);
 
@@ -1639,7 +1666,7 @@ class Item
         $content  = trim(Auth::$parsedBody['body']      ?? '');
         $title    = trim(Auth::$parsedBody['title']     ?? '');
         $summary  = trim(Auth::$parsedBody['summary']   ?? '');
-        $mimetype = trim(Auth::$parsedBody['mimetype']  ?? 'text/bbcode');
+        $mimetype = ContentTypes::validate(Auth::$parsedBody['mimetype'] ?? null);
         $slug     = trim(Auth::$parsedBody['pagetitle'] ?? '');
         $catsGiven = array_key_exists('category', Auth::$parsedBody);
         $category  = trim(Auth::$parsedBody['category'] ?? '');
@@ -1648,9 +1675,37 @@ class Item
             Response::error(400, 'body is required');
         }
 
+        // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
+        // Use the right column: uuid for bare identifiers, mid for full URLs.
+        $col    = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
+        $midEsc = dbesc($mid);
+
+        // Do NOT use item_normal() here — it restricts to item_type = ITEM_TYPE_POST (0),
+        // which would exclude webpages, articles, wiki pages, etc.
+        $item = dbq("SELECT * FROM item
+                     WHERE $col = '$midEsc' AND uid = $uid
+                     AND item_deleted = 0 LIMIT 1");
+
+        if (!$item) {
+            Response::error(404, 'Item not found or permission denied');
+        }
+
         $postTags = [];
 
         require_once('include/text.php');
+
+        // Markdown is an input format on posts and comments only — see
+        // ContentTypes::toBbcode(). This handler also serves webpages,
+        // articles, cards and wiki pages (that is why the lookup above cannot
+        // use item_normal()), and those keep their real mimetype, so the
+        // conversion has to be gated on the item's own type.
+        $mdSource = '';
+        if (intval($item[0]['item_type']) === ITEM_TYPE_POST) {
+            if ($mimetype === 'text/markdown') {
+                $mdSource = $content;
+            }
+            [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
+        }
 
         if ($mimetype === 'text/bbcode') {
             $content = cleanup_bbcode($content);
@@ -1686,21 +1741,6 @@ class Item
             // (prepare_text() does no sanitization at display time for
             // text/html; it's a store-time-only guarantee).
             $content = z_input_filter($content, $mimetype, channel_codeallowed($uid));
-        }
-
-        // The frontend sends the short uuid (e.g. "abc123") not the full mid URL.
-        // Use the right column: uuid for bare identifiers, mid for full URLs.
-        $col    = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
-        $midEsc = dbesc($mid);
-
-        // Do NOT use item_normal() here — it restricts to item_type = ITEM_TYPE_POST (0),
-        // which would exclude webpages, articles, wiki pages, etc.
-        $item = dbq("SELECT * FROM item
-                     WHERE $col = '$midEsc' AND uid = $uid
-                     AND item_deleted = 0 LIMIT 1");
-
-        if (!$item) {
-            Response::error(404, 'Item not found or permission denied');
         }
 
         $iid = intval($item[0]['id']);
@@ -1746,6 +1786,17 @@ class Item
             dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
             dbesc($attachments ? json_encode($attachments) : ''),
             dbesc($now), dbesc($now), $iid, $uid);
+
+        // Refresh (or clear) the remembered Markdown source. Clearing matters:
+        // an item re-saved as bbcode must not keep an older Markdown source
+        // that a later edit would restore over the top of it.
+        if (intval($item[0]['item_type']) === ITEM_TYPE_POST) {
+            if ($mdSource !== '') {
+                ContentTypes::rememberMarkdown($iid, $mdSource, $content);
+            } else {
+                ContentTypes::forgetMarkdown($iid);
+            }
+        }
 
         // Rebuild term records to match the edited body (mentions, hashtags,
         // groups, emoji) — same delete+reinsert approach core's own
@@ -2611,8 +2662,21 @@ class Item
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
 
-        $body = $item['body'];
-        if ($item['mimetype'] === 'text/bbcode') {
+        $body     = $item['body'];
+        $mimetype = $item['mimetype'];
+
+        // A post composed in Markdown is stored as bbcode (ContentTypes::
+        // toBbcode), so reopen it in the Markdown the author actually typed
+        // when we still have it. recallMarkdown() returns '' if the body has
+        // since been changed elsewhere, in which case the stored bbcode is
+        // authoritative and editing continues in bbcode.
+        $md = ContentTypes::recallMarkdown(intval($item['id']), $body);
+        if ($md !== '') {
+            $body     = $md;
+            $mimetype = 'text/markdown';
+        } elseif ($mimetype === 'text/bbcode') {
+            // Only the stored bbcode carries full [share …] blocks; a Markdown
+            // source keeps the compact [share=<id>] token the composer wrote.
             $body = $this->collapseShareTags($body, $ob_hash);
         }
 
@@ -2626,7 +2690,7 @@ class Item
             'body'     => $body,
             'title'    => $item['title'],
             'summary'  => $item['summary'],
-            'mimetype' => $item['mimetype'],
+            'mimetype' => $mimetype,
             'category' => $cats ? implode(',', array_column($cats, 'term')) : '',
         ]);
     }

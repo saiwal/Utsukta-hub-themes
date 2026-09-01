@@ -18,6 +18,7 @@ require_once('include/items.php');
 use Zotlabs\Daemon\Master;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Moderate
 {
@@ -72,7 +73,7 @@ class Moderate
         ))));
         if ($parentMids) {
             $inList = implode("','", array_map('dbesc', $parentMids));
-            $parents = q("SELECT mid, title, body, plink FROM item WHERE uid = %d AND mid IN ('$inList')", intval($uid));
+            $parents = q("SELECT mid, title, body, mimetype, plink FROM item WHERE uid = %d AND mid IN ('$inList')", intval($uid));
             foreach (($parents ?: []) as $p) {
                 $targets[$p['mid']] = $p;
             }
@@ -132,7 +133,8 @@ class Moderate
             'created'  => $item['created'],
             'is_reply' => $isReply,
             'title'    => $item['title'],
-            'body'     => $item['body'],
+            'body'     => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'mimetype' => $item['mimetype'] ?? '',
             'author'   => [
                 'name'  => Response::decodeEntities(urldecode($item['author']['xchan_name'] ?? '')),
                 'url'   => $item['author']['xchan_url']  ?? '',
@@ -144,7 +146,8 @@ class Moderate
             ],
             'target' => $target ? [
                 'title'     => $target['title'],
-                'body'      => $target['body'],
+                'body'      => ContentTypes::decode($target['body'], $target['mimetype'] ?? ''),
+                'mimetype'  => $target['mimetype'] ?? '',
                 'permalink' => $target['plink'],
             ] : null,
         ];
