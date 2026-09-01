@@ -6,6 +6,7 @@ use DBA;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\AccessList;
+use Zotlabs\Lib\Apps;
 
 /**
  * GET /spa/lockview/:type/:id — "who can see this", the JSON port of
@@ -50,6 +51,7 @@ class Lockview
                 'access' => [],
                 'guests' => $guests,
                 'other_guests' => $this->otherGuests($uid, $type, $item, $url, $guests),
+                'can_create_guest' => $this->canCreateGuest($uid, $type, $item, $url),
                 'no_audience' => true,
             ]);
         }
@@ -137,6 +139,7 @@ class Lockview
             'access' => $access,
             'guests' => $guests,
             'other_guests' => $others,
+            'can_create_guest' => $this->canCreateGuest($uid, $type, $item, $url),
         ]);
     }
 
@@ -281,6 +284,19 @@ class Lockview
             return !empty($item['item_private']);
         }
         return $this->restricted($item);
+    }
+
+    /**
+     * May the owner create a brand-new guest for this resource from the share
+     * dialog? Same additive test as canGrant(), plus the app that owns the
+     * atoken table — Apps::system_app_installed matches the .apd `name:`
+     * verbatim and is case-sensitive, so 'Guest Access', never a slug.
+     */
+    private function canCreateGuest(int $uid, string $type, array $item, string $url): bool
+    {
+        return $url !== ''
+            && $this->canGrant($type, $item)
+            && Apps::system_app_installed($uid, 'Guest Access');
     }
 
     /** True when the row names an explicit audience. */
