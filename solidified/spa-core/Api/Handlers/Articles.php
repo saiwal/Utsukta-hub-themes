@@ -560,6 +560,12 @@ class Articles
         $series   = trim($input['series']   ?? '');
         $seriesOrder    = isset($input['series_order']) ? intval($input['series_order']) : null;
         $translationOf  = trim($input['translation_of'] ?? '');
+        // Publishing controls — create-only, mirroring PostComposer/Item.php.
+        // The edit branch below ignores them, so editing an article never
+        // disturbs its stored expires/item_delayed/item_nocomment.
+        $expire     = trim($input['expire']  ?? '');
+        $createdRaw = trim($input['created'] ?? '');
+        $nocomment  = !empty($input['nocomment']) ? 1 : 0;
 
         if (!$body) {
             Response::error(400, 'Body is required');
@@ -703,6 +709,22 @@ class Articles
         $mid  = z_root() . '/item/' . $uuid;
         $now  = datetime_convert();
 
+        // Delayed publish ("time travel post", core feature delayed_posting):
+        // a future created date stores the item with item_delayed = 1, which
+        // hides it from all item_normal queries. Daemon\Cron flips the flag and
+        // summons the Notifier once the publish time arrives — its query
+        // (Cron.php: "where item_delayed = 1") is item_type-agnostic, so it
+        // picks up articles exactly as it does posts.
+        $created = $now;
+        $delayed = 0;
+        if ($createdRaw) {
+            $ts = datetime_convert(date_default_timezone_get(), 'UTC', $createdRaw);
+            if ($ts > $now) {
+                $created = $ts;
+                $delayed = 1;
+            }
+        }
+
         // ── Translation group ────────────────────────────────────────────────
         // A new translation of an existing article shares a group id (the
         // source article's own uuid) so siblings can be looked up later.
@@ -747,7 +769,7 @@ class Articles
             'thr_parent'      => $mid,
             'owner_xchan'     => $channel['channel_hash'],
             'author_xchan'    => $channel['channel_hash'],
-            'created'         => $now,
+            'created'         => $created,
             'edited'          => $now,
             'commented'       => $now,
             'received'        => $now,
@@ -759,6 +781,8 @@ class Articles
             'item_origin'     => 1,
             'item_wall'       => 1,
             'item_private'    => $item_private,
+            'item_delayed'    => $delayed,
+            'item_nocomment'  => $nocomment,
             'mimetype'        => $mimetype,
             'title'           => $title,
             'summary'         => $summary,
@@ -772,6 +796,20 @@ class Articles
             'term'            => $post_tags,
             'attach'          => $attachments,
         ];
+
+        // Core closes comments from the moment of publication when nocomment
+        // is set (comments_closed = created); otherwise item_store leaves the
+        // column at the DB null date (comments stay open).
+        if ($nocomment) {
+            $datarray['comments_closed'] = $created;
+        }
+
+        if ($expire) {
+            $exp = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
+            if ($exp > $now) {
+                $datarray['expires'] = $exp;
+            }
+        }
 
         if ($slug) {
             \Zotlabs\Lib\IConfig::Set($datarray, 'system',
@@ -797,7 +835,12 @@ class Articles
         q("UPDATE item SET lang = '%s' WHERE id = %d AND uid = %d",
             dbesc($lang), intval($result['item_id']), intval($uid));
 
-        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
+        // Delayed articles are delivered by Daemon\Cron at publish time, which
+        // summons the Notifier itself — summoning here too would federate the
+        // article immediately and defeat the schedule.
+        if (!$delayed) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
+        }
 
         Response::send([
             'uuid' => $result['item']['uuid'] ?? $uuid,
