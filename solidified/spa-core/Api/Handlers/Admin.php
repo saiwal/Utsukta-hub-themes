@@ -99,10 +99,16 @@ class Admin
             case 'channels':       $this->getChannels();      break;
             case 'security':       $this->getSecurity();      break;
             case 'features':       $this->getFeatures();      break;
-            case 'addons':         $this->getAddons();        break;
+            case 'addons':
+                if (($slug = $this->argv(3))) {
+                    $this->getAddonSettings($slug);
+                } else {
+                    $this->getAddons();
+                }
+                break;
             case 'themes':
-                if (($this->argv(3)) === 'options') {
-                    $this->getThemeOptions();
+                if (($theme = $this->argv(3))) {
+                    $this->getThemeSettings($theme);
                 } else {
                     $this->getThemes();
                 }
@@ -803,6 +809,13 @@ class Admin
     {
         require_once('include/plugin.php');
 
+        // The addon table records which plugins define <name>_plugin_admin(),
+        // set by install_plugin() — same gate core's Admin\Addons uses.
+        $with_admin = [];
+        foreach (q("SELECT aname FROM addon WHERE plugin_admin = 1") ?: [] as $row) {
+            $with_admin[$row['aname']] = true;
+        }
+
         $addons = [];
         $files  = glob('addon/*/*.php');
 
@@ -824,6 +837,7 @@ class Admin
                         : ($info['author'] ?? ''),
                     'installed'   => plugin_is_installed($name),
                     'active'      => in_array($name, App::$plugins, true),
+                    'has_settings' => isset($with_admin[$name]),
                 ];
             }
         }
@@ -841,6 +855,11 @@ class Admin
     {
         $data   = Auth::$parsedBody;
         $action = $data['action'] ?? '';
+
+        if ($action === 'settings') {
+            $this->postAddonSettings($data);
+            return;
+        }
 
         if ($action !== 'toggle') {
             Response::error(400, 'Unknown action');
@@ -868,6 +887,89 @@ class Admin
         Response::send(['name' => $name, 'active' => $active]);
     }
 
+    /**
+     * Render an addon's own admin form (<slug>_plugin_admin()).
+     *
+     * The hook hands back Smarty-rendered HTML built from core's field_*.tpl
+     * partials — the same markup the classic /admin/addons/:slug page wraps in
+     * a <form>. There is no JSON contract for these forms, so the SPA renders
+     * the HTML and posts the inputs back by name.
+     */
+    private function getAddonSettings(string $slug): void
+    {
+        Response::send($this->renderAddonSettings($slug));
+    }
+
+    private function renderAddonSettings(string $slug): array
+    {
+        $slug = basename($slug);
+
+        if (!is_file("addon/$slug/$slug.php")) {
+            Response::error(404, 'Unknown addon');
+        }
+        if (!in_array($slug, App::$plugins, true)) {
+            Response::error(400, 'Addon is not enabled');
+        }
+
+        @require_once("addon/$slug/$slug.php");
+
+        $func = $slug . '_plugin_admin';
+        if (!function_exists($func)) {
+            Response::error(404, 'Addon has no settings form');
+        }
+
+        $form = '';
+        $func($form);
+
+        return ['slug' => $slug, 'html' => $form];
+    }
+
+    /**
+     * Save an addon's settings by calling <slug>_plugin_admin_post(), which
+     * reads $_POST directly. Our request body is JSON, so the posted fields are
+     * copied into $_POST/$_REQUEST first, along with the admin_addons security
+     * token the stricter addons check for.
+     */
+    private function postAddonSettings(array $data): void
+    {
+        $slug = basename($data['name'] ?? '');
+
+        if (!$slug || !is_file("addon/$slug/$slug.php")) {
+            Response::error(400, 'Invalid addon');
+        }
+        if (!in_array($slug, App::$plugins, true)) {
+            Response::error(400, 'Addon is not enabled');
+        }
+
+        @require_once("addon/$slug/$slug.php");
+
+        $func = $slug . '_plugin_admin_post';
+        if (!function_exists($func)) {
+            Response::error(404, 'Addon has no settings form');
+        }
+
+        $fields = is_array($data['fields'] ?? null) ? $data['fields'] : [];
+
+        // Scalars and flat arrays only — an addon form is field_input.tpl and
+        // friends, and nested structures have no way to arrive here anyway.
+        foreach ($fields as $k => $v) {
+            if (is_array($v)) {
+                $v = array_values(array_filter($v, 'is_scalar'));
+            } elseif (!is_scalar($v) && $v !== null) {
+                continue;
+            }
+            $_POST[$k] = $v;
+        }
+
+        $_POST['form_security_token'] = get_form_security_token('admin_addons');
+        $_REQUEST = array_merge($_REQUEST, $_POST);
+
+        $func();
+
+        // Re-render so the client shows what was actually stored.
+        Response::send($this->renderAddonSettings($slug));
+    }
+
     // ── Themes ────────────────────────────────────────────────────────────────
 
     private function getThemes(): void
@@ -892,7 +994,7 @@ class Admin
                     'experimental' => file_exists($file . '/experimental'),
                     'current'      => ($name === $current),
                     'allowed'      => in_array($name, $allowed_list),
-                    'has_config'   => is_file("view/theme/$name/php/config.php"),
+                    'has_settings' => self::themeHasSettings($name),
                 ];
             }
         }
@@ -900,60 +1002,83 @@ class Admin
         Response::send(['themes' => $themes, 'current' => $current]);
     }
 
-    // ── Theme Options ─────────────────────────────────────────────────────────
-    //
-    // Reads keys registered by the theme in the config table (cat='theme_X').
-    // Themes populate these in their {theme}_theme_admin_enable() function via
-    // Config::Set defaults. No theme file modifications required.
-
-    private function getThemeOptions(): void
+    /**
+     * A theme's settings form comes from theme_admin() in its php/config.php.
+     * Those functions are plain globals (no theme prefix), so exactly one
+     * theme's config.php may be loaded per request — never probe them in a
+     * loop. Hence this static check rather than require_once + function_exists.
+     */
+    private static function themeHasSettings(string $name): bool
     {
-        $theme    = basename($_GET['theme'] ?? self::cfgStr('theme', 'redbasic'));
-        $category = 'theme_' . $theme;
+        $cfg = "view/theme/$name/php/config.php";
+        return is_file($cfg)
+            && (bool) preg_match('/function\s+theme_admin\s*\(/', (string) file_get_contents($cfg));
+    }
 
-        $rows = q("SELECT k, v FROM config WHERE cat = '%s' ORDER BY k", dbesc($category));
+    private function getThemeSettings(string $theme): void
+    {
+        Response::send($this->renderThemeSettings($theme));
+    }
 
-        if (!$rows) {
-            Response::send(['theme' => $theme, 'fields' => []]);
-            return;
+    private function renderThemeSettings(string $theme): array
+    {
+        $theme = basename($theme);
+        $cfg   = "view/theme/$theme/php/config.php";
+
+        if (!is_dir("view/theme/$theme") || !is_file($cfg)) {
+            Response::error(404, 'Unknown theme');
         }
 
-        $schema_files = glob("view/theme/$theme/schema/*.css") ?: [];
-        $schema_opts  = ['---' => 'default'];
-        foreach ($schema_files as $f) {
-            $n = basename($f, '.css');
-            $schema_opts[$n] = $n;
+        require_once($cfg);
+
+        if (!function_exists('theme_admin')) {
+            Response::error(404, 'Theme has no settings form');
         }
 
-        $fields = [];
-        foreach ($rows as $row) {
-            $key   = $row['k'];
-            $value = (string) $row['v'];
+        // theme_admin() *returns* its markup (an addon's _plugin_admin() fills a
+        // by-reference arg instead), and adminlte declares it as theme_admin(&$a),
+        // so the argument has to be a variable.
+        $a = null;
+        $form = (string) theme_admin($a);
 
-            if ($key === 'schema') {
-                $type  = 'select';
-                $extra = ['options' => $schema_opts];
-            } elseif (strpos($key, 'color') !== false) {
-                $type  = 'color';
-                $extra = [];
-            } else {
-                $type  = 'text';
-                $extra = [];
+        return ['slug' => $theme, 'html' => $form];
+    }
+
+    private function postThemeSettings(array $data): void
+    {
+        $theme = basename($data['theme'] ?? $data['name'] ?? '');
+        $cfg   = "view/theme/$theme/php/config.php";
+
+        if (!$theme || !is_dir("view/theme/$theme") || !is_file($cfg)) {
+            Response::error(400, 'Invalid theme');
+        }
+
+        require_once($cfg);
+
+        if (!function_exists('theme_admin_post')) {
+            Response::error(404, 'Theme has no settings form');
+        }
+
+        $fields = is_array($data['fields'] ?? null) ? $data['fields'] : [];
+        foreach ($fields as $k => $v) {
+            if (is_array($v)) {
+                $v = array_values(array_filter($v, 'is_scalar'));
+            } elseif (!is_scalar($v) && $v !== null) {
+                continue;
             }
-
-            $field = [
-                'key'   => $key,
-                'type'  => $type,
-                'label' => ucwords(str_replace('_', ' ', $key)),
-                'hint'  => '',
-                'group' => 'Options',
-                'value' => $value,
-            ];
-            if ($extra) $field = array_merge($field, $extra);
-            $fields[] = $field;
+            $_POST[$k] = $v;
         }
 
-        Response::send(['theme' => $theme, 'fields' => $fields]);
+        // The rendered form carries its own admin_themes token, but a panel left
+        // open past the 3h lifetime would send a stale one — and the themes'
+        // check_form_security_token_redirectOnErr() would goaway() mid-JSON.
+        $_POST['form_security_token'] = get_form_security_token('admin_themes');
+        $_REQUEST = array_merge($_REQUEST, $_POST);
+
+        $a = null;
+        theme_admin_post($a);
+
+        Response::send($this->renderThemeSettings($theme));
     }
 
     private function postThemes(): void
@@ -980,34 +1105,8 @@ class Admin
             return;
         }
 
-        if ($action === 'options') {
-            $theme     = basename($data['theme'] ?? '');
-            $form_data = $data['form_data'] ?? [];
-
-            if (!$theme || !is_array($form_data)) {
-                Response::error(400, 'theme and form_data required');
-            }
-
-            $category = 'theme_' . $theme;
-            $rows     = q("SELECT k FROM config WHERE cat = '%s'", dbesc($category));
-            $db_keys  = array_column($rows ?: [], 'k');
-
-            if (empty($db_keys)) {
-                Response::error(400, 'Theme has no registered config keys');
-            }
-
-            foreach ($form_data as $k => $v) {
-                $k = (string) $k;
-                if (!in_array($k, $db_keys, true)) continue;
-                if (strpos($k, 'color') !== false) {
-                    $v = preg_match('/^#([A-Fa-f0-9]{3}){1,2}$|^$/', (string) $v) ? (string) $v : '';
-                } else {
-                    $v = (string) $v;
-                }
-                Config::Set($category, $k, $v);
-            }
-
-            Response::send(['status' => 'ok']);
+        if ($action === 'settings') {
+            $this->postThemeSettings($data);
             return;
         }
 

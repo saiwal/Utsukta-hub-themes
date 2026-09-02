@@ -174,7 +174,32 @@ class Files
             // this exact ACL and is indistinguishable from picking the same
             // group by hand — the client compares against this to label it.
             'default_acl' => $this->defaultAcl($uid),
+            // Collabora/WOPI editing, served by the `wopi` addon's own /wopi routes.
+            'wopi'        => $this->wopiConfig(),
         ]);
+    }
+
+    /**
+     * Site config for the `wopi` addon, or null when it is absent/unconfigured.
+     * The SPA needs the client URL to origin-check Collabora's UI_Close
+     * postMessage, and the mime list to decide which files offer the action.
+     */
+    private function wopiConfig(): ?array
+    {
+        if (!plugin_is_installed('wopi')) return null;
+
+        $url = \Zotlabs\Lib\Config::Get('system', 'wopi_client_url', '');
+        if (!$url) return null;
+
+        // Only the addon's launch path warms this cache (Mod_Wopi::cache_supported_types),
+        // so it stays cold until someone opens a document. null = "unknown, let the client try".
+        // ponytail: action shows on every file while cold; fetch /hosting/discovery here if that grates.
+        $types = \Zotlabs\Lib\Cache::get('wopi_supported_mime_types', '1 Day');
+
+        return [
+            'url'   => rtrim($url, '/'),
+            'types' => $types ? json_decode($types, true) : null,
+        ];
     }
 
     // ── Single file metadata ──────────────────────────────────────────────────
