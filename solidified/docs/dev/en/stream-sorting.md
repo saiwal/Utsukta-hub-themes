@@ -313,6 +313,11 @@ buttons.
 Both get their panels from `createPopover()` (`filters/createPopover.ts`):
 open state, outside-click / Escape dismissal, and placement via
 `useFloating()` — the same `@floating-ui/dom` wrapper `Tooltip.tsx` uses.
+`useFloating()` also returns a `positioned` signal, and every caller must gate
+`visibility` on it: `computePosition` is async, so `x`/`y` are still `0,0` for
+the frame after mount and the panel otherwise flashes at the top-left of the
+viewport before jumping to its anchor. Use `visibility`, not `display` — the
+element has to stay measurable for floating-ui to place it.
 Panels render in a `<Portal>` with `position: fixed`, which matters because the
 wide sort row is an `overflow-x-auto` scroller that would otherwise clip them;
 `flip()`/`shift()` also keep a panel on screen near the viewport edge, where the
