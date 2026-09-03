@@ -79,8 +79,8 @@ class Cards
     // deck names in the deck overview.
     // -------------------------------------------------------------------------
 
-    /** The board every channel has before it configures any (also the legacy one). */
-    private const DEFAULT_BOARD = 'kanban';
+    /** The single board pre-multi-board channels stored columns for. */
+    private const LEGACY_BOARD = 'kanban';
 
     private function getKanban(int $profile_uid): never
     {
@@ -89,12 +89,18 @@ class Cards
 
         if (!$boards) {
             // Pre-multi-board channels stored one column list and no board list.
-            // Read it as the default board rather than migrating anything.
+            // Read it as the legacy board rather than migrating anything. With
+            // no columns either there is nothing to show: a channel that has
+            // never configured a board gets none, and the SPA offers to create
+            // one instead of inventing an empty "kanban" board.
             $legacy = get_pconfig($profile_uid, 'spa', 'kanban_columns', '');
-            $boards = $this->normalizeBoards([[
-                'name'    => self::DEFAULT_BOARD,
-                'columns' => $legacy ? (json_decode($legacy, true) ?? []) : [],
-            ]]);
+            $legacy = $legacy ? (json_decode($legacy, true) ?? []) : [];
+            if ($legacy) {
+                $boards = $this->normalizeBoards([[
+                    'name'    => self::LEGACY_BOARD,
+                    'columns' => $legacy,
+                ]]);
+            }
         }
 
         Response::send([
