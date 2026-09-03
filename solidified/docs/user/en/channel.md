@@ -45,6 +45,32 @@ When you visit your own channel (`/channel/<your-nick>`), you can:
 - Access your channel-specific settings and tabs
 - The post composer may appear if you have configured it on your wall
 
+<!-- sort_order -->
+## Sort Order
+
+The wall toolbar has a sort control on the left, with the view switcher and the
+compose / direct-message / search buttons grouped at the right.
+
+A channel wall offers five orders:
+
+- **Latest** — newest posts first. The default.
+- **Active** — threads with the most recent reply first.
+- **Top** — the most liked posts.
+- **Most discussed** — the posts with the most replies.
+- **Unthreaded** — a flat, chronological list of every activity, comments and
+  reactions included.
+
+Top and Most discussed also take a time window — **Today / Week / Month / Year /
+All time** — which appears in the label, as *Top (Month)*. It's a good way to
+skim what someone's best-received posts were over a given period.
+
+Two orders from the Network stream are deliberately missing here: **Hot** and
+**Controversial**. Both are built for ranking many people's posts against each
+other, and neither says anything useful about a single person's wall. The full
+explanation of every order is in [Network](network).
+
+Note that **pinned posts stay pinned** under every order except Unthreaded.
+
 ## Profile Detail
 
 Click the profile header or a dedicated **About** link to see the full profile:

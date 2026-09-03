@@ -6,6 +6,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Concerns\StreamOrdering;
+use Utsukta\SpaCore\Api\Concerns\CachesRanking;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
@@ -18,6 +19,7 @@ class Network
 {
     use FormatsItems;
     use FiltersBlockedChannels;
+    use CachesRanking;
 
     public function get(): void
     {
@@ -49,7 +51,9 @@ class Network
         // 'unthreaded' is the only order that also changes the shape of the
         // result (flat, not threaded); the rest only change the ORDER BY.
         $nouveau = ($get_order === 'unthreaded');
-        $ordering = StreamOrdering::expr($get_order);
+        $clause = StreamOrdering::clause($get_order, $uid);
+        $ordering = $clause['order'];
+        $rank_join = $clause['join'];
 
         // ── Filter params ─────────────────────────────────────────────────────
         $star = intval($_GET['star'] ?? 0);
@@ -98,7 +102,8 @@ class Network
         // overrides `commented` — but not the ranked orders, where
         // "best posts before <date>" is a perfectly sensible request.
         if ($datequery && !StreamOrdering::isRanked($get_order)) {
-            $ordering = StreamOrdering::expr('created');
+            $ordering = StreamOrdering::clause('created', $uid)['order'];
+            $rank_join = '';
         }
 
         // ── SQL fragments ─────────────────────────────────────────────────────
@@ -302,12 +307,14 @@ class Network
         // ── Fetch items ───────────────────────────────────────────────────────
         $items = [];
         $rootCount = 0;
+        $cached = false;
 
         if ($nouveau) {
             // Flat / unthreaded
             $items = dbq("SELECT item.*, item.id AS item_id, $reaction_subqueries
                 FROM item
                 LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
+                $rank_join
                 $net_query
                 WHERE true $uids $item_normal
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
@@ -324,15 +331,33 @@ class Network
             }
         } else {
             // Threaded — two-step: parent ids then full threads
-            $r = dbq("SELECT item.parent AS item_id FROM item
+            $parents_sql = "SELECT item.parent AS item_id FROM item
                 LEFT JOIN abook ON ( item.owner_xchan = abook.abook_xchan $abook_uids )
+                $rank_join
                 $net_query
                 WHERE true $uids $item_thread_top $item_normal
                 AND item.mid = item.parent_mid
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
                 $sql_extra3 $sql_extra $sql_options $sql_nets
                 $net_query2
-                ORDER BY $ordering DESC $pager_sql");
+                ORDER BY $ordering DESC ";
+
+            // Ranked orders sort the whole candidate set before they can
+            // return a page, so the ordered ids are cached and every later
+            // page of the same scroll is a free slice. Chronological orders
+            // stop at LIMIT and stay live.
+            if (StreamOrdering::isRanked($get_order) && $this->rankCacheCovers($offset, $itemspage)) {
+                $depth = $this->rankCacheDepth();
+                $ranked = $this->rankedIds(
+                    $this->rankCacheKey('network', $uid, $get_order, $_GET),
+                    fn() => array_column(dbq($parents_sql . " LIMIT $depth") ?: [], 'item_id')
+                );
+                $cached = $ranked['cached'];
+                $page = array_slice($ranked['ids'], $offset, $itemspage);
+                $r = array_map(fn($id) => ['item_id' => $id], $page);
+            } else {
+                $r = dbq($parents_sql . $pager_sql);
+            }
 
             $rootCount = count($r ?: []);
 
@@ -374,7 +399,7 @@ class Network
             $itemspage,
             $rootCount,
             $nouveau,
-            ['ordering' => $get_order],
+            ['ordering' => $get_order, 'cached' => $cached],
         );
     }
 }

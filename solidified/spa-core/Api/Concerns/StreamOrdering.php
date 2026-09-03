@@ -2,17 +2,24 @@
 // Api/Concerns/StreamOrdering.php
 namespace Utsukta\SpaCore\Api\Concerns;
 
-// ORDER BY expressions for the stream handlers (Network, Channel).
+// ORDER BY clauses for the stream handlers (Network, Channel).
 //
-// The chronological orders are plain columns; the ranked ones ("reddit style")
-// are built from the same correlated count subqueries ReactionCounts uses, so
-// they correlate against an outer table aliased `item` — which both handlers'
-// parent/flat queries satisfy.
+// The chronological orders are plain indexed columns. The ranked ones
+// ("reddit style") need reaction counts, which live in sibling `item` rows
+// rather than in a column — so each ranked order comes with a LEFT JOIN onto a
+// pre-aggregated derived table, and the expression reads off that join.
+//
+// The joins exist for one reason: correlated scalar subqueries in ORDER BY are
+// evaluated per candidate row (EXPLAIN: DEPENDENT SUBQUERY + filesort), and
+// `controversial` textually contains four of them, so it paid 4N index dives
+// per page. One grouped pass, hash-joined, replaces all of that — and each
+// count is computed once per candidate no matter how often the formula
+// mentions it.
 final class StreamOrdering
 {
-    // Orders that do not put the newest item first. These force the threaded
-    // path off nothing, but the client must not run its created-based
-    // new-post poll while one is active.
+    // Orders that do not put the newest item first. The client must not run
+    // its created-based new-post poll while one is active, and these are the
+    // orders whose result is worth caching.
     public const RANKED = ['top', 'hot', 'discussed', 'controversial'];
 
     public static function isRanked(string $order): bool
@@ -27,62 +34,109 @@ final class StreamOrdering
             || self::isRanked($order);
     }
 
-    // Full ORDER BY expression (no DESC). Unknown keys fall back to created.
-    //
-    // ponytail: the ranked expressions are correlated subqueries, which no
-    // index can cover — sorting scans the candidate parent set. The time-range
-    // picker in the UI is the mitigation (it bounds the window via dbegin).
-    // If that stops being enough, denormalise the counts onto `item` or
-    // maintain a materialised ranking table; don't try to index this.
-    public static function expr(string $order): string
+    /**
+     * ORDER BY clause for an order key, plus the JOIN it needs.
+     *
+     * ponytail: a cold ranked page still filesorts the whole candidate set —
+     * inherent to ranking without capping the candidate pool, which was a
+     * deliberate call (exact rankings over approximate ones). CachesRanking
+     * makes that cost once per 15 minutes instead of once per page. If it ever
+     * needs to go lower, cap the pool in the inner query or denormalise the
+     * counts onto `item`; the join below is already as cheap as this shape gets.
+     *
+     * @return array{join: string, order: string} `join` is empty for the
+     *         chronological orders; `order` never carries DESC.
+     *
+     * The outer table must be aliased `item` (both handlers' queries are), and
+     * the join fragments are scoped to $uid, matching how the count subqueries
+     * in ReactionCounts correlate.
+     */
+    public static function clause(string $order, int $uid): array
     {
         $pg = defined('ACTIVE_DBTYPE') && defined('DBTYPE_POSTGRES')
             && ACTIVE_DBTYPE == DBTYPE_POSTGRES;
 
+        // LEFT JOIN misses (a post nobody reacted to) come back NULL.
+        $likes    = 'COALESCE(rx.likes, 0)';
+        $dislikes = 'COALESCE(rx.dislikes, 0)';
+        $comments = 'COALESCE(cx.comments, 0)';
+
         switch ($order) {
             case 'commented':
-                return 'item.commented';
+                return ['join' => '', 'order' => 'item.commented'];
 
             case 'top':
-                return self::verbCount('Like');
+                return ['join' => self::reactionJoin($uid), 'order' => $likes];
 
             case 'discussed':
-                return ReactionCounts::commentCountSubquery();
+                return ['join' => self::commentJoin($uid), 'order' => $comments];
 
             case 'hot':
                 // Reddit's hotness: log of the score plus a linear age term,
                 // so a post needs ~10x the likes to outrank one 12.5h newer.
-                $likes = self::verbCount('Like');
                 $log   = $pg ? "LOG(GREATEST($likes, 1)::numeric)" : "LOG10(GREATEST($likes, 1))";
                 $epoch = $pg ? 'EXTRACT(EPOCH FROM item.created)' : 'UNIX_TIMESTAMP(item.created)';
-                return "($log + $epoch / 45000)";
+                return [
+                    'join'  => self::reactionJoin($uid),
+                    'order' => "($log + $epoch / 45000)",
+                ];
 
             case 'controversial':
                 // Engagement volume scaled down the more one-sided the split is.
-                $likes    = self::verbCount('Like');
-                $dislikes = self::verbCount('Dislike');
-                $total    = "($likes + $dislikes)";
-                $balance  = "ABS($likes - $dislikes)";
+                $total   = "($likes + $dislikes)";
+                $balance = "ABS($likes - $dislikes)";
                 // Postgres does integer division on bigint counts — cast.
-                $cast     = $pg ? '::numeric' : '';
-                return "($total * (1 - $balance$cast / GREATEST($total, 1)))";
+                $cast    = $pg ? '::numeric' : '';
+                return [
+                    'join'  => self::reactionJoin($uid),
+                    'order' => "($total * (1 - $balance$cast / GREATEST($total, 1)))",
+                ];
 
             case 'created':
             case 'unthreaded':
             default:
-                return 'item.created';
+                return ['join' => '', 'order' => 'item.created'];
         }
     }
 
-    // Same shape as the like_count/dislike_count subqueries in
-    // ReactionCounts::subqueries() — kept in step with them deliberately, so a
-    // post's rank matches the counts the client renders on it.
-    private static function verbCount(string $verb): string
+    // Like/dislike counts per thread root, grouped the way
+    // ReactionCounts::subqueries() correlates them: on thr_parent = the root's
+    // mid, so only direct reactions to the root count, one vote per author
+    // however many duplicate activities federation delivered.
+    private static function reactionJoin(int $uid): string
     {
         $normal = ReactionCounts::normalFlags();
-        return "(SELECT COUNT(DISTINCT r.author_xchan) FROM item r
-                 WHERE r.uid = item.uid AND r.thr_parent = item.mid
-                   AND r.item_thread_top = 0 AND r.obj_type != 'Answer'
-                   AND r.verb = '$verb' AND $normal)";
+        return "LEFT JOIN (
+                  SELECT r.thr_parent AS tp,
+                         COUNT(DISTINCT CASE WHEN r.verb = 'Like'    THEN r.author_xchan END) AS likes,
+                         COUNT(DISTINCT CASE WHEN r.verb = 'Dislike' THEN r.author_xchan END) AS dislikes
+                  FROM item r
+                  WHERE r.uid = $uid
+                    AND r.item_thread_top = 0
+                    AND r.obj_type != 'Answer'
+                    AND r.verb IN ('Like', 'Dislike')
+                    AND $normal
+                  GROUP BY r.thr_parent
+                ) rx ON rx.tp = item.mid ";
+    }
+
+    // Reply counts, grouped on r.parent — NOT thr_parent. This mirrors
+    // ReactionCounts::commentCountSubquery(), which correlates on
+    // `r.parent = item.id`: "Most discussed" counts the whole thread including
+    // nested replies, where the reaction counts only count direct children of
+    // the root. Grouping these by thr_parent would quietly redefine the order.
+    private static function commentJoin(int $uid): string
+    {
+        $normal = ReactionCounts::normalFlags();
+        return "LEFT JOIN (
+                  SELECT r.parent AS pid, COUNT(*) AS comments
+                  FROM item r
+                  WHERE r.uid = $uid
+                    AND r.item_thread_top = 0
+                    AND r.obj_type != 'Answer'
+                    AND r.verb IN ('Create', 'Update', 'EmojiReact')
+                    AND $normal
+                  GROUP BY r.parent
+                ) cx ON cx.pid = item.id ";
     }
 }

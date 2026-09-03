@@ -17,13 +17,69 @@ Use the view switcher (top-right of the filter bar, or bottom row on mobile) to 
 
 [IMAGE: View mode switcher with all four icons]
 
+<!-- sort_order -->
 ## Sort Order
 
-Three buttons in the filter bar control sort order:
+The sort control in the filter bar decides what order the stream comes back in.
+On a wide screen it's a row of tabs; on a phone it collapses into a single
+button that opens the same list.
 
-- **Latest** — newest posts first (by creation date)
-- **Active** — posts with the most recent comment, like, or reaction appear first
-- **All** — unthreaded flat list of every activity item in chronological order
+There are seven orders, and they fall into two groups.
+
+### By time
+
+- **Latest** — newest posts first, by when they were written. The default.
+- **Active** — threads with the most recent reply first. A conversation from
+  last week that someone just commented on jumps to the top. Good for keeping
+  up with discussions rather than announcements.
+- **Unthreaded** — a flat, chronological list of *every* activity, not just
+  posts: comments, likes and reactions appear as their own entries instead of
+  being folded into their thread. Useful when you want to see everything that
+  happened, in the order it happened.
+
+### By popularity
+
+These four rank posts against each other instead of putting them in time order.
+
+- **Top** — the most liked posts, most likes first. A like counts once per
+  person no matter how many times it reaches your hub.
+- **Hot** — a blend of likes and freshness, so a busy stream doesn't just show
+  you the same all-time favourites. Likes count on a sliding scale — going from
+  1 like to 10 helps as much as going from 10 to 100 — and a post also gains
+  ground simply for being newer, at a rate of one "step" every 12½ hours. The
+  practical effect: **a post needs about ten times the likes to beat one posted
+  half a day later.** Old posts don't sink over time; new ones just start
+  higher.
+- **Most discussed** — the biggest conversations, by number of replies. This is
+  about *volume*, where Active is about *recency*: a 200-comment argument from
+  Tuesday ranks above a thread that got one reply a minute ago.
+- **Controversial** — posts that got a lot of reaction *and* a split verdict.
+  A post needs both: 50 likes and 50 dislikes ranks highly, 100 likes and no
+  dislikes doesn't rank at all, because everybody agreed. The more one-sided
+  the split, the further it falls.
+
+### Time range
+
+Top, Most discussed and Controversial keep counting forever, so without a limit
+they'd show you the same all-time winners on every visit. Picking one of them
+opens a small **Today / Week / Month / Year / All time** menu, and the window
+you choose becomes part of the label — *Most discussed (Week)*. Click the
+selected tab again to change it.
+
+Hot has no time range because its freshness bonus already is one.
+
+### Two things to know
+
+- **They can lag a few minutes.** Ranking a whole stream is expensive, so the
+  result is reused for up to 15 minutes. A post you just liked may take that
+  long to climb. The time-based orders are always live.
+- **Live updates pause.** The "new posts" banner only appears under Latest,
+  Active and Unthreaded. Under the popularity orders, "newest" isn't the top of
+  the list, so there's nothing sensible to add there — switch back to a
+  time-based order to resume.
+- **Sorting respects your filters.** Whatever tags, folders, connections, dates
+  or searches are active, the sort applies within those results, not to the
+  whole stream.
 
 ## Quick Filter Toggles
 

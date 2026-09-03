@@ -7,10 +7,13 @@ how the shared `SortSelect` control drives it.
 
 | Layer | File |
 |---|---|
-| ORDER BY expressions | `packages/spa-core/php/Api/Concerns/StreamOrdering.php` |
+| ORDER BY clauses (expression + join) | `packages/spa-core/php/Api/Concerns/StreamOrdering.php` |
+| Ranking cache | `packages/spa-core/php/Api/Concerns/CachesRanking.php` |
 | Consumers | `Handlers/Network.php`, `Handlers/Channel.php` |
 | Sort data (orders, ranges, `rangeToDbegin`) | `src/shared/stream/filters/ranked.ts` |
 | UI control | `src/shared/stream/filters/SortSelect.tsx` |
+| View-mode control (same collapse pattern) | `src/shared/stream/filters/ViewSwitcher.tsx` |
+| Panel state + floating placement | `src/shared/stream/filters/createPopover.ts` |
 | Network wiring | `modules/network/views/StreamFilters.tsx`, `modules/network/api.ts` |
 | Channel wiring | `modules/channel/widgets/ChannelFeedShell.tsx` |
 | Poll guard | `src/shared/stream/store/createStreamStore.ts` |
@@ -44,9 +47,10 @@ so a hand-edited URL can't inject SQL through `?order=`.
 
 ### The counts
 
-All four ranked orders are built from **correlated subqueries**, not columns.
-Hubzilla stores a like as its own `item` row whose `thr_parent` is the mid of
-the thing it likes, so there is no `like_count` column to sort on:
+All four ranked orders count sibling `item` rows, not columns. Hubzilla stores
+a like as its own `item` row whose `thr_parent` is the mid of the thing it
+likes, so there is no `like_count` column to sort on. Conceptually the count
+is:
 
 ```sql
 (SELECT COUNT(DISTINCT r.author_xchan) FROM item r
@@ -60,9 +64,11 @@ how many duplicate activities federation delivers. `obj_type != 'Answer'`
 keeps poll votes out, and the `item_normal` flag set (shared with
 `ReactionCounts::normalFlags()`) keeps deleted/hidden/unpublished rows out.
 
-These are deliberately the **same** subqueries `ReactionCounts::subqueries()`
-uses to produce the `like_count` / `comment_count` the client renders on each
-post. A post's rank always matches the numbers shown on it.
+These are deliberately the **same** counts `ReactionCounts::subqueries()` uses
+to produce the `like_count` / `comment_count` the client renders on each post,
+so a post's rank always matches the numbers shown on it. For *ranking* they are
+computed once per candidate through a joined aggregate rather than as a
+per-row subquery — see [How the counts are joined](#how-the-counts-are-joined-and-why).
 
 ### `top`
 
@@ -95,10 +101,10 @@ degenerates into `created`. That is expected, not a bug.
 
 ### `discussed`
 
-Comment count (`ReactionCounts::commentCountSubquery()`), descending. Note it
-counts the whole thread, and counts *replies* — the `Create`/`Update`/
-`EmojiReact` allowlist, so thread-subscription `Follow`/`Ignore` activities and
-hidden group-boost `Announce`s don't inflate it.
+Reply count, descending. Note it counts the whole thread — nested replies
+included — and counts *replies* only: the `Create`/`Update`/`EmojiReact`
+allowlist, so thread-subscription `Follow`/`Ignore` activities and hidden
+group-boost `Announce`s don't inflate it.
 
 Distinct from `commented`/Active, which is a *timestamp*: `discussed` is "the
 biggest conversations", `commented` is "the conversations that moved most
@@ -124,7 +130,7 @@ scores 10. A post needs *both* engagement and disagreement to rank.
 
 ### Portability
 
-`StreamOrdering::expr()` branches on `ACTIVE_DBTYPE` because three pieces
+`StreamOrdering::clause()` branches on `ACTIVE_DBTYPE` because three pieces
 differ between the two databases Hubzilla supports:
 
 | | MySQL | Postgres |
@@ -135,18 +141,77 @@ differ between the two databases Hubzilla supports:
 
 `db_getfunc()` in core has no entries for any of these, hence the local branch.
 
-### Performance ceiling
+### How the counts are joined, and why
 
-A correlated subquery in `ORDER BY` cannot be indexed: the database evaluates
-it for every candidate row before it can sort. The ranked orders therefore
-scan the whole candidate parent set.
+`StreamOrdering::clause($order, $uid)` returns **both** an ORDER BY expression
+and the JOIN that expression reads from:
 
-The time range is the mitigation — it bounds that set via `dbegin`. If it ever
-stops being enough, the upgrade path is a denormalised count column on `item`
-maintained on write, or a materialised ranking table; there is no index that
-rescues the current shape. This is marked with a `ponytail:` comment on
-`expr()`.
+```php
+['join' => 'LEFT JOIN ( … GROUP BY r.thr_parent ) rx ON rx.tp = item.mid ',
+ 'order' => 'COALESCE(rx.likes, 0)']
+```
 
+It did not always work this way. The first version inlined the count subqueries
+directly into the ORDER BY, which `EXPLAIN` showed as a `DEPENDENT SUBQUERY`
+plus a filesort: the database ran a fresh index dive **per candidate row**, on
+the single-column `thr_parent` index (`key_len 764`, a wide varchar). Worse,
+the expressions are textual — `controversial` mentions the like subquery twice
+and the dislike subquery twice, so it paid *four* dives per row, and `hot` two.
+
+The aggregate join replaces all of that with one grouped pass over the reaction
+rows, materialised once and hash-joined to the candidates. Each count is now
+computed once per candidate no matter how often the formula mentions it, and
+`controversial` has the same query plan as `top`.
+
+Two derived tables, joined only when the chosen order needs one:
+
+- **`rx`** (`top`, `hot`, `controversial`) — likes and dislikes, `GROUP BY
+  r.thr_parent`, joined on the root's `mid`.
+- **`cx`** (`discussed`) — replies, **`GROUP BY r.parent`**, joined on the
+  root's `id`.
+
+That grouping difference is load-bearing, not an inconsistency: the reaction
+counts only count direct reactions to the root, while
+`commentCountSubquery()` correlates on `r.parent = item.id` and counts the
+whole thread including nested replies. Grouping comments by `thr_parent` would
+quietly redefine what "Most discussed" means.
+
+What remains is a filesort over the full candidate set on a cold cache —
+inherent to ranking without capping the candidate pool, which was a deliberate
+choice in favour of exact rankings over approximate ones. The cache below is
+what keeps that from being paid per page.
+
+### Ranked results are cached for 15 minutes
+
+Ranking is the expensive half of a ranked page; fetching the ten rows it picked
+is trivial. And because pagination is `LIMIT/OFFSET`, scrolling to page 5 used
+to re-rank the whole set five times over.
+
+`Concerns/CachesRanking.php` stores the ordered parent-id list under
+`Zotlabs\Lib\Cache` (already used in this API by `Linkmeta.php` and
+`PasswordReset.php`) for **15 minutes**, so a whole scroll session — and every
+revisit inside the window — costs one ranking pass.
+
+- **Key**: `spa:rank:<scope>:<uid>:<order>:<md5 of the filter params>`. Every
+  filter is in the key, or a tag-filtered stream would serve the unfiltered
+  ranking; params are sorted so query-string order can't split the cache, and
+  `start` is excluded on purpose so one ranking serves all its pages. The
+  channel scope also carries the observer hash, since `item_permissions_sql()`
+  fences visitors and two viewers of the same wall can legitimately rank
+  differently.
+- **Depth**: 1000 ids (~100 pages). This is *not* a candidate cap — the
+  database still ranks the entire set; it only bounds how much of the sorted
+  output is carried around. A page past it falls through to a plain paged
+  query.
+- **Scope**: ranked orders only. The chronological orders walk an index and
+  stop at `LIMIT`; they're already cheap and stay live.
+
+`meta.cached` reports whether a page was served from the ranking cache.
+
+**The trade-off**: a ranked view can lag up to 15 minutes behind new likes.
+That's consistent with the rest of the feature — live polling is already
+disabled under ranked orders, so there's no second freshness path to
+contradict it.
 ## Time ranges
 
 `top`, `discussed` and `controversial` accumulate counts forever, so without a
@@ -256,10 +321,25 @@ a personal wall rarely sees. The backend still accepts both on
 Pinned posts survive the ranked orders (they only drop out under `unthreaded`,
 since `Channel.php` emits them only when `!$nouveau && $offset === 0`).
 
+## User-facing docs
+
+The orders are explained for end users under **Sort Order** in
+`src/docs/user/en/network.md` (all seven, including how the hot and
+controversial rankings behave) and `src/docs/user/en/channel.md` (the five a
+wall offers, and why the other two are missing).
+
+`SortSelect` is `use:helpable`, so those sections open in the help overlay when
+a user clicks the control in help mode. The target defaults to
+`network.sort_order`; channel passes `help="channel.sort_order"`. Both headings
+carry a `<!-- sort_order -->` anchor comment so they keep resolving once the
+docs are translated.
+
 ## Adding an order
 
-1. Add the key to `StreamOrdering::expr()` and, if it isn't chronological, to
-   `StreamOrdering::RANKED`.
+1. Add the key to `StreamOrdering::clause()` — returning the ORDER BY
+   expression and whichever aggregate join it reads from — and, if it isn't
+   chronological, to `StreamOrdering::RANKED` (which also opts it into the
+   ranking cache).
 2. Add it to `ALL_ORDERS` in `SortSelect.tsx` with an icon, and to
    `RANKED_ORDERS` / `RANGE_AWARE` in `ranked.ts` as applicable.
 3. Add the label to the `network` namespace in all three locales and to
