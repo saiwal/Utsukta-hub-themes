@@ -17,16 +17,16 @@ class Response
         exit;
     }
 
-    public static function paginate(array $items, int $offset, int $limit, int $rootCount, bool $nouveau = false): never
+    public static function paginate(array $items, int $offset, int $limit, int $rootCount, bool $nouveau = false, array $extra = []): never
     {
-        self::send($items, [
+        self::send($items, array_merge([
             'offset'     => $offset,
             'limit'      => $limit,
             'count'      => count($items),
             'root_count' => $rootCount,
             'has_more'   => $rootCount >= $limit,
             'nouveau'    => $nouveau,
-        ]);
+        ], $extra));
     }
 
     // Some text fields (xchan_name from federated actors, or values this API

@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
+use Utsukta\SpaCore\Api\Concerns\StreamOrdering;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Response;
 
@@ -34,13 +35,14 @@ class Channel
 
         // ── Ordering ──────────────────────────────────────────────────────────
         $get_order = $_GET['order'] ?? 'created';
-        $nouveau   = false;
-
-        switch ($get_order) {
-            case 'commented': $ordering = 'commented'; break;
-            case 'unthreaded': $nouveau = true; $ordering = 'created'; break;
-            default:           $ordering = 'created';
+        if (!StreamOrdering::isValid($get_order)) {
+            $get_order = 'created';
         }
+
+        // 'unthreaded' is the only order that also changes the shape of the
+        // result (flat, not threaded); the rest only change the ORDER BY.
+        $nouveau   = ($get_order === 'unthreaded');
+        $ordering  = StreamOrdering::expr($get_order);
 
         // ── Filter params ─────────────────────────────────────────────────────
         $search   = $_GET['search']  ?? '';
@@ -128,7 +130,7 @@ class Channel
                 FROM item
                 WHERE true $uids $item_normal
                 $sql_extra $sql_date
-                ORDER BY item.created DESC $pager_sql");
+                ORDER BY $ordering DESC $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -158,8 +160,12 @@ class Channel
                     xchan_query($items, true);
                     $items = fetch_post_tags($items, true);
 
-                    $key = $ordering === 'commented' ? 'commented' : 'created';
-                    usort($items, fn($a, $b) => strtotime($b[$key]) - strtotime($a[$key]));
+                    // Re-apply the order the parent query produced — the
+                    // ranked orders have no column to re-sort by here.
+                    $ordered_parents = array_map('intval', array_column($r, 'item_id'));
+                    usort($items, fn($a, $b) =>
+                        array_search(intval($a['id']), $ordered_parents)
+                        - array_search(intval($b['id']), $ordered_parents));
                 }
             }
         }
@@ -219,7 +225,7 @@ class Channel
             'root_count'    => $rootCount,
             'has_more'      => $rootCount >= $itemspage,
             'nouveau'       => $nouveau,
-            'ordering'      => $ordering,
+            'ordering'      => $get_order,
             'can_post_wall' => $can_post_wall,
         ];
         if ($showPinnedMeta) {

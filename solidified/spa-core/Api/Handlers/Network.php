@@ -5,6 +5,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
+use Utsukta\SpaCore\Api\Concerns\StreamOrdering;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
@@ -41,20 +42,14 @@ class Network
         // stale preference from a page the user can't see or change.
         $get_order = $_GET['order'] ?? 'created';
 
-        $nouveau = false;
-        $ordering = 'created';
-
-        switch ($get_order) {
-            case 'commented':
-                $ordering = 'commented';
-                break;
-            case 'unthreaded':
-                $nouveau = true;
-                $ordering = 'created';
-                break;
-            default:
-                $ordering = 'created';
+        if (!StreamOrdering::isValid($get_order)) {
+            $get_order = 'created';
         }
+
+        // 'unthreaded' is the only order that also changes the shape of the
+        // result (flat, not threaded); the rest only change the ORDER BY.
+        $nouveau = ($get_order === 'unthreaded');
+        $ordering = StreamOrdering::expr($get_order);
 
         // ── Filter params ─────────────────────────────────────────────────────
         $star = intval($_GET['star'] ?? 0);
@@ -99,8 +94,11 @@ class Network
             $nouveau = true;
         }
 
-        if ($datequery) {
-            $ordering = 'created';
+        // A "jump to this date" query is inherently chronological, so it
+        // overrides `commented` — but not the ranked orders, where
+        // "best posts before <date>" is a perfectly sensible request.
+        if ($datequery && !StreamOrdering::isRanked($get_order)) {
+            $ordering = StreamOrdering::expr('created');
         }
 
         // ── SQL fragments ─────────────────────────────────────────────────────
@@ -316,7 +314,7 @@ class Network
                 AND item.verb NOT IN ('Add', 'Remove')
                 $sql_extra $sql_options $sql_nets $sql_date
                 $net_query2
-                ORDER BY item.created DESC $pager_sql");
+                ORDER BY $ordering DESC $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -376,6 +374,7 @@ class Network
             $itemspage,
             $rootCount,
             $nouveau,
+            ['ordering' => $get_order],
         );
     }
 }
