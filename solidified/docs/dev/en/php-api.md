@@ -174,9 +174,24 @@ POST /spa/item/:mid/star            toggle starred flag
 POST /spa/item/:mid/edit            edit body/title
 POST /spa/item/:mid/delete          delete (federated)
 POST /spa/item/:mid/reshare         reshare with optional text
+POST /spa/item/:mid/fetchreplies    pull one more level of a remote thread
 ```
 
 `:mid` may be a full zot6 URL, a short UUID, or a `b64.`-prefixed base64-encoded mid.
+
+## Federated Import Endpoint
+
+```
+GET /spa/search?url=<permalink>     fetch a remote post + its discussion, returns { uuid }
+```
+
+Tries Zot (`Libzot::fetch_conversation`) then ActivityPub. The AP path needs the
+`pubcrawl` app installed on the channel. Pair it with
+`POST /spa/item/:mid/fetchreplies` to descend further into an AP thread.
+
+See [Post-import](post-import) for the whole story — why the uuid is read back
+from the DB rather than trusted, how ancestors and replies are discovered, the
+Lemmy fallback, and the bounds on inline fetching.
 
 ## Notes Endpoint
 

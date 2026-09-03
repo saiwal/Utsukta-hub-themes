@@ -169,6 +169,13 @@ class Display
         $root_item['blocked'] = $this->isBlockedHash($blocked, $root_item['author']['hash'] ?? null)
             || (!empty($root_item['owner']) && $this->isBlockedHash($blocked, $root_item['owner']['hash'] ?? null));
 
+        // Was this thread pulled in by URL (Search.php) rather than delivered?
+        // A delivered thread arrives with its comments and keeps receiving them;
+        // a fetched one is a snapshot, so only it should offer "fetch more
+        // replies". Read here rather than in formatItem() — this is one item,
+        // and a per-row iconfig lookup would add a query per post in a stream.
+        $root_item['imported'] = (bool) \Zotlabs\Lib\IConfig::Get(intval($item['id']), 'spa', 'imported');
+
         Response::send([
             'post' => $root_item,
         ]);

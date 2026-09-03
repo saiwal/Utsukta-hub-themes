@@ -9,6 +9,7 @@ use Zotlabs\Lib\Activity;
 use Zotlabs\Lib\ActivityStreams;
 use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\Config;
+use Zotlabs\Lib\IConfig;
 use Zotlabs\Lib\Libzot;
 
 class Search
@@ -94,6 +95,15 @@ class Search
                     // root, and for a root URL the two are the same.
                     $row = $this->storedRow($item['mid'], $channel);
                     if ($row) {
+                        // Mark the thread as one we pulled in rather than one
+                        // that was delivered to us. A delivered thread arrives
+                        // with its comments and stays current; a fetched one is
+                        // a snapshot that may be missing replies, which is the
+                        // only case where offering "fetch more replies" makes
+                        // sense. item_fetched can't serve here — Activity::store()
+                        // consumes it and it is never persisted.
+                        $this->markImported($row['parent_mid'], $channel);
+
                         $rootObj = $this->fetchActivityObject($row['parent_mid'], $channel);
                         if ($rootObj) {
                             // Bounded by wall clock, not just count: each reply
@@ -172,10 +182,24 @@ class Search
         if (!$mid) {
             return null;
         }
-        $r = q("select uuid, parent_mid from item where mid = '%s' and uid = %d limit 1",
+        $r = q("select id, uuid, parent_mid from item where mid = '%s' and uid = %d limit 1",
             dbesc($mid),
             intval($channel['channel_id'])
         );
         return $r ? $r[0] : null;
+    }
+
+    // Flags the thread root as imported-by-URL (iconfig spa/imported), read back
+    // by Display.php so only these threads offer "fetch more replies".
+    private function markImported(string $rootMid, array $channel): void
+    {
+        $r = q("select id from item where mid = '%s' and uid = %d limit 1",
+            dbesc($rootMid),
+            intval($channel['channel_id'])
+        );
+        if ($r) {
+            $id = intval($r[0]['id']);
+            IConfig::Set($id, 'spa', 'imported', 1);
+        }
     }
 }
