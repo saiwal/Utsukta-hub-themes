@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-BeXRvOD7.js";import{za as t}from"./app-CIF8vm24.js";function n(){return e(t,{href:`/login`})}export{n as default};
