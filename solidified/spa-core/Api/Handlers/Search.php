@@ -3,14 +3,18 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use App;
 use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Concerns\FetchesRemoteReplies;
 use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\Activity;
 use Zotlabs\Lib\ActivityStreams;
 use Zotlabs\Lib\Apps;
+use Zotlabs\Lib\Config;
 use Zotlabs\Lib\Libzot;
 
 class Search
 {
+    use FetchesRemoteReplies;
+
     public function get(): void
     {
         Auth::requireLocalGet();
@@ -82,14 +86,74 @@ class Search
 
                     Activity::init_background_fetch(get_observer_hash());
 
-                    if ($uuid = $this->storedUuid($item['mid'], $channel)) {
-                        Response::send(['uuid' => $uuid]);
+                    // Pull the discussion in too. Activity::store() only queues
+                    // the replies collection for the background Convo daemon,
+                    // so without this the post opens with no comments. Walk the
+                    // thread root's replies, not the requested item's — for a
+                    // reply permalink the interesting collection hangs off the
+                    // root, and for a root URL the two are the same.
+                    $row = $this->storedRow($item['mid'], $channel);
+                    if ($row) {
+                        $rootObj = $this->fetchActivityObject($row['parent_mid'], $channel);
+                        if ($rootObj) {
+                            // Bounded by wall clock, not just count: each reply
+                            // is its own signed round-trip, so a busy thread on a
+                            // slow host would otherwise run the request into a
+                            // timeout. Whatever the budget doesn't reach stays
+                            // queued for the Convo daemon, and the "fetch more
+                            // replies" button (Item::fetchMoreReplies) picks up
+                            // the rest on demand. import_replies_limit at 0
+                            // disables the inline walk; import_replies_budget at
+                            // 0 removes the time bound (count only).
+                            $this->fetchRemoteReplies(
+                                $channel,
+                                get_observer_hash(),
+                                $rootObj,
+                                intval(Config::Get('spa', 'import_replies_limit', 25)),
+                                floatval(Config::Get('spa', 'import_replies_budget', 6))
+                            );
+                        }
+                        Response::send(['uuid' => $row['uuid']]);
                     }
                 }
             }
         }
 
-        Response::error(404, 'Post not found — it may not be publicly accessible or may not support Zot/ActivityPub');
+        Response::error(404, $this->explainFetchFailure($url));
+    }
+
+    /**
+     * Why the fetch failed, in the user's words.
+     *
+     * Both fetch paths collapse every failure into null, so the generic
+     * "not found" hid the two cases people actually hit: a deleted/private
+     * post, and a server running authorized fetch that rejected our signed
+     * request (commonly because this host's own actor URL isn't reachable from
+     * theirs). One unsigned probe on the already-failed path tells them apart.
+     */
+    private function explainFetchFailure(string $url): string
+    {
+        $generic = 'Post not found — it may not be publicly accessible or may not support Zot/ActivityPub';
+
+        $redirects = 0;
+        $x = z_fetch_url($url, true, $redirects, [
+            'headers' => ['Accept: application/activity+json'],
+            'timeout' => 10,
+        ]);
+
+        $code = intval($x['return_code'] ?? 0);
+
+        if ($code === 401 || $code === 403) {
+            return 'The remote server refused the request (HTTP ' . $code . '). '
+                 . 'It likely requires authorized fetch and could not verify this site — '
+                 . 'check that this hub is reachable from the public internet.';
+        }
+
+        if ($code === 404 || $code === 410) {
+            return 'The post no longer exists on the remote server (HTTP ' . $code . ').';
+        }
+
+        return $generic;
     }
 
     /**
@@ -99,13 +163,19 @@ class Search
      */
     private function storedUuid(string $mid, array $channel): string
     {
+        $r = $this->storedRow($mid, $channel);
+        return $r ? $r['uuid'] : '';
+    }
+
+    private function storedRow(string $mid, array $channel): ?array
+    {
         if (!$mid) {
-            return '';
+            return null;
         }
-        $r = q("select uuid from item where mid = '%s' and uid = %d limit 1",
+        $r = q("select uuid, parent_mid from item where mid = '%s' and uid = %d limit 1",
             dbesc($mid),
             intval($channel['channel_id'])
         );
-        return $r ? $r[0]['uuid'] : '';
+        return $r ? $r[0] : null;
     }
 }

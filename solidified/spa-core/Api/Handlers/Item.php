@@ -19,6 +19,7 @@ use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
 use Utsukta\SpaCore\Api\Concerns\EmbedsCards;
+use Utsukta\SpaCore\Api\Concerns\FetchesRemoteReplies;
 use Utsukta\SpaCore\Api\Response;
 
 class Item
@@ -26,6 +27,7 @@ class Item
     use FiltersBlockedChannels;
     use EnforcesServiceClass;
     use EmbedsCards;
+    use FetchesRemoteReplies;
 
     // ── Entry points ──────────────────────────────────────────────────────────
     //
@@ -49,6 +51,7 @@ class Item
     // POST /api/item/:mid/edit               -> edit item body/title
     // POST /api/item/:mid/follow             -> follow thread (core: subthread/sub)
     // POST /api/item/:mid/unfollow           -> unfollow thread (core: subthread/unsub)
+    // POST /api/item/:mid/fetchreplies       -> pull one more level of a remote thread
     // POST /api/item                         -> create new top-level post
     // POST /api/item/:mid                    -> (same as comment — alias)
 
@@ -124,7 +127,7 @@ class Item
         $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
                        'tentativeaccept', 'star', 'pin', 'comment', 'delete',
                        'edit', 'reshare', 'saveto', 'vote',
-                       'follow', 'unfollow', 'addtocal'];
+                       'follow', 'unfollow', 'addtocal', 'fetchreplies'];
 
         $segs = array_slice(App::$argv, 2);
         $last = count($segs) ? $segs[count($segs) - 1] : '';
@@ -195,6 +198,9 @@ class Item
                 break;
             case 'unfollow':
                 $this->toggleThreadFollow($mid, false);
+                break;
+            case 'fetchreplies':
+                $this->fetchMoreReplies($mid);
                 break;
             default:
                 // POST /api/item/:mid with no verb → comment (convenience alias)
@@ -1523,6 +1529,83 @@ class Item
         Libsync::build_sync_packet($uid, ['config']);
 
         json_return_and_die(['success' => true, 'pinned' => !$isPinned]);
+    }
+
+    // POST /api/item/:mid/fetchreplies
+    //
+    // Descend one more level into a remote (ActivityPub) thread. Every item in
+    // the thread that has no local children is a place the conversation may
+    // continue upstream, so each of those gets its replies walked. Pressing
+    // again therefore reaches one level deeper rather than re-walking replies
+    // already imported (fetchRemoteReplies() skips mids we already hold).
+    //
+    // The thread root is always included, child or not: on Lemmy the root Page
+    // is the *only* object that can name the thread's comments, so dropping it
+    // from the frontier would make a second press find nothing.
+    //
+    // Zot threads arrive whole via Libzot::fetch_conversation(), so this is only
+    // ever useful on AP items.
+    //
+    // ponytail: 10 leaves x 25 replies, 15s of wall clock per press. Each leaf
+    // costs at least two remote fetches, so the time budget is the bound that
+    // actually holds; raise these only if someone asks for deeper threads.
+    private const REPLY_LEAVES_PER_CALL = 10;
+    private const REPLIES_PER_LEAF      = 25;
+    private const REPLY_TIME_BUDGET     = 15.0;
+
+    private function fetchMoreReplies(string $mid): void
+    {
+        $this->requireLocalChannel();
+        $this->requireCsrf();
+
+        $channel = App::get_channel();
+        $ob_hash = $channel['channel_hash'];
+
+        $target = $this->resolveItem($mid, $ob_hash);
+        if (!$target) {
+            json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        $parent = intval($target['parent']);
+        $uid    = intval($channel['channel_id']);
+        $limit  = self::REPLY_LEAVES_PER_CALL;
+
+        // Thread root plus every item with no local child — the frontier.
+        $leaves = dbq("SELECT i.mid FROM item i
+                       WHERE i.parent = $parent AND i.uid = $uid AND i.item_deleted = 0
+                         AND (i.item_thread_top = 1
+                              OR NOT EXISTS (SELECT 1 FROM item c
+                                             WHERE c.parent_mid = i.mid AND c.uid = $uid
+                                               AND c.mid != i.mid AND c.item_deleted = 0))
+                       ORDER BY i.item_thread_top DESC, i.id DESC
+                       LIMIT $limit");
+
+        // Count rows, not store() calls: Activity::store() drops duplicates and
+        // permission-denied activities silently, so the number of attempts would
+        // overstate what the viewer actually gets to see.
+        $before   = $this->threadSize($parent, $uid);
+        $deadline = microtime(true) + self::REPLY_TIME_BUDGET;
+
+        foreach ($leaves as $leaf) {
+            $left = $deadline - microtime(true);
+            if ($left <= 0) {
+                break;
+            }
+            $obj = $this->fetchActivityObject($leaf['mid'], $channel);
+            if (!$obj) {
+                continue;
+            }
+            $this->fetchRemoteReplies($channel, $ob_hash, $obj, self::REPLIES_PER_LEAF, $left);
+        }
+
+        Response::send(['fetched' => $this->threadSize($parent, $uid) - $before]);
+    }
+
+    private function threadSize(int $parent, int $uid): int
+    {
+        $r = dbq("SELECT count(*) AS c FROM item
+                  WHERE parent = $parent AND uid = $uid AND item_deleted = 0");
+        return $r ? intval($r[0]['c']) : 0;
     }
 
     // POST /api/item/:mid/follow | /api/item/:mid/unfollow
