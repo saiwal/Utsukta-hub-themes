@@ -228,7 +228,19 @@ the caller passes that as `dbegin`; `range` itself is never sent:
 | `week` | today − 7 days |
 | `month` | today − 30 days |
 | `year` | today − 365 days |
-| `all` (or absent) | *(no dbegin)* |
+| `all` | *(no dbegin)* |
+| *absent* | same as `day` — see below |
+
+**Absent means `day`, not `all`.** `DEFAULT_RANGE` in `ranked.ts` is what a
+range-aware order resolves to with nothing in the URL, via `resolveRange()`.
+An unbounded count sort is both the least useful (same all-time winners every
+visit) and the most expensive query the stream can run, so it isn't the thing
+you get by default.
+
+The consequence to keep in mind when touching this: **absent and `all` are
+different states**, so `all` has to be written to the URL explicitly. The two
+`setOrder` helpers omit only `DEFAULT_RANGE` from the query string — omitting
+`all` instead, as they originally did, would make "All time" unselectable.
 
 Keeping `range` in the URL rather than only the derived date means the picker
 round-trips exactly on reload instead of reverse-guessing a range from a date.

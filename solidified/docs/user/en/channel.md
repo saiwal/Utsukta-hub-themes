@@ -61,8 +61,9 @@ A channel wall offers five orders:
   reactions included.
 
 Top and Most discussed also take a time window — **Today / Week / Month / Year /
-All time** — which appears in the label, as *Top (Month)*. It's a good way to
-skim what someone's best-received posts were over a given period.
+All time** — which appears in the label, as *Top (Month)*. They start on Today;
+widening to Month or All time is a good way to skim what someone's
+best-received posts have been.
 
 Two orders from the Network stream are deliberately missing here: **Hot** and
 **Controversial**. Both are built for ranking many people's posts against each

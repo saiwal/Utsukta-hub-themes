@@ -66,6 +66,10 @@ opens a small **Today / Week / Month / Year / All time** menu, and the window
 you choose becomes part of the label — *Most discussed (Week)*. Click the
 selected tab again to change it.
 
+They start on **Today**, so you get what's popular right now rather than the
+same all-time favourites on every visit. Widen the window whenever you want to
+look further back.
+
 Hot has no time range because its freshness bonus already is one.
 
 ### Two things to know
