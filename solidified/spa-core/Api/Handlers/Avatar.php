@@ -4,6 +4,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Zotlabs\Lib\Libsync;
 
 class Avatar
 {
@@ -85,7 +86,7 @@ class Avatar
         if ($type === 'avatar') {
             $this->processAvatar($uid, $channel, $im, $p, $hash);
         } else {
-            $this->processCover($uid, $im, $p, $hash);
+            $this->processCover($uid, $channel, $im, $p, $hash);
         }
     }
 
@@ -163,6 +164,17 @@ class Avatar
             photo_profile_setperms($uid, $hash, intval($def[0]['id']));
         }
 
+        // Same deferred sync as the photo uploads: attach_store ran with
+        // nosync because the scales are written afterwards. Core pairs the
+        // file with the rebuilt profiles here — Profile_photo.php:241,261-263.
+        $sync = attach_export_data($channel, $hash);
+        if ($sync) {
+            Libsync::build_sync_packet($uid, [
+                'file'    => [$sync],
+                'profile' => profiles_build_sync($uid, false),
+            ]);
+        }
+
         $_SESSION['reload_avatar'] = true;
         \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
 
@@ -173,7 +185,7 @@ class Avatar
         ]);
     }
 
-    private function processCover(int $uid, $im, array $p, string $hash): void
+    private function processCover(int $uid, array $channel, $im, array $p, string $hash): void
     {
         q("UPDATE photo SET photo_usage = %d WHERE photo_usage = %d AND uid = %d",
             intval(PHOTO_NORMAL), intval(PHOTO_COVER), intval($uid));
@@ -206,6 +218,10 @@ class Avatar
         if ($f && $f[0]['folder']) {
             attach_change_permissions($uid, $f[0]['folder'], '', '', '', '', false, true);
         }
+
+        // Cover syncs the file only — Cover_photo.php:232-234.
+        $sync = attach_export_data($channel, $hash);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
 
         \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
 

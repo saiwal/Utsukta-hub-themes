@@ -625,6 +625,15 @@ class Photos
             $im2->scaleImage(320);
             $im2->storeThumbnail($p, 2);
 
+            // attach_store ran with nosync: the scales above are written
+            // after it returns, and attach_export_data() reads the photo rows
+            // at call time, so syncing there would have shipped a half-built
+            // photo. Core defers it the same way and for the same reason —
+            // Zotlabs/Storage/Directory.php::createFile() syncs last. Without
+            // this a clone received the deletes below but never the upload.
+            $sync = attach_export_data($owner, $newHash);
+            if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+
             $t = time();
             Response::send([
                 'resource_id' => $newHash,
@@ -716,6 +725,15 @@ class Photos
         $im2 = photo_factory($imagedata, $base['mimetype']);
         $im2->scaleImage(320);
         $im2->storeThumbnail($p, 2);
+
+        // attach_store ran with nosync: the scales above are written
+        // after it returns, and attach_export_data() reads the photo rows
+        // at call time, so syncing there would have shipped a half-built
+        // photo. Core defers it the same way and for the same reason —
+        // Zotlabs/Storage/Directory.php::createFile() syncs last. Without
+        // this a clone received the deletes below but never the upload.
+        $sync = attach_export_data($owner, $newHash);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
 
         $t = time();
         Response::send([
