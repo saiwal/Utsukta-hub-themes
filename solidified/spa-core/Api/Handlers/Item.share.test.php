@@ -2,7 +2,7 @@
 /**
  * Check for the [share=<id>] expansion split in Item::expandShareTags.
  *
- * App items (articles, cards) must build their block via buildShareBlock, so
+ * App items (articles, cards) must build their block via buildEmbedBlock, so
  * the block's link is the item's app page (/articles/<nick>/<slug>) — that
  * string is the only thing both bbcode renderers key off to label the embed an
  * article rather than a post. Ordinary posts must still go through core
@@ -45,11 +45,15 @@ $_SESSION['uid'] = intval($article['uid']);
 App::$channel  = $c[0];
 App::$observer = $x[0];
 
-$base = dirname(__DIR__) . '/';
-foreach (glob($base . 'Concerns/*.php') as $f) require_once($f);
-require_once($base . 'Response.php');
-require_once($base . 'Auth.php');
-require_once($base . 'Handlers/Item.php');
+// The theme's composer autoloader — the same one src/mod/spa.php pulls in.
+// Loading the API by hand instead would have to get trait-uses-trait
+// declaration order right (and would drag in the .test.php files as well).
+$autoload = dirname(__DIR__, 3) . '/vendor/autoload.php';
+if (!file_exists($autoload)) {
+    fwrite(STDERR, "run this from the deployed theme (expected $autoload)\n");
+    exit(2);
+}
+require_once($autoload);
 
 $expand = new ReflectionMethod(\Utsukta\SpaCore\Api\Handlers\Item::class, 'expandShareTags');
 $expand->setAccessible(true);

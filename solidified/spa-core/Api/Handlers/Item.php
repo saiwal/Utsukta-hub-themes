@@ -17,16 +17,18 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\ContentTypes;
 use Utsukta\SpaCore\Api\Concerns\ReactionCounts;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
+use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
-use Utsukta\SpaCore\Api\Concerns\EmbedsCards;
+use Utsukta\SpaCore\Api\Concerns\EmbedsItems;
 use Utsukta\SpaCore\Api\Concerns\FetchesRemoteReplies;
 use Utsukta\SpaCore\Api\Response;
 
 class Item
 {
     use FiltersBlockedChannels;
+    use FormatsItems;
     use EnforcesServiceClass;
-    use EmbedsCards;
+    use EmbedsItems;
     use FetchesRemoteReplies;
 
     // ── Entry points ──────────────────────────────────────────────────────────
@@ -241,42 +243,13 @@ class Item
         xchan_query($rows, true);
         $rows = fetch_post_tags($rows, true);
 
-        $row = $rows[0];
         // Follow/Ignore activities live in the *viewer's* channel copy of the
-        // thread (core Mod_Subthread), so match by parent_mid within their uid.
-        $luid = intval(local_channel());
-        if ($luid && $ob_hash) {
-            $pmid = dbesc($row['parent_mid']);
-            $obs  = dbesc($ob_hash);
-            $fr = dbq(
-                "SELECT verb FROM item
-                 WHERE uid = $luid
-                   AND parent_mid = '$pmid'
-                   AND author_xchan = '$obs'
-                   AND verb IN ('Follow', 'Ignore')
-                   AND item_deleted = 0
-                 ORDER BY created DESC, id DESC LIMIT 1"
-            );
-            if (!empty($fr)) {
-                $row['viewer_following'] = $fr[0]['verb'] === 'Follow';
-            } else {
-                // No explicit Follow/Ignore yet — commenting on the thread
-                // already makes core notify() treat you as involved, so
-                // reflect that here too (see applyViewerFollowing()).
-                $participated = dbq(
-                    "SELECT id FROM item
-                     WHERE uid = $luid
-                       AND parent_mid = '$pmid'
-                       AND author_xchan = '$obs'
-                       AND verb NOT IN ('Follow', 'Ignore')
-                       AND item_deleted = 0
-                     LIMIT 1"
-                );
-                $row['viewer_following'] = !empty($participated);
-            }
-        }
+        // thread (core Mod_Subthread), so this has to match by parent_mid
+        // within their uid rather than by item id.
+        $this->applyViewerFollowing($rows, $ob_hash);
+        $row = $rows[0];
 
-        json_return_and_die(['item' => self::formatItem($row, $ob_hash)]);
+        json_return_and_die(['item' => $this->formatItem($row, $ob_hash, $this->isPinnedItem($row))]);
     }
 
     // GET /api/item/:mid/comments
@@ -399,12 +372,13 @@ class Item
             $rows = fetch_post_tags($rows, true);
         }
 
+        // Comments are never pinned, so isPinned stays at its default.
         $comments = array_map(
-            fn($row) => self::formatItem($row, $ob_hash),
+            fn($row) => $this->formatItem($row, $ob_hash),
             $rows ?: []
         );
 
-        return [$comments, self::findDeletedParentStubs($comments, $rootMid)];
+        return [$comments, $this->deletedParentStubs($comments, $rootMid)];
     }
 
     // Cheap whole-thread shape query (id/uuid/mid/thr_parent/created only, no
@@ -1094,7 +1068,7 @@ class Item
         if ($rows) {
             xchan_query($rows, true);
             $rows          = fetch_post_tags($rows, true);
-            $formattedPost = self::formatItem($rows[0], $ob_hash);
+            $formattedPost = $this->formatItem($rows[0], $ob_hash, $this->isPinnedItem($rows[0]));
         } else {
             $formattedPost = ['iid' => $iid, 'mid' => $mid, 'uuid' => $uuid];
         }
@@ -1283,42 +1257,8 @@ class Item
             Master::Summon(['Notifier', 'drop', $existing[0]['id']]);
             $state = 'removed';
         } else {
-            // Add reaction — construct a minimal reaction item
-            $uuid = item_message_id();
-            $reactionMid = z_root() . '/item/' . $uuid;
-            $now = datetime_convert();
-
-            $datarray = [
-                'aid' => intval($target['aid']),
-                'uid' => $targetUid,
-                'uuid' => $uuid,
-                'mid' => $reactionMid,
-                'parent_mid' => $target['mid'],
-                'thr_parent' => $target['mid'],
-                'owner_xchan' => $target['owner_xchan'],
-                'author_xchan' => $ob_hash,
-                'created' => $now,
-                'edited' => $now,
-                'commented' => $now,
-                'received' => $now,
-                'changed' => $now,
-                'verb' => $activityVerb,
-                'obj_type' => 'Activity',
-                'body' => '',
-                'title' => '',
-                'mimetype' => 'text/bbcode',
-                'allow_cid' => $target['allow_cid'],
-                'allow_gid' => $target['allow_gid'],
-                'deny_cid' => $target['deny_cid'],
-                'deny_gid' => $target['deny_gid'],
-                'item_private' => intval($target['item_private']),
-                'item_wall' => intval($target['item_wall']),
-                'item_origin' => 1,
-                'item_thread_top' => 0,
-                'item_notshown' => 1,
-                'plink' => $reactionMid,
-                'route' => $target['route'] ?? '',
-            ];
+            $datarray = self::buildReactionArray(
+                $target, $activityVerb, $ob_hash, intval($target['aid']));
 
             $post = item_store($datarray);
             if (!$post['success']) {
@@ -1379,41 +1319,8 @@ class Item
         }
 
         // Add the new RSVP reaction
-        $uuid        = item_message_id();
-        $reactionMid = z_root() . '/item/' . $uuid;
-        $now         = datetime_convert();
-
-        $datarray = [
-            'aid'            => $channel['channel_account_id'],
-            'uid'            => intval($target['uid']),
-            'uuid'           => $uuid,
-            'mid'            => $reactionMid,
-            'parent_mid'     => $target['mid'],
-            'thr_parent'     => $target['mid'],
-            'owner_xchan'    => $target['owner_xchan'],
-            'author_xchan'   => $ob_hash,
-            'created'        => $now,
-            'edited'         => $now,
-            'commented'      => $now,
-            'received'       => $now,
-            'changed'        => $now,
-            'verb'           => $activityVerb,
-            'obj_type'       => 'Activity',
-            'body'           => '',
-            'title'          => '',
-            'mimetype'       => 'text/bbcode',
-            'allow_cid'      => $target['allow_cid'],
-            'allow_gid'      => $target['allow_gid'],
-            'deny_cid'       => $target['deny_cid'],
-            'deny_gid'       => $target['deny_gid'],
-            'item_private'   => intval($target['item_private']),
-            'item_wall'      => intval($target['item_wall']),
-            'item_origin'    => 1,
-            'item_thread_top'=> 0,
-            'item_notshown'  => 1,
-            'plink'          => $reactionMid,
-            'route'          => $target['route'] ?? '',
-        ];
+        $datarray = self::buildReactionArray(
+            $target, $activityVerb, $ob_hash, intval($channel['channel_account_id']));
 
         $post = item_store($datarray);
         if (!$post['success']) {
@@ -2302,62 +2209,6 @@ class Item
         return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
     }
 
-    // Find deleted items that are parents of the given formatted comments but
-    // absent from the result set. Returns pre-formatted stubs so the frontend
-    // can build a complete thread tree without gaps.
-    private static function findDeletedParentStubs(array $comments, string $rootMid): array
-    {
-        if (empty($comments)) return [];
-
-        $presentMids = array_column($comments, 'mid');
-        $missing = [];
-        foreach ($comments as $c) {
-            $tp = $c['thr_parent'] ?? '';
-            if ($tp && $tp !== $rootMid && !in_array($tp, $presentMids) && !in_array($tp, $missing)) {
-                $missing[] = $tp;
-            }
-        }
-        if (empty($missing)) return [];
-
-        $inList  = implode("','", array_map('dbesc', $missing));
-        $deleted = dbq("SELECT uuid, mid, parent_mid, thr_parent, created
-                        FROM item
-                        WHERE mid IN ('$inList') AND item_deleted = 1
-                        ORDER BY created ASC");
-
-        return array_map(fn($d) => [
-            'uuid'             => $d['uuid'],
-            'mid'              => $d['mid'],
-            'parent_mid'       => $d['parent_mid'],
-            'thr_parent'       => $d['thr_parent'],
-            'created'          => $d['created'],
-            'edited'           => $d['created'],
-            'title'            => '',
-            'body'             => '',
-            'verb'             => 'Create',
-            'obj_type'         => 'Note',
-            'like_count'       => 0,
-            'dislike_count'    => 0,
-            'announce_count'   => 0,
-            'comment_count'    => 0,
-            'item_private'     => 0,
-            'item_thread_top'  => 0,
-            'item_unseen'      => 0,
-            'iid'              => 0,
-            'profile_uid'      => 0,
-            'flags'            => ['deleted'],
-            'author'           => ['name' => '', 'address' => '', 'url' => '', 'hash' => '', 'photo' => ['src' => '', 'mimetype' => '']],
-            'permalink'        => '',
-            'viewer_liked'     => false,
-            'viewer_disliked'  => false,
-            'viewer_repeated'  => false,
-            'viewer_attending' => false,
-            'viewer_declining' => false,
-            'viewer_maybe'     => false,
-            'viewer_following' => false,
-            'can_comment'      => false,
-        ], $deleted ?: []);
-    }
 
     // Shared reaction count subqueries string
     private static function reactionSubqueries(): string
@@ -2366,6 +2217,54 @@ class Item
     }
 
     // Fetch fresh counts after a toggle — avoids a full item re-fetch
+    /**
+     * The minimal reaction item: a bodyless activity hung off $target, carrying
+     * the target's ACL so it reaches exactly the same audience the thing it
+     * reacts to did. item_notshown keeps it out of every item_normal() stream.
+     *
+     * $aid is the account the row is billed to — the target's for a plain
+     * reaction (any authenticated viewer, including a remote one, may react),
+     * the acting local channel's for an RSVP (which requires a local channel).
+     */
+    private static function buildReactionArray(array $target, string $verb, string $obHash, int $aid): array
+    {
+        $uuid        = item_message_id();
+        $reactionMid = z_root() . '/item/' . $uuid;
+        $now         = datetime_convert();
+
+        return [
+            'aid'             => $aid,
+            'uid'             => intval($target['uid']),
+            'uuid'            => $uuid,
+            'mid'             => $reactionMid,
+            'parent_mid'      => $target['mid'],
+            'thr_parent'      => $target['mid'],
+            'owner_xchan'     => $target['owner_xchan'],
+            'author_xchan'    => $obHash,
+            'created'         => $now,
+            'edited'          => $now,
+            'commented'       => $now,
+            'received'        => $now,
+            'changed'         => $now,
+            'verb'            => $verb,
+            'obj_type'        => 'Activity',
+            'body'            => '',
+            'title'           => '',
+            'mimetype'        => 'text/bbcode',
+            'allow_cid'       => $target['allow_cid'],
+            'allow_gid'       => $target['allow_gid'],
+            'deny_cid'        => $target['deny_cid'],
+            'deny_gid'        => $target['deny_gid'],
+            'item_private'    => intval($target['item_private']),
+            'item_wall'       => intval($target['item_wall']),
+            'item_origin'     => 1,
+            'item_thread_top' => 0,
+            'item_notshown'   => 1,
+            'plink'           => $reactionMid,
+            'route'           => $target['route'] ?? '',
+        ];
+    }
+
     private function fetchReactionCounts(string $mid): array
     {
         $midEsc = dbesc($mid);
@@ -2390,173 +2289,7 @@ class Item
     }
 
     // Shared item formatter — same shape as your existing network/channel items
-    private static function formatItem(array $item, string $ob_hash): array
-    {
-        $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
-        if ($ob_hash && !empty($item['reaction_verbs'])) {
-            foreach (explode('|', $item['reaction_verbs']) as $rv) {
-                if (!str_contains($rv, ':'))
-                    continue;
-                [$v, $xchan] = explode(':', $rv, 2);
-                if ($xchan !== $ob_hash)
-                    continue;
-                if ($v === 'Like')           $liked      = true;
-                if ($v === 'Dislike')        $disliked   = true;
-                if ($v === 'Announce')       $repeated   = true;
-                if ($v === 'Accept')         $attending  = true;
-                if ($v === 'Reject')         $declining  = true;
-                if ($v === 'TentativeAccept') $maybe     = true;
-            }
-        }
 
-        $owner = null;
-        if (($item['owner_xchan'] ?? '') !== ($item['author_xchan'] ?? '') && !empty($item['owner'])) {
-            $x = $item['owner'];
-            $owner = [
-                'name'    => Response::decodeEntities($x['xchan_name'] ?? ''),
-                'address' => $x['xchan_addr']            ?? '',
-                'url'     => $x['xchan_url']             ?? '',
-                'hash'    => $x['xchan_hash']            ?? '',
-                'photo'   => [
-                    'src'      => $x['xchan_photo_m']        ?? '',
-                    'mimetype' => $x['xchan_photo_mimetype'] ?? '',
-                ],
-            ];
-        }
-
-        $attachRaw = $item['attach'] ?? '';
-        $root = z_root();
-        $attach = array_map(function (array $a) use ($root): array {
-            // Pre-fix rows may have been stored with 'url' instead of 'href'.
-            if (!isset($a['href']) && isset($a['url'])) {
-                $a['href'] = $a['url'];
-            }
-            if (isset($a['href']) && str_starts_with($a['href'], '/')) {
-                $a['href'] = $root . $a['href'];
-            }
-            return $a;
-        }, $attachRaw ? (json_decode($attachRaw, true) ?: []) : []);
-
-        // Only top-level items can be pinned — skip the pconfig lookup for comments.
-        $isPinned = false;
-        if (intval($item['item_thread_top']) && !empty($item['uid']) && !empty($item['uuid'])) {
-            $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
-            $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
-            $isPinned      = in_array($item['uuid'], $pinnedMids, true);
-        }
-
-        return [
-            'uuid' => $item['uuid'],
-            'mid' => $item['mid'],
-            'parent_mid' => $item['parent_mid'],
-            'thr_parent' => $item['thr_parent'],
-            'message_top' => intval($item['item_thread_top'])
-                ? $item['mid']
-                : ($item['thr_parent'] ?? $item['mid']),
-            'created' => $item['created'],
-            'edited' => $item['edited'],
-            'commented' => $item['commented'] ?? $item['created'],
-            'title' => $item['title'],
-            'body' => $item['body'],
-            'verb' => $item['verb'],
-            'obj_type' => $item['obj_type'],
-            'like_count' => intval($item['like_count'] ?? 0),
-            'dislike_count' => intval($item['dislike_count'] ?? 0),
-            'announce_count' => intval($item['announce_count'] ?? 0),
-            'comment_count' => intval($item['comment_count'] ?? 0),
-            'item_private' => intval($item['item_private']),
-            'item_thread_top' => intval($item['item_thread_top']),
-            'item_unseen' => intval($item['item_unseen'] ?? 0),
-            'iid' => intval($item['id']),
-            'profile_uid' => intval($item['uid']),
-            'flags' => array_values(array_filter([
-                intval($item['item_thread_top']) ? 'thread_parent' : null,
-                intval($item['item_private']) ? 'private' : null,
-                intval($item['item_private']) === 2 ? 'direct_message' : null,
-                intval($item['item_starred']) ? 'starred' : null,
-                $isPinned ? 'pinned' : null,
-                intval($item['item_unseen']) ? 'unseen' : null,
-            ])),
-            'author' => [
-                'name'    => Response::decodeEntities($item['author']['xchan_name'] ?? ''),
-                'address' => $item['author']['xchan_addr']            ?? '',
-                'url'     => $item['author']['xchan_url']             ?? '',
-                'hash'    => $item['author']['xchan_hash']            ?? '',
-                'network' => $item['author']['xchan_network']         ?? '',
-                'photo'   => [
-                    'src'      => $item['author']['xchan_photo_m']        ?? '',
-                    'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
-                ],
-            ],
-            'owner'            => $owner,
-            'permalink'        => $item['plink'] ?? '',
-            'viewer_liked'     => $liked,
-            'viewer_disliked'  => $disliked,
-            'viewer_repeated'  => $repeated,
-            'viewer_attending' => $attending,
-            'viewer_declining' => $declining,
-            'viewer_maybe'     => $maybe,
-            'viewer_following' => (bool)($item['viewer_following'] ?? false),
-            // Same check core uses to decide whether to render a comment box
-            // (comment_policy, comments_closed, nocomment, owner perms).
-            'can_comment'      => (bool) can_comment_on_post($ob_hash, $item),
-            'attach'           => $attach,
-            'poll'             => self::extractPoll($item, $ob_hash),
-            // Mirrors Concerns\FormatsItems::formatItem() — this handler has its own
-            // copy rather than using that trait, so the field has to be added twice
-            // or the single-item view would show no categories while the streams do.
-            // Callers hydrate $item['term'] via fetch_post_tags(), so no extra query.
-            'categories'       => array_values(array_column(
-                get_terms_oftype($item['term'] ?? [], TERM_CATEGORY), 'term')),
-        ];
-    }
-
-    private static function extractPoll(array $item, string $observer_xchan): ?array
-    {
-        if (($item['obj_type'] ?? '') !== 'Question') return null;
-        $raw = $item['obj'] ?? '';
-        if (!$raw) return null;
-
-        $obj = is_array($raw) ? $raw : json_decode($raw, true);
-        if (!$obj || ($obj['type'] ?? '') !== 'Question') return null;
-
-        $multiple = false;
-        $choices  = $obj['oneOf'] ?? null;
-        if (empty($choices)) {
-            $choices  = $obj['anyOf'] ?? [];
-            $multiple = true;
-        }
-
-        $options = [];
-        foreach ($choices as $opt) {
-            $options[] = [
-                'name'  => htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5),
-                'votes' => intval($opt['replies']['totalItems'] ?? 0),
-            ];
-        }
-
-        $viewer_votes = [];
-        if ($observer_xchan && !empty($item['id'])) {
-            $iid   = intval($item['id']);
-            $obEsc = dbesc($observer_xchan);
-            $rows  = dbq("SELECT title FROM item
-                          WHERE parent = $iid
-                            AND author_xchan = '$obEsc'
-                            AND obj_type = 'Answer'
-                            AND item_deleted = 0");
-            if ($rows) {
-                $viewer_votes = array_column($rows, 'title');
-            }
-        }
-
-        return [
-            'multiple'     => $multiple,
-            'end_time'     => $obj['endTime'] ?? null,
-            'closed'       => $obj['closed']  ?? null,
-            'options'      => $options,
-            'viewer_votes' => $viewer_votes,
-        ];
-    }
 
     // POST /api/item/:mid/vote
     // Body: { "answer": "Option name" } or { "answer": ["Option A", "Option B"] } for multi-choice
@@ -2688,7 +2421,7 @@ class Item
         // Core Share::bbcode() also refuses to wrap posts whose body already
         // contains [/share] (i.e. reshares). Build the block ourselves then.
         if (!$shareBlock) {
-            $shareBlock = $this->buildShareBlock($item);
+            $shareBlock = $this->buildEmbedBlock($item);
         }
 
         if (!$shareBlock) {
@@ -2789,15 +2522,8 @@ class Item
     {
         Auth::requireLocalGet();
 
-        $bb = '';
-        $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
-        if ($r) {
-            $sql_extra = item_permissions_sql(intval($r[0]['uid']));
-            $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
-            if ($v) {
-                $bb = $this->buildShareBlock($v[0], forDisplay: true);
-            }
-        }
+        $item = $this->permittedItemById(intval($id));
+        $bb   = $item ? $this->buildEmbedBlock($item, forDisplay: true) : '';
 
         if (!$bb) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
@@ -2815,16 +2541,8 @@ class Item
     {
         Auth::requireLocalGet();
 
-        $bb = '';
-        $r = q("SELECT * FROM item WHERE id = %d AND item_type = %d LIMIT 1",
-            intval($id), intval(ITEM_TYPE_CARD));
-        if ($r) {
-            $sql_extra = item_permissions_sql(intval($r[0]['uid']));
-            $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
-            if ($v) {
-                $bb = $this->buildCardBlock($v[0], forDisplay: true);
-            }
-        }
+        $item = $this->permittedItemById(intval($id), ITEM_TYPE_CARD);
+        $bb   = $item ? $this->buildEmbedBlock($item, forDisplay: true, ownPrivateOk: true) : '';
 
         if (!$bb) {
             json_return_and_die(['error' => 'Card not found or permission denied']);
@@ -2833,54 +2551,6 @@ class Item
         json_return_and_die(['success' => true, 'bbcode' => $bb]);
     }
 
-    // Expand compact [share=<item id>][/share] tags into the canonical
-    // [share author=…]…[/share] block before storing — same mechanism as core
-    // Item::post. Lib\Share enforces visibility (item_permissions_sql, no
-    // private items), so a client-supplied id cannot leak restricted content.
-    // Any content inside the compact tag is discarded, as core does.
-    private function expandShareTags(string $body): string
-    {
-        if (!preg_match_all('/(\[share=(\d+)\](.*?)\[\/share\])/ism', $body, $match)) {
-            return $body;
-        }
-
-        foreach ($match[2] as $i => $id) {
-            $r = q("SELECT * FROM item WHERE id = %d LIMIT 1", intval($id));
-
-            // Core Share::bbcode() hardcodes the item's plink as the block's
-            // link, which would render an article or card embed as a generic
-            // post pointing at /item/<uuid>. App items skip it and build the
-            // block below, where appItemLink() supplies the /articles/ or
-            // /cards/ URL both bbcode renderers key off.
-            $bb = ($r && self::isAppItem($r[0]))
-                ? ''
-                : (new \Zotlabs\Lib\Share(intval($id)))->bbcode();
-
-            if (!$bb) {
-                // App items, and posts Share::bbcode() refuses because their
-                // body already contains [/share] (nested reshares). Rebuild
-                // the block ourselves with the same visibility rules
-                // Lib\Share applies.
-                if ($r && !intval($r[0]['item_private'])) {
-                    $sql_extra = item_permissions_sql($r[0]['uid']);
-                    $v = q("SELECT * FROM item WHERE id = %d $sql_extra", intval($id));
-                    if ($v) {
-                        $bb = $this->buildShareBlock($v[0]);
-                    }
-                }
-            }
-
-            if (!$bb) {
-                // Silently dropping the tag would eat the reshared content on
-                // save; refuse instead so the composer keeps the user's draft.
-                Response::error(422, 'Shared post not found or cannot be reshared');
-            }
-
-            $body = str_replace($match[1][$i], $bb, $body);
-        }
-
-        return $body;
-    }
 
     // Inverse of expandShareTags for the edit composer: replace each stored
     // top-level [share …message_id='…'…]…[/share] block with
@@ -2912,7 +2582,7 @@ class Item
             // renders them from their own attributes.
             //
             // A card embed is stored as a share block too (see
-            // Concerns\EmbedsCards), so this one scan serves both: an
+            // Concerns\EmbedsItems), so this one scan serves both: an
             // ITEM_TYPE_CARD target collapses to [card=<id>] for
             // expandCardTags, anything else to [share=<id>] for
             // expandShareTags.
@@ -2922,8 +2592,8 @@ class Item
                 if ($target && $target['mimetype'] === 'text/bbcode') {
                     $isCard = intval($target['item_type']) === ITEM_TYPE_CARD;
                     // Cards additionally allow the owner's own private ones —
-                    // buildCardBlock()'s gate, mirrored here so the two
-                    // directions agree about what is embeddable.
+                    // buildEmbedBlock()'s ownPrivateOk gate, mirrored here so
+                    // the two directions agree about what is embeddable.
                     $embeddable = !intval($target['item_private'])
                         || ($isCard && intval($target['uid']) === intval(local_channel()));
                     if ($embeddable) {
@@ -2966,52 +2636,6 @@ class Item
         return -1;
     }
 
-    // $forDisplay: composer previews may include private items the viewer
-    // can already see; save-time expansion must never embed them.
-    private function buildShareBlock(array $item, bool $forDisplay = false): string
-    {
-        if (($item['item_private'] && !$forDisplay) || $item['mimetype'] !== 'text/bbcode') {
-            return '';
-        }
-
-        $rows = [$item];
-        xchan_query($rows, true);
-        $author  = $rows[0]['author'] ?? [];
-        $network = $author['xchan_network'] ?? '';
-        // quote='true' tells Activity::encode_item to strip the block and
-        // federate it as quoteUrl = the block's link attribute (Lib/Activity.php
-        // ~677). That only works when the link is an AS-resolvable object, i.e.
-        // an ordinary post's plink. An app item's link is its HTML app page, so
-        // quoting it federates as an unfetchable "RE: <url>" and the remote
-        // renders bare text — send the block inline instead, which is also what
-        // buildCardBlock has always done.
-        $quote = (!self::isAppItem($item) && in_array($network, ['zot6', 'activitypub']))
-            ? "quote='true'"
-            : '';
-
-        $bb  = "[share author='" . urlencode($author['xchan_name'] ?? '') . "'\n";
-        $bb .= "\tprofile='" . ($author['xchan_url'] ?? '') . "'\n";
-        $bb .= "\tavatar='" . ($author['xchan_photo_s'] ?? '') . "'\n";
-        // App items (articles, cards) link to their own page, not their plink:
-        // that is what makes both bbcode renderers label the block correctly.
-        $bb .= "\tlink='" . (self::appItemLink($item) ?: ($item['plink'] ?? '')) . "'\n";
-        $bb .= "\tauth='" . ($network === 'zot6' ? 'true' : 'false') . "'\n";
-        $bb .= "\tposted='" . ($item['created'] ?? '') . "'\n";
-        $bb .= "\tmessage_id='" . ($item['mid'] ?? '') . "'\n";
-        if ($quote) {
-            $bb .= "\t$quote\n";
-        }
-        $bb .= ']';
-
-        if ($item['title']) {
-            $bb .= '[h3][b]' . $item['title'] . '[/b][/h3]' . "\r\n";
-        }
-
-        $bb .= $item['body'];
-        $bb .= '[/share]';
-
-        return $bb;
-    }
 
     // ── Guards ────────────────────────────────────────────────────────────────
 

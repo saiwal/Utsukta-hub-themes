@@ -156,13 +156,7 @@ class Display
         $blocked = $this->blockedXchans(local_channel());
         $item    = $items[0];
 
-        $isPinned = false;
-        if (!empty($item['uid']) && !empty($item['uuid'])) {
-            $pinnedMidsRaw = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
-            $pinnedMids    = array_map('unpack_link_id', is_array($pinnedMidsRaw) ? $pinnedMidsRaw : []);
-            $isPinned      = in_array($item['uuid'], $pinnedMids, true);
-        }
-        $root_item = $this->formatItem($item, $observer_hash, $isPinned);
+        $root_item = $this->formatItem($item, $observer_hash, $this->isPinnedItem($item));
 
         // Root stays visible even if blocked — flagged so the frontend can
         // swap in a placeholder instead of hard-hiding a direct permalink.

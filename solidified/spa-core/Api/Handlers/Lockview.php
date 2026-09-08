@@ -156,8 +156,13 @@ class Lockview
         $uid = Auth::requireLocalJson();
         [$type, $item, $url] = $this->resource($uid);
 
-        if ((\App::$argv[4] ?? '') !== 'grant') {
+        $action = \App::$argv[4] ?? '';
+        if (!in_array($action, ['grant', 'revoke'], true)) {
             Response::error(404, 'Not found');
+        }
+
+        if ($action === 'revoke') {
+            $this->revoke($uid, $type, $item);
         }
 
         // Refuse where appending to allow_cid would narrow rather than widen —
@@ -197,6 +202,46 @@ class Lockview
             'url'     => $url . (str_contains($url, '?') ? '&' : '?') . 'zat=' . rawurlencode($token['atoken_token']),
             'expires' => $token['atoken_expires'] > DBA::$dba->get_null_date() ? $token['atoken_expires'] : null,
         ]);
+    }
+
+    /**
+     * POST /spa/lockview/:type/:id/revoke — body { atoken_id }
+     *
+     * The inverse of grant: drops the guest's hash from allow_cid on every row
+     * that grant touched. Refused where it would empty the allow list on a row
+     * whose privacy rests on that list alone (photo/attach/chatroom/menu_item),
+     * since an empty allow_cid there means "public" — the same asymmetry
+     * canGrant() guards in the other direction. An item keeps item_private, so
+     * emptying its allow list leaves it private-to-self, not public.
+     */
+    private function revoke(int $uid, string $type, array $item): void
+    {
+        $atokenId = intval(Auth::$parsedBody['atoken_id'] ?? 0);
+        $token = null;
+        foreach ($this->atokens($uid) as $t) {
+            if (intval($t['atoken_id']) === $atokenId) {
+                $token = $t;
+                break;
+            }
+        }
+        if (!$token) {
+            Response::error(404, 'Unknown guest');
+        }
+
+        $allow = str_replace('<' . $token['xchan_hash'] . '>', '', (string) ($item['allow_cid'] ?? ''));
+
+        if ($type !== 'item' && $allow === '' && !strlen($item['allow_gid'] ?? '')) {
+            Response::error(400, 'Removing the last guest would make this public');
+        }
+
+        foreach ($this->aclTargets($type, $item) as [$table, $where]) {
+            q("UPDATE %s SET allow_cid = '%s' WHERE $where",
+                dbesc($table),
+                dbesc($allow)
+            );
+        }
+
+        Response::send(['id' => $atokenId, 'name' => $token['xchan_name']]);
     }
 
     /**

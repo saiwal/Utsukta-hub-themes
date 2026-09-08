@@ -4,6 +4,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\ContentTypes;
+use Utsukta\SpaCore\Api\Concerns\ResolvesAcl;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
 
 require_once 'include/items.php';
@@ -11,6 +12,7 @@ require_once 'include/items.php';
 class Webpages
 {
     use EnforcesServiceClass;
+    use ResolvesAcl;
     // GET /api/webpages/:nick               → list webpages  (owner only: write_pages)
     // GET /api/webpages/:nick?pagelink=…    → render page    (public: view_pages)
     // GET /api/webpages/:nick?mid=…         → render page    (public: view_pages)
@@ -273,7 +275,7 @@ class Webpages
         }
 
         [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-            $this->resolveWebpageAcl($scope, $body, $owner['channel_hash']);
+            $this->aclFromScope($scope, $body, $owner['channel_hash']);
 
         $uuid = item_message_id();
         $mid  = z_root() . '/item/' . $uuid;
@@ -399,7 +401,7 @@ class Webpages
 
         if ($scope !== null) {
             [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] =
-                $this->resolveWebpageAcl($scope, $body, $ownerHash);
+                $this->aclFromScope($scope, $body, $ownerHash);
 
             q("UPDATE item
                SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
@@ -434,45 +436,6 @@ class Webpages
         Response::send(['success' => true]);
     }
 
-    // Returns [allow_cid, allow_gid, deny_cid, deny_gid, item_private, public_policy]
-    private function resolveWebpageAcl(string $scope, array $body, string $ownerHash): array
-    {
-        if ($scope === 'connections') {
-            // item_private=1 + public_policy='contacts' is the mechanism
-            // item_permissions_sql() checks this via scopes_sql()
-            return ['', '', '', '', 1, 'contacts'];
-        }
-
-        if ($scope === 'private') {
-            return ['<' . $ownerHash . '>', '', '', '', 1, ''];
-        }
-
-        if ($scope === 'custom') {
-            $allow_cid = '';
-            $allow_gid = '';
-            $deny_cid  = '';
-            $deny_gid  = '';
-
-            foreach ((array) ($body['allow_cid'] ?? []) as $h) {
-                $allow_cid .= '<' . $h . '>';
-            }
-            foreach ((array) ($body['allow_gid'] ?? []) as $g) {
-                $allow_gid .= '<' . $g . '>';
-            }
-            foreach ((array) ($body['deny_cid'] ?? []) as $h) {
-                $deny_cid .= '<' . $h . '>';
-            }
-            foreach ((array) ($body['deny_gid'] ?? []) as $g) {
-                $deny_gid .= '<' . $g . '>';
-            }
-
-            $item_private = ($allow_cid || $allow_gid) ? 1 : 0;
-            return [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, ''];
-        }
-
-        // public — no ACL restrictions
-        return ['', '', '', '', 0, ''];
-    }
 
     private function formatDetail(array $item): array
     {
@@ -511,11 +474,4 @@ class Webpages
         ];
     }
 
-    // Hubzilla stores ACL as "<hash1><hash2>..." — extract the bare hashes.
-    private static function parseHashList(string $str): array
-    {
-        if (!$str) return [];
-        preg_match_all('/<([^>]+)>/', $str, $m);
-        return $m[1] ?? [];
-    }
 }

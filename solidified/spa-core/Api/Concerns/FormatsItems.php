@@ -70,6 +70,23 @@ trait FormatsItems
         return trim($recipients, ', ');
     }
 
+    // Is this item on its channel's pinned list? Only top-level items can be
+    // pinned, so a comment short-circuits without touching pconfig. Fine for a
+    // single item or a thread's worth; a stream should batch the pconfig read
+    // once and pass the result in (see Channel.php's $pinnedMidSet) rather than
+    // calling this per row.
+    protected function isPinnedItem(array $item): bool
+    {
+        if (!intval($item['item_thread_top'] ?? 0) || empty($item['uid']) || empty($item['uuid'])) {
+            return false;
+        }
+
+        $raw    = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
+        $pinned = array_map('unpack_link_id', is_array($raw) ? $raw : []);
+
+        return in_array($item['uuid'], $pinned, true);
+    }
+
     // Find deleted items that are parents of the given comments but absent from
     // the result set. Returns pre-formatted stubs (same shape as formatItem output)
     // so the frontend can build a complete thread tree without gaps.
@@ -116,7 +133,7 @@ trait FormatsItems
             'iid'              => 0,
             'profile_uid'      => 0,
             'flags'            => ['deleted'],
-            'author'           => ['name' => '', 'address' => '', 'url' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
+            'author'           => ['name' => '', 'address' => '', 'url' => '', 'hash' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
             'owner'            => null,
             'permalink'        => '',
             'location'         => '',
@@ -382,7 +399,7 @@ trait FormatsItems
             // Same check core uses to decide whether to render a comment box
             // (comment_policy, comments_closed, nocomment, owner perms).
             'can_comment' => (bool) can_comment_on_post($observer_xchan, $item),
-            'attach' => self::normalizeAttach($item['attach'] ? json_decode($item['attach'], true) : []),
+            'attach' => self::normalizeAttach($item['attach'] ? (json_decode($item['attach'], true) ?: []) : []),
             'poll'   => self::extractPoll($item, $observer_xchan),
             // Categories live on the term table, so this needs $item['term'] —
             // every caller already batch-hydrates it via fetch_post_tags(), which

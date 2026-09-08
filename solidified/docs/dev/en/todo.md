@@ -794,3 +794,67 @@ which was ruled out only because arbitrary/self-hosted SMTP has to work.
 - End-to-end against a local catcher (MailHog/Mailpit) on an allowlisted port: share email arrives
   with the user's `From`; delete the config and confirm the same share falls back to `z_mail()`.
 - Scope isolation: trigger a password reset and confirm it still goes through the site mailer.
+
+## Solid ecosystem libraries to evaluate
+
+**Status: candidates identified, not started.** Not a single feature — a running list of
+Solid-ecosystem packages worth pulling in for existing workstreams, so we don't reach for an
+unrelated one-off (or hand-roll something the ecosystem already solved) when we get to
+implementation. `@akin01/solid-email` was investigated and **rejected**: it renders HTML email
+server-side (its browser-condition build strips `render`/`compile`/`Tailwind` down to DOM preview
+components only), and this project has no Node process — transactional email is sent by Hubzilla
+core PHP, so it has nowhere to plug in. The candidates below are all genuinely client-side.
+
+### `@solid-primitives/*` — same monorepo we already depend on
+
+Already using `i18n` and `media` from here. These are tree-shakable, individually installable, and
+maintained by the Solid core/ecosystem team, so pulling more from this family is lower-risk than
+adding a new unrelated dependency:
+
+- **`resize-observer`** / **`intersection-observer`** — feeds `measureElement` for the
+  `@tanstack/solid-virtual` rollout (variable-height rows are the flagged complexity for ChatRoomView
+  → FeedView/ListView), and lazy-loading images in FeedView.
+- **`upload`** — could sit in front of the existing Filerobot image editor / attach flow.
+- **`scheduled`** — debounce/throttle for BBCode live-preview or search-as-you-type inputs.
+- **`storage`** — signal-backed reactive wrapper if a reactive layer over `idb-keyval` is ever
+  wanted instead of manual get/set.
+- **`clipboard`**, **`keyboard`**, **`active-element`** — relevant to the Card Picker toolbar button
+  and focus handling in `ExcalidrawComposerModal.tsx`.
+
+### Cards module (masonry/pinboard, flip interaction, Decks/Series)
+
+- **`solid-dnd`** — the standard Solid drag-and-drop primitive. Candidate for real Decks/Series
+  reordering instead of hand-rolled pointer-event handling.
+- CSS flip stays hand-written (cheap enough not to need a library); pair masonry
+  entrance/reflow animation with **`solid-motionone`**, already a dependency, rather than adding a
+  second animation library.
+
+### Headless UI primitives (Kobalte was already evaluated per prior notes)
+
+- **Kobalte** — accessible unstyled primitives (dialog/popover/combobox). Candidate for proper
+  focus-trap/ARIA in modals such as `ExcalidrawComposerModal.tsx` instead of hand-rolled focus
+  management.
+- **corvu** — smaller, newer alternative to Kobalte, drawer/dialog-focused.
+- **solid-ui** — shadcn-style copy-paste components built on Kobalte + corvu + Tailwind v4, if a
+  component-ownership model is ever preferred over a dependency for the design-system layer.
+- ⚠️ Kobalte, corvu, and `solid-dnd` each ship their own focus-management/positioning logic that can
+  overlap with the existing `@floating-ui/dom` dependency — check bundle overlap before adopting more
+  than one headless-UI stack at once.
+
+### Forms (Register/Settings/Admin sections currently hand-rolled)
+
+- **`@modular-forms/solid`** or **Felte** — mature Solid form libraries with validation; candidates
+  for cutting boilerplate in `RegisterView.tsx`, `AccountSection.tsx`, `SiteSection.tsx`,
+  `SecuritySection.tsx`.
+- **Formisch** — newer schema-based headless form library (same author as Valibot), smaller bundle;
+  worth a look if validation ever becomes schema-driven project-wide.
+
+### Toasts
+
+- No transient in-app toast system currently exists (the Notifications settings section is about the
+  persistent Alerts bucket, not ephemeral UI toasts). **`solid-toast`** is the common choice if one is
+  ever needed.
+
+### Magicui-solid (https://axuj.github.io/magicui-solid/)
+
+ - magicui-solid is a port of Magic UI components for SolidJS. It provides beautifully designed, animated UI components that you can copy, paste, and customize into your SolidJS projects.
