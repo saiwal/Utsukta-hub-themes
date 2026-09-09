@@ -80,8 +80,16 @@ class Channel
             . $this->blockedSqlClause('item.author_xchan', $blocked)
             . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
-        // Verb whitelist — exclude reactions and federation noise
-				$sql_extra .= " AND item.verb IN ('Create', 'Update', 'EmojiReact', 'Invite') ";
+        // Verb whitelist — exclude reactions and federation noise.
+        // Core's channel module (Zotlabs/Module/Channel.php) has no verb filter:
+        // it hides the FEP-171b conversation-container rows (verb 'Add') via
+        // `item.id = item.parent` alone, which the threaded branch below also
+        // does with `mid = parent_mid`. The whitelist is only load-bearing for
+        // the flat/nouveau query, which has no thread-top constraint — so it
+        // must stay, but it must also let Announce through, or a boost made in
+        // the classic UI (or synced from a clone) is on the wall in core and
+        // missing here.
+        $sql_extra .= " AND item.verb IN ('Create', 'Update', 'EmojiReact', 'Invite', '" . ACTIVITY_SHARE . "') ";
 
         if ($category) {
             $sql_extra .= protect_sprintf(term_query('item', $category, TERM_CATEGORY));
