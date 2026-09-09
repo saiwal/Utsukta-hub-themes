@@ -491,6 +491,14 @@ class Photos
             return;
         }
 
+        // POST /api/photos/:nick/images/move — batch move photos into an album (JSON)
+        if ($datatype === 'images' && (\App::$argv[4] ?? '') === 'move') {
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->batchMovePhotos($uid, $owner, Auth::$parsedBody['resource_ids'] ?? [], (string) (Auth::$parsedBody['folder'] ?? ''));
+            return;
+        }
+
         // POST /api/photos/:nick/image/:id/rename — rename photo (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'rename') {
             $obs_hash = Auth::requireLoggedInJson();
@@ -802,6 +810,31 @@ class Photos
             $deleted[] = $rid;
         }
         Response::send(['deleted' => $deleted]);
+    }
+
+    private function batchMovePhotos(int $uid, array $channel, array $resourceIds, string $folderHash): void
+    {
+        if (!is_array($resourceIds) || !$resourceIds) Response::error(400, 'resource_ids required');
+        if ($folderHash) {
+            $f = q("SELECT id FROM attach WHERE uid = %d AND hash = '%s' AND is_dir = 1 LIMIT 1",
+                intval($uid), dbesc($folderHash));
+            if (!$f) Response::error(404, 'Album not found');
+        }
+
+        $moved = [];
+        foreach ($resourceIds as $rid) {
+            $rid = strval($rid);
+            // is_photo guards against moving arbitrary cloud files through the photo API.
+            $r = q("SELECT id FROM attach WHERE uid = %d AND hash = '%s' AND is_photo = 1 LIMIT 1",
+                intval($uid), dbesc($rid));
+            if (!$r) continue;
+            $res = attach_move($uid, $rid, $folderHash);
+            if (empty($res['success'])) continue;
+            $sync = attach_export_data($channel, $rid);
+            if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+            $moved[] = $rid;
+        }
+        Response::send(['moved' => $moved]);
     }
 
     private function deleteAlbum(int $uid, array $channel, string $folderHash): void
