@@ -8,7 +8,7 @@ use Zotlabs\Lib\Config;
 /**
  * Site-wide announcements for the SPA's Site Announcements widget.
  *
- * GET  /api/announcements          → public, most recent MAX_SHOWN first
+ * GET  /api/announcements          → local channel only, most recent MAX_SHOWN first
  * POST /api/announcements          → admin only: { action: 'create', title, body }
  *                                                { action: 'delete', id }
  *
@@ -25,6 +25,7 @@ class Announcements
 
     public function get(): void
     {
+        Auth::requireLocalGet();
         self::maybeAnnounceUpgrade();
         $list = self::load();
         $shown = array_slice($list, 0, self::MAX_SHOWN);
