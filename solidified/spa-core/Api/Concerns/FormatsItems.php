@@ -409,6 +409,14 @@ trait FormatsItems
             // make categories invisible in the SPA for most channels.
             'categories' => array_values(array_column(
                 get_terms_oftype($item['term'] ?? [], TERM_CATEGORY), 'term')),
+            // Links the author marked bookmarkable with #^[url]…[/url]. Core turns
+            // those into TERM_BOOKMARK terms at compose time (include/text.php
+            // handle_tag()) and they federate as AS2 zot:Bookmark tags, so remote
+            // Hubzilla posts and every RSS item arrive already carrying them.
+            // Same free ride as categories: $item['term'] is already hydrated.
+            'bookmark_links' => array_map(
+                fn($t) => ['url' => $t['url'], 'title' => $t['term']],
+                array_values(get_terms_oftype($item['term'] ?? [], TERM_BOOKMARK))),
         ];
     }
 }

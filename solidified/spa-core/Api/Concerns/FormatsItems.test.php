@@ -40,7 +40,7 @@ const CANONICAL = [
     'owner', 'recipients', 'permalink', 'location', 'coord', 'expires',
     'viewer_liked', 'viewer_disliked', 'viewer_repeated', 'viewer_attending',
     'viewer_declining', 'viewer_maybe', 'viewer_following', 'can_comment',
-    'attach', 'poll', 'categories',
+    'attach', 'poll', 'categories', 'bookmark_links',
 ];
 
 $fail = 0;
