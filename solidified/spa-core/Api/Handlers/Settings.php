@@ -675,6 +675,7 @@ class Settings
                 'name'        => $name,
                 'description' => self::appDesc($app),
                 'photo'       => $app['photo'] ?? '',
+                'url'         => self::appUrl($app),
                 'requires'    => $app['requires'] ?? '',
                 'installed'   => $inst !== null,
                 'pinned'      => $inst !== null && str_contains($categories, 'nav_pinned_app'),
@@ -691,6 +692,7 @@ class Settings
                 'name'        => $name,
                 'description' => self::appDesc($inst),
                 'photo'       => $inst['photo'] ?? '',
+                'url'         => self::appUrl($inst),
                 'requires'    => $inst['requires'] ?? '',
                 'installed'   => true,
                 'pinned'      => str_contains($categories, 'nav_pinned_app'),
@@ -708,6 +710,15 @@ class Settings
             'nav_order' => array_values((array) $nav_order),
             'kanban'    => intval(get_pconfig($uid, 'spa', 'kanban')),
         ]);
+    }
+
+    // .apd files may list a second, settings URL after a comma ("$baseurl/cdav/
+    // calendar, $baseurl/settings/calendar"); core splits it at render time
+    // (Apps::app_render), so do the same here — the client matches this against
+    // its registered SPA routes to decide whether the app can appear in nav.
+    private static function appUrl(array $app): string
+    {
+        return trim(explode(',', (string) ($app['url'] ?? ''))[0]);
     }
 
     // .apd files and app_encode() both spell it 'desc'; core escapes quotes into

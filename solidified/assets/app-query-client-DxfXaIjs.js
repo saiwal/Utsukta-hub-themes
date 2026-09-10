@@ -1,0 +1,1 @@
+import{r as e}from"./app-build-CByD-33e.js";var t=new e({defaultOptions:{queries:{staleTime:6e4,gcTime:18e5,retry:2,refetchOnWindowFocus:!0,refetchOnReconnect:!0}}});export{t};

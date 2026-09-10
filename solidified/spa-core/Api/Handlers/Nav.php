@@ -375,23 +375,26 @@ class Nav
             ];
         }
 
-        // With invitations switched off site-wide, the Invite app is dead
-        // weight: Handlers/Invite.php refuses every call and core's own page
-        // answers "Invites not proposed by configuration". Drop it from every
-        // list the SPA reads, so neither the app tile nor the directory's
-        // Invite section (requiresApp: "/invite") offers a door that opens
-        // onto an error. The app stays installed — this is a site-level
-        // capability, not an uninstall.
-        if (!(get_config('system', 'invitation_only') || get_config('system', 'invitation_also'))) {
-            $notInvite = fn($url) => !str_contains((string) $url, '/invite');
-            foreach (['pinned', 'featured', 'system_apps'] as $listName) {
-                $$listName = array_values(array_filter(
-                    $$listName ?: [],
-                    fn($app) => $notInvite($app['url'] ?? '')
-                ));
-            }
-            $installed_apps = array_values(array_filter($installed_apps, $notInvite));
+        // The Invite app's UI is a section of the directory (/directory/invite),
+        // reached from the directory's own sidebar, so an app tile for it would
+        // be a second door to the same page. Drop it from the lists the nav
+        // renders — but NOT from installed_apps, which is what gates that
+        // sidebar entry (requiresApp: "/invite").
+        $notInvite = fn($url) => !str_contains((string) $url, '/invite');
+        foreach (['pinned', 'featured', 'system_apps'] as $listName) {
+            $$listName = array_values(array_filter(
+                $$listName ?: [],
+                fn($app) => $notInvite($app['url'] ?? '')
+            ));
         }
+
+        // With invitations switched off site-wide the section goes too:
+        // Handlers/Invite.php refuses every call and core's own page answers
+        // "Invites not proposed by configuration", so the entry would open onto
+        // an error. The app stays installed — this is a site-level capability,
+        // not an uninstall.
+        if (!(get_config('system', 'invitation_only') || get_config('system', 'invitation_also')))
+            $installed_apps = array_values(array_filter($installed_apps, $notInvite));
 
         Response::send([
             'viewer'           => $viewer,
