@@ -375,6 +375,24 @@ class Nav
             ];
         }
 
+        // With invitations switched off site-wide, the Invite app is dead
+        // weight: Handlers/Invite.php refuses every call and core's own page
+        // answers "Invites not proposed by configuration". Drop it from every
+        // list the SPA reads, so neither the app tile nor the directory's
+        // Invite section (requiresApp: "/invite") offers a door that opens
+        // onto an error. The app stays installed — this is a site-level
+        // capability, not an uninstall.
+        if (!(get_config('system', 'invitation_only') || get_config('system', 'invitation_also'))) {
+            $notInvite = fn($url) => !str_contains((string) $url, '/invite');
+            foreach (['pinned', 'featured', 'system_apps'] as $listName) {
+                $$listName = array_values(array_filter(
+                    $$listName ?: [],
+                    fn($app) => $notInvite($app['url'] ?? '')
+                ));
+            }
+            $installed_apps = array_values(array_filter($installed_apps, $notInvite));
+        }
+
         Response::send([
             'viewer'           => $viewer,
             'actions'          => $actions,

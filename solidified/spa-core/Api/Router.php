@@ -68,6 +68,7 @@ class Router
         'nodeinfo'       => Handlers\Nodeinfo::class,
         'connections'    => Handlers\Connections::class,
         'sources'        => Handlers\Sources::class,
+        'invite'         => Handlers\Invite::class,
         'directory'      => Handlers\Directory::class,
         'cart'           => Handlers\Cart::class,
         'rss-feed'       => Handlers\Rss::class,
