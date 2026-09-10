@@ -388,6 +388,11 @@ class Nav
             'system_apps'      => $system_apps,
             'channel_tabs'     => $channel_tabs,
             'has_public_stream' => (bool) can_view_public_stream(),
+            // Admin landing pages (admin/site): 'frontpage' for visitors,
+            // 'startpage' for logged-in members — the SPA's "/" honours both,
+            // as core's Home.php does.
+            'frontpage'        => (string) get_config('system', 'frontpage'),
+            'startpage'        => (string) get_config('system', 'startpage'),
             'installed_apps'   => $installed_apps,
             'osm'              => $osm,
             // Effective language for this request/session — browser-detected
