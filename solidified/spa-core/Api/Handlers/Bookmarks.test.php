@@ -142,6 +142,38 @@ function cleanup(int $uid): void
         intval($uid), dbesc(URL1), dbesc(URL2));
 }
 
+// ── bodyContainsUrl: the entity-escaping mismatch ───────────────────────────
+// The client reads a URL out of a rendered anchor, where '&' is '&amp;', and
+// decodes it before sending. The stored body may hold either form. Getting this
+// wrong rejected every link with two query parameters.
+
+$probe = new Utsukta\SpaCore\Api\Handlers\Bookmarks();
+$bcu   = new ReflectionMethod(Utsukta\SpaCore\Api\Handlers\Bookmarks::class, 'bodyContainsUrl');
+$bcu->setAccessible(true);
+$has = fn(string $body, string $url, string $mime = '') =>
+    $bcu->invoke($probe, ['body' => $body, 'mimetype' => $mime], $url);
+
+// The reported case: a Lemmy comment linking a YouTube timestamp.
+$yt = 'https://youtube.com/watch?v=BOwfLUmvwQg&t=96s';
+check('escaped & in a bbcode body matches the decoded url',
+    $has('[url=https://youtube.com/watch?v=BOwfLUmvwQg&amp;t=96s]yt[/url]', $yt));
+check('plain & in the body still matches',
+    $has('see https://youtube.com/watch?v=BOwfLUmvwQg&t=96s', $yt));
+check('double-escaped & matches too',
+    $has('https://youtube.com/watch?v=BOwfLUmvwQg&amp;amp;t=96s', $yt));
+check('a markdown body is un-escaped first',
+    $has('[yt](https://youtube.com/watch?v=BOwfLUmvwQg&amp;t=96s)', $yt, 'text/markdown'));
+check('single-parameter urls were never the problem',
+    $has('https://example.com/a', 'https://example.com/a'));
+
+// Still a trust boundary: a URL the post never contained is refused, and
+// normalising entities must not open a way around that.
+check('a url absent from the body is refused',
+    $has('https://youtube.com/watch?v=BOwfLUmvwQg&amp;t=96s', 'https://attacker.example/evil'), false);
+check('an empty body matches nothing', $has('', 'https://attacker.example/evil'), false);
+check('a near-miss host is refused',
+    $has('https://example.com/a', 'https://example.com.evil/a'), false);
+
 cleanup($uid);   // leftovers from an interrupted run
 
 // ── Folders ─────────────────────────────────────────────────────────────────

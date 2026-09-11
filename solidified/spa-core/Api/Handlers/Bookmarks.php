@@ -29,6 +29,7 @@ use App;
 use Zotlabs\Lib\Apps;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 use Utsukta\SpaCore\Api\Concerns\ResolvesAcl;
 
 class Bookmarks
@@ -246,6 +247,7 @@ class Bookmarks
         }
 
         $requested = $data['urls'] ?? null;
+        $rejected  = [];
         if (is_array($requested)) {
             $chosen = [];
             foreach ($requested as $entry) {
@@ -261,7 +263,10 @@ class Bookmarks
                 // body. Only accept it if it really is in the stored body,
                 // otherwise this endpoint would file arbitrary URLs under a
                 // "saved from a post" label.
-                if (strpos($item['body'], $url) === false) continue;
+                if (!$this->bodyContainsUrl($item, $url)) {
+                    $rejected[] = $url;
+                    continue;
+                }
 
                 $chosen[] = [
                     'url'  => $url,
@@ -274,7 +279,9 @@ class Bookmarks
         }
 
         if (!$chosen)
-            Response::error(400, 'No bookmarkable links in this post');
+            Response::error(400, $rejected
+                ? 'Those links are not in this post'
+                : 'No bookmarkable links in this post');
 
         require_once('include/bookmarks.php');
 
@@ -289,6 +296,40 @@ class Bookmarks
         }
 
         Response::send(['success' => true, 'count' => count($chosen)]);
+    }
+
+    /**
+     * Does this URL actually occur in the post?
+     *
+     * The comparison cannot be a plain strpos against the stored body, because
+     * the two sides are escaped to different depths. The client reads the URL out
+     * of a rendered anchor, where `&` is `&amp;` — and it decodes it, so it sends
+     * a bare `&`. The stored body may hold either form: 7% of the bodies on this
+     * hub keep `&amp;` inside a URL, and a markdown body is escaped once more
+     * again (which is what ContentTypes::decode undoes, mirroring the read path
+     * the client was served from). Any link with two query parameters — a YouTube
+     * timestamp, a UTM tag — landed on the wrong side of that and was rejected.
+     *
+     * Normalising entities can't conjure a URL the author never wrote, so this
+     * still proves containment; it just stops proving it only for simple URLs.
+     */
+    private function bodyContainsUrl(array $item, string $url): bool
+    {
+        $norm = static function (string $s): string {
+            // Repeated: the escaping depth differs per mimetype, and '&amp;amp;'
+            // does occur in the wild. Bounded rather than while(), so a body full
+            // of '&amp;amp;amp;…' can't spin here.
+            for ($i = 0; $i < 3; $i++) {
+                $next = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                if ($next === $s) break;
+                $s = $next;
+            }
+            return $s;
+        };
+
+        $body = ContentTypes::decode($item['body'] ?? '', $item['mimetype'] ?? '');
+
+        return str_contains($norm($body), $norm($url));
     }
 
     private function saveFolder(int $uid, array $data): never
