@@ -26,7 +26,31 @@ use Utsukta\SpaCore\Api\Response;
  */
 trait ItemCollection
 {
+    use EmbedsItems;
     use ResolvesAcl;
+
+    /**
+     * Expand the composer's compact embed tokens at save time.
+     *
+     * Every collection POST needs this, not just the handler that grew it
+     * first: an unexpanded [card=<id>] / [share=<id>] is stored verbatim and
+     * only ever renders as the fallback chip, and it carries no message_id, so
+     * nothing downstream (backlinks included) can see the embed at all.
+     *
+     * Only bbcode carries these tokens. Non-bbcode bodies need no sanitizing
+     * here: this saves through item_store() / item_store_update(), both of
+     * which run z_input_filter() on the body themselves (include/items.php:1702,
+     * :2192), and filtering again would htmlspecialchars-escape a text/markdown
+     * body twice.
+     */
+    private function expandEmbedTokens(string $mimetype, string $body): string
+    {
+        if ($mimetype !== 'text/bbcode') {
+            return $body;
+        }
+
+        return $this->expandCardTags($this->expandShareTags($body));
+    }
 
     /** Extra response keys for one formatted item. */
     private function formatExtras(array $item, array $iconfig): array

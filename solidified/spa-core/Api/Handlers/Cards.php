@@ -65,6 +65,70 @@ class Cards
         return ['template' => ($iconfig['card/template'] ?? '') ?: 'freeform'];
     }
 
+    /**
+     * Backlinks: the channel's own items that embed this card.
+     *
+     * An expanded [card=<id>] block carries message_id='<mid>' (see
+     * EmbedsItems::buildEmbedBlock), and the mid — unlike the block's link
+     * attribute — survives a slug rename, so that is what we match on.
+     *
+     * item_permissions_sql (from the GET preamble) plus item_normal_search()
+     * gate the list: a visitor never sees a mention they could not open, and
+     * nobody sees one that is unpublished, delayed, hidden or moderated.
+     * item_normal_search() rather than item_normal() because a mention may be
+     * an article, a card or an ordinary post, and item_normal() pins a single
+     * item_type.
+     *
+     * ponytail: LIKE '%…%' over the channel's items, no index. Fine at hub
+     * scale; if it ever isn't, write an iconfig backlink row at embed time and
+     * read that instead. Scoped to the card owner's own channel, so a mention
+     * from another local channel doesn't show — cross-channel needs a
+     * per-uid item_permissions_sql pass, which is a different query, not a
+     * wider WHERE.
+     */
+    private function afterSingle(array &$root, int $profile_uid, string $permission_sql, string $nick): void
+    {
+        $root['mentioned_in'] = [];
+
+        $mid = $root['mid'] ?? '';
+        if (!$mid) {
+            return;
+        }
+
+        // Escape LIKE's own wildcards before dbesc — a mid is a URL and '_' is
+        // common in one.
+        $needle = dbesc(str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], "message_id='" . $mid . "'"));
+
+        $rows = dbq("SELECT item.id, item.uuid, item.title, item.created, item.plink, item.item_type,
+                (SELECT v FROM iconfig sl WHERE sl.iid = item.id AND sl.cat = 'system'
+                    AND sl.k IN ('" . item_type_to_namespace(ITEM_TYPE_ARTICLE) . "','"
+                               . item_type_to_namespace(ITEM_TYPE_CARD) . "') LIMIT 1) AS slug
+            FROM item
+            WHERE item.uid = " . intval($profile_uid) . "
+            AND item.body LIKE '%$needle%'
+            AND item.id = item.parent
+            AND item.uuid != '" . dbesc($root['uuid']) . "'
+            " . item_normal_search() . "
+            $permission_sql
+            ORDER BY item.created DESC
+            LIMIT 50");
+
+        $root['mentioned_in'] = array_map(function ($m) use ($nick) {
+            $type = intval($m['item_type']);
+            $path = $type === ITEM_TYPE_ARTICLE ? 'articles' : ($type === ITEM_TYPE_CARD ? 'cards' : '');
+
+            return [
+                'uuid'      => $m['uuid'],
+                'title'     => Response::decodeEntities($m['title']),
+                'created'   => $m['created'],
+                'item_type' => $type,
+                'view_url'  => $path
+                    ? z_root() . '/' . $path . '/' . $nick . '/' . ($m['slug'] ? urldecode($m['slug']) : $m['uuid'])
+                    : ($m['plink'] ?: z_root() . '/display/' . $m['uuid']),
+            ];
+        }, $rows ?: []);
+    }
+
     // -------------------------------------------------------------------------
     // GET /spa/cards/:nick/kanban -> { enabled, boards: [{ name, columns }] }
     //
@@ -186,19 +250,7 @@ class Cards
 
         $attachments = $this->extractAttachments($uid, $channel, $mimetype, $body, $acl);
 
-        // ── Expand compact [card=<id>] embeds ─────────────────────────────────
-        // A card body may embed another card (CAPABILITIES.card.cardPicker),
-        // so the same save-time expansion Item.php applies to posts and
-        // comments has to run here too — otherwise the raw compact token is
-        // stored and only ever renders as the fallback chip.
-        // Only bbcode carries [card=…] tokens. Non-bbcode bodies need no
-        // sanitizing here: this handler saves through item_store() /
-        // item_store_update(), both of which run z_input_filter() on the body
-        // themselves (include/items.php:1702, :2192). Filtering again would
-        // htmlspecialchars-escape a text/markdown body twice.
-        if ($mimetype === 'text/bbcode') {
-            $body = $this->expandCardTags($body);
-        }
+        $body = $this->expandEmbedTokens($mimetype, $body);
 
         $post_tags = $category ? $this->categoryTerms($uid, $channel, $category) : [];
 

@@ -140,6 +140,7 @@ class Articles
         [$allow_cid, $allow_gid, $deny_cid, $deny_gid, $item_private, $public_policy] = $acl;
 
         $attachments = $this->extractAttachments($uid, $channel, $mimetype, $body, $acl);
+        $body        = $this->expandEmbedTokens($mimetype, $body);
         $post_tags   = $category ? $this->categoryTerms($uid, $channel, $category) : [];
 
         // ── Edit existing article ─────────────────────────────────────────────
