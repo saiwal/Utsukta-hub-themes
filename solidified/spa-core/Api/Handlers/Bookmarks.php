@@ -173,6 +173,10 @@ class Bookmarks
                     'order'   => intval($item['mitem_order']),
                     'is_chat' => (bool)($flags & MENU_ITEM_CHATROOM),
                     'is_zid'  => $isZid,
+                    // Enough for the list's "Private" badge. The columns themselves
+                    // are not exposed: this endpoint is owner-only, so nothing the
+                    // client could do with them would change what anyone sees —
+                    // core's /mitem is where a menu row's ACL gets edited.
                     'private' => (bool)($item['allow_cid'] || $item['allow_gid']
                                      || $item['deny_cid'] || $item['deny_gid']),
                 ];
@@ -213,6 +217,9 @@ class Bookmarks
         ];
 
         // $private is core's "ACL this to me only" switch (allow_cid = own hash).
+        // A boolean is all bookmark_add() can express, and all this endpoint
+        // offers: a richer ACL would change nothing any SPA reader can observe
+        // (see the read comment above), so core's /mitem owns that job.
         bookmark_add($channel, $channel, ['url' => $url, 'term' => $title],
             !empty($data['private']) ? 1 : 0, $opts);
 
