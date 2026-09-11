@@ -119,7 +119,7 @@ class Bookmarks
         foreach (($r ?: []) as $row) {
             $items[] = [
                 'id'    => intval($row['mitem_id']),
-                'url'   => $row['mitem_link'],
+                'url'   => self::linkOut($row['mitem_link']),
                 'title' => $row['mitem_desc'],
             ];
         }
@@ -159,12 +159,16 @@ class Bookmarks
                 $flags = intval($item['mitem_flags']);
                 $isZid = (bool)($flags & MENU_ITEM_ZID);
 
+                // Decoded before zid(), which would otherwise append its query
+                // parameter to an href-escaped string.
+                $link = self::linkOut($item['mitem_link']);
+
                 $item_list[] = [
                     'id'      => intval($item['mitem_id']),
-                    'url'     => $item['mitem_link'],
+                    'url'     => $link,
                     // What menu_render() hands the browser: a zot link gets magic
                     // auth appended, so following it keeps you logged in.
-                    'visit_url' => $isZid ? zid($item['mitem_link']) : $item['mitem_link'],
+                    'visit_url' => $isZid ? zid($link) : $link,
                     'title'   => $item['mitem_desc'],
                     'order'   => intval($item['mitem_order']),
                     'is_chat' => (bool)($flags & MENU_ITEM_CHATROOM),
@@ -299,6 +303,25 @@ class Bookmarks
     }
 
     /**
+     * A stored mitem_link, turned back into a usable URL.
+     *
+     * menu_add_item() runs the link through escape_tags(), so '&' is stored as
+     * '&amp;'. That is right for core, whose usermenu.tpl drops the value straight
+     * into an href where the browser decodes it again — but this API hands the
+     * value to JSON, and nothing downstream of that does any HTML decoding. A
+     * bookmark to a URL with two query parameters therefore arrived at the client
+     * as a link that navigates to the wrong place (or nowhere).
+     *
+     * Decoded on read rather than stored decoded, so core's own /bookmarks page,
+     * its menu export and every already-saved row keep working unchanged. Same
+     * shape as FormatsItems' ContentTypes::decode() on bodies.
+     */
+    private static function linkOut(?string $link): string
+    {
+        return html_entity_decode((string) $link, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
      * Does this URL actually occur in the post?
      *
      * The comparison cannot be a plain strpos against the stored body, because
@@ -387,7 +410,8 @@ class Bookmarks
         if ($to !== $from)
             $this->requireBookmarkMenu($uid, $to);
 
-        $url   = array_key_exists('url',   $data) ? trim((string)$data['url'])   : $item['mitem_link'];
+        $stored = self::linkOut($item['mitem_link']);
+        $url   = array_key_exists('url',   $data) ? trim((string)$data['url'])   : $stored;
         $title = array_key_exists('title', $data) ? trim((string)$data['title']) : $item['mitem_desc'];
 
         if (!$url || !$title)
@@ -395,8 +419,10 @@ class Bookmarks
 
         // MENU_ITEM_ZID is derived from the URL, so re-derive it when the URL
         // changes; everything else (notably MENU_ITEM_CHATROOM) is preserved.
+        // Against the decoded form: the client only ever sends decoded URLs, so
+        // comparing to the raw column would report a change on every '&'.
         $flags = intval($item['mitem_flags']);
-        if ($url !== $item['mitem_link']) {
+        if ($url !== $stored) {
             $flags = is_matrix_url($url) ? ($flags | MENU_ITEM_ZID) : ($flags & ~MENU_ITEM_ZID);
         }
 
