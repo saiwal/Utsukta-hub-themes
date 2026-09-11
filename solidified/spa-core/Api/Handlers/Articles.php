@@ -261,6 +261,7 @@ class Articles
         if ($translationGroup) {
             \Zotlabs\Lib\IConfig::Set($datarray, 'article', 'translation_group', $translationGroup);
         }
+        $this->setEmbedIconfig($datarray, $body);
 
         $result = item_store($datarray);
 

@@ -1022,6 +1022,10 @@ class Item
             Response::error(400, 'Post cancelled');
         }
 
+        // Index the embeds in the stored body — Cards' "Mentioned in" reads
+        // these instead of scanning bodies (Concerns\EmbedsItems).
+        $this->setEmbedIconfig($datarray, $datarray['body']);
+
         $post = item_store($datarray);
 
         if (!$post['success']) {
@@ -1777,6 +1781,11 @@ class Item
             dbesc($attachments ? json_encode($attachments) : ''),
             dbesc($now), dbesc($now), $iid, $uid);
 
+        // By item id, not datarray: this path updates the row itself rather
+        // than going through item_store_update(), so nothing else would write
+        // (or clear) the embed index for it.
+        $this->setEmbedIconfig($iid, $content);
+
         // Refresh (or clear) the remembered Markdown source. Clearing matters:
         // an item re-saved as bbcode must not keep an older Markdown source
         // that a later edit would restore over the top of it.
@@ -2446,6 +2455,8 @@ class Item
             isWall: true,
             term: $extraTerms,
         );
+
+        $this->setEmbedIconfig($datarray, $datarray['body']);
 
         $post = item_store($datarray);
 

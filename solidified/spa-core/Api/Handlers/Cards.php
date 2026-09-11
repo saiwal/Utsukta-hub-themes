@@ -68,9 +68,24 @@ class Cards
     /**
      * Backlinks: the channel's own items that embed this card.
      *
-     * An expanded [card=<id>] block carries message_id='<mid>' (see
-     * EmbedsItems::buildEmbedBlock), and the mid — unlike the block's link
-     * attribute — survives a slug rename, so that is what we match on.
+     * Read from the embed index (iconfig cat 'spa', key 'embeds'), which the
+     * save paths write from the stored body — see EmbedsItems::
+     * setEmbedIconfig() for the format and for why it is keyed on the mid
+     * rather than on the block's link (a link carries a slug and changes when
+     * the card is renamed).
+     *
+     * This used to be a LIKE '%message_id=…%' over every row with the card
+     * owner's uid — which is everything ever *delivered* to the channel, not
+     * just its own posts — so opening one card read tens of thousands of
+     * mediumtext bodies and pinned a CPU for seconds on a real hub. The join
+     * below is driven by iconfig's `k` index, so only rows that actually are
+     * embeds are touched.
+     *
+     * Nothing was backfilled: an embed written before the index existed shows
+     * up once its host item is next saved, and not before.
+     *
+     * item_thread_top = 1 keeps comments out (they can carry embeds too, and
+     * did under the old query as well, which matched on item.id = item.parent).
      *
      * item_permissions_sql (from the GET preamble) plus item_normal_search()
      * gate the list: a visitor never sees a mention they could not open, and
@@ -79,12 +94,9 @@ class Cards
      * an article, a card or an ordinary post, and item_normal() pins a single
      * item_type.
      *
-     * ponytail: LIKE '%…%' over the channel's items, no index. Fine at hub
-     * scale; if it ever isn't, write an iconfig backlink row at embed time and
-     * read that instead. Scoped to the card owner's own channel, so a mention
-     * from another local channel doesn't show — cross-channel needs a
-     * per-uid item_permissions_sql pass, which is a different query, not a
-     * wider WHERE.
+     * Scoped to the card owner's own channel, so a mention from another local
+     * channel doesn't show — cross-channel needs a per-uid
+     * item_permissions_sql pass, which is a different query, not a wider WHERE.
      */
     private function afterSingle(array &$root, int $profile_uid, string $permission_sql, string $nick): void
     {
@@ -95,18 +107,15 @@ class Cards
             return;
         }
 
-        // Escape LIKE's own wildcards before dbesc — a mid is a URL and '_' is
-        // common in one.
-        $needle = dbesc(str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], "message_id='" . $mid . "'"));
-
         $rows = dbq("SELECT item.id, item.uuid, item.title, item.created, item.plink, item.item_type,
                 (SELECT v FROM iconfig sl WHERE sl.iid = item.id AND sl.cat = 'system'
                     AND sl.k IN ('" . item_type_to_namespace(ITEM_TYPE_ARTICLE) . "','"
                                . item_type_to_namespace(ITEM_TYPE_CARD) . "') LIMIT 1) AS slug
-            FROM item
-            WHERE item.uid = " . intval($profile_uid) . "
-            AND item.body LIKE '%$needle%'
-            AND item.id = item.parent
+            FROM iconfig e
+            INNER JOIN item ON item.id = e.iid
+            WHERE " . self::embedMatchSql($mid, 'e') . "
+            AND item.uid = " . intval($profile_uid) . "
+            AND item.item_thread_top = 1
             AND item.uuid != '" . dbesc($root['uuid']) . "'
             " . item_normal_search() . "
             $permission_sql
@@ -330,6 +339,7 @@ class Cards
             $this->setGroupIconfig($datarray, $deck, $deckOrder);
         }
         \Zotlabs\Lib\IConfig::Set($datarray, 'card', 'template', $template);
+        $this->setEmbedIconfig($datarray, $body);
 
         $result = item_store($datarray);
 

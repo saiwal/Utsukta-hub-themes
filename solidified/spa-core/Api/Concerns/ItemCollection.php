@@ -642,6 +642,11 @@ trait ItemCollection
         // the group metadata, when only the title changes).
         $datarray['iconfig'] = dbq("SELECT * FROM iconfig WHERE iid = " . intval($post_id)) ?: [];
 
+        // Re-index the body's embeds (Cards' "Mentioned in" reads these).
+        // After the pre-load, so it replaces the stored row rather than
+        // being replaced by it.
+        $this->setEmbedIconfig($datarray, $fields['body']);
+
         return $datarray;
     }
 

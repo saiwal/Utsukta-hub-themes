@@ -122,6 +122,103 @@ trait EmbedsItems
         return $bb;
     }
 
+    // -------------------------------------------------------------------------
+    // Backlink index (iconfig cat 'spa', key 'embeds')
+    //
+    // "What embeds this card?" used to be answered by a LIKE '%message_id=…%'
+    // over every body in the channel — which on a real hub means every post
+    // ever delivered to it, so opening one card read tens of thousands of
+    // bodies. Recording the embedded mids at save time turns that into an
+    // indexed lookup on iconfig.k, over only the rows that actually are
+    // embeds.
+    //
+    // ponytail: the lookup is an equality match on iconfig.k plus a LIKE over
+    // the matched rows' v, so its cost tracks the number of embeds on the
+    // *hub*, not the number pointing at this card. Rows are ~100 bytes and the
+    // index is hot, so that is microseconds at hub scale and well below the
+    // cost of the thread query next to it. If hub-wide embeds ever reach five
+    // figures: move the target mid into the key (k = 'embeds:<sha1(mid)>', one
+    // row per referenced mid, mid mirrored in v so the rows stay readable) and
+    // the LIKE becomes an exact index hit. The catch is the writer, not the
+    // reader — buildEditDatarray() pre-loads every iconfig row, so the edit
+    // path would have to strip stale 'embeds:*' entries from that array by
+    // hand instead of calling IConfig::Delete once.
+    //
+    // The list is re-derived from the *stored* body on every save rather than
+    // tracked alongside the expansion, so it can't drift: whatever share
+    // blocks the body ends up with are what gets indexed, whichever path
+    // (compose, edit, reshare) produced them. Nothing was backfilled, so an
+    // embed written before this existed stays invisible to the backlink query
+    // until its host item is next saved.
+    // -------------------------------------------------------------------------
+
+    /** Separator *and* terminator, so a LIKE can match a whole mid. See setEmbedIconfig(). */
+    protected const EMBED_SEP = "\n";
+
+    /**
+     * The mids of every item embedded in a stored body.
+     *
+     * Matches the block's message_id attribute, not its link: the link carries
+     * a slug and changes when an app item is renamed, the mid never does. A
+     * nested block (an embedded item whose own body embeds something) is
+     * picked up too — it is genuinely mentioned in this body.
+     */
+    protected static function embedRefs(string $body): array
+    {
+        if (!preg_match_all("/\[share\b[^\]]*?\bmessage_id='([^']*)'/is", $body, $m)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter($m[1])));
+    }
+
+    /**
+     * Record (or clear) a body's embed backlinks.
+     *
+     * Stored as one iconfig row holding the mids wrapped in separators
+     * ("\n<mid>\n<mid>\n"), because IConfig keys one row per cat+key and a
+     * row per mid would need a different storage layer. The wrapping is what
+     * lets the reader match a whole mid (LIKE '%\n<mid>\n%') instead of a
+     * prefix.
+     *
+     * $target is by reference for the same reason setGroupIconfig() is: given
+     * a datarray IConfig::Set appends to its 'iconfig' key for item_store() to
+     * write, and by value the caller keeps an unmodified copy. Given an item
+     * id it writes the row directly, which is what the paths that update the
+     * item row themselves (Item::editItem) need.
+     *
+     * Clearing matters as much as setting: item_store_update() re-inserts only
+     * what the datarray carries — but editItem() doesn't go through it, so an
+     * edit that removes the last embed has to delete the row explicitly.
+     */
+    protected function setEmbedIconfig(&$target, string $body): void
+    {
+        $refs = self::embedRefs($body);
+
+        if ($refs) {
+            \Zotlabs\Lib\IConfig::Set($target, 'spa', 'embeds',
+                self::EMBED_SEP . implode(self::EMBED_SEP, $refs) . self::EMBED_SEP);
+        } elseif (!is_array($target) || isset($target['iconfig'])) {
+            // IConfig::Delete() reads $target['iconfig'] unguarded, so a fresh
+            // create datarray (no iconfig key yet, and nothing to clear) would
+            // only earn an undefined-key warning.
+            \Zotlabs\Lib\IConfig::Delete($target, 'spa', 'embeds');
+        }
+    }
+
+    /**
+     * SQL condition matching the iconfig rows (aliased $alias) that embed $mid.
+     * Escapes LIKE's own wildcards before dbesc — a mid is a URL and '_' is
+     * common in one.
+     */
+    protected static function embedMatchSql(string $mid, string $alias = 'e'): string
+    {
+        $needle = dbesc(str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'],
+            self::EMBED_SEP . $mid . self::EMBED_SEP));
+
+        return "$alias.cat = 'spa' AND $alias.k = 'embeds' AND $alias.v LIKE '%$needle%'";
+    }
+
     /**
      * Re-read a client-supplied numeric item id behind its owner's permission
      * SQL, so an id guessed by the caller cannot surface an item they are not

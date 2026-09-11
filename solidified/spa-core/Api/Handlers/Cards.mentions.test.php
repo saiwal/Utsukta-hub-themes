@@ -11,6 +11,11 @@
  * renamed. Both are asserted here, plus the item_normal_search() gate: a
  * delayed article must not show up in anybody's list.
  *
+ * The match itself comes from the embed index (iconfig cat 'spa', key
+ * 'embeds') that the save paths write — EmbedsItems::setEmbedIconfig — rather
+ * than from scanning bodies, so the last checks pin that the row is written on
+ * save and cleared when an edit removes the embed.
+ *
  * Creates a real card and a real article, deletes both again.
  *
  * Run inside the Hubzilla install:
@@ -166,6 +171,28 @@ q("UPDATE item SET item_delayed = 1 WHERE id = %d", $aid);
 $got = step('Cards', $nick, 'get', SLUG_C . '-renamed')['data']['card'] ?? [];
 check('delayed article is not listed', $got['mentioned_in'] ?? null, []);
 q("UPDATE item SET item_delayed = 0 WHERE id = %d", $aid);
+
+// The backlink index itself: the article's save must have recorded the card's
+// mid (iconfig cat 'spa', key 'embeds'), since that row — not a body scan — is
+// what the query above reads.
+$idx = q("SELECT v FROM iconfig WHERE iid = %d AND cat = 'spa' AND k = 'embeds' LIMIT 1", $aid);
+check('embed indexed on save', str_contains($idx[0]['v'] ?? '', "\n" . $mid . "\n"));
+
+// And an edit that drops the embed must clear it again: item_store_update()
+// re-inserts only what the datarray carries, so a stale row here would leave a
+// mention listed for an article that no longer embeds the card.
+step('Articles', $nick, 'post', '', [
+    'body'     => 'No embed any more.',
+    'title'    => TITLE_A,
+    'slug'     => SLUG_A,
+    'lang'     => 'en',
+    'mimetype' => 'text/bbcode',
+    'post_id'  => $aid,
+]);
+$idx = q("SELECT v FROM iconfig WHERE iid = %d AND cat = 'spa' AND k = 'embeds' LIMIT 1", $aid);
+check('index cleared when the embed is removed', $idx, []);
+$got = step('Cards', $nick, 'get', SLUG_C . '-renamed')['data']['card'] ?? [];
+check('mention gone with it', $got['mentioned_in'] ?? null, []);
 
 cleanup();
 echo "\n" . ($fail ? "$fail check(s) failed\n" : "all checks passed\n");
