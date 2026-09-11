@@ -45,6 +45,32 @@ class Admin
         return (string) $v;
     }
 
+    // Directory servers this hub may point at, mirroring core's admin form
+    // (Zotlabs/Module/Admin/Site.php). Only meaningful for a directory client:
+    // a hub that is itself a directory always searches its own /dirsearch.
+    private static function directoryServerChoices(): array
+    {
+        if (self::cfgInt('directory_mode', DIRECTORY_MODE_NORMAL) !== DIRECTORY_MODE_NORMAL)
+            return [];
+
+        $realm   = get_directory_realm();
+        $choices = [];
+
+        $r = q("select site_url from site where site_flags in (%d,%d) and site_realm = '%s'
+                and site_dead = 0 and site_project != 'redmatrix'",
+            intval(DIRECTORY_MODE_SECONDARY),
+            intval(DIRECTORY_MODE_PRIMARY),
+            dbesc($realm)
+        );
+        foreach ($r ?: [] as $rr)
+            $choices[] = $rr['site_url'];
+
+        if ($realm === DIRECTORY_REALM)
+            $choices = array_merge($choices, get_directory_fallback_servers());
+
+        return array_values(array_unique($choices));
+    }
+
     private function requireAdmin(): void
     {
         if (!local_channel() || !is_site_admin()) {
@@ -240,8 +266,13 @@ class Admin
             'pubstream_incl'           => self::cfgStr('pubstream_incl'),
             'pubstream_excl'           => self::cfgStr('pubstream_excl'),
 
-            // Email
+            // Directory
             'directory_server'         => self::cfgStr('directory_server'),
+            'directory_mode'           => self::cfgInt('directory_mode', DIRECTORY_MODE_NORMAL),
+            'directory_realm'          => get_directory_realm(),
+            'directory_server_choices' => self::directoryServerChoices(),
+
+            // Email
             'from_email'               => self::cfgStr('from_email'),
             'from_email_name'          => self::cfgStr('from_email_name'),
             'reply_address'            => self::cfgStr('reply_address'),
