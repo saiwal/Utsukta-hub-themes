@@ -119,8 +119,8 @@ class Bookmarks
         foreach (($r ?: []) as $row) {
             $items[] = [
                 'id'    => intval($row['mitem_id']),
-                'url'   => self::linkOut($row['mitem_link']),
-                'title' => $row['mitem_desc'],
+                'url'   => self::unescapeStored($row['mitem_link']),
+                'title' => self::unescapeStored($row['mitem_desc']),
             ];
         }
 
@@ -161,7 +161,7 @@ class Bookmarks
 
                 // Decoded before zid(), which would otherwise append its query
                 // parameter to an href-escaped string.
-                $link = self::linkOut($item['mitem_link']);
+                $link = self::unescapeStored($item['mitem_link']);
 
                 $item_list[] = [
                     'id'      => intval($item['mitem_id']),
@@ -169,7 +169,7 @@ class Bookmarks
                     // What menu_render() hands the browser: a zot link gets magic
                     // auth appended, so following it keeps you logged in.
                     'visit_url' => $isZid ? zid($link) : $link,
-                    'title'   => $item['mitem_desc'],
+                    'title'   => self::unescapeStored($item['mitem_desc']),
                     'order'   => intval($item['mitem_order']),
                     'is_chat' => (bool)($flags & MENU_ITEM_CHATROOM),
                     'is_zid'  => $isZid,
@@ -180,11 +180,11 @@ class Bookmarks
 
             $result[] = [
                 'id'     => intval($menu['menu_id']),
-                'name'   => $menu['menu_name'],
+                'name'   => self::unescapeStored($menu['menu_name']),
                 // bookmark_add() names a post-derived folder "<16 hash chars> Name",
                 // which is unreadable; menu_desc is the "X's bookmarks" label core
                 // actually renders.
-                'label'  => $menu['menu_desc'] ?: $menu['menu_name'],
+                'label'  => self::unescapeStored($menu['menu_desc'] ?: $menu['menu_name']),
                 'system' => (bool)(intval($menu['menu_flags']) & MENU_SYSTEM),
                 'items'  => $item_list,
             ];
@@ -303,22 +303,27 @@ class Bookmarks
     }
 
     /**
-     * A stored mitem_link, turned back into a usable URL.
+     * A stored menu string, turned back into what the author actually wrote.
      *
-     * menu_add_item() runs the link through escape_tags(), so '&' is stored as
-     * '&amp;'. That is right for core, whose usermenu.tpl drops the value straight
-     * into an href where the browser decodes it again — but this API hands the
-     * value to JSON, and nothing downstream of that does any HTML decoding. A
-     * bookmark to a URL with two query parameters therefore arrived at the client
-     * as a link that navigates to the wrong place (or nowhere).
+     * menu_add_item() / menu_create() run *both* the link and the description
+     * through escape_tags(), so '&' is stored as '&amp;'. That is right for core,
+     * whose usermenu.tpl drops each value straight into HTML — an href for the
+     * link, bbcode() output for the description — where the browser decodes it
+     * again. But this API hands the values to JSON, and nothing downstream of that
+     * does any HTML decoding: a link with two query parameters navigated nowhere,
+     * and a title containing '&' read as a literal '&amp;'.
+     *
+     * Safe for the title because every SPA render site interpolates it as a text
+     * node (BookmarksContentWidget, BookmarkedRoomsWidget) and never as innerHTML,
+     * so the framework re-escapes it on the way into the DOM.
      *
      * Decoded on read rather than stored decoded, so core's own /bookmarks page,
-     * its menu export and every already-saved row keep working unchanged. Same
-     * shape as FormatsItems' ContentTypes::decode() on bodies.
+     * its menu export, clone sync and every already-saved row keep working
+     * unchanged. Same shape as FormatsItems' ContentTypes::decode() on bodies.
      */
-    private static function linkOut(?string $link): string
+    private static function unescapeStored(?string $value): string
     {
-        return html_entity_decode((string) $link, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     /**
@@ -410,9 +415,10 @@ class Bookmarks
         if ($to !== $from)
             $this->requireBookmarkMenu($uid, $to);
 
-        $stored = self::linkOut($item['mitem_link']);
+        $stored = self::unescapeStored($item['mitem_link']);
         $url   = array_key_exists('url',   $data) ? trim((string)$data['url'])   : $stored;
-        $title = array_key_exists('title', $data) ? trim((string)$data['title']) : $item['mitem_desc'];
+        $title = array_key_exists('title', $data) ? trim((string)$data['title'])
+                                                  : self::unescapeStored($item['mitem_desc']);
 
         if (!$url || !$title)
             Response::error(400, 'url and title cannot be empty');
