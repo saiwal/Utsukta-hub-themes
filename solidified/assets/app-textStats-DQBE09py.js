@@ -1,0 +1,1 @@
+function e(e){return e.trim().split(/\s+/).filter(Boolean).length}export{e as t};

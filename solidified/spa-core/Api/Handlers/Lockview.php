@@ -63,6 +63,9 @@ class Lockview
 
         $access         = [];
         $allowedXchans  = [];
+        // A deny entry beats every allow branch in core's item SQL, so a guest
+        // named here is out of the audience no matter which group let them in.
+        $deniedXchans   = [];
 
         // Privacy groups and profile ("vp.") groups both expand to member
         // xchans — that expansion is how a guest added to a privacy group
@@ -80,8 +83,11 @@ class Lockview
                     intval($uid)
                 );
                 foreach ($rows ?: [] as $row) {
-                    if (!$denied) {
-                        $allowedXchans = array_merge($allowedXchans, AccessList::profile_members_xchan($uid, $row['id']));
+                    $members = AccessList::profile_members_xchan($uid, $row['id']);
+                    if ($denied) {
+                        $deniedXchans = array_merge($deniedXchans, $members);
+                    } else {
+                        $allowedXchans = array_merge($allowedXchans, $members);
                     }
                     $access[] = ['kind' => 'profile', 'name' => $row['profile_name'], 'denied' => $denied];
                 }
@@ -94,8 +100,11 @@ class Lockview
                     intval($uid)
                 );
                 foreach ($rows ?: [] as $row) {
-                    if (!$denied) {
-                        $allowedXchans = array_merge($allowedXchans, AccessList::members_xchan($uid, $row['id']));
+                    $members = AccessList::members_xchan($uid, $row['id']);
+                    if ($denied) {
+                        $deniedXchans = array_merge($deniedXchans, $members);
+                    } else {
+                        $allowedXchans = array_merge($allowedXchans, $members);
                     }
                     $access[] = ['kind' => 'group', 'name' => $row['gname'], 'denied' => $denied];
                 }
@@ -110,12 +119,19 @@ class Lockview
             if (!$hashes) {
                 continue;
             }
+            // Straight off the ACL, not out of the xchan rows below: a guest
+            // token has no xchan row at all (atoken_xchan() synthesises one),
+            // so reading the audience back from that query would drop every
+            // guest we ourselves put in allow_cid or deny_cid.
+            if ($denied) {
+                $deniedXchans = array_merge($deniedXchans, $hashes);
+            } else {
+                $allowedXchans = array_merge($allowedXchans, $hashes);
+            }
+
             \stringify_array_elms($hashes, true);
             $rows = q("SELECT xchan_name, xchan_hash FROM xchan WHERE xchan_hash IN (" . implode(',', $hashes) . ")");
             foreach ($rows ?: [] as $row) {
-                if (!$denied) {
-                    $allowedXchans[] = $row['xchan_hash'];
-                }
                 // Guests are listed in their own section below, not twice.
                 if (!in_array($row['xchan_hash'], $atokenHashes, true)) {
                     $access[] = ['kind' => 'contact', 'name' => $row['xchan_name'], 'denied' => $denied];
@@ -123,9 +139,16 @@ class Lockview
             }
         }
 
-        $allowedXchans = array_unique($allowedXchans);
+        $allowedXchans = array_diff(array_unique($allowedXchans), $deniedXchans);
 
-        $guests = $this->guestLinks($uid, $type, $item, $url, $allowedXchans);
+        // A private item that names no allow list still has an audience — its
+        // public_policy — and a revoke only writes deny_cid, so it lands here
+        // rather than in the no-audience branch above. Keep asking core about
+        // the policy in that case, or revoking one guest would hide the rest.
+        $byPolicy = !empty($item['item_private'])
+            && !strlen($item['allow_cid'] ?? '') && !strlen($item['allow_gid'] ?? '');
+
+        $guests = $this->guestLinks($uid, $type, $item, $url, $byPolicy ? null : $allowedXchans, $deniedXchans);
 
         // A guest who isn't on the ACL yet is offered as "add" rather than
         // hidden: the owner is standing in the share dialog precisely because
@@ -185,16 +208,11 @@ class Lockview
 
         $hash  = $token['xchan_hash'];
         $allow = (string) ($item['allow_cid'] ?? '');
+        $deny  = str_replace('<' . $hash . '>', '', (string) ($item['deny_cid'] ?? ''));
         if (!str_contains($allow, '<' . $hash . '>')) {
             $allow .= '<' . $hash . '>';
-
-            foreach ($this->aclTargets($type, $item) as [$table, $where]) {
-                q("UPDATE %s SET allow_cid = '%s' WHERE $where",
-                    dbesc($table),
-                    dbesc($allow)
-                );
-            }
         }
+        $this->writeAcl($type, $item, $allow, $deny);
 
         Response::send([
             'id'      => $atokenId,
@@ -208,11 +226,18 @@ class Lockview
      * POST /spa/lockview/:type/:id/revoke — body { atoken_id }
      *
      * The inverse of grant: drops the guest's hash from allow_cid on every row
-     * that grant touched. Refused where it would empty the allow list on a row
-     * whose privacy rests on that list alone (photo/attach/chatroom/menu_item),
-     * since an empty allow_cid there means "public" — the same asymmetry
-     * canGrant() guards in the other direction. An item keeps item_private, so
-     * emptying its allow list leaves it private-to-self, not public.
+     * that grant touched, AND names them in deny_cid. Un-allowing alone is not
+     * enough — a guest is eligible through the *expanded* allow list, so one
+     * who got in as a member of a privacy group (allow_gid, no allow_cid at
+     * all) has nothing to strip and the revoke silently did nothing. deny wins
+     * over every allow branch in core's item SQL, so it removes them whichever
+     * way they were let in.
+     *
+     * Still refused where it would empty the allow list on a row whose privacy
+     * rests on that list alone (photo/attach/chatroom/menu_item), since an
+     * empty allow_cid there means "public" — the same asymmetry canGrant()
+     * guards in the other direction. An item keeps item_private, so emptying
+     * its allow list leaves it private-to-self, not public.
      */
     private function revoke(int $uid, string $type, array $item): void
     {
@@ -228,20 +253,32 @@ class Lockview
             Response::error(404, 'Unknown guest');
         }
 
-        $allow = str_replace('<' . $token['xchan_hash'] . '>', '', (string) ($item['allow_cid'] ?? ''));
+        $hash  = $token['xchan_hash'];
+        $allow = str_replace('<' . $hash . '>', '', (string) ($item['allow_cid'] ?? ''));
+        $deny  = (string) ($item['deny_cid'] ?? '');
+        if (!str_contains($deny, '<' . $hash . '>')) {
+            $deny .= '<' . $hash . '>';
+        }
 
         if ($type !== 'item' && $allow === '' && !strlen($item['allow_gid'] ?? '')) {
             Response::error(400, 'Removing the last guest would make this public');
         }
 
-        foreach ($this->aclTargets($type, $item) as [$table, $where]) {
-            q("UPDATE %s SET allow_cid = '%s' WHERE $where",
-                dbesc($table),
-                dbesc($allow)
-            );
-        }
+        $this->writeAcl($type, $item, $allow, $deny);
 
         Response::send(['id' => $atokenId, 'name' => $token['xchan_name']]);
+    }
+
+    /** Writes both ACL columns to every row that must move together. */
+    private function writeAcl(string $type, array $item, string $allow, string $deny): void
+    {
+        foreach ($this->aclTargets($type, $item) as [$table, $where]) {
+            q("UPDATE %s SET allow_cid = '%s', deny_cid = '%s' WHERE $where",
+                dbesc($table),
+                dbesc($allow),
+                dbesc($deny)
+            );
+        }
     }
 
     /**
@@ -391,8 +428,9 @@ class Lockview
      *
      * @param string[]|null $allowedXchans expanded allow list, or null to test
      *                                     the item's public_policy instead
+     * @param string[] $deniedXchans       expanded deny list — beats either test
      */
-    private function guestLinks(int $uid, string $type, array $item, string $url, ?array $allowedXchans = null): array
+    private function guestLinks(int $uid, string $type, array $item, string $url, ?array $allowedXchans = null, array $deniedXchans = []): array
     {
         if (!$url) {
             return [];
@@ -400,9 +438,10 @@ class Lockview
 
         $out = [];
         foreach ($this->atokens($uid) as $t) {
-            $eligible = $allowedXchans === null
-                ? $this->policyAdmits($uid, intval($item['id']), $t['xchan_hash'])
-                : in_array($t['xchan_hash'], $allowedXchans, true);
+            $eligible = !in_array($t['xchan_hash'], $deniedXchans, true)
+                && ($allowedXchans === null
+                    ? $this->policyAdmits($uid, intval($item['id']), $t['xchan_hash'])
+                    : in_array($t['xchan_hash'], $allowedXchans, true));
 
             if (!$eligible) {
                 continue;
