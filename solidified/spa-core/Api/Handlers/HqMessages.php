@@ -15,6 +15,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
+use Utsukta\SpaCore\Api\Concerns\StreamFilters;
 
 require_once 'include/items.php';
 require_once 'include/text.php';
@@ -25,6 +26,26 @@ class HqMessages
 {
     use FormatsItems;
 
+    /** File-tag folder the inbox uses as its trash can. Items tagged with it
+     *  are hidden from every feed except the Trash folder view itself — the
+     *  inbox's delete is a move, so it stays undoable and federates nothing. */
+    public const TRASH = 'Trash';
+
+    /**
+     * What counts as a listable message, for `$alias`.
+     *
+     * Shared with Folders.php so the sidebar's unread badges can't disagree
+     * with the lists they sit next to — leaving the verb exclusions off the
+     * count made a channel with 9 DM threads report 13 unread ones, because
+     * internal Follow/Ignore/Add/Remove activities are rows in `item` too.
+     */
+    public static function itemNormalSql(int $uid, string $alias = 'item'): string
+    {
+        $sql = item_normal($uid)
+            . " and item.verb not in ('Add', 'Remove', 'Follow', 'Ignore', '" . ACTIVITY_FOLLOW . "') ";
+        return $alias === 'item' ? $sql : str_replace('item.', $alias . '.', $sql);
+    }
+
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -32,11 +53,15 @@ class HqMessages
         $offset = max(0, intval($_GET['offset'] ?? 0));
         $type = $_GET['type'] ?? '';
         $file = $_GET['file'] ?? '';
-        $search = trim($_GET['search'] ?? '');
+        // `search` is the shared stream filter (body/title, see StreamFilters);
+        // `author` is this endpoint's own name/address filter, which is what the
+        // list header's box and HQ's message cards use.
+        $author = trim($_GET['author'] ?? '');
         $xchan  = trim($_GET['xchan'] ?? '');
+        $unread = ($_GET['unread'] ?? '') === '1';
 
         if ($type === 'notification') {
-            $this->sendNotices($uid, $offset, $search);
+            $this->sendNotices($uid, $offset, $author);
             return;
         }
 
@@ -44,11 +69,9 @@ class HqMessages
 
         // Pass $uid so item_normal() recognizes the requester as owner and
         // includes their own delayed/moderated items (see Channel.php).
-        $item_normal = item_normal($uid);
-        // Filter internal follow activities and stream add/remove activities.
-        $item_normal .= " and item.verb not in ('Add', 'Remove', 'Follow', 'Ignore', '" . ACTIVITY_FOLLOW . "') ";
-        $item_normal_i = str_replace('item.', 'i.', $item_normal);
-        $item_normal_c = str_replace('item.', 'c.', $item_normal);
+        $item_normal = self::itemNormalSql($uid);
+        $item_normal_i = self::itemNormalSql($uid, 'i');
+        $item_normal_c = self::itemNormalSql($uid, 'c');
 
         $vnotify = get_pconfig($uid, 'system', 'vnotify', -1);
         $vnotify_sql_c = '';
@@ -58,15 +81,10 @@ class HqMessages
             $vnotify_sql_c = " AND c.verb NOT IN ('Dislike', '" . dbesc(ACTIVITY_DISLIKE) . "') ";
         }
 
-        $filed_filter_sql = '';
-        if ($type === 'filed' && $file) {
-            $filed_filter_sql = " AND (term.term = '" . protect_sprintf(dbesc($file)) . "') ";
-        }
-
         // Free-text search against the author's display name/address.
         $search_sql = '';
-        if ($search !== '') {
-            $search_like = protect_sprintf(dbesc('%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%'));
+        if ($author !== '') {
+            $search_like = protect_sprintf(dbesc('%' . str_replace(['%', '_'], ['\\%', '\\_'], $author) . '%'));
             $search_sql = " AND EXISTS (
                 SELECT 1 FROM xchan sx WHERE sx.xchan_hash = i.author_xchan
                 AND (sx.xchan_name LIKE '$search_like' OR sx.xchan_addr LIKE '$search_like')
@@ -96,26 +114,77 @@ class HqMessages
         // on every new reply) rather than thread-creation time, so a DM
         // thread that just got a new reply bubbles back to the top.
         $order_col = 'created';
+
+        // The selected feed is expressed as stream-filter params rather than
+        // hand-rolled SQL, so the sidebar filter widget and the feed can't
+        // disagree about privacy: `dm` and `star` already carry the right
+        // rules (and `star`/`file` deliberately dismiss the public/private
+        // fence, exactly as they do on /network).
+        $q = $_GET;
         switch ($type) {
             case 'direct':
-                $type_sql = ' AND i.item_private = 2 AND i.item_thread_top = 1 ';
+                $q['dm'] = '1';
                 $order_col = 'commented';
                 // Tricks some mysql backends into using the right index.
                 $dummy_order_sql = ', i.received DESC ';
                 break;
             case 'starred':
-                $type_sql = ' AND i.item_starred = 1 AND i.item_thread_top = 1 ';
+                $q['star'] = '1';
                 break;
             case 'filed':
-                $type_sql = ' AND i.id IN (SELECT term.oid FROM term WHERE term.ttype = ' . TERM_FILE . ' AND term.uid = i.uid ' . $filed_filter_sql . ')';
+                if ($file) {
+                    $q['file'] = $file;
+                }
                 break;
-            default:
-                $type_sql = ' AND i.item_private IN (0, 1) AND i.item_thread_top = 1 ';
         }
 
-        $items = q("SELECT *,
+        $channel = \App::get_channel();
+        $f = StreamFilters::build($q, $uid, [
+            'alias' => 'i',
+            'channel_hash' => $channel['channel_hash'] ?? '',
+            'observer_xchan' => get_observer_hash(),
+            'item_normal' => $item_normal,
+        ]);
+
+        // A mailbox lists threads, so the thread-top restriction stays even for
+        // the filters that relax it on /network (conv, liked, cid, gid). Those
+        // are all `parent IN (…)` subqueries and so still match thread-wide;
+        // the row-level ones (search, tag, unseen) match the first message of
+        // the thread rather than any reply in it.
+        $type_sql = ' AND i.item_thread_top = 1 ' . $f['extra'] . $f['options'] . $f['nets'] . $f['date'];
+
+        // Inbox filter chip. Distinct from the shared `unseen` filter, which is
+        // row-level: an inbox thread counts as unread when a *reply* is unseen.
+        if ($unread) {
+            $type_sql .= " AND (i.item_unseen = 1 OR EXISTS (
+                SELECT 1 FROM item cu WHERE cu.uid = i.uid AND cu.parent = i.parent
+                AND cu.item_unseen = 1 AND cu.item_thread_top = 0
+            )) ";
+        }
+
+        // Trashed items drop out of every feed but the Trash folder itself —
+        // reached either by selecting the folder or by an `in:trash` search.
+        $viewingTrash = ($type === 'filed' && $file === self::TRASH)
+            || (($q['file'] ?? '') === self::TRASH);
+        if (!$viewingTrash) {
+            $type_sql .= " AND i.id NOT IN (SELECT oid FROM term
+                WHERE ttype = " . intval(TERM_FILE) . " AND uid = i.uid
+                AND term = '" . protect_sprintf(dbesc(self::TRASH)) . "') ";
+        }
+
+        // Affinity filtering reads abook; nothing else here needs the join.
+        $abook_join = $f['needs_abook']
+            ? " LEFT JOIN abook ON (i.owner_xchan = abook.abook_xchan AND abook.abook_channel = $uid) "
+            : '';
+        // Protocol filter brings its own xchan join.
+        $net_join = $f['net_query'];
+        $type_sql .= $f['net_query2'];
+
+        $items = q("SELECT i.*,
             (SELECT count(*) FROM item c WHERE c.uid = %d AND c.parent = i.parent AND c.item_unseen = 1 AND c.item_thread_top = 0 $item_normal_c $vnotify_sql_c) AS unseen_count
             FROM item i
+            $abook_join
+            $net_join
             WHERE i.uid = %d
             AND i.created <= '%s'
             $type_sql
@@ -129,9 +198,9 @@ class HqMessages
             dbescdate(datetime_convert())
         );
 
-        if ($type === 'filed') {
-            $items = fetch_post_tags($items);
-        }
+        // Every entry carries its folder list, not just the filed feed — the
+        // inbox renders folder chips and needs to know what a move must undo.
+        $items = fetch_post_tags($items);
 
         xchan_query($items, false);
 
@@ -160,13 +229,17 @@ class HqMessages
                 $info .= t('via') . ' ' . Response::decodeEntities($item['source']['xchan_name']);
             }
 
+            $folders = [];
+            foreach (($item['term'] ?? []) as $term) {
+                if (intval($term['ttype']) === TERM_FILE) {
+                    $folders[] = $term['term'];
+                }
+            }
+
             if ($type === 'filed') {
                 $info = '';
-                foreach ($item['term'] as $term) {
-                    if ($term['ttype'] !== TERM_FILE) {
-                        continue;
-                    }
-                    $info .= '<span class="badge rounded-pill bg-danger me-1"><i class="bi bi-folder"></i>&nbsp;' . $term['term'] . '</span>';
+                foreach ($folders as $name) {
+                    $info .= '<span class="badge rounded-pill bg-danger me-1"><i class="bi bi-folder"></i>&nbsp;' . $name . '</span>';
                 }
             }
 
@@ -212,6 +285,9 @@ class HqMessages
                 'icon' => $icon,
                 'unseen_count' => $item['unseen_count'] ?: ($item['item_unseen'] ? '&#8192;' : ''),
                 'unseen_class' => $item['item_unseen'] ? 'primary' : 'secondary',
+                'unseen' => (bool) intval($item['item_unseen']),
+                'starred' => (bool) intval($item['item_starred']),
+                'folders' => $folders,
             ];
         }
 

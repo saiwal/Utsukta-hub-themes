@@ -128,7 +128,7 @@ class Item
         // The action verb is always the last segment for POST requests.
         $POST_VERBS = ['like', 'dislike', 'repeat', 'accept', 'reject',
                        'tentativeaccept', 'star', 'pin', 'comment', 'delete',
-                       'edit', 'reshare', 'saveto', 'vote',
+                       'edit', 'reshare', 'saveto', 'vote', 'seen',
                        'follow', 'unfollow', 'addtocal', 'fetchreplies'];
 
         $segs = array_slice(App::$argv, 2);
@@ -191,6 +191,9 @@ class Item
                 break;
             case 'saveto':
                 $this->saveToFolder($mid);
+                break;
+            case 'seen':
+                $this->setSeen($mid);
                 break;
             case 'vote':
                 $this->voteOnPoll($mid);
@@ -1368,26 +1371,24 @@ class Item
     }
 
     // POST /api/item/:mid/star
-    // Toggles the starred flag on the item (local only — not federated)
+    // Toggles the starred flag on the item (local only — not federated).
+    // An explicit {"starred": bool} sets that state instead: a bulk "star
+    // these 12" must be idempotent rather than 12 independent toggles.
     private function toggleStar(string $mid): void
     {
-        $this->requireLocalChannel();
-        $this->requireCsrf();
-
+        Auth::requireLocalJson();
         $uid = local_channel();
-        $item_normal = item_normal();
-        $midEsc = dbesc($mid);
 
-        $item = dbq("SELECT id, item_starred FROM item
-                     WHERE mid = '$midEsc' AND uid = $uid
-                     $item_normal LIMIT 1");
-
-        if (!$item) {
+        // resolveItem, not a raw `mid =` match: the inbox only ever has an
+        // item uuid (MessageEntry.b64mid), which this used to miss entirely.
+        $item = $this->resolveItem($mid, get_observer_hash());
+        if (!$item || intval($item['uid']) !== $uid) {
             json_return_and_die(['error' => 'Item not found']);
         }
 
-        $newState = intval($item[0]['item_starred']) ? 0 : 1;
-        $iid = intval($item[0]['id']);
+        $want = Auth::$parsedBody['starred'] ?? null;
+        $newState = $want === null ? (intval($item['item_starred']) ? 0 : 1) : (int) (bool) $want;
+        $iid = intval($item['id']);
 
         q('UPDATE item SET item_starred = %d WHERE id = %d AND uid = %d',
             $newState, $iid, $uid);
@@ -1968,6 +1969,30 @@ class Item
     // POST /api/item/:mid/saveto
     // Body: { "name": "folder name" }            → add to folder
     // Body: { "name": "folder name", "remove": true } → remove from folder
+    // POST /api/item/:mid/seen  {"seen": bool}
+    // Marks a thread read or unread. Core's /sse_bs endpoint (see markSeen.ts)
+    // only ever clears item_unseen, so mark-as-unread has no other path.
+    private function setSeen(string $mid): void
+    {
+        Auth::requireLocalJson();
+        $uid = local_channel();
+
+        $item = $this->resolveItem($mid, get_observer_hash());
+        if (!$item || intval($item['uid']) !== $uid) {
+            \Utsukta\SpaCore\Api\Response::error(403, 'Item not found in your stream');
+        }
+
+        $seen = (bool) (Auth::$parsedBody['seen'] ?? true);
+        $parent = intval($item['parent']) ?: intval($item['id']);
+
+        // The whole thread, not just the row: an inbox entry is a thread and
+        // its unread badge counts unseen replies.
+        q('UPDATE item SET item_unseen = %d WHERE (id = %d OR parent = %d) AND uid = %d',
+            $seen ? 0 : 1, intval($item['id']), $parent, intval($uid));
+
+        json_return_and_die(['success' => true, 'seen' => $seen]);
+    }
+
     private function saveToFolder(string $mid): void
     {
         Auth::requireLocalJson();
