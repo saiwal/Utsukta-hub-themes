@@ -84,7 +84,7 @@ class Pubstream {
             {$item_normal}
             and (abook.abook_blocked = 0 or abook.abook_flags is null)
             {$sql_extra} {$net_query}
-            ORDER BY item.{$ordering} DESC
+            ORDER BY item.{$ordering} DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::TIEBREAK . "
             LIMIT {$limit} OFFSET {$offset}
         ");
 

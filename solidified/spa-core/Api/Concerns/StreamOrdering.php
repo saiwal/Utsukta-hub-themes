@@ -22,6 +22,20 @@ final class StreamOrdering
     // orders whose result is worth caching.
     public const RANKED = ['top', 'hot', 'discussed', 'controversial'];
 
+    // Appended to every stream ORDER BY. `created` and `commented` each have
+    // a standalone index besides the uid-prefixed ones, and for
+    // `ORDER BY item.created DESC LIMIT 10` MySQL will read that index
+    // newest-first across *all* channels, filtering for this uid as it goes —
+    // fine on a small hub, a full-table scan on a busy one whose newest rows
+    // mostly belong to someone else (EXPLAIN: type index, key created).
+    // A trailing sort key no index covers takes that plan away, so the uid
+    // index drives and the filesort only sees this channel's rows. Core's
+    // channel module gets the same plan for free from its `ORDER BY ..., item_id`
+    // (an alias for item.parent), and HqMessages already carries the same trick.
+    // ponytail: optimizer nudge, not a guarantee — the real fix is a
+    // (uid, item_wall, created) index, which is core's schema to change.
+    public const TIEBREAK = ', item.parent DESC';
+
     public static function isRanked(string $order): bool
     {
         return in_array($order, self::RANKED, true);
