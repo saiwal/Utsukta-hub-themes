@@ -122,13 +122,6 @@ class Channel
         // Permission filter for non-owners
         $sql_extra .= item_permissions_sql($channel_uid, $observer_xchan);
 
-        // `item_wall = 1` is what makes this query mis-plan (see
-        // StreamOrdering::indexAnchor()); dm=1 drops that filter and with it the
-        // trap, and anchoring it anyway would only take a good plan away.
-        if (!$dm) {
-            $sql_extra .= StreamOrdering::indexAnchor($ordering);
-        }
-
         // Date range (threaded mode: parent query only)
         $sql_date  = '';
         if ($datequery) {
@@ -155,7 +148,7 @@ class Channel
                 $rank_join
                 WHERE true $uids $item_normal
                 $sql_extra $sql_date
-                ORDER BY $ordering DESC $pager_sql");
+                ORDER BY $ordering DESC" . ($dm ? "" : StreamOrdering::tiebreak()) . " $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -170,7 +163,7 @@ class Channel
                 WHERE true $uids $item_thread_top $item_normal
                 AND item.mid = item.parent_mid
                 $sql_extra3 $sql_extra
-                ORDER BY $ordering DESC ";
+                ORDER BY $ordering DESC" . ($dm ? "" : StreamOrdering::tiebreak()) . " ";
 
             // See Network.php — ranked orders sort the whole candidate set
             // before they can return a page, so the ordered ids are cached and

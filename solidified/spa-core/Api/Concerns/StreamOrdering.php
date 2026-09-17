@@ -22,7 +22,7 @@ final class StreamOrdering
     // orders whose result is worth caching.
     public const RANKED = ['top', 'hot', 'discussed', 'controversial'];
 
-    // A no-op upper bound, ANDed into a stream query whose WHERE carries
+    // Appended to the ORDER BY of a stream query whose WHERE carries
     // `item_wall = 1`.
     //
     // `created` and `commented` each have a standalone index besides the
@@ -34,37 +34,27 @@ final class StreamOrdering
     // times out — seen live on a 11.4 hub where every unfiltered /spa/channel
     // 504'd at 60s while `?tag=x` answered instantly.
     //
-    // An upper bound on the sort column turns the uid index into a *range* the
-    // optimizer prefers: it walks (uid, created) backwards and stops at LIMIT.
+    // A trailing sort key no index covers takes that plan away: the optimizer
+    // then drives off a uid_* index and filesorts. That sounds worse than
+    // steering it onto (uid, created) with a bound on the sort column, and on
+    // a table where most of the channel's rows *are* wall posts it is. On a
+    // real channel it isn't, and that is the case that matters: wall posts are
+    // a fraction of a percent of what a uid receives, so the filesort runs over
+    // a few hundred wall rows picked out by uid_item_wall, where the bounded
+    // range scan reads every received row to test the flag. Field behaviour on
+    // the affected hub agreed: the tiebreak cleared the timeout, the bound did
+    // not.
     //
-    // Scope matters. `item_wall = 1` is the trigger — ablation on a real
-    // database: remove it and the optimizer picks a uid_* index_merge on its
-    // own; keep it and nothing else (the abook join, the verb whitelist,
-    // item_private, id=parent vs mid=parent_mid) changes the outcome. So this
-    // belongs only on the wall queries. Anchoring /network or /pubstream, which
-    // have no wall filter, only replaces a working index_merge with a range
-    // scan that reads full rows — measurably more I/O on the most-polled
-    // endpoint there is. Core has exactly one query with the trigger, its
-    // channel module, and it is guarded by an accidental `ORDER BY ..., item_id`
-    // (an alias for item.parent) — which is why classic Hubzilla never hit this.
+    // Core's channel module gets this same plan from its `ORDER BY ..., item_id`
+    // (an alias for item.parent), which is why classic Hubzilla never hit this.
     //
-    // The bound is deliberately a far-future constant, not NOW(): scheduled
-    // posts carry a future `created` and the owner is meant to see them. Unlike
-    // FORCE INDEX it is a plain predicate, so a tag/search filter can still win
-    // a narrower plan, and it costs Postgres nothing.
-    private const FAR_FUTURE = '9999-12-31 23:59:59';
-
-    public static function indexAnchor(string $orderExpr, string $alias = 'item'): string
+    // ponytail: still an optimizer nudge. The real fix is an index that covers
+    // the filter *and* the order — `ALTER TABLE item ADD INDEX uid_wall_created
+    // (uid, item_wall, created)` — which makes every plan here a seek and is a
+    // hub-side change needing no deploy.
+    public static function tiebreak(string $alias = 'item'): string
     {
-        // Only a bare indexed column can be served from an index in the first
-        // place; the ranked orders sort by an expression over a join, so there
-        // is no bad plan there to steer away from.
-        $col = preg_quote($alias, '/');
-        if (!preg_match("/^$col\\.(created|commented)$/", trim($orderExpr), $m)) {
-            return '';
-        }
-
-        return " AND $alias.{$m[1]} <= '" . self::FAR_FUTURE . "' ";
+        return ", $alias.parent DESC";
     }
 
     public static function isRanked(string $order): bool
