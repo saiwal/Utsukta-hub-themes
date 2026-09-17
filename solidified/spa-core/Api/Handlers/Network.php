@@ -52,9 +52,6 @@ class Network
         // 'unthreaded' is the only order that also changes the shape of the
         // result (flat, not threaded); the rest only change the ORDER BY.
         $nouveau = ($get_order === 'unthreaded');
-        $clause = StreamOrdering::clause($get_order, $uid);
-        $ordering = $clause['order'];
-        $rank_join = $clause['join'];
 
         // ── Filters ───────────────────────────────────────────────────────────
         // Shared with /spa/hq-messages so the inbox answers to the same
@@ -79,6 +76,12 @@ class Network
         $net_query = $f['net_query'];
         $net_query2 = $f['net_query2'];
 
+        // Ordering is resolved after the filters because a ranked view hands
+        // its date range to the aggregate join — see StreamOrdering::clause().
+        $clause = StreamOrdering::clause($get_order, $uid, $f['datequery2'] ?? '');
+        $ordering = $clause['order'];
+        $rank_join = $clause['join'];
+
         // A "jump to this date" query is inherently chronological, so it
         // overrides `commented` — but not the ranked orders, where
         // "best posts before <date>" is a perfectly sensible request.
@@ -86,6 +89,11 @@ class Network
             $ordering = StreamOrdering::clause('created', $uid)['order'];
             $rank_join = '';
         }
+
+        // Keeps the optimizer on the (uid, created) index — see
+        // StreamOrdering::indexAnchor(). Placed after the override above so
+        // it bounds the column the query actually sorts on.
+        $sql_extra .= StreamOrdering::indexAnchor($ordering);
 
         // In threaded mode date filter goes on the parent query only
         $sql_extra3 = $nouveau ? '' : $sql_date;
@@ -110,7 +118,7 @@ class Network
                 AND item.verb NOT IN ('Add', 'Remove')
                 $sql_extra $sql_options $sql_nets $sql_date
                 $net_query2
-                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " $pager_sql");
+                ORDER BY $ordering DESC $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -129,7 +137,7 @@ class Network
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
                 $sql_extra3 $sql_extra $sql_options $sql_nets
                 $net_query2
-                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " ";
+                ORDER BY $ordering DESC ";
 
             // Ranked orders sort the whole candidate set before they can
             // return a page, so the ordered ids are cached and every later

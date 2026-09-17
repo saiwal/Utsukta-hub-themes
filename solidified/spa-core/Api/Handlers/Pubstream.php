@@ -83,8 +83,8 @@ class Pubstream {
             {$uids} {$site_firehose_sql}
             {$item_normal}
             and (abook.abook_blocked = 0 or abook.abook_flags is null)
-            {$sql_extra} {$net_query}
-            ORDER BY item.{$ordering} DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak() . "
+            {$sql_extra} {$net_query}" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::indexAnchor("item.$ordering") . "
+            ORDER BY item.{$ordering} DESC
             LIMIT {$limit} OFFSET {$offset}
         ");
 

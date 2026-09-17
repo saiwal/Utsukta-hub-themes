@@ -22,21 +22,41 @@ final class StreamOrdering
     // orders whose result is worth caching.
     public const RANKED = ['top', 'hot', 'discussed', 'controversial'];
 
-    // Appended to every paged ORDER BY over `item`. `created` and `commented` each have
-    // a standalone index besides the uid-prefixed ones, and for
-    // `ORDER BY item.created DESC LIMIT 10` MySQL will read that index
-    // newest-first across *all* channels, filtering for this uid as it goes —
-    // fine on a small hub, a full-table scan on a busy one whose newest rows
-    // mostly belong to someone else (EXPLAIN: type index, key created).
-    // A trailing sort key no index covers takes that plan away, so the uid
-    // index drives and the filesort only sees this channel's rows. Core's
-    // channel module gets the same plan for free from its `ORDER BY ..., item_id`
-    // (an alias for item.parent), and HqMessages already carries the same trick.
-    // ponytail: optimizer nudge, not a guarantee — the real fix is a
-    // (uid, item_wall, created) index, which is core's schema to change.
-    public static function tiebreak(string $alias = 'item'): string
+    // A no-op upper bound, ANDed into every paged stream query over `item`.
+    //
+    // `created` and `commented` each have a standalone index besides the
+    // uid-prefixed ones, and for `WHERE item.uid = X ... ORDER BY item.created
+    // DESC LIMIT 10` MySQL happily reads that standalone index newest-first
+    // across *all* channels, filtering for the uid as it goes (EXPLAIN: type
+    // index, key created). Fine on a small hub; on a busy one whose newest
+    // rows belong to someone else it walks the table and the request times
+    // out — seen live, where every unfiltered /spa/channel 504'd while a
+    // tag-filtered one answered instantly.
+    //
+    // An upper bound on the sort column turns the uid index into a *range*
+    // the optimizer prefers: it then walks (uid, created) backwards and stops
+    // at LIMIT. Measured on a 202k-row copy of `item`, this touches 26 index
+    // entries where the plain query touched 16,681 (and a trailing
+    // `ORDER BY …, item.parent DESC` — core's channel module gets that plan by
+    // accident — forces a filesort over every row of the uid instead).
+    //
+    // The bound is deliberately a far-future constant, not NOW(): scheduled
+    // posts carry a future `created` and the owner is meant to see them.
+    // Unlike FORCE INDEX this is a plain predicate, so a tag/search filter can
+    // still win a narrower plan, and it costs Postgres nothing.
+    private const FAR_FUTURE = '9999-12-31 23:59:59';
+
+    public static function indexAnchor(string $orderExpr, string $alias = 'item'): string
     {
-        return ", $alias.parent DESC";
+        // Only a bare indexed column can be served from an index in the first
+        // place; the ranked orders sort by an expression over a join, so there
+        // is no bad plan there to steer away from.
+        $col = preg_quote($alias, '/');
+        if (!preg_match("/^$col\\.(created|commented)$/", trim($orderExpr), $m)) {
+            return '';
+        }
+
+        return " AND $alias.{$m[1]} <= '" . self::FAR_FUTURE . "' ";
     }
 
     public static function isRanked(string $order): bool
@@ -68,7 +88,7 @@ final class StreamOrdering
      * the join fragments are scoped to $uid, matching how the count subqueries
      * in ReactionCounts correlate.
      */
-    public static function clause(string $order, int $uid): array
+    public static function clause(string $order, int $uid, string $dbegin = ''): array
     {
         $pg = defined('ACTIVE_DBTYPE') && defined('DBTYPE_POSTGRES')
             && ACTIVE_DBTYPE == DBTYPE_POSTGRES;
@@ -83,10 +103,10 @@ final class StreamOrdering
                 return ['join' => '', 'order' => 'item.commented'];
 
             case 'top':
-                return ['join' => self::reactionJoin($uid), 'order' => $likes];
+                return ['join' => self::reactionJoin($uid, $dbegin), 'order' => $likes];
 
             case 'discussed':
-                return ['join' => self::commentJoin($uid), 'order' => $comments];
+                return ['join' => self::commentJoin($uid, $dbegin), 'order' => $comments];
 
             case 'hot':
                 // Reddit's hotness: log of the score plus a linear age term,
@@ -94,7 +114,7 @@ final class StreamOrdering
                 $log   = $pg ? "LOG(GREATEST($likes, 1)::numeric)" : "LOG10(GREATEST($likes, 1))";
                 $epoch = $pg ? 'EXTRACT(EPOCH FROM item.created)' : 'UNIX_TIMESTAMP(item.created)';
                 return [
-                    'join'  => self::reactionJoin($uid),
+                    'join'  => self::reactionJoin($uid, $dbegin),
                     'order' => "($log + $epoch / 45000)",
                 ];
 
@@ -105,7 +125,7 @@ final class StreamOrdering
                 // Postgres does integer division on bigint counts — cast.
                 $cast    = $pg ? '::numeric' : '';
                 return [
-                    'join'  => self::reactionJoin($uid),
+                    'join'  => self::reactionJoin($uid, $dbegin),
                     'order' => "($total * (1 - $balance$cast / GREATEST($total, 1)))",
                 ];
 
@@ -116,13 +136,31 @@ final class StreamOrdering
         }
     }
 
+    // A ranged view ("Top (month)") aggregates every reaction the channel ever
+    // received, because the range only bounds the *posts*. A reaction cannot
+    // predate the post it reacts to, so the same bound applies to the reaction
+    // rows: anything older belongs to a post the range already excluded. The
+    // day of slack is for federated activities whose remote `created` runs
+    // slightly ahead of the local copy's.
+    private static function sinceClause(string $dbegin): string
+    {
+        if ($dbegin === '') {
+            return '';
+        }
+
+        $since = datetime_convert('UTC', 'UTC', $dbegin . ' - 1 day');
+
+        return " AND r.created >= '" . dbesc($since) . "' ";
+    }
+
     // Like/dislike counts per thread root, grouped the way
     // ReactionCounts::subqueries() correlates them: on thr_parent = the root's
     // mid, so only direct reactions to the root count, one vote per author
     // however many duplicate activities federation delivered.
-    private static function reactionJoin(int $uid): string
+    private static function reactionJoin(int $uid, string $dbegin = ''): string
     {
         $normal = ReactionCounts::normalFlags();
+        $since  = self::sinceClause($dbegin);
         return "LEFT JOIN (
                   SELECT r.thr_parent AS tp,
                          COUNT(DISTINCT CASE WHEN r.verb = 'Like'    THEN r.author_xchan END) AS likes,
@@ -132,7 +170,7 @@ final class StreamOrdering
                     AND r.item_thread_top = 0
                     AND r.obj_type != 'Answer'
                     AND r.verb IN ('Like', 'Dislike')
-                    AND $normal
+                    AND $normal $since
                   GROUP BY r.thr_parent
                 ) rx ON rx.tp = item.mid ";
     }
@@ -142,9 +180,10 @@ final class StreamOrdering
     // `r.parent = item.id`: "Most discussed" counts the whole thread including
     // nested replies, where the reaction counts only count direct children of
     // the root. Grouping these by thr_parent would quietly redefine the order.
-    private static function commentJoin(int $uid): string
+    private static function commentJoin(int $uid, string $dbegin = ''): string
     {
         $normal = ReactionCounts::normalFlags();
+        $since  = self::sinceClause($dbegin);
         return "LEFT JOIN (
                   SELECT r.parent AS pid, COUNT(*) AS comments
                   FROM item r
@@ -152,7 +191,7 @@ final class StreamOrdering
                     AND r.item_thread_top = 0
                     AND r.obj_type != 'Answer'
                     AND r.verb IN ('Create', 'Update', 'EmojiReact')
-                    AND $normal
+                    AND $normal $since
                   GROUP BY r.parent
                 ) cx ON cx.pid = item.id ";
     }

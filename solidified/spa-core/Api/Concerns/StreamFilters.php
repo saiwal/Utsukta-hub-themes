@@ -303,6 +303,7 @@ class StreamFilters
             'net_query' => $net_query,
             'net_query2' => $net_query2,
             'datequery' => $datequery,
+            'datequery2' => $datequery2,
             'needs_abook' => $sql_nets !== '',
         ];
     }

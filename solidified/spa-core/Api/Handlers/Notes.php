@@ -185,8 +185,8 @@ class Notes
              WHERE item.uid = $uid
                AND item.item_thread_top = 1
                AND item.verb = 'Create'
-               $item_normal $sql_extra
-             ORDER BY item.created DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak() . "
+               $item_normal $sql_extra" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::indexAnchor('item.created') . "
+             ORDER BY item.created DESC
              LIMIT $limit OFFSET $start"
         );
 

@@ -104,8 +104,8 @@ class Feed
                $wall_sql
                $verb_sql
                $term_join
-               $perm_sql $item_normal
-             ORDER BY item.created DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak() . "
+               $perm_sql $item_normal" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::indexAnchor('item.created') . "
+             ORDER BY item.created DESC
              LIMIT " . self::MAX_ITEMS
         );
 
