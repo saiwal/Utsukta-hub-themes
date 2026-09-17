@@ -44,7 +44,11 @@ class Channel
         // 'unthreaded' is the only order that also changes the shape of the
         // result (flat, not threaded); the rest only change the ORDER BY.
         $nouveau   = ($get_order === 'unthreaded');
-        $clause    = StreamOrdering::clause($get_order, $channel_uid);
+        $clause    = StreamOrdering::clause(
+            $get_order,
+            $channel_uid,
+            (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin'])) ? notags($_GET['dbegin']) : ''
+        );
         $ordering  = $clause['order'];
         $rank_join = $clause['join'];
 

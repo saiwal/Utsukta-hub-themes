@@ -52,9 +52,6 @@ class Network
         // 'unthreaded' is the only order that also changes the shape of the
         // result (flat, not threaded); the rest only change the ORDER BY.
         $nouveau = ($get_order === 'unthreaded');
-        $clause = StreamOrdering::clause($get_order, $uid);
-        $ordering = $clause['order'];
-        $rank_join = $clause['join'];
 
         // ── Filters ───────────────────────────────────────────────────────────
         // Shared with /spa/hq-messages so the inbox answers to the same
@@ -78,6 +75,13 @@ class Network
         $nouveau = $f['flat'];
         $net_query = $f['net_query'];
         $net_query2 = $f['net_query2'];
+
+        // Resolved after the filters: a ranked view hands its date range to the
+        // aggregate join, so the ranking only reads reactions inside the window
+        // — see StreamOrdering::clause().
+        $clause = StreamOrdering::clause($get_order, $uid, $f['datequery2'] ?? '');
+        $ordering = $clause['order'];
+        $rank_join = $clause['join'];
 
         // A "jump to this date" query is inherently chronological, so it
         // overrides `commented` — but not the ranked orders, where

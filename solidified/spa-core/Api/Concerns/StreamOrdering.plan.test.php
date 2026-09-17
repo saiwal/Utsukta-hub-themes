@@ -75,4 +75,14 @@ foreach ($shapes as $label => $sql) {
 // that order, so the anchor must stay out of their way.
 assert(StreamOrdering::indexAnchor('COALESCE(rx.likes, 0)') === '', 'ranked order must not be anchored');
 
+// A ranged ranked view bounds its aggregate join by the same dbegin, so "Top
+// (month)" reads a month of reactions instead of the channel's whole history.
+$ranged    = StreamOrdering::clause('top', $uid, '2026-08-18')['join'];
+$unbounded = StreamOrdering::clause('top', $uid)['join'];
+$discussed = StreamOrdering::clause('discussed', $uid, '2026-08-18')['join'];
+
+assert(str_contains($ranged, "r.created >= '2026-08-17 00:00:00'"), "ranged join must bound reactions: $ranged");
+assert(str_contains($discussed, "r.created >= '2026-08-17 00:00:00'"), 'comment join must bound the same way');
+assert(!str_contains($unbounded, 'r.created >='), 'an unranged view must aggregate everything');
+
 echo $saw_bad ? "PASS\n" : "PASS  (this database is too small to show the bad plan)\n";
