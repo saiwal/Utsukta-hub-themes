@@ -78,6 +78,46 @@ Both halves are emitted as `data-bb-raw` embeds — the same non-editable carrie
 the source back byte for byte when the surface re-serializes. Without that the
 reference comes back as a bare `1` and the footnote dissolves as you type.
 
+## The Write tab, and when it is offered
+
+Bbcode always gets the WYSIWYG surface. Markdown and HTML get it only where
+`EditorCapabilities.nonBbcodeWysiwyg` is on — and for content stored in the
+format it was typed in, only while the body survives a round trip unchanged:
+
+```ts
+// src/shared/editor/core/wysiwygSafe.ts
+const probe = document.createElement("div");
+probe.innerHTML = sourceToHtml(body, mime);
+return htmlToSource(probe.innerHTML, mime) === body;
+```
+
+The probe element is not decoration. `RichEditor` assigns `innerHTML` and later
+reads it back, and the browser normalises markup in between — attribute order
+and quoting, implied tags, entity forms, self-closing tags. For `text/html`
+that *is* the entire rewrite, since `htmlToSource` hands HTML straight back, so
+a string-to-string check would call every HTML body safe and then mangle it.
+
+`createWysiwygAvailable()` evaluates this at mount and on a format change,
+never per keystroke: the check runs marked, DOMPurify and Turndown over the
+whole document, and a tab that appeared and vanished while typing would be
+worse than either answer. The same accessor feeds `<RichEditor
+wysiwygAvailable>` and the source toggle's `canWysiwyg`, so the button and the
+surface cannot disagree.
+
+Who gets what:
+
+| Composer | Write tab for non-bbcode |
+|---|---|
+| Post, comment, DM | always — the body is converted to bbcode on save, so normalisation never reaches storage |
+| Article, card, webpage, block, note | when the body round-trips unchanged |
+| Wiki | never — core git-versions pages, so a normalising edit reads as a whole-file rewrite in the history |
+| `text/plain` | never, anywhere — `htmlToSource` has no branch for it and a plain body would come back as bbcode |
+
+`markdown-roundtrip.test.ts` pins both halves: 33 shapes that must come back
+byte-identical, and the known-rewritten ones (setext headings, reference links)
+that must not — if those ever start surviving, the guard may allow them, but
+silently returning something *different* is what it exists to catch.
+
 ## Traps
 
 **`__text__` is bold, not underline.** That is CommonMark (`__` and `**` are the

@@ -1,1 +1,0 @@
-import{M as e,V as t,Y as n}from"./app-web-BeXRvOD7.js";import{n as r}from"./app-mimetypes-C8heCqJV.js";import{i,r as a}from"./app-editor.types-p3hPvcxO.js";function o(e,t){if(!e.trim())return!0;try{return a(i(e,t),t)===e}catch{return!1}}function s(i,a,s){return e(t(a,e=>r(e,s)&&(e===`text/bbcode`||o(n(i),e))))}export{s as t};
