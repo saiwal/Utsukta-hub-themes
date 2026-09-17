@@ -25,6 +25,54 @@ Select text first, then click a button to wrap the selection. If nothing is sele
 
 [IMAGE: Composer toolbar with button labels]
 
+## Writing in Markdown
+
+If you turn on **Markdown** in Settings → Features → Editor, the composer accepts
+Markdown as well as BBCode. Your post is converted to BBCode when you publish it,
+so everyone sees it correctly — including people on the classic Hubzilla themes
+and on other networks.
+
+### Basic syntax
+
+| You type | You get |
+|---|---|
+| `**bold**` or `__bold__` | **bold** |
+| `*italic*` or `_italic_` | *italic* |
+| `# Heading` | a heading |
+| `> quoted` | a quote |
+| `- item` | a bullet list |
+| `1. item` | a numbered list |
+| `` `code` `` or ```` ```block``` ```` | code |
+| `[label](https://example.com)` | a link |
+| `![alt](https://example.com/x.png)` | an image |
+
+### Extended syntax
+
+| You type | You get |
+|---|---|
+| `~~struck~~` | struck-through text |
+| `- [ ] task` / `- [x] done` | a checklist |
+| `==highlight==` | highlighted text |
+| `H~2~O` | subscript |
+| `X^2^` | superscript |
+| `see [^1]` and `[^1]: the note` | a footnote |
+| a table written with `\|` pipes | a table |
+
+Footnotes show up in the composer where you typed them — the reference as a
+small superscript, the note itself set apart just below. That is on purpose: the
+composer shows your text as you wrote it rather than rearranging it while you
+are still writing.
+
+### Two things Markdown cannot do
+
+**There is no underline in Markdown.** `__text__` means **bold**, exactly like
+`**text**` — that is standard Markdown everywhere, not a quirk of this theme.
+For underline, use the toolbar's **U** button, which inserts `[u]…[/u]`.
+
+The same goes for text colour, highlight colour, font, size, spoilers and
+centred text: the toolbar inserts BBCode for those, and you can mix BBCode and
+Markdown freely in the same post.
+
 ## Mentioning Someone
 
 Type `@` followed by a name to mention a connection. A popup appears with matching names — select one to insert a proper mention link.

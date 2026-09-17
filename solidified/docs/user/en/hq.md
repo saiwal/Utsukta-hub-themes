@@ -22,10 +22,11 @@ The composer at the top of HQ lets you write and publish a new post directly.
 
 ![IMAGE: HQ composer in its collapsed state](hq/composer-collapsed.png)
 
-- Click the text area to expand the full composer.
-- Write your post using plain text or BBCode formatting.
-- Use the **toolbar** to quickly insert bold, italic, links, images, and other BBCode tags.
-- Choose who can see your post with the **privacy selector** (see [composing-posts.txt](composing-posts.txt) for details).
+- Click the text area to expand the composer.
+- Write your post using plain text, BBCode, or Markdown (see [composing-posts.txt](composing-posts.txt)).
+- Use the **toolbar** for bold, italic, underline, strikethrough, highlight, links and emoji. It is the compact version of the full composer's toolbar — open the full composer (the arrows button) for tables, quotes, code blocks, LaTeX and the rest.
+- **Paste or drag an image straight into the text area.** It is uploaded to your cloud files and inserted as a link — which is what makes it show up correctly for everyone, including on the classic themes.
+- Choose who can see your post with the **privacy selector**.
 - Your draft is saved automatically as you type — if you close the tab by accident it will still be there.
 
 ![IMAGE: Composer expanded with toolbar and privacy picker visible](hq/composer-full.png)

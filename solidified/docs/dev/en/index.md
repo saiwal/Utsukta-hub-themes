@@ -21,6 +21,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Post-import](post-import) — Importing a federated post by URL: Zot vs ActivityPub, ancestor and reply discovery, the Lemmy fallback
 - [Offline](offline) — Service worker, fetch fallback, and the local message store
 - [Php-api](php-api) — Backend PHP API: router, auth, response, handlers
+- [Markdown](markdown) — Markdown as an input layer: the two converters, the extended syntax, and why the composer and the saved post must agree
 - [I18n](i18n) — Internationalization (i18n) system
 - [Theme-scaffold](theme-scaffold) — Generating a new, independently-branded theme package from `@utsukta/spa-core`
 - [Excalidraw](excalidraw) — The React-in-Solid Excalidraw whiteboard integration

@@ -125,6 +125,34 @@ final class ContentTypes
             $md
         );
 
+        // The extended-syntax inline marks MarkdownExtra has no idea about
+        // (https://www.markdownguide.org/cheat-sheet/). Each has an exact
+        // bbcode equivalent in include/bbcode.php, and bbcode passes through
+        // markdown_to_bb() untouched, so translating here is all it takes.
+        // Order matters: ~~struck~~ is consumed above, so a surviving single
+        // "~" can only be subscript.
+        $inline = [
+            // ==highlight== -> [mark]  (bbcode.php:1425)
+            '/(```[\s\S]*?```|`[^`\n]*`)|==(?!\s)(.+?)(?<!\s)==/s' => '[mark]$1[/mark]',
+            // ~sub~ -> [sub]  (bbcode.php:1409). No whitespace inside, or
+            // "a ~ b ~ c" in running prose would become a subscript; no
+            // brackets either, or the carets of two adjacent footnote
+            // references ("[^a][^b]") read as a delimiter pair and MarkdownExtra
+            // never gets to see the footnotes.
+            '/(```[\s\S]*?```|`[^`\n]*`)|~([^\s~\[\]]+)~/s'         => '[sub]$1[/sub]',
+            // ^sup^ -> [sup]  (bbcode.php:1406)
+            '/(```[\s\S]*?```|`[^`\n]*`)|\^([^\s^\[\]]+)\^/s'      => '[sup]$1[/sup]',
+        ];
+        foreach ($inline as $re => $tpl) {
+            $md = preg_replace_callback(
+                $re,
+                fn(array $m) => $m[1] !== ''
+                    ? $m[1]
+                    : str_replace('$1', $m[2], $tpl),
+                $md
+            );
+        }
+
         // A run of "- [ ] a" / "- [x] b" lines -> one [checklist] block, whose
         // item markers are [] and [x] (bb_checklist in include/bbcode.php).
         return preg_replace_callback(
