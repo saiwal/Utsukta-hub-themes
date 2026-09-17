@@ -110,7 +110,7 @@ class Network
                 AND item.verb NOT IN ('Add', 'Remove')
                 $sql_extra $sql_options $sql_nets $sql_date
                 $net_query2
-                ORDER BY $ordering DESC" . StreamOrdering::TIEBREAK . " $pager_sql");
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -129,7 +129,7 @@ class Network
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
                 $sql_extra3 $sql_extra $sql_options $sql_nets
                 $net_query2
-                ORDER BY $ordering DESC" . StreamOrdering::TIEBREAK . " ";
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " ";
 
             // Ranked orders sort the whole candidate set before they can
             // return a page, so the ordered ids are cached and every later

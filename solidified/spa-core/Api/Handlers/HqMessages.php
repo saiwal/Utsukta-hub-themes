@@ -109,7 +109,9 @@ class HqMessages
             $xchan_sql = " AND ( i.author_xchan IN ($in) OR " . implode(' OR ', $likes) . " ) ";
         }
 
-        $dummy_order_sql = '';
+        // Keeps MySQL off the standalone `created`/`commented` index — see
+        // StreamOrdering::tiebreak(). The `direct` tab overrides it below.
+        $dummy_order_sql = \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak('i');
         // Sort by last thread activity ("commented", bumped by item_store()
         // on every new reply) rather than thread-creation time, so a DM
         // thread that just got a new reply bubbles back to the top.

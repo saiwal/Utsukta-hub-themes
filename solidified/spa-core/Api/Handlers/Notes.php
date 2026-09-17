@@ -186,7 +186,7 @@ class Notes
                AND item.item_thread_top = 1
                AND item.verb = 'Create'
                $item_normal $sql_extra
-             ORDER BY item.created DESC
+             ORDER BY item.created DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak() . "
              LIMIT $limit OFFSET $start"
         );
 

@@ -30,14 +30,22 @@ $c = q("SELECT uid, count(*) n FROM item GROUP BY uid ORDER BY n DESC LIMIT 1");
 if (!$c) { echo "SKIP  no items in this database\n"; exit(0); }
 $uid = intval($c[0]['uid']);
 
-// The threaded parent query of Handlers/Channel.php, anonymous observer.
-$sql = "SELECT item.id AS item_id FROM item
-    WHERE true AND item.uid = $uid " . item_normal($uid) . "
-    AND item_thread_top = 1 AND item.mid = item.parent_mid
-    AND item.item_wall = 1
-    AND item.verb IN ('Create','Update','EmojiReact','Invite','" . ACTIVITY_SHARE . "')
-    AND item.item_private IN (0,1) AND item.item_private = 0
-    ORDER BY item.created DESC";
+// Two real query shapes: the threaded parent query of Handlers/Channel.php
+// and the RSS query of Handlers/Feed.php, both anonymous-observer.
+$normal = item_normal($uid);
+$shapes = [
+    'channel parents' => "SELECT item.id AS item_id FROM item
+        WHERE true AND item.uid = $uid $normal
+        AND item_thread_top = 1 AND item.mid = item.parent_mid
+        AND item.item_wall = 1
+        AND item.verb IN ('Create','Update','EmojiReact','Invite','" . ACTIVITY_SHARE . "')
+        AND item.item_private IN (0,1) AND item.item_private = 0
+        ORDER BY item.created DESC",
+    'feed'            => "SELECT item.uuid FROM item
+        WHERE item.uid = $uid $normal
+        AND item.item_thread_top = 1 AND item.item_private = 0 AND item.item_wall = 1
+        ORDER BY item.created DESC",
+];
 
 // EXPLAIN isn't one of the statements the db driver unwraps for us.
 $key = function ($q) {
@@ -46,10 +54,15 @@ $key = function ($q) {
     return $r[0]['key'] ?? '';
 };
 
-$with    = $key($sql . StreamOrdering::TIEBREAK);
-$without = $key($sql);
+echo "uid $uid ({$c[0]['n']} items)\n";
+$saw_bad = false;
 
-echo "uid $uid ({$c[0]['n']} items)\n  without tiebreak: $without\n  with tiebreak:    $with\n";
+foreach ($shapes as $label => $sql) {
+    $with    = $key($sql . StreamOrdering::tiebreak());
+    $without = $key($sql);
+    $saw_bad = $saw_bad || !str_starts_with($without, 'uid');
+    echo "  $label\n    without tiebreak: $without\n    with tiebreak:    $with\n";
+    assert(str_starts_with($with, 'uid'), "$label: expected a uid-prefixed index, got '$with'");
+}
 
-assert(str_starts_with($with, 'uid'), "expected a uid-prefixed index, got '$with'");
-echo (str_starts_with($without, 'uid') ? "PASS  (this database is too small to show the bad plan)\n" : "PASS\n");
+echo $saw_bad ? "PASS\n" : "PASS  (this database is too small to show the bad plan)\n";

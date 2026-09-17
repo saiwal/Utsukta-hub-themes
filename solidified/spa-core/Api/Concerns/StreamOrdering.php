@@ -22,7 +22,7 @@ final class StreamOrdering
     // orders whose result is worth caching.
     public const RANKED = ['top', 'hot', 'discussed', 'controversial'];
 
-    // Appended to every stream ORDER BY. `created` and `commented` each have
+    // Appended to every paged ORDER BY over `item`. `created` and `commented` each have
     // a standalone index besides the uid-prefixed ones, and for
     // `ORDER BY item.created DESC LIMIT 10` MySQL will read that index
     // newest-first across *all* channels, filtering for this uid as it goes —
@@ -34,7 +34,10 @@ final class StreamOrdering
     // (an alias for item.parent), and HqMessages already carries the same trick.
     // ponytail: optimizer nudge, not a guarantee — the real fix is a
     // (uid, item_wall, created) index, which is core's schema to change.
-    public const TIEBREAK = ', item.parent DESC';
+    public static function tiebreak(string $alias = 'item'): string
+    {
+        return ", $alias.parent DESC";
+    }
 
     public static function isRanked(string $order): bool
     {

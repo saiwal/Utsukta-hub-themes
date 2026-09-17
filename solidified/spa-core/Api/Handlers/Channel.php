@@ -144,7 +144,7 @@ class Channel
                 $rank_join
                 WHERE true $uids $item_normal
                 $sql_extra $sql_date
-                ORDER BY $ordering DESC" . StreamOrdering::TIEBREAK . " $pager_sql");
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -159,7 +159,7 @@ class Channel
                 WHERE true $uids $item_thread_top $item_normal
                 AND item.mid = item.parent_mid
                 $sql_extra3 $sql_extra
-                ORDER BY $ordering DESC" . StreamOrdering::TIEBREAK . " ";
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " ";
 
             // See Network.php — ranked orders sort the whole candidate set
             // before they can return a page, so the ordered ids are cached and

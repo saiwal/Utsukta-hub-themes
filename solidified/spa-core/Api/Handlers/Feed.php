@@ -105,7 +105,7 @@ class Feed
                $verb_sql
                $term_join
                $perm_sql $item_normal
-             ORDER BY item.created DESC
+             ORDER BY item.created DESC" . \Utsukta\SpaCore\Api\Concerns\StreamOrdering::tiebreak() . "
              LIMIT " . self::MAX_ITEMS
         );
 
