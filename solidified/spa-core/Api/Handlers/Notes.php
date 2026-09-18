@@ -147,6 +147,11 @@ class Notes
             $sql_extra .= protect_sprintf(term_query('item', $tag, TERM_HASHTAG));
         }
 
+        $cat = trim($_GET['cat'] ?? '');
+        if ($cat) {
+            $sql_extra .= protect_sprintf(term_query('item', $cat, TERM_CATEGORY));
+        }
+
         $search = trim($_GET['search'] ?? '');
         if ($search) {
             $sql_extra .= sprintf(

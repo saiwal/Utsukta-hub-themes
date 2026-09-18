@@ -60,13 +60,11 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | admin info            | siteinfo*                                      | contentTop                                 | -      | -        |
 | album strip           | channel, profile, photos                       | right                                      | -      | ✅       |
 | albums                | photos*                                        | right                                      | -      | -        |
-| archive (calendar)    | articles, channel, profile                     | right, footer                              | -      | -        |
-| archive tree          | channel, profile                               | right                                      | -      | -        |
+| archive               | articles, channel, profile, notepad            | right, footer                              | -      | -        |
 | article series        | articles                                       | right                                      | -      | -        |
 | article teaser        | channel, profile, articles                     | right                                      | -      | ✅       |
 | bookmarked rooms      | chat*                                          | right                                      | -      | -        |
-| categories (list)     | articles, channel, profile                     | right                                      | -      | -        |
-| categories (cloud)    | articles, channel                              | right, footer                              | -      | -        |
+| categories            | articles, cards, channel, profile, notepad     | right, footer                              | -      | -        |
 | chat room card        | channel, profile, chat                         | right                                      | -      | ✅       |
 | clock                 | any                                            | right, contentTop                             | -      | ✅       |
 | connections           | channel, profile                               | right                                      | -      | -        |
@@ -102,8 +100,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | scrapbook feed        | channel                                        | contentTop                                 | -      | -        |
 | service_classes       | siteinfo*                                      | contentTop                                 | -      | -        |
 | shop item card        | channel, profile, cart                         | right                                      | -      | ✅       |
-| tags cloud            | articles, channel, notepad                     | right                                      | -      | -        |
-| tags list             | articles, channel, notepad                     | right, footer                              | -      | -        |
+| tags                  | articles, cards, channel, profile, notepad     | right, footer                              | -      | -        |
 | themes info           | siteinfo*                                      | contentTop                                 | -      | -        |
 | timeline feed         | channel                                        | contentTop                                 | -      | -        |
 | upcoming events       | hq*                                            | contentTop                                    | -      | -        |
@@ -146,16 +143,16 @@ Shows the latest thumbnails from one photo album you pick, in a small grid that 
 ### Photos
 
 Browsable grid of a channel's recent photos and albums, with a lightbox for viewing full-size images and stepping through an album.
-<!-- archive_calendar -->
-
-### Archive (Calendar)
-
-Alternate archive layout: a month calendar with a dot under each day that has a post. Prev/next month and prev/next year controls let you browse, and clicking a dotted day filters the stream to that single day.
-<!-- archive_tree -->
+<!-- archive -->
 
 ### Archive
 
-Collapsible year/month list of the channel's post history, with a post count next to each month. Selecting a month filters the stream to that period.
+Browse the channel's history by date. The widget's **Style** setting picks the layout:
+
+- **List** — a collapsible year/month tree with a post count next to each month. Selecting a month filters to that period.
+- **Calendar** — a month grid with a dot under each day that has a post, plus prev/next month and year controls. Clicking a dotted day filters to that single day.
+
+Clicking the active month or day again clears the date filter.
 <!-- article_series -->
 
 ### Article Series
@@ -181,16 +178,16 @@ Lists the channel's card decks with a count for each, drawn as a small stack. Cl
 ### Card Showcase
 
 A single card, rendered as the real thing rather than a text preview — it flips to its back on hover, or on tap where there's no pointer. Add one per card you want to highlight.
-<!-- categories_list -->
+<!-- categories -->
 
-### Categories (list)
+### Categories
 
-Row-style list of the channel's post categories with post counts, as an alternative layout to the Categories Cloud. Clicking a category filters the stream to it.
-<!-- categories_cloud -->
+The categories used across the channel's posts. Clicking one filters to it; clicking it again clears the filter. Two settings:
 
-### Category Cloud
+- **Style** — *List* shows rows with counts and a share bar, scrolling inside the widget once there are more than fit. *Cloud* shows pills sized by how many items each category holds, with the count on hover.
+- **Rainbow colours** — gives every category name its own colour, derived from the name so it stays the same each visit.
 
-Tag-cloud style layout of the channel's post categories, with pill size scaled by how many posts are in each. Clicking a category filters the stream to it.
+In the Notepad this widget is called **Notebooks**, since a note's categories are its notebooks.
 <!-- chat_room_card -->
 
 ### Chatroom Card
@@ -371,16 +368,14 @@ Displays the hub's available service classes and their storage, channel, and con
 ### Shop Item Card
 
 A showcase card for a single item from the channel's shop, with an add-to-cart button. Add one per item you want to feature.
-<!-- tags_cloud -->
+<!-- tags -->
 
 ### Tags
 
-Tag-cloud layout of the channel's post tags, with pill size scaled by how often each tag is used. Clicking a tag filters the stream to it.
-<!-- tags_list -->
+The hashtags used across the channel's posts. Clicking one filters to it; clicking it again clears the filter. Two settings:
 
-### Tags (list)
-
-Row-style list of the channel's post tags with counts and mini usage bars, as an alternative layout to the Tags cloud.
+- **Style** — *Cloud* shows pills sized by how often each tag is used. *List* shows rows with counts and usage bars, scrolling inside the widget once there are more than fit.
+- **Rainbow colours** — gives every tag its own colour, derived from the tag name so it stays the same each visit.
 <!-- timeline_feed -->
 
 ### Timeline Feed
