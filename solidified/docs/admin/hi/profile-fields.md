@@ -17,12 +17,21 @@ Themed या specialist communities (academic hubs, professional networks, hobb
 
 ## Field जोड़ना
 
+Field जोड़ना **दो steps** का काम है — पहले define, फिर enable।
+
 1. **Add field** क्लिक करें।
 2. Provide करें:
+   - **Field nickname** — internal name (जैसे `occupation`); step 4 में यही enable करना है
    - **Field name** — label जो users को दिखेगा (जैसे "Occupation")
-   - **Field type** — text input, textarea, dropdown आदि
-   - **Order** — display position
+   - **Field type** — text, textarea, checkbox या select
+   - **Help text** — input के नीचे दिखने वाला optional hint
 3. Save करें।
+4. ऊपर के **Basic Profile Fields** या **Advanced Profile Fields** box में field का
+   **nickname** जोड़ें और **Submit** करें।
+
+Step 4 optional नहीं है: जो field किसी list में नहीं है वह invisible रहता है — न profile
+editor में input, न profile page पर कुछ। (Advanced fields सिर्फ़ उन channels को दिखते हैं
+जिनके पास "Advanced profiles" feature enabled है; Basic fields सबको।)
 
 [IMAGE: Add profile field form name, type और order fields के साथ]
 
@@ -34,4 +43,9 @@ Field के बगल में **Edit** क्लिक करें। Remove
 
 ## User Experience
 
-Field जोड़ने के बाद users अगली बार **Settings → Profile** खोलने पर नया field देखेंगे। Existing users का profile blank रहेगा जब तक वे fill न करें।
+Enable होने के बाद users इसे **Profiles → edit** (पूरा profile editor) में "Additional
+information" के नीचे भरते हैं। भरी हुई values channel के profile page और profile card पर
+दिखती हैं। Existing users का profile blank रहेगा जब तक वे fill न करें।
+
+Values हर profile के लिए अलग store होती हैं, इसलिए multiple profiles वाला channel हर profile
+पर अलग जवाब दे सकता है।

@@ -4,11 +4,13 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\Concerns\CustomProfileFields;
 use Utsukta\SpaCore\Api\Concerns\FetchesRemoteActor;
 use Utsukta\SpaCore\Api\Concerns\ResolvesConnection;
 
 class Profile
 {
+    use CustomProfileFields;
     use FetchesRemoteActor;
     use ResolvesConnection;
     public function get(): void {
@@ -52,6 +54,7 @@ class Profile
 
         require_once 'include/channel.php';
         require_once 'include/permissions.php';
+        require_once 'include/features.php';
 
         profile_load($nick);
 
@@ -189,6 +192,13 @@ class Profile
             'contact'         => $block ? '' : ($profile['contact']   ?? ''),
             'channels'        => $block ? '' : ($profile['channels']  ?? ''),
             'hide_friends'    => (bool) ($profile['hide_friends'] ?? false),
+            // Admin-defined fields (profdef/profext) — resolved from the
+            // profile actually shown, which may be an abook-assigned one.
+            'custom_fields'   => $block ? [] : $this->customProfileFields(
+                $uid,
+                $profile['profile_guid'] ?? '',
+                (bool) feature_enabled(local_channel(), 'advanced_profiles')
+            ),
             'connections'     => intval($conn_count[0]['total']   ?? 0),
             'is_connected'    => $is_connected,
             'is_pending'      => $is_pending,
@@ -277,6 +287,7 @@ class Profile
             'work'            => '', 'education' => '', 'likes'     => '',
             'dislikes'        => '', 'contact'   => '', 'channels'  => '',
             'hide_friends'    => false,
+            'custom_fields'   => [],
             'connections'     => 0,
             'is_connected'    => $is_connected,
             'connect_url'     => $is_connected ? '' : $this->connectUrlFor($ob_hash, $nick),

@@ -4,6 +4,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\Config;
+use Zotlabs\Lib\Queue as LibQueue;
 use App;
 
 class Admin
@@ -169,6 +170,7 @@ class Admin
             case 'service-classes': $this->postServiceClasses(); break;
             case 'logs':            $this->postLogs();           break;
             case 'queueworker':     $this->postQueueworker();    break;
+            case 'inspect-queue':   $this->postQueue();          break;
             default:
                 Response::error(404, "Unknown admin section: {$section}");
         }
@@ -1162,6 +1164,36 @@ class Admin
             'items' => $items ?: [],
             'total' => intval($total_r[0]['total'] ?? 0),
         ]);
+    }
+
+    // Expert-mode queue actions, same three as classic admin/queue?expert=1.
+    private function postQueue(): void
+    {
+        require_once('include/hubloc.php');
+
+        $d       = Auth::$parsedBody;
+        $action  = (string) ($d['action'] ?? '');
+        $posturl = trim((string) ($d['posturl'] ?? ''));
+
+        if ($posturl === '') Response::error(400, 'posturl is required');
+
+        switch ($action) {
+            case 'drop':
+                hubloc_mark_as_down($posturl);
+                LibQueue::remove_by_posturl($posturl);
+                break;
+            case 'empty':
+                LibQueue::remove_by_posturl($posturl);
+                break;
+            case 'deliver':
+                $rows = q("SELECT * FROM outq WHERE outq_posturl = '%s'", dbesc($posturl));
+                foreach (($rows ?: []) as $row) LibQueue::deliver($row, true);
+                break;
+            default:
+                Response::error(400, "Unknown queue action: {$action}");
+        }
+
+        Response::send(['ok' => true]);
     }
 
     // ── Queueworker ───────────────────────────────────────────────────────────

@@ -191,6 +191,8 @@ class Settings
         Response::send([
             'autoperms' => intval(get_pconfig($uid, 'system', 'autoperms')),
             'index_opt_out' => intval(get_pconfig($uid, 'system', 'index_opt_out')),
+            'suggestme' => intval(get_pconfig($uid, 'system', 'suggestme')),
+            'show_online_status' => intval(get_pconfig($uid, 'system', 'show_online_status')),
             'permit_all_mentions' => intval(get_pconfig($uid, 'system', 'permit_all_mentions')),
             'moderate_unsolicited_comments' => intval(get_pconfig($uid, 'system', 'moderate_unsolicited_comments')),
             'ocap_enabled' => intval(get_pconfig($uid, 'system', 'ocap_enabled')),
@@ -1045,6 +1047,8 @@ class Settings
         $toggles = [
             'autoperms',
             'index_opt_out',
+            'suggestme',
+            'show_online_status',
             'permit_all_mentions',
             'moderate_unsolicited_comments',
             'ocap_enabled',

@@ -4,9 +4,12 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\Concerns\CustomProfileFields;
 
 class Profiles
 {
+    use CustomProfileFields;
+
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -120,6 +123,9 @@ class Profiles
             'channels'     => $p['channels'] ?? '',
             'avatar_l'     => $avatar_l,
             'cover_url'    => $cover_url,
+            'custom_fields' => $uid
+                ? $this->customProfileFields($uid, $p['profile_guid'] ?? '', (bool) feature_enabled($uid, 'advanced_profiles'))
+                : [],
         ];
     }
 
@@ -273,6 +279,13 @@ class Profiles
             dbesc($f['likes']),         dbesc($f['dislikes']),
             dbesc($f['contact']),       dbesc($f['channels']),
             intval($id),                intval($uid)
+        );
+
+        $this->saveCustomProfileFields(
+            $uid,
+            $p['profile_guid'] ?? '',
+            $data,
+            (bool) feature_enabled($uid, 'advanced_profiles')
         );
 
         // Propagate name change to channel for the default profile
