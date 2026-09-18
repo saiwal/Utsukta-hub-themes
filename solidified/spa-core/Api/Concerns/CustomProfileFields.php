@@ -25,7 +25,7 @@ trait CustomProfileFields
         }
 
         $out = [];
-        foreach (q("SELECT field_name, field_type, field_desc, field_help FROM profdef ORDER BY id") ?: [] as $d) {
+        foreach (q("SELECT field_name, field_type, field_desc, field_help, field_inputs FROM profdef ORDER BY id") ?: [] as $d) {
             if (isset($allowed[$d['field_name']])) {
                 $out[$d['field_name']] = $d;
             }
@@ -33,7 +33,14 @@ trait CustomProfileFields
         return $out;
     }
 
-    /** @return array<int,array{name:string,label:string,help:string,type:string,value:string}> */
+    /** A select's choices, one per line (profdef.field_inputs). */
+    private static function fieldOptions(array $def): array
+    {
+        if (($def['field_type'] ?? '') !== 'select') return [];
+        return array_values(array_filter(array_map('trim', preg_split('/\R/', $def['field_inputs'] ?? '') ?: [])));
+    }
+
+    /** @return array<int,array{name:string,label:string,help:string,type:string,options:array,value:string}> */
     protected function customProfileFields(int $uid, string $guid, bool $advanced): array
     {
         $defs = $this->allowedProfdefs($advanced);
@@ -53,6 +60,7 @@ trait CustomProfileFields
                 'label' => $d['field_desc'] ?: $name,
                 'help'  => $d['field_help'] ?? '',
                 'type'  => $d['field_type'] ?: 'text',
+                'options' => self::fieldOptions($d),
                 'value' => $values[$name] ?? '',
             ];
         }
@@ -66,15 +74,33 @@ trait CustomProfileFields
         if (!$defs || !$guid) return;
 
         $existing = [];
-        $rows = q("SELECT id, k FROM profext WHERE channel_id = %d AND hash = '%s'",
+        $current  = [];
+        $rows = q("SELECT id, k, v FROM profext WHERE channel_id = %d AND hash = '%s'",
             intval($uid), dbesc($guid));
         foreach ($rows ?: [] as $r) {
             $existing[$r['k']] = intval($r['id']);
+            $current[$r['k']]  = $r['v'];
         }
 
         foreach ($defs as $name => $d) {
             if (!array_key_exists($name, $data)) continue;
-            $v = escape_tags(trim((string) $data[$name]));
+            $raw = trim((string) $data[$name]);
+
+            // A select may only hold one of its defined choices — the client
+            // sends a free-form string like every other field. Compare before
+            // escaping, since the stored options are raw.
+            // An off-list choice is rejected — except the one already stored,
+            // which redbasic's free-text edit form can have put there; dropping
+            // it would silently erase it on an unrelated save.
+            $opts = self::fieldOptions($d);
+            if ($opts && $raw !== '' && $raw !== ($current[$name] ?? null)
+                && !in_array($raw, $opts, true)) continue;
+
+            // A checkbox is two-valued whatever the client sent; the editor
+            // pairs it with a hidden "0" so unticking clears it.
+            $v = ($d['field_type'] ?? '') === 'checkbox'
+                ? ($raw === '1' ? '1' : '0')
+                : escape_tags($raw);
 
             if (isset($existing[$name])) {
                 q("UPDATE profext SET v = '%s' WHERE id = %d", dbesc($v), $existing[$name]);

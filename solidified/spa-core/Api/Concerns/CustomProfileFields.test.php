@@ -34,6 +34,8 @@ class ProfFieldsProbe
 
 const OK_FIELD  = 'cpftest_enabled';
 const OFF_FIELD = 'cpftest_disabled';
+const SEL_FIELD = 'cpftest_select';
+const BOX_FIELD = 'cpftest_checkbox';
 
 $fail = 0;
 function check(string $label, $got, $want): void {
@@ -53,15 +55,17 @@ $guid = $pr[0]['profile_guid'];
 
 // ── setup: two definitions, only one of them enabled ────────────────────────
 $saved_adv = Config::Get('system', 'profile_fields_advanced');
-foreach ([OK_FIELD, OFF_FIELD] as $n) {
+foreach ([OK_FIELD, OFF_FIELD, SEL_FIELD, BOX_FIELD] as $n) {
     q("DELETE FROM profdef WHERE field_name = '%s'", dbesc($n));
     q("DELETE FROM profext WHERE channel_id = %d AND hash = '%s' AND k = '%s'", $uid, dbesc($guid), dbesc($n));
 }
+q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','checkbox','Verified','','')", dbesc(BOX_FIELD));
+q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','select','Rank','','Apprentice\nJourneyman\n  Master  ')", dbesc(SEL_FIELD));
 q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','text','Occupation','What you do','')", dbesc(OK_FIELD));
 q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','text','Not enabled','','')", dbesc(OFF_FIELD));
 
 $adv = $saved_adv ?: ['address','locality','postal_code','partner','howlong','politic','religion','likes','dislikes','interest','channels','music','book','film','tv','romance','employment','education'];
-Config::Set('system', 'profile_fields_advanced', array_merge($adv, [OK_FIELD]));
+Config::Set('system', 'profile_fields_advanced', array_merge($adv, [OK_FIELD, SEL_FIELD, BOX_FIELD]));
 
 $p = new ProfFieldsProbe();
 
@@ -92,8 +96,35 @@ check('one profext row', count(q("SELECT id FROM profext WHERE channel_id = %d A
 $p->write($uid, $guid, []);
 check('absent key preserves value', $byName($p->read($uid, $guid), OK_FIELD)[0]['value'], 'Cooper');
 
+// ── select: only its own choices are storable ──────────────────────────────
+$sel = $byName($p->read($uid, $guid), SEL_FIELD)[0];
+check('options parsed + trimmed', $sel['options'], ['Apprentice', 'Journeyman', 'Master']);
+check('no options on a text field', $byName($p->read($uid, $guid), OK_FIELD)[0]['options'], []);
+
+$p->write($uid, $guid, [SEL_FIELD => 'Journeyman']);
+check('valid choice stored', $byName($p->read($uid, $guid), SEL_FIELD)[0]['value'], 'Journeyman');
+
+$p->write($uid, $guid, [SEL_FIELD => 'Archmage']);
+check('invalid choice ignored', $byName($p->read($uid, $guid), SEL_FIELD)[0]['value'], 'Journeyman');
+
+// a value redbasic's free-text form could have stored survives a re-save
+q("UPDATE profext SET v = 'Archmage' WHERE channel_id = %d AND hash = '%s' AND k = '%s'", $uid, dbesc($guid), dbesc(SEL_FIELD));
+$p->write($uid, $guid, [SEL_FIELD => 'Archmage']);
+check('off-list value already stored is kept', $byName($p->read($uid, $guid), SEL_FIELD)[0]['value'], 'Archmage');
+
+$p->write($uid, $guid, [SEL_FIELD => '']);
+check('empty clears a select', $byName($p->read($uid, $guid), SEL_FIELD)[0]['value'], '');
+
+// ── checkbox: two-valued, whatever arrives ─────────────────────────────────
+$p->write($uid, $guid, [BOX_FIELD => '1']);
+check('checkbox ticked',   $byName($p->read($uid, $guid), BOX_FIELD)[0]['value'], '1');
+$p->write($uid, $guid, [BOX_FIELD => '0']);
+check('checkbox unticked', $byName($p->read($uid, $guid), BOX_FIELD)[0]['value'], '0');
+$p->write($uid, $guid, [BOX_FIELD => 'banana']);
+check('checkbox clamps junk to 0', $byName($p->read($uid, $guid), BOX_FIELD)[0]['value'], '0');
+
 // ── teardown ────────────────────────────────────────────────────────────────
-foreach ([OK_FIELD, OFF_FIELD] as $n) {
+foreach ([OK_FIELD, OFF_FIELD, SEL_FIELD, BOX_FIELD] as $n) {
     q("DELETE FROM profdef WHERE field_name = '%s'", dbesc($n));
     q("DELETE FROM profext WHERE channel_id = %d AND hash = '%s' AND k = '%s'", $uid, dbesc($guid), dbesc($n));
 }

@@ -1266,7 +1266,7 @@ class Admin
         $all_builtin = array_keys(get_profile_fields_advanced(1) ?: []);
 
         // Custom fields from profdef
-        $custom = q("SELECT id, field_name, field_type, field_desc, field_help FROM profdef ORDER BY id");
+        $custom = q("SELECT id, field_name, field_type, field_desc, field_help, field_inputs FROM profdef ORDER BY id");
         $custom_names = array_column($custom ?: [], 'field_name');
 
         Response::send([
@@ -1302,10 +1302,11 @@ class Admin
             $type = trim($data['field_type'] ?? 'text');
             $desc = trim($data['field_desc'] ?? '');
             $help = trim($data['field_help'] ?? '');
+            $opts = trim($data['field_inputs'] ?? '');
             if (!$name) Response::error(400, 'field_name required');
-            q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','%s','%s','%s','')",
-                dbesc($name), dbesc($type), dbesc($desc), dbesc($help));
-            $row = q("SELECT id, field_name, field_type, field_desc, field_help FROM profdef WHERE field_name = '%s' ORDER BY id DESC LIMIT 1", dbesc($name));
+            q("INSERT INTO profdef (field_name, field_type, field_desc, field_help, field_inputs) VALUES ('%s','%s','%s','%s','%s')",
+                dbesc($name), dbesc($type), dbesc($desc), dbesc($help), dbesc($opts));
+            $row = q("SELECT id, field_name, field_type, field_desc, field_help, field_inputs FROM profdef WHERE field_name = '%s' ORDER BY id DESC LIMIT 1", dbesc($name));
             Response::send(['field' => $row ? $row[0] : null]);
             return;
         }
@@ -1316,9 +1317,10 @@ class Admin
             $type = trim($data['field_type'] ?? 'text');
             $desc = trim($data['field_desc'] ?? '');
             $help = trim($data['field_help'] ?? '');
+            $opts = trim($data['field_inputs'] ?? '');
             if (!$id || !$name) Response::error(400, 'id and field_name required');
-            q("UPDATE profdef SET field_name='%s', field_type='%s', field_desc='%s', field_help='%s' WHERE id=%d",
-                dbesc($name), dbesc($type), dbesc($desc), dbesc($help), $id);
+            q("UPDATE profdef SET field_name='%s', field_type='%s', field_desc='%s', field_help='%s', field_inputs='%s' WHERE id=%d",
+                dbesc($name), dbesc($type), dbesc($desc), dbesc($help), dbesc($opts), $id);
             Response::send(['status' => 'ok']);
             return;
         }
