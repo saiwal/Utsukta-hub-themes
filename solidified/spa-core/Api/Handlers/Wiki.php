@@ -405,6 +405,10 @@ class Wiki
             // so existing behaviour is unchanged when the client sends nothing.
             $mime_type = ContentTypes::validate($data['mime_type'] ?? null, ContentTypes::WIKI);
             $type_lock = (bool) ($data['type_lock'] ?? false);
+            // Redbasic's "Create a status post for this wiki" toggle
+            // (Mod_Wiki.php:235), defaulting to No as it does. 0 sets
+            // item_hidden=1, and pages inherit the flag from the wiki.
+            $post_visible = (bool) ($data['post_visible'] ?? false);
 
             if (!$wiki_name) {
                 Response::error(400, 'Wiki name required');
@@ -440,9 +444,7 @@ class Wiki
                     'urlName'      => \NativeWiki::name_encode($wiki_name),
                     'mimeType'     => $mime_type,
                     'typelock'     => $type_lock ? '1' : '0',
-                    // 0 => item_hidden=1: no status post in the stream when a
-                    // wiki is created. Pages inherit this flag from the wiki.
-                    'postVisible'  => 0,
+                    'postVisible'  => $post_visible ? 1 : 0,
                 ],
                 $acl
             );
