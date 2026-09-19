@@ -1,1 +1,0 @@
-import{B as e,O as t}from"./app-web-BeXRvOD7.js";import{tn as n}from"./app-CZUD-owy.js";import{t as r}from"./app-StyleConfigForm-BvIpn_yf.js";function i(i){let{t:a}=n();return t(r,e(i,{fallback:`list`,get options(){return[{value:`list`,label:a(`widgets.style_list`)},{value:`calendar`,label:a(`widgets.style_calendar`)}]}}))}export{i as default};

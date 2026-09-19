@@ -90,16 +90,28 @@ class Photos
 
     private function getSummary(array $channel, string $ob_hash, bool $can_write): void
     {
-        // Recent photos — last 8, any album
+        // All photos across every album, paged. The folder-visibility filter
+        // below runs after LIMIT/OFFSET, so a page may return fewer rows than
+        // asked for — has_more reports whether the *raw* page was full, and the
+        // client pages by raw offset, which keeps the offsets consistent.
         $sql_extra = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
         $ph_drv = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
-        $uid = intval($channel['channel_id']);
+        $uid   = intval($channel['channel_id']);
+        $start = max(0, intval($_GET['start'] ?? 0));
+        $limit = min(100, max(1, intval($_GET['limit'] ?? 30)));
 
-        // Over-fetch: the folder-visibility filter below runs after the limit.
+        $orderCol = [
+            'date' => 'photo.created',
+            'name' => 'photo.filename',
+            'size' => 'photo.filesize',
+        ][$_GET['sort'] ?? 'date'] ?? 'photo.created';
+        $dir = (($_GET['dir'] ?? 'desc') === 'asc') ? 'ASC' : 'DESC';
+
         $r = dbq("SELECT photo.resource_id, photo.filename, photo.mimetype, photo.imgscale,
                          photo.title, photo.description, photo.is_nsfw, photo.album, photo.created,
+                         photo.filesize,
                          photo.allow_cid, photo.allow_gid, photo.deny_cid, photo.deny_gid,
                          COALESCE(a.folder, '') AS fhash
               FROM photo
@@ -108,12 +120,12 @@ class Photos
                 AND photo.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
                 AND photo.imgscale = 2
                 $sql_extra
-              ORDER BY photo.created DESC
-              LIMIT 40");
+              ORDER BY $orderCol $dir
+              LIMIT $limit OFFSET $start");
 
+        $raw = count($r ?: []);
         $out = [];
         foreach (($r ?: []) as $row) {
-            if (count($out) >= 8) break;
             $fhash = (string) $row['fhash'];
             if ($fhash !== '' && !$this->canViewFolder($uid, $ob_hash, $fhash)) continue;
             $ext = $phototypes[$row['mimetype']] ?? 'jpg';
@@ -126,17 +138,48 @@ class Photos
                 'is_private' => $this->rowIsPrivate($row, $uid, $fhash),
                 'album' => $row['album'],
                 'created' => $row['created'],
+                'filesize' => intval($row['filesize'] ?? 0),
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
                 'link' => z_root() . '/photos/' . $channel['channel_address'] . '/image/' . $row['resource_id'],
             ];
         }
 
-        Response::send($out, ['can_write' => $can_write]);
+        Response::send($out, [
+            'can_write' => $can_write,
+            'start'     => $start,
+            'limit'     => $limit,
+            'has_more'  => $raw === $limit,
+        ]);
+    }
+
+    // Regex matching the channel's automatic photo-upload folders. Core stores
+    // the folder as a pattern in pconfig system/photo_path (default '%Y-%m')
+    // and expands %Y/%m/%d at upload time (include/attach.php::filepath_macro),
+    // so the pattern has to become a date-shaped regex to catch every month's
+    // folder rather than only the current one. A pattern with no '/' names a
+    // folder, not a path, so it also matches nested (a leading '<parent>/').
+    private function autoAlbumRegex(int $uid): ?string
+    {
+        // Core seeds photo_path with '%Y-%m' at channel creation
+        // (include/channel.php), but a channel may have blanked it since —
+        // the date-shaped folders it already produced are still there, so fall
+        // back to that same default rather than showing no uploads tab at all.
+        $pat = trim((string) get_pconfig($uid, 'system', 'photo_path'));
+        if ($pat === '') $pat = '%Y-%m';
+
+        $rx = str_replace(
+            ['%Y', '%m', '%d'],
+            ['\\d{4}', '\\d{2}', '\\d{2}'],
+            preg_quote($pat, '#')
+        );
+        $prefix = (strpos($pat, '/') === false) ? '(?:.*/)?' : '';
+        return '#^' . $prefix . $rx . '$#';
     }
 
     private function getAlbumsSummary(array $channel, string $ob_hash, bool $can_write): void
     {
         $uid        = intval($channel['channel_id']);
+        $autoRx     = $this->autoAlbumRegex($uid);
         $ph_drv     = photo_factory('');
         $phototypes = $ph_drv->supportedTypes();
 
@@ -148,7 +191,7 @@ class Photos
         // Album name comes from p.album (the photo record's own field) — no attach ACL check.
         $counts_raw = dbq(
             "SELECT COALESCE(a.folder, '') AS fhash, p.album AS album_name,
-                    COUNT(DISTINCT p.resource_id) AS cnt
+                    COUNT(DISTINCT p.resource_id) AS cnt, MAX(p.created) AS newest
              FROM photo p
              LEFT JOIN attach a ON a.hash = p.resource_id AND a.uid = $uid
              WHERE p.uid = $uid
@@ -195,6 +238,8 @@ class Photos
                 'album'  => (string) $row['album_name'],
                 'folder' => $fhash,
                 'total'  => $total,
+                'created' => (string) ($row['newest'] ?? ''),
+                'auto'   => $autoRx !== null && (bool) preg_match($autoRx, (string) $row['album_name']),
                 'url'    => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $fhash,
                 'thumb'  => $thumb,
             ];
