@@ -440,7 +440,9 @@ class Wiki
                     'urlName'      => \NativeWiki::name_encode($wiki_name),
                     'mimeType'     => $mime_type,
                     'typelock'     => $type_lock ? '1' : '0',
-                    'postVisible'  => 1,
+                    // 0 => item_hidden=1: no status post in the stream when a
+                    // wiki is created. Pages inherit this flag from the wiki.
+                    'postVisible'  => 0,
                 ],
                 $acl
             );
