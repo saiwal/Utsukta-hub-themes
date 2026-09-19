@@ -30,7 +30,7 @@ class Scheduled
         // are future-dated, so a created floor (1 day of cron slack) lets the
         // (uid, created) index cut the scan to a handful of rows.
         $rows = q(
-            "SELECT id, uuid, mid, title, body, created FROM item
+            "SELECT id, uuid, mid, title, body, created, item_private FROM item
              WHERE uid = %d AND created > '%s'
                AND item_delayed = 1 AND item_deleted = 0
              ORDER BY created ASC LIMIT 100",
@@ -45,6 +45,10 @@ class Scheduled
             'title'   => $r['title'],
             'body'    => $r['body'],
             'created' => $r['created'],
+            // item_private = 2 is a DM (same test FormatsItems uses for the
+            // direct_message flag) — the queue mixes posts and DMs, and a
+            // pending DM should not read as a pending public post.
+            'dm'      => intval($r['item_private']) === 2,
         ], $rows ?: []));
     }
 
