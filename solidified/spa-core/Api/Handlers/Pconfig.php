@@ -61,6 +61,26 @@ class Pconfig
         return $result;
     }
 
+    /**
+     * Site and observer facts every branch returns. bbcode's [sitename],
+     * [baseurl] and the [observer…] conditionals are resolved client-side, and
+     * this boot request is the only place the SPA learns any of them.
+     */
+    private static function siteBlock(): array
+    {
+        $o = \App::get_observer();
+        return [
+            'sitename' => (string) \Zotlabs\Lib\Config::Get('system', 'sitename'),
+            'baseurl'  => z_root(),
+            'observer' => ($o && !empty($o['xchan_hash'])) ? [
+                'xchan_url'     => (string) ($o['xchan_url'] ?? ''),
+                'xchan_name'    => (string) ($o['xchan_name'] ?? ''),
+                'xchan_addr'    => (string) ($o['xchan_addr'] ?? ''),
+                'xchan_photo_l' => (string) ($o['xchan_photo_l'] ?? ''),
+            ] : null,
+        ];
+    }
+
     public function get(): void
     {
         $channel_param = isset($_GET['channel']) ? notags(trim($_GET['channel'])) : '';
@@ -111,7 +131,7 @@ class Pconfig
                 }
             }
 
-            Response::send($response);
+            Response::send($response + self::siteBlock());
         }
 
         // Remote-authenticated visitor
@@ -127,7 +147,7 @@ class Pconfig
                 $page_spa = self::channelSpa($channel_param);
                 if ($page_spa !== null) $base['spa'] = $page_spa;
             }
-            Response::send($base);
+            Response::send($base + self::siteBlock());
         }
 
         // Anonymous visitor on a channel page — expose only public spa display prefs
@@ -138,7 +158,7 @@ class Pconfig
                     'uid'     => 0,
                     'channel' => $channel_param,
                     'spa'     => $page_spa,
-                ]);
+                ] + self::siteBlock());
             }
         }
 
@@ -146,6 +166,6 @@ class Pconfig
         Response::send([
             'uid'     => 0,
             'channel' => '',
-        ]);
+        ] + self::siteBlock());
     }
 }

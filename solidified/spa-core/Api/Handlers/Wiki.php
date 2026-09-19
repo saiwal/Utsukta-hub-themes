@@ -605,6 +605,18 @@ class Wiki
                 Response::error(500, $saved['message'] ?? 'Error saving page');
             }
 
+            // save_page() copies the *existing* page item's mimetype onto the
+            // new revision (NativeWikiPage.php:382) and ignores $pageArgs's
+            // 'mimeType' entirely — so on an unlocked wiki a format change on
+            // an existing page has to be written onto the stored revision here.
+            if ($saved['item_id'] && empty($w['typelock'])) {
+                q("update item set mimetype = '%s' where id = %d and uid = %d",
+                    dbesc($mime_type),
+                    intval($saved['item_id']),
+                    intval($uid)
+                );
+            }
+
             // Commit
             $commit = \NativeWikiPage::commit([
                 'commit_msg'    => $commit_msg ?: 'Page updated',

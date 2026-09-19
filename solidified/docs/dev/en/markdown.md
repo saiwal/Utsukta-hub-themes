@@ -122,11 +122,18 @@ silently returning something *different* is what it exists to catch.
 
 **`__text__` is bold, not underline.** That is CommonMark (`__` and `**` are the
 same tag) and MarkdownExtra agrees. Markdown has no underline in any flavour, so
-the toolbar's underline button emits `[u]…[/u]` even in Markdown mode — the same
-rule every construct Markdown cannot spell follows (colour, font, size, spoiler,
-centre, lettered lists). Do not "fix" this with an extension: `markdown_to_bb()`
-would still render `__x__` as bold everywhere else on the hub and over
-federation.
+the toolbar's underline button emits `[u]…[/u]` in Markdown mode **on the
+surfaces whose body is converted to bbcode on save** — posts, comments and DMs,
+i.e. `EditorCapabilities.bbcodeFallback` — and the same rule covers every
+construct Markdown cannot spell (colour, font, size, spoiler, centre, lettered
+lists). On an article, card, webpage, block, wiki page or note the body is
+stored as typed and `prepare_text()` renders it with MarkdownExtra alone, with
+no bbcode pass, so those same buttons emit inline HTML (`<u>`, `<span
+style="color:…">`, `<details>`) instead — both MarkdownExtra and `marked` pass
+raw HTML through. The whole table is `src/shared/editor/core/markup.ts`; do not
+put a branch back in the toolbar. Do not "fix" the `__x__` reading with an
+extension either: `markdown_to_bb()` would still render it as bold everywhere
+else on the hub and over federation.
 
 **Strikethrough is consumed before subscript.** `~~x~~` and `~x~` share a
 delimiter. Both converters run the `~~` rule first, so a surviving single `~`
@@ -170,6 +177,7 @@ change.
 node --experimental-strip-types src/shared/editor/core/markedExtended.test.ts
 node --experimental-strip-types src/shared/editor/core/markdown-roundtrip.test.ts
 php packages/spa-core/php/Api/ContentTypes.test.php
+node --experimental-strip-types src/shared/editor/core/markup.test.ts
 ```
 
 The first two pin the composer dialect (including the `~~`/`~` and `[^a][^b]`
@@ -182,4 +190,5 @@ to one side and not the other is exactly what they catch.
 - `src/shared/editor/core/sourceToHtml.ts` — Markdown → editor HTML (imports the above for its side effect)
 - `src/shared/editor/core/markdownTurndown.ts` — editor HTML → Markdown
 - `src/shared/editor/core/markdownProtect.ts` — bbcode lifting and the raw-embed encoding
+- `src/shared/editor/core/markup.ts` — what each toolbar button spells in each of the four content formats
 - `packages/spa-core/php/Api/ContentTypes.php` — `toBbcode()`, `gfmToBbcode()`, and the remembered Markdown source
