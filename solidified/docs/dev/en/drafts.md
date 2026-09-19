@@ -50,7 +50,7 @@ POST /spa/drafts/delete                     delete
 
 `src/modules/hq/widgets/DraftsWidget.tsx` is the cross-type list. It:
 
-- Fetches `listServerDrafts("post,article,webpage,wiki,note")` and filters client-side to the types it knows how to render (`SHOWN_TYPES`).
+- Fetches `listServerDrafts("post,article,webpage,wiki,note,dm")` and filters client-side to the types it knows how to render (`SHOWN_TYPES`).
 - Renders three lines per entry: title (or an "Untitled draft" fallback) / preview snippet / a footer row with the type badge, a delete button, and the draft's `created` date, right-aligned.
 - Uses a per-type `isLoadable()` gate — clicking a non-loadable entry does nothing (delete still works). An entry is loadable only when the scope carries everything the target composer needs to render *without* an extra fetch:
   - `post:new`, `article:new`/`edit`, `note:new`/`edit` — always loadable; these composers need nothing beyond what the draft itself stores.

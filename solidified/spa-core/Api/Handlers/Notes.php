@@ -8,7 +8,7 @@ use Utsukta\SpaCore\Api\ContentTypes;
 class Notes
 {
     // POST /api/notes
-    // Body (JSON): { body, mimetype? }
+    // Body (JSON): { body, mimetype?, category? }
     // Creates a personal note directly via item_store(), bypassing the legacy
     // /item endpoint which would also create a blank companion Add activity.
     public function post(): void
@@ -24,6 +24,7 @@ class Notes
 
         $content  = $b['body']     ?? '';
         $mimetype = ContentTypes::validate($b['mimetype'] ?? null);
+        $category = trim($b['category'] ?? '');
 
         if (!trim($content)) {
             Response::error(400, 'Body is required');
@@ -34,6 +35,19 @@ class Notes
         // linkify_tags() are discarded — only hashtags are persisted.
         $postTags    = [];
         $attachments = [];
+
+        // Notebooks are ordinary TERM_CATEGORY terms, so the category widget
+        // and the ?cat= filter below work unchanged.
+        foreach (array_filter(array_map('trim', explode(',', $category))) as $cat) {
+            $postTags[] = [
+                'uid'   => $uid,
+                'ttype' => TERM_CATEGORY,
+                'otype' => TERM_OBJ_POST,
+                'term'  => $cat,
+                'url'   => z_root() . '/notepad?cat=' . urlencode($cat),
+            ];
+        }
+
         if ($mimetype === 'text/bbcode') {
             require_once 'include/text.php';
             $results = linkify_tags($content, $uid);
@@ -195,9 +209,12 @@ class Notes
              LIMIT $limit OFFSET $start"
         );
 
+        $rows = $rows ?: [];
+        if ($rows) $rows = fetch_post_tags($rows);
+
         $root = z_root();
         $items = [];
-        foreach (($rows ?: []) as $row) {
+        foreach ($rows as $row) {
             $attach = $row['attach'] ? (json_decode($row['attach'], true) ?: []) : [];
             $items[] = [
                 'id'       => intval($row['id']),
@@ -207,6 +224,8 @@ class Notes
                 'created'  => $row['created'],
                 'edited'   => $row['edited'],
                 'mimetype' => $row['mimetype'],
+                'categories' => array_values(array_column(
+                    get_terms_oftype($row['term'] ?? [], TERM_CATEGORY), 'term')),
                 'attach'   => array_map(function (array $a) use ($root): array {
                     $href = $a['href'] ?? '';
                     if ($href && str_starts_with($href, '/')) $href = $root . $href;

@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-BeXRvOD7.js";import{ya as t}from"./app-CcmpLVlx.js";function n(){return e(t,{href:`/directory/invite`})}export{n as default};
