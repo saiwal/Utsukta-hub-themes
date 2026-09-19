@@ -829,6 +829,8 @@ class Settings
             'evdays' => $evdays,
             'always_show_in_notices' => intval(get_pconfig($uid, 'system', 'always_show_in_notices', 0)),
             'update_notices_per_parent' => intval(get_pconfig($uid, 'system', 'update_notices_per_parent', 1)),
+            // Sse_bs::$direction — flips every notification query to ORDER BY ASC.
+            'invert_notifications_order' => intval(get_pconfig($uid, 'system', 'invert_notifications_order', 0)),
             'post_newfriend' => intval(get_pconfig($uid, 'system', 'post_newfriend', 0)),
             'post_joingroup' => intval(get_pconfig($uid, 'system', 'post_joingroup', 0)),
             'post_profilechange' => intval(get_pconfig($uid, 'system', 'post_profilechange', 0)),
@@ -883,6 +885,7 @@ class Settings
             'post_profilechange',
             'always_show_in_notices',
             'update_notices_per_parent',
+            'invert_notifications_order',
         ];
         foreach ($toggles as $k) {
             if (isset($data[$k]))

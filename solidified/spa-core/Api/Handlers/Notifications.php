@@ -54,7 +54,9 @@ class Notifications
 
             return [
                 'notify_id'   => intval($row['id']),
-                'notify_link' => ($row['ntype'] == NOTIFY_INTRO)
+                // ntype is a bitmask (boot.php NOTIFY_*), so == misses any
+                // composite value. HqMessages::sendNotices() gets this right.
+                'notify_link' => (intval($row['ntype']) & NOTIFY_INTRO)
                     ? z_root() . '/notify/view/' . $row['id']
                     : $row['link'],
                 'name'        => Response::decodeEntities($row['xname']),
