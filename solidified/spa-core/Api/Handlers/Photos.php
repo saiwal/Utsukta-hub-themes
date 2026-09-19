@@ -153,27 +153,32 @@ class Photos
     }
 
     // Regex matching the channel's automatic photo-upload folders. Core stores
-    // the folder as a pattern in pconfig system/photo_path (default '%Y-%m')
-    // and expands %Y/%m/%d at upload time (include/attach.php::filepath_macro),
-    // so the pattern has to become a date-shaped regex to catch every month's
-    // folder rather than only the current one. A pattern with no '/' names a
-    // folder, not a path, so it also matches nested (a leading '<parent>/').
-    private function autoAlbumRegex(int $uid): ?string
+    // the folder as a pattern in pconfig system/photo_path and expands %Y/%m/%d
+    // at upload time (include/attach.php::filepath_macro), so the pattern has
+    // to become a date-shaped regex to catch every month's folder rather than
+    // only the current one.
+    //
+    // Two wrinkles the alternation exists for: core seeds the pconfig with
+    // '%Y-%m' at channel creation (include/channel.php), and a channel may have
+    // blanked or changed it since — folders made under the *previous* pattern
+    // are still on disk, so match core's default alongside whatever is
+    // configured now. A pattern with no '/' names a folder rather than a path,
+    // so that alternative also matches nested ('(?:.*/)?').
+    private function autoAlbumRegex(int $uid): string
     {
-        // Core seeds photo_path with '%Y-%m' at channel creation
-        // (include/channel.php), but a channel may have blanked it since —
-        // the date-shaped folders it already produced are still there, so fall
-        // back to that same default rather than showing no uploads tab at all.
-        $pat = trim((string) get_pconfig($uid, 'system', 'photo_path'));
-        if ($pat === '') $pat = '%Y-%m';
+        $configured = trim((string) get_pconfig($uid, 'system', 'photo_path'), " \t\n\r/");
 
-        $rx = str_replace(
-            ['%Y', '%m', '%d'],
-            ['\\d{4}', '\\d{2}', '\\d{2}'],
-            preg_quote($pat, '#')
-        );
-        $prefix = (strpos($pat, '/') === false) ? '(?:.*/)?' : '';
-        return '#^' . $prefix . $rx . '$#';
+        $alts = [];
+        foreach (array_unique(array_filter([$configured, '%Y-%m'])) as $pat) {
+            $rx = str_replace(
+                ['%Y', '%m', '%d'],
+                ['\\d{4}', '\\d{2}', '\\d{2}'],
+                preg_quote($pat, '#')
+            );
+            $alts[] = (strpos($pat, '/') === false ? '(?:.*/)?' : '') . $rx;
+        }
+
+        return '#^(?:' . implode('|', $alts) . ')$#';
     }
 
     private function getAlbumsSummary(array $channel, string $ob_hash, bool $can_write): void
@@ -239,7 +244,7 @@ class Photos
                 'folder' => $fhash,
                 'total'  => $total,
                 'created' => (string) ($row['newest'] ?? ''),
-                'auto'   => $autoRx !== null && (bool) preg_match($autoRx, (string) $row['album_name']),
+                'auto'   => (bool) preg_match($autoRx, (string) $row['album_name']),
                 'url'    => z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $fhash,
                 'thumb'  => $thumb,
             ];
