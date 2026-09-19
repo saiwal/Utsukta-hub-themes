@@ -3,7 +3,7 @@
 /**
  * * Name: doubleleft
  *   * Description: Solidified doubleleft, same as default
- *   * Version: 0.4.1-beta
+ *   * Version: 0.5-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
