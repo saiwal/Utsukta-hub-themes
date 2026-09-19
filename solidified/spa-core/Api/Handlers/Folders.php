@@ -73,18 +73,25 @@ class Folders
             );
             $starredCount = $sr ? (int) $sr[0]['cnt'] : 0;
 
+            // DMs only. This used to count unread non-DM threads too, but
+            // nothing rendered that number — an "all messages" badge lit by
+            // every delivered post is permanently on and says nothing — and
+            // counting it is what made this the expensive query here: without
+            // the item_private filter the planner drives off
+            // uid_item_thread_top, i.e. one pass over every thread ever
+            // delivered to the channel, where the other two queries are
+            // bounded by what you filed and what you starred. With it, this
+            // rides uid_item_private and scales with your DMs.
             $cr = q(
-                "SELECT SUM(CASE WHEN i.item_private = 2 THEN 1 ELSE 0 END) AS dm,
-                        SUM(CASE WHEN i.item_private IN (0, 1) THEN 1 ELSE 0 END) AS all_
+                "SELECT COUNT(*) AS dm
                  FROM item i
-                 WHERE i.uid = %d AND i.item_thread_top = 1
+                 WHERE i.uid = %d AND i.item_private = 2 AND i.item_thread_top = 1
                    $item_normal AND $unseen AND $not_trash",
                 intval($uid)
             );
 
             Response::send($folders, [
                 'starred_count' => $starredCount,
-                'unread_all' => $cr ? (int) $cr[0]['all_'] : 0,
                 'unread_direct' => $cr ? (int) $cr[0]['dm'] : 0,
             ]);
         } else {
