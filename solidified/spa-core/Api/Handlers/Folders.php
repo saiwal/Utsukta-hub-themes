@@ -22,14 +22,21 @@ class Folders
             // everything but Trash itself.
             $item_normal = HqMessages::itemNormalSql($uid, 'i');
 
-            $unseen = "(i.item_unseen = 1 OR EXISTS (
-                SELECT 1 FROM item cu
-                WHERE cu.uid = i.uid AND cu.parent = i.parent
+            // Both of these are IN (...) against a *constant* uid rather than
+            // EXISTS correlated on i.uid: every row here belongs to $uid
+            // anyway, and the correlation was the whole cost. Correlated,
+            // EXPLAIN showed two DEPENDENT SUBQUERYs re-run per candidate
+            // thread top (i.e. per delivered thread in the channel, tens of
+            // thousands of index lookups a request); uncorrelated, both
+            // become a MATERIALIZED subquery evaluated once.
+            $unseen = "(i.item_unseen = 1 OR i.parent IN (
+                SELECT cu.parent FROM item cu
+                WHERE cu.uid = " . intval($uid) . "
                   AND cu.item_unseen = 1 AND cu.item_thread_top = 0
             ))";
 
             $not_trash = "i.id NOT IN (SELECT oid FROM term
-                WHERE ttype = " . intval(TERM_FILE) . " AND uid = i.uid
+                WHERE ttype = " . intval(TERM_FILE) . " AND uid = " . intval($uid) . "
                 AND term = '" . protect_sprintf(dbesc(HqMessages::TRASH)) . "')";
 
             // Per folder. LEFT JOIN, not an inner one: a folder you created
