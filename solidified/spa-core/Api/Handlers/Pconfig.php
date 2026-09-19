@@ -91,6 +91,9 @@ class Pconfig
             $response = [
                 'uid'      => $uid,
                 'channel'  => $nick,
+                // zidify_links() equivalent on the client needs the observer's
+                // webbie to reach ACL-restricted media on other hubs.
+                'my_address' => (string) (get_my_address() ?: channel_reddress($channel)),
                 'is_admin' => is_site_admin(),
                 'system'   => $config['system']  ?? [],
                 'spa'      => $config['spa']     ?? [],
@@ -115,9 +118,10 @@ class Pconfig
         $observer = \App::get_observer();
         if ($observer && !empty($observer['xchan_hash'])) {
             $base = [
-                'uid'       => 0,
-                'channel'   => '',
-                'is_remote' => true,
+                'uid'        => 0,
+                'channel'    => '',
+                'is_remote'  => true,
+                'my_address' => (string) (get_my_address() ?: ''),
             ];
             if ($channel_param !== '') {
                 $page_spa = self::channelSpa($channel_param);

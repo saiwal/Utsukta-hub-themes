@@ -23,6 +23,11 @@ $solidified_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/so
 	<title><?php if (x($page, 'title')) echo $page['title'] ?></title>
 	<script>
     var baseurl = "<?php echo z_root() ?>";
+    // core's head.tpl emits this too; this theme writes its own <head>, so it
+    // has to repeat it. lib/zid.ts reads it synchronously at boot — a body
+    // rendered before /spa/pconfig lands would otherwise lose the zid that
+    // gets the viewer past another hub's ACL on an image.
+    var zid = <?php echo json_encode(get_my_address() ?: null) ?>;
   </script>
   <?php foreach ($solidified_assets['css'] as $solidified_css): ?>
   <link rel="stylesheet" href="<?php echo $solidified_css ?>">

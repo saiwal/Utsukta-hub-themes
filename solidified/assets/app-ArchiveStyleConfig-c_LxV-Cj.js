@@ -1,1 +1,0 @@
-import{B as e,O as t}from"./app-web-BeXRvOD7.js";import{Sa as n}from"./app-CnZQyckA.js";import{t as r}from"./app-StyleConfigForm-D12NI-um.js";function i(i){let{t:a}=n();return t(r,e(i,{fallback:`list`,get options(){return[{value:`list`,label:a(`widgets.style_list`)},{value:`calendar`,label:a(`widgets.style_calendar`)}]}}))}export{i as default};

@@ -1,1 +1,0 @@
-var e=[`text/bbcode`,`text/html`,`text/markdown`,`text/plain`];function t(e){return e||`text/bbcode`}function n(t){return e.includes(t)}function r(e){return t(e)===`text/bbcode`}function i(e,n){let i=t(e);return r(i)||!!n&&(i===`text/markdown`||i===`text/html`)}export{t as i,i as n,n as r,e as t};

@@ -1354,10 +1354,25 @@ class Settings
                 dbesc($channel['channel_hash']));
         }
 
-        // Propagate name change to channel table
-        if ($fields['fullname'])
+        // Propagate name change to channel + xchan tables
+        if ($fields['fullname']) {
             q("UPDATE channel SET channel_name = '%s' WHERE channel_id = %d",
                 dbesc($fields['fullname']), intval($uid));
+
+            if ($channel)
+                q("UPDATE xchan SET xchan_name = '%s', xchan_name_date = '%s' WHERE xchan_hash = '%s'",
+                    dbesc($fields['fullname']),
+                    dbesc(datetime_convert()),
+                    dbesc($channel['channel_hash']));
+        }
+
+        // Clone sync to the channel's other hubs
+        $r = q("SELECT * FROM profile WHERE uid = %d AND is_default = 1 LIMIT 1", intval($uid));
+        if ($r)
+            Libsync::build_sync_packet($uid, ['profile' => $r]);
+
+        // Directory update + Notifier refresh_all -> connections (zot6, and AP via pubcrawl)
+        \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
 
         Response::send(['status' => 'ok']);
     }
