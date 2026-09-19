@@ -222,15 +222,22 @@ class Photos
 
             $thumb = null;
             if ($fhash !== '') {
+                // This URL is only ever rendered as a small album card, so take
+                // scale 3 (320px) over scale 2 (640px) — a quarter of the bytes.
+                // Core creates scale 3 only when the source is wider than 320px
+                // (include/photos.php) and /photo serves the default image for a
+                // scale that doesn't exist rather than falling back, so order by
+                // imgscale DESC and use whichever of the two this photo has.
                 $t = dbq(
                     "SELECT p.resource_id, p.mimetype, p.imgscale
                      FROM photo p
                      INNER JOIN attach a ON a.hash = p.resource_id AND a.uid = $uid
                      WHERE a.folder = '" . dbesc($fhash) . "'
                        AND p.uid = $uid
-                       AND p.imgscale = 2
+                       AND p.imgscale IN (2, 3)
                        AND p.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
                        $sql_photo
+                     ORDER BY p.imgscale DESC
                      LIMIT 1"
                 );
                 if ($t) {
