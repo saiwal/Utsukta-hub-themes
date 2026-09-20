@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-BeXRvOD7.js";import{t}from"./app-ProfileView-CoL3j_xi.js";function n(){return e(t,{})}export{n as default};
