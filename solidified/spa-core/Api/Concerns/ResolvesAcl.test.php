@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Self-check for Concerns/ResolvesAcl. Pure string/array work — no Hubzilla,
  * no database:

@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Check for Handlers/Lockview's guest grant/revoke.
  *

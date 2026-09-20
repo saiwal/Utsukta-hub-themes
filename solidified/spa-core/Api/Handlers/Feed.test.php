@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Validity checks for the SPA's RSS generator (Handlers\Feed).
  *

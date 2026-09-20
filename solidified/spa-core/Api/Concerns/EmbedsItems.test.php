@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Contract check for Concerns/EmbedsItems — the [share] and [card] embeds.
  *

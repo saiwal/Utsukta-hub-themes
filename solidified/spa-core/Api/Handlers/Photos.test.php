@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Photos.php batch move — a moved photo must follow its album in BOTH tables.
  *

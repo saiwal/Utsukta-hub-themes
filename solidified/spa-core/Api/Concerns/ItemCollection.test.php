@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Round-trip check for Concerns/ItemCollection — the machinery shared by the
  * Articles and Cards handlers.

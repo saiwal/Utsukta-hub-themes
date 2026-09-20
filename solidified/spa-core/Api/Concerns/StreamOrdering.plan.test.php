@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * StreamOrdering::tiebreak() — the wall queries must not be planned off the
  * standalone `created` index.

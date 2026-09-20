@@ -1,4 +1,5 @@
 <?php
+if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Round-trip check for Concerns/CustomProfileFields — admin-defined profile
  * fields (profdef) and their per-profile values (profext).
