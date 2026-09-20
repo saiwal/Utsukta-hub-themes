@@ -288,26 +288,40 @@ class Profiles
             (bool) feature_enabled($uid, 'advanced_profiles')
         );
 
-        // Propagate name change to channel for the default profile
-        if ($is_default && $f['fullname']) {
-            q(
-                "UPDATE channel SET channel_name = '%s' WHERE channel_id = %d",
-                dbesc($f['fullname']),
-                intval($uid)
-            );
+        if ($is_default) {
+            $ch = q("SELECT channel_hash FROM channel WHERE channel_id = %d LIMIT 1", intval($uid));
+
+            // xchan_name is what every rendered item's author name comes from, so
+            // skipping it leaves the old name on every post in the streams.
+            if ($f['fullname']) {
+                q("UPDATE channel SET channel_name = '%s' WHERE channel_id = %d",
+                    dbesc($f['fullname']),
+                    intval($uid)
+                );
+
+                if ($ch)
+                    q("UPDATE xchan SET xchan_name = '%s', xchan_name_date = '%s' WHERE xchan_hash = '%s'",
+                        dbesc($f['fullname']),
+                        dbesc(datetime_convert()),
+                        dbesc($ch[0]['channel_hash'])
+                    );
+            }
+
+            // Sync xchan_hidden immediately when publish changes
+            if ($ch)
+                q("UPDATE xchan SET xchan_hidden = %d WHERE xchan_hash = '%s'",
+                    intval(1 - $f['publish']),
+                    dbesc($ch[0]['channel_hash'])
+                );
         }
 
-        // Sync xchan_hidden immediately when publish changes on the default profile
-        if ($is_default) {
-            $channel = q("SELECT channel_hash FROM channel WHERE channel_id = %d LIMIT 1", intval($uid));
-            if ($channel) {
-                $hidden = 1 - $f['publish'];
-                q("UPDATE xchan SET xchan_hidden = %d WHERE xchan_hash = '%s'",
-                    intval($hidden),
-                    dbesc($channel[0]['channel_hash'])
-                );
-            }
-        }
+        // Clone sync + directory/connection refresh, same as postProfileSettings()
+        $r = q("SELECT * FROM profile WHERE id = %d AND uid = %d LIMIT 1", intval($id), intval($uid));
+        if ($r)
+            \Zotlabs\Lib\Libsync::build_sync_packet($uid, ['profile' => $r]);
+
+        if ($is_default)
+            \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
 
         Response::send(['status' => 'ok']);
     }
