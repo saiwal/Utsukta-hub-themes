@@ -1,0 +1,1 @@
+import{B as e,O as t}from"./app-web-BeXRvOD7.js";import{tn as n}from"./app-b4j7E5wj.js";import{t as r}from"./app-StyleConfigForm-yR5m3bzU.js";function i(i){let{t:a}=n();return t(r,e(i,{fallback:`cloud`,rainbow:!0,get options(){return[{value:`cloud`,label:a(`widgets.style_cloud`)},{value:`list`,label:a(`widgets.style_list`)}]}}))}export{i as default};
