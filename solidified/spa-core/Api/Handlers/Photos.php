@@ -1073,6 +1073,14 @@ class Photos
             $allow_cid = '<' . $channel['channel_hash'] . '>';
             $deny_gid  = '';
             $deny_cid  = '';
+        } elseif (($body['scope'] ?? null) === 'connections') {
+            // attach/photo rows have no public_policy column, so "connections"
+            // is stored as the channel's own default ACL (what aclModeFrom()
+            // matches against to read it back).
+            $allow_gid = $channel['channel_allow_gid'];
+            $allow_cid = $channel['channel_allow_cid'];
+            $deny_gid  = $channel['channel_deny_gid'];
+            $deny_cid  = $channel['channel_deny_cid'];
         } else {
             $allow_gid = $this->buildAclField($body['allow_gid'] ?? []);
             $allow_cid = $this->buildAclField($body['allow_cid'] ?? []);
