@@ -8,12 +8,17 @@ use Zotlabs\Access\PermissionRoles;
 use Zotlabs\Access\Permissions;
 use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\Config;
+use Utsukta\SpaCore\Api\Concerns\FilesByRules;
 use Zotlabs\Lib\Libsync;
 use Zotlabs\Daemon\Master;
 use App;
 
 class Settings
 {
+    // Shares the rule validator with the read-time engine, so a rule that
+    // would be skipped when filing can't be saved either.
+    use FilesByRules;
+
     public function get(): void
     {
         $this->requireManageAccess();
@@ -959,9 +964,41 @@ class Settings
             case 'locations':
                 $this->postLocationsSettings($uid, $data);
                 break;
+            case 'inbox_rules':
+                $this->postInboxRules($uid, $data);
+                break;
             default:
                 Response::error(404, 'Unknown settings section');
         }
+    }
+
+    /**
+     * Auto-filing rules for the inbox. Read back through the boot payload
+     * (cat `spa` is dumped wholesale by Pconfig.php), so there is no GET here.
+     *
+     * `reset` moves the cursor back so the rules re-run over existing mail on
+     * the next inbox load — including posts pulled out of a folder by hand,
+     * which is why it is an explicit action rather than something a save does.
+     */
+    private function postInboxRules(int $uid, array $data): void
+    {
+        if (!empty($data['reset'])) {
+            // Not del_pconfig: an unset cursor means "first run, adopt the high
+            // water mark and file nothing". An epoch value means "consider
+            // everything", which is what re-running the rules is.
+            set_pconfig($uid, 'spa', 'rules_cursor', '0001-01-01 00:00:00');
+            Response::send(['reset' => true]);
+        }
+
+        $rules = self::validateRules(is_array($data['rules'] ?? null) ? $data['rules'] : []);
+
+        if ($rules) {
+            set_pconfig($uid, 'spa', 'inbox_rules', json_encode($rules));
+        } else {
+            del_pconfig($uid, 'spa', 'inbox_rules');
+        }
+
+        Response::send(['rules' => $rules]);
     }
 
     private function postDisplaySettings(int $uid, array $data): void
@@ -1423,7 +1460,7 @@ class Settings
 
     // Feature groups/names not offered in the SPA (no corresponding UI, or
     // superseded — e.g. emoji reactions are always on here).
-    private const EXCLUDED_FEATURE_GROUPS = ['channel_home', 'connections'];
+    private const EXCLUDED_FEATURE_GROUPS = ['channel_home'];
     private const EXCLUDED_FEATURES = ['emojis'];
 
     private function getFeaturesSettings(): void

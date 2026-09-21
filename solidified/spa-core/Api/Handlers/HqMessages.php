@@ -16,6 +16,7 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\StreamFilters;
+use Utsukta\SpaCore\Api\Concerns\FilesByRules;
 
 require_once 'include/items.php';
 require_once 'include/text.php';
@@ -25,6 +26,7 @@ require_once 'include/bbcode.php';
 class HqMessages
 {
     use FormatsItems;
+    use FilesByRules;
 
     /** File-tag folder the inbox uses as its trash can. Items tagged with it
      *  are hidden from every feed except the Trash folder view itself — the
@@ -204,6 +206,16 @@ class HqMessages
 
         xchan_query($items, false);
 
+        // Auto-file by the user's inbox rules. After xchan_query, which is what
+        // puts the author's name and address on the row for the sender rules.
+        // Only the unfiltered first page: the cursor may only advance past posts
+        // we have actually all seen, and any filter or offset makes this page a
+        // subset of what arrived.
+        if ($type === '' && $offset === 0 && $search_sql === '' && $xchan_sql === ''
+            && !$unread && $author === '' && ($q['file'] ?? '') === '') {
+            $this->applyInboxRules($items, $uid);
+        }
+
         $entries = [];
 
         foreach ($items as $item) {
@@ -223,10 +235,19 @@ class HqMessages
                 $info .= $this->dmRecipients($item);
             }
 
+            // Who put this in the stream, when that isn't the author: the
+            // resharer, or the group/forum it came through. Sent as its own
+            // field as well as inside $info — $info is a rendered string the
+            // client can only display verbatim, and the 'filed' branch below
+            // overwrites it entirely.
+            $via = '';
             if ($item['owner_xchan'] !== $item['author_xchan']) {
-                $info .= t('via') . ' ' . Response::decodeEntities($item['owner']['xchan_name']);
+                $via = Response::decodeEntities($item['owner']['xchan_name']);
             } elseif ($item['verb'] === 'Announce' && isset($item['source'])) {
-                $info .= t('via') . ' ' . Response::decodeEntities($item['source']['xchan_name']);
+                $via = Response::decodeEntities($item['source']['xchan_name']);
+            }
+            if ($via !== '') {
+                $info .= t('via') . ' ' . $via;
             }
 
             $folders = [];
@@ -288,6 +309,7 @@ class HqMessages
                 'unseen' => (bool) intval($item['item_unseen']),
                 'starred' => (bool) intval($item['item_starred']),
                 'folders' => $folders,
+                'via' => $via,
             ];
         }
 

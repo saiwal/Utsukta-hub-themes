@@ -142,6 +142,7 @@ class Connections
                     abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                     abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
                     abook.abook_role, abook.abook_profile,
+                    abook.abook_incl, abook.abook_excl,
                     xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                     xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                     xchan.xchan_pubforum, xchan.xchan_updated
@@ -725,6 +726,8 @@ class Connections
             'ignored' => 'AND abook.abook_ignored = 1',
             'hidden'  => 'AND abook.abook_hidden = 1',
             'archived'=> 'AND (abook.abook_archived = 1 OR abook.abook_not_here = 1)',
+            // Connections carrying a message filter — the inbox rules overview.
+            'filtered'=> "AND (abook.abook_incl != '' OR abook.abook_excl != '')",
             default   => '',  // 'all' or unknown
         };
     }
@@ -781,6 +784,11 @@ class Connections
             'pending'        => (bool) intval($row['abook_pending']),
             'profile_id'     => $raw_profile > 0 ? $raw_profile : null,
             'granted_perms'  => $grantedPerms,
+            // Message filters. Only the paginated list selects these; the
+            // single-row lookups leave them empty, which is what a caller that
+            // didn't ask for them should see.
+            'incl'           => $row['abook_incl'] ?? '',
+            'excl'           => $row['abook_excl'] ?? '',
         ];
     }
 }
