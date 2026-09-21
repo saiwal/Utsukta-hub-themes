@@ -4,6 +4,7 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 require_once ('include/items.php');
+require_once ('include/channel.php');
 require_once ('include/conversation.php');
 require_once ('include/security.php');
 require_once ('include/crypto.php');
@@ -972,6 +973,8 @@ class Item
             'route'           => '',
         ];
 
+        $datarray += self::conversationTarget($profileUid, $ownerChannel['channel_hash'], $mid);
+
         // Core closes comments from the moment of publication when nocomment
         // is set (comments_closed = created); otherwise item_store leaves the
         // column at the DB null date (comments stay open).
@@ -1103,6 +1106,19 @@ class Item
             json_return_and_die(['error' => 'Parent item not found or permission denied']);
         }
 
+        // A pubstream-only parent lives on the sys channel. Commenting on it
+        // as-is would store the comment under *its* uid with item_origin = 1;
+        // core copies the thread into the commenter's own stream first. The
+        // copy belongs here and not in resolveItem(), which also serves the
+        // read, edit and delete paths, where creating rows would be wrong.
+        $sys = get_sys_channel();
+        if ($sys && intval($parent['uid']) === intval($sys['channel_id']) && local_channel()) {
+            $copy = copy_of_pubitem(App::get_channel(), $parent['mid']);
+            if ($copy) {
+                $parent = $copy;
+            }
+        }
+
         // resolveItem only proves the observer can *view* the parent. Commenting
         // is a separate permission — enforce the channel's comment policy /
         // post_comments grant and closed-comment state, as core Item.php does.
@@ -1216,6 +1232,33 @@ class Item
 
         if ($mdSource !== '') {
             ContentTypes::rememberMarkdown(intval($post['item_id']), $mdSource, $content);
+        }
+
+        // Keep a thread you are taking part in from being expired out.
+        if (local_channel()) {
+            retain_item(intval($parent['parent']));
+        }
+
+        // Wall-to-wall comment: delivery never fires the notification, because
+        // the comment is stored under the wall owner's own uid.
+        if ($datarray['owner_xchan'] !== $datarray['author_xchan'] && intval($parent['item_wall'])) {
+            Enotify::submit([
+                'type'       => NOTIFY_COMMENT,
+                'from_xchan' => $datarray['author_xchan'],
+                'to_xchan'   => $datarray['owner_xchan'],
+                'item'       => $datarray,
+                'link'       => z_root() . '/display/' . $datarray['uuid'],
+                'verb'       => 'Create',
+                'otype'      => 'item',
+                'parent'     => intval($parent['parent']),
+                'parent_mid' => $parent['parent_mid'],
+            ]);
+        }
+
+        // Photo comments turn the photo item visible on the profile wall, so a
+        // new album doesn't dump every picture there at once.
+        if (intval($parent['item_hidden'])) {
+            q('UPDATE item SET item_hidden = 0 WHERE id = %d', intval($parent['id']));
         }
 
         Master::Summon(['Notifier', 'comment-new', $post['item_id']]);
@@ -2171,11 +2214,20 @@ class Item
         $parentMid = $isComment ? $parent['mid'] : $mid;
         $thrParent = $isComment ? $parent['mid'] : $mid;
         $ownerHash = $isComment ? $parent['owner_xchan'] : $channel['channel_hash'];
+        // A specific ACL overrides public_policy outright (core Item::post).
+        $publicPolicy = '';
+        if (!$isComment && !($acl['allow_cid'] ?? '') && !($acl['allow_gid'] ?? '')
+            && !($acl['deny_cid'] ?? '') && !($acl['deny_gid'] ?? '')) {
+            $publicPolicy = map_scope(PermissionLimits::Get($profileUid, 'view_stream'), true);
+        }
+
         // Comments inherit the thread's privacy verbatim (core Item::post) —
         // deriving it from the ACL would downgrade a DM (private=2) to 1.
+        // A restricted view_stream policy makes an otherwise open post private
+        // too, or it would surface in the public stream regardless.
         $private = $isComment
             ? intval($parent['item_private'])
-            : (!empty($acl['allow_cid']) || !empty($acl['allow_gid']) ? 1 : 0);
+            : (!empty($acl['allow_cid']) || !empty($acl['allow_gid']) || $publicPolicy ? 1 : 0);
         // Comments are stored under the parent's owning account (App::get_channel()
         // is empty for a remote/OWA commenter, who has no local channel here).
         $aid = $isComment ? intval($parent['aid']) : intval($channel['channel_account_id'] ?? 0);
@@ -2208,11 +2260,59 @@ class Item
             'item_wall' => $isWall ? 1 : 0,
             'item_origin' => 1,
             'item_thread_top' => $isComment ? 0 : 1,
-            'item_unseen' => 0,
+            // Core: a comment written by anyone other than the uid owner lands
+            // unseen, which is what raises their unread badge.
+            'item_unseen' => (local_channel() !== $profileUid) ? 1 : 0,
             'item_private' => $private,
+            // Omitting these is not neutral: item_store() falls back to the
+            // literal 'contacts' for comment_policy, which costs the item its
+            // reply box for authenticated non-connections, and to '' for
+            // public_policy, which would make a reshare *more* visible than the
+            // channel's own posts. A comment inherits the thread's instead.
+            'comment_policy' => map_scope(PermissionLimits::Get($profileUid, 'post_comments')),
+            'public_policy' => $isComment ? $parent['public_policy'] : $publicPolicy,
             'plink' => $mid,
             'route' => $parent['route'] ?? '',
-        ];
+        ] + self::conversationTarget($profileUid, $ownerHash, $mid, $parent);
+    }
+
+    // Conversation collection, mirroring core Zotlabs\Module\Item::post (the
+    // block core labels "Set the conversation target"). Remote hubs thread
+    // replies on this: both Activity::store() and Libzot::process_delivery()
+    // *drop* a relayed comment whose parent carries a Collection target unless
+    // the receiving channel owns the conversation, so follower copies wait for
+    // the owner's canonical relay. An item stored without one has its replies
+    // accepted out of band instead, and every hub ends up with a different
+    // partial version of the thread.
+    //
+    // $parent is the item that was replied to, null for a new thread. Its
+    // parent_mid — not its mid — is the thread root, which matters because the
+    // SPA lets you reply to a comment and core only ever passes the root here.
+    private static function conversationTarget(int $uid, string $ownerHash, string $mid, ?array $parent = null): array
+    {
+        $c = q('SELECT channel_address, channel_hash FROM channel WHERE channel_id = %d LIMIT 1',
+            intval($uid)
+        );
+
+        if ($c && $c[0]['channel_hash'] === $ownerHash) {
+            return [
+                'target' => [
+                    'id'           => str_replace('/item/', '/conversation/', $parent ? $parent['parent_mid'] : $mid),
+                    'type'         => 'Collection',
+                    'attributedTo' => z_root() . '/channel/' . $c[0]['channel_address'],
+                ],
+                'tgt_type' => 'Collection',
+            ];
+        }
+
+        // Someone else's conversation: carry their collection through unchanged.
+        // item_store() passes a string target straight to the column, so the
+        // JSON we read back out of the parent row needs no re-encoding.
+        if ($parent && !empty($parent['target'])) {
+            return ['target' => $parent['target'], 'tgt_type' => $parent['tgt_type']];
+        }
+
+        return ['target' => '', 'tgt_type' => ''];
     }
 
     // Map a scope string to an ACL array
@@ -2418,6 +2518,8 @@ class Item
                 'item_thread_top' => 0,
                 'plink'           => $answerMid,
             ];
+
+            $datarray += self::conversationTarget(intval($poll['uid']), $poll['author_xchan'], $answerMid, $poll);
 
             $post = item_store($datarray);
             if ($post['success']) {
