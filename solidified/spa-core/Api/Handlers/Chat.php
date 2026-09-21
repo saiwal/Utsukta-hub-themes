@@ -18,6 +18,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use App;
 use Zotlabs\Lib\Chatroom;
+use Zotlabs\Lib\Libsync;
 use Zotlabs\Access\AccessList;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
@@ -257,6 +258,11 @@ class Chat
 
         if (!$x)
             Response::error(500, 'Failed to create room');
+
+        // Chatroom::create() does not clone-sync (Chatroom::destroy() does), so
+        // core's own module syncs here itself — Zotlabs\Module\Chat::post.
+        // Without this a room made in the SPA exists on one hub only.
+        Libsync::build_sync_packet($uid, ['chatroom' => $x]);
 
         Response::send([
             'id'         => intval($x[0]['cr_id']),

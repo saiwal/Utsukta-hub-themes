@@ -173,34 +173,32 @@ class Profiles
 
         $guid = new_uuid();
 
-        if ($default) {
-            $d = $default[0];
-            q(
-                "INSERT INTO profile
-                 (uid, profile_guid, profile_name, is_default, fullname, pdesc, homepage, hometown, gender, dob, about, keywords, hide_friends)
-                 VALUES (%d, '%s', '%s', 0, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d)",
-                intval($uid),
-                dbesc($guid),
-                dbesc($profile_name),
-                dbesc($d['fullname'] ?? ''),
-                dbesc($d['pdesc'] ?? ''),
-                dbesc($d['homepage'] ?? ''),
-                dbesc($d['hometown'] ?? ''),
-                dbesc($d['gender'] ?? ''),
-                dbesc($d['dob'] ?? ''),
-                dbesc($d['about'] ?? ''),
-                dbesc($d['keywords'] ?? ''),
-                0
-            );
-        } else {
-            q(
-                "INSERT INTO profile (uid, profile_guid, profile_name, is_default)
-                 VALUES (%d, '%s', '%s', 0)",
-                intval($uid),
-                dbesc($guid),
-                dbesc($profile_name)
-            );
-        }
+        // profile_store_lowlevel(), not a hand-rolled INSERT: it fills every
+        // column the table expects, and it is what sets `aid` — a profile row
+        // written without one is detached from its account. Core also copies
+        // photo/thumb from the default profile, so a new profile shows the
+        // channel's avatar instead of nothing (Zotlabs\Module\Profiles::init).
+        require_once('include/channel.php');
+
+        $d = $default ? $default[0] : [];
+        profile_store_lowlevel([
+            'aid'          => intval($d['aid'] ?? 0) ?: intval(get_account_id()),
+            'uid'          => intval($uid),
+            'profile_guid' => $guid,
+            'profile_name' => $profile_name,
+            'is_default'   => 0,
+            'hide_friends' => 0,
+            'fullname'     => $d['fullname'] ?? '',
+            'photo'        => $d['photo']    ?? '',
+            'thumb'        => $d['thumb']    ?? '',
+            'pdesc'        => $d['pdesc']    ?? '',
+            'homepage'     => $d['homepage'] ?? '',
+            'hometown'     => $d['hometown'] ?? '',
+            'gender'       => $d['gender']   ?? '',
+            'dob'          => $d['dob']      ?? '',
+            'about'        => $d['about']    ?? '',
+            'keywords'     => $d['keywords'] ?? '',
+        ]);
 
         $row = q(
             "SELECT id FROM profile WHERE uid = %d AND profile_guid = '%s' LIMIT 1",

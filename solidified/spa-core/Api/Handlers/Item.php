@@ -21,6 +21,7 @@ use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\EnforcesServiceClass;
 use Utsukta\SpaCore\Api\Concerns\EmbedsItems;
+use Utsukta\SpaCore\Api\Concerns\SetsConversationTarget;
 use Utsukta\SpaCore\Api\Concerns\FetchesRemoteReplies;
 use Utsukta\SpaCore\Api\Response;
 
@@ -29,6 +30,7 @@ class Item
     use FiltersBlockedChannels;
     use FormatsItems;
     use EnforcesServiceClass;
+    use SetsConversationTarget;
     use EmbedsItems;
     use FetchesRemoteReplies;
 
@@ -1016,10 +1018,25 @@ class Item
                     'endTime'      => $pollEndTime,
                     'to'           => [ACTIVITY_PUBLIC_INBOX],
                 ];
-                if (empty($datarray['expires'])) {
-                    $datarray['expires'] = datetime_convert('UTC', 'UTC', $pollEndTime);
+                // Deliberately NOT setting 'expires' from the poll's end time.
+                // item.expires is what the expiry reaper deletes on, and core
+                // only ever sets it from the author's explicit expiry field
+                // (Zotlabs\Module\Item::post:561) — never from a poll. Setting
+                // it here made every poll made in the SPA delete itself, results
+                // and all, the moment it closed.
+                //
+                // Core closes comments on a poll when the poll closes
+                // (Zotlabs\Module\Item::post, the endTime branch) — otherwise a
+                // finished poll keeps taking replies here but not in redbasic.
+                $pollEnd = datetime_convert('UTC', 'UTC', $pollEndTime);
+                if ($pollEnd > \DBA::$dba->get_null_date()) {
+                    $datarray['comments_closed'] = $pollEnd;
                 }
             }
+        }
+
+        if (self::isDuplicatePost($profileUid, $datarray['body'])) {
+            Response::error(409, 'Duplicate post suppressed');
         }
 
         call_hooks('post_local', $datarray);
@@ -1215,6 +1232,10 @@ class Item
             attach: $attachments,
         );
 
+        if (self::isDuplicatePost($profileUid, $datarray['body'])) {
+            json_return_and_die(['error' => 'Duplicate comment suppressed']);
+        }
+
         call_hooks('post_local', $datarray);
 
         if (!empty($datarray['cancel'])) {
@@ -1284,6 +1305,15 @@ class Item
         $target = $this->resolveItem($mid, $ob_hash);
         if (!$target) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+
+        // A repeat is a boost. Core's Share module refuses one on a private
+        // item outright (Zotlabs\Module\Share::init), and redbasic therefore
+        // shows no repeat button there — so the SPA must refuse it too rather
+        // than offering an action the rest of the network doesn't have.
+        // Likes and RSVPs on a private item are fine, and core allows them.
+        if ($activityVerb === ACTIVITY_SHARE && intval($target['item_private'])) {
+            json_return_and_die(['error' => 'Cannot repeat a private post']);
         }
 
         $verbEsc = dbesc($activityVerb);
@@ -2276,73 +2306,77 @@ class Item
         ] + self::conversationTarget($profileUid, $ownerHash, $mid, $parent);
     }
 
-    // Conversation collection, mirroring core Zotlabs\Module\Item::post (the
-    // block core labels "Set the conversation target"). Remote hubs thread
-    // replies on this: both Activity::store() and Libzot::process_delivery()
-    // *drop* a relayed comment whose parent carries a Collection target unless
-    // the receiving channel owns the conversation, so follower copies wait for
-    // the owner's canonical relay. An item stored without one has its replies
-    // accepted out of band instead, and every hub ends up with a different
-    // partial version of the thread.
-    //
-    // $parent is the item that was replied to, null for a new thread. Its
-    // parent_mid — not its mid — is the thread root, which matters because the
-    // SPA lets you reply to a comment and core only ever passes the root here.
-    private static function conversationTarget(int $uid, string $ownerHash, string $mid, ?array $parent = null): array
+    // Core's 'suppress_duplicates' feature (Zotlabs\Module\Item::post): a second
+    // post or comment carrying the same body within two minutes is a
+    // double-submit, not a second thought. Feature-gated per channel exactly as
+    // core gates it, and never applied to an edit — re-saving a post two minutes
+    // after writing it, having changed only the title, is not a duplicate.
+    private static function isDuplicatePost(int $profileUid, string $body): bool
     {
-        $c = q('SELECT channel_address, channel_hash FROM channel WHERE channel_id = %d LIMIT 1',
-            intval($uid)
+        if (!feature_enabled($profileUid, 'suppress_duplicates')) {
+            return false;
+        }
+
+        $z = q("SELECT created FROM item WHERE uid = %d AND created > %s - INTERVAL %s
+                AND body = '%s' LIMIT 1",
+            intval($profileUid),
+            db_utcnow(),
+            db_quoteinterval('2 MINUTE'),
+            dbesc($body)
         );
 
-        if ($c && $c[0]['channel_hash'] === $ownerHash) {
-            return [
-                'target' => [
-                    'id'           => str_replace('/item/', '/conversation/', $parent ? $parent['parent_mid'] : $mid),
-                    'type'         => 'Collection',
-                    'attributedTo' => z_root() . '/channel/' . $c[0]['channel_address'],
-                ],
-                'tgt_type' => 'Collection',
-            ];
-        }
-
-        // Someone else's conversation: carry their collection through unchanged.
-        // item_store() passes a string target straight to the column, so the
-        // JSON we read back out of the parent row needs no re-encoding.
-        if ($parent && !empty($parent['target'])) {
-            return ['target' => $parent['target'], 'tgt_type' => $parent['tgt_type']];
-        }
-
-        return ['target' => '', 'tgt_type' => ''];
+        return (bool) $z;
     }
 
-    // Map a scope string to an ACL array
-    private static function scopeToAcl(string $scope, int $profileUid): array
+    // Core's readable reaction body (Zotlabs\Module\Like::get ~:440-513):
+    // "<actor> likes <author>'s <status>". Empty when either xchan is missing,
+    // which is the same thing core's killme() amounts to for our purposes.
+    private static function reactionBody(array $target, string $verb, string $obHash): string
     {
-        if ($scope === 'private') {
-            $channel = App::get_channel();
-            return [
-                'allow_cid' => '<' . $channel['channel_hash'] . '>',
-                'allow_gid' => '',
-                'deny_cid' => '',
-                'deny_gid' => '',
-            ];
+        $author = q("SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1", dbesc($target['author_xchan']));
+        $actor  = q("SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1", dbesc($obHash));
+        if (!$author || !$actor) {
+            return '';
         }
-        if ($scope === 'contacts') {
-            // Use the channel's configured default ACL
-            $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', $profileUid);
-            $acl = new \Zotlabs\Access\AccessList($r ? $r[0] : App::get_channel());
-            $g = $acl->get();
-            return [
-                'allow_cid' => $g['allow_cid'],
-                'allow_gid' => $g['allow_gid'],
-                'deny_cid' => $g['deny_cid'],
-                'deny_gid' => $g['deny_gid'],
-            ];
-        }
-        // public
-        return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
-    }
 
+        // Core's exact switch (Zotlabs\Module\Like::get). Note it keys on
+        // 'Invite', not 'Event' — an event item's obj_type is 'Event', so core
+        // itself falls through to 'status' there. Matched deliberately: the
+        // point is to emit the same sentence core does, not a better one.
+        $postType = match ($target['obj_type'] ?? '') {
+            'Image'   => t('image'),
+            'Invite'  => t('event'),
+            'Profile' => t('profile'),
+            default   => t('status'),
+        };
+        if (!intval($target['item_thread_top'])) {
+            $postType = t('comment');
+        }
+
+        if ($verb === ACTIVITY_SHARE) {
+            $mention = '[zrl=' . $author[0]['xchan_url'] . ']@' . $author[0]['xchan_name'] . '[/zrl]';
+            return sprintf(t('&#x1f501; Repeated %1$s\'s %2$s'), $mention,
+                \Zotlabs\Lib\Activity::activity_obj_mapper($target['obj_type']));
+        }
+
+        $bodyverb = match ($verb) {
+            'Like'            => t('%1$s likes %2$s\'s %3$s'),
+            'Dislike'         => t('%1$s doesn\'t like %2$s\'s %3$s'),
+            'Accept'          => t('%1$s is attending %2$s\'s %3$s'),
+            'Reject'          => t('%1$s is not attending %2$s\'s %3$s'),
+            'TentativeAccept' => t('%1$s may attend %2$s\'s %3$s'),
+            default           => '',
+        };
+        if (!$bodyverb) {
+            return '';
+        }
+
+        $alink = '[zrl=' . $actor[0]['xchan_url']  . '][bdi]' . $actor[0]['xchan_name']  . '[/bdi][/zrl]';
+        $ulink = '[zrl=' . $author[0]['xchan_url'] . '][bdi]' . $author[0]['xchan_name'] . '[/bdi][/zrl]';
+        $plink = '[zrl=' . z_root() . '/display/' . $target['uuid'] . ']' . $postType . '[/zrl]';
+
+        return sprintf($bodyverb, $alink, $ulink, $plink);
+    }
 
     // Shared reaction count subqueries string
     private static function reactionSubqueries(): string
@@ -2352,9 +2386,16 @@ class Item
 
     // Fetch fresh counts after a toggle — avoids a full item re-fetch
     /**
-     * The minimal reaction item: a bodyless activity hung off $target, carrying
-     * the target's ACL so it reaches exactly the same audience the thing it
-     * reacts to did. item_notshown keeps it out of every item_normal() stream.
+     * A reaction item hung off $target, carrying the target's ACL so it reaches
+     * exactly the same audience the thing it reacts to did. item_notshown keeps
+     * it out of every item_normal() stream.
+     *
+     * obj_type mirrors the *target's* type, as core Zotlabs\Module\Like does
+     * (Like.php:323) — a reaction to a Note is a reaction to a Note, and
+     * hardcoding 'Activity' here made every reaction the SPA sent describe
+     * itself differently from the same reaction sent by redbasic. The body is
+     * core's readable sentence for the same reason, and matches what this
+     * handler already writes on the Follow/Ignore path.
      *
      * $aid is the account the row is billed to — the target's for a plain
      * reaction (any authenticated viewer, including a remote one, may react),
@@ -2365,6 +2406,20 @@ class Item
         $uuid        = item_message_id();
         $reactionMid = z_root() . '/item/' . $uuid;
         $now         = datetime_convert();
+        $body        = self::reactionBody($target, $verb, $obHash);
+        $isAnnounce  = ($verb === ACTIVITY_SHARE);
+
+        // A repeat is a boost, not a hidden counter: core's Share module stores
+        // it visible (item_notshown = 0) and owned by the *author* of the thing
+        // being boosted. Storing it notshown made every repeat sent from the SPA
+        // invisible — the flag federates (include/items.php:1550), so remote
+        // hubs hid it too and nobody ever saw the boost. Likes and RSVPs stay
+        // hidden, exactly as core's Like module stores them.
+        //
+        // obj is the encoded object of the thing being reacted to. Core sets it
+        // on every reaction; without it the activity federates with nothing to
+        // render.
+        $object = json_encode(\Zotlabs\Lib\Activity::fetch_item(['id' => $target['mid']]));
 
         return [
             'aid'             => $aid,
@@ -2373,7 +2428,7 @@ class Item
             'mid'             => $reactionMid,
             'parent_mid'      => $target['mid'],
             'thr_parent'      => $target['mid'],
-            'owner_xchan'     => $target['owner_xchan'],
+            'owner_xchan'     => $isAnnounce ? $target['author_xchan'] : $target['owner_xchan'],
             'author_xchan'    => $obHash,
             'created'         => $now,
             'edited'          => $now,
@@ -2381,8 +2436,9 @@ class Item
             'received'        => $now,
             'changed'         => $now,
             'verb'            => $verb,
-            'obj_type'        => 'Activity',
-            'body'            => '',
+            'obj_type'        => $target['obj_type'],
+            'obj'             => $object,
+            'body'            => $body,
             'title'           => '',
             'mimetype'        => 'text/bbcode',
             'allow_cid'       => $target['allow_cid'],
@@ -2393,7 +2449,7 @@ class Item
             'item_wall'       => intval($target['item_wall']),
             'item_origin'     => 1,
             'item_thread_top' => 0,
-            'item_notshown'   => 1,
+            'item_notshown'   => $isAnnounce ? 0 : 1,
             'plink'           => $reactionMid,
             'route'           => $target['route'] ?? '',
         ];

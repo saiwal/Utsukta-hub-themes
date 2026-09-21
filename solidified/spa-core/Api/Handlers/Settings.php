@@ -813,6 +813,23 @@ class Settings
         return Apps::system_app_installed($uid, 'Public Stream');
     }
 
+    /**
+     * Clone-sync one app row after an install. Core's Appman does this on every
+     * install and delete (Zotlabs\Module\Appman); without it the channel's
+     * other hubs never learn the app list changed. System apps and
+     * user-created apps ride different sync keys.
+     */
+    private static function syncApp(int $uid, string $guid): void
+    {
+        $sync = q("SELECT * FROM app WHERE app_channel = %d AND app_id = '%s' LIMIT 1",
+            intval($uid), dbesc($guid));
+        if (!$sync) {
+            return;
+        }
+        Libsync::build_sync_packet($uid,
+            [(intval($sync[0]['app_system']) ? 'sysapp' : 'app') => $sync]);
+    }
+
     private function getNotificationSettings(): void
     {
         $uid = local_channel();
@@ -1253,9 +1270,19 @@ class Settings
             $app['guid']   = $guid;
             $app['system'] = 1;
             \Zotlabs\Lib\Apps::app_install($uid, $app);
+            self::syncApp($uid, $guid);
 
         } elseif ($action === 'uninstall') {
+            // Read the row before destroying it — core's Appman does the same,
+            // then flags the copy deleted so clones remove theirs.
+            $sync = q("SELECT * FROM app WHERE app_channel = %d AND app_id = '%s' LIMIT 1",
+                intval($uid), dbesc($guid));
             \Zotlabs\Lib\Apps::app_destroy($uid, ['guid' => $guid]);
+            if ($sync) {
+                $sync[0]['app_deleted'] = 1;
+                Libsync::build_sync_packet($uid,
+                    [(intval($sync[0]['app_system']) ? 'sysapp' : 'app') => $sync]);
+            }
 
         } elseif ($action === 'nav') {
             // app must be installed first

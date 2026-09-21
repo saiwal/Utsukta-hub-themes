@@ -2,6 +2,8 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
+use Zotlabs\Lib\Libsync;
+use Zotlabs\Daemon\Master;
 use Utsukta\SpaCore\Api\Response;
 use App;
 
@@ -729,8 +731,32 @@ class Cal
         );
 
         if ($item) {
+            // Same phased shape core uses (Zotlabs\Module\Channel_calendar and
+            // Item::deleteItem here): DROPITEM_PHASE1 marks the row, then the
+            // clone packet, tag_deliver and the Notifier carry the deletion
+            // outward. drop_item() alone federates nothing, so without this an
+            // event deleted in the SPA stayed on every other hub — and on the
+            // channel's own clones — forever.
             drop_item($item[0]['id'], DROPITEM_PHASE1);
+
+            $r2 = q('SELECT * FROM item WHERE id = %d', intval($item[0]['id']));
+            if ($r2) {
+                xchan_query($r2);
+                $sync = fetch_post_tags($r2);
+                Libsync::build_sync_packet($uid, ['item' => [encode_item($sync[0], true)]]);
+            }
+
+            tag_deliver($uid, $item[0]['id']);
+
+            if (intval($item[0]['item_wall'])) {
+                Master::Summon(['Notifier', 'drop', $item[0]['id']]);
+            }
         }
+
+        // The event row itself is clone-synced separately from its item — core
+        // flags a copy deleted and sends it so clones drop their own row.
+        $existing['event_deleted'] = 1;
+        Libsync::build_sync_packet($uid, ['event' => [$existing]]);
 
         // Remove the event record
         q("DELETE FROM event WHERE id = %d AND uid = %d",

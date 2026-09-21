@@ -2,6 +2,7 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Concerns\ItemCollection;
+use Utsukta\SpaCore\Api\Concerns\SetsConversationTarget;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\ContentTypes;
 
@@ -13,6 +14,7 @@ use Utsukta\SpaCore\Api\ContentTypes;
 class Articles
 {
     use ItemCollection;
+    use SetsConversationTarget;
 
     const COLL_ITEM_TYPE    = ITEM_TYPE_ARTICLE;
     const COLL_NAME         = 'article';
@@ -216,7 +218,8 @@ class Articles
             'received'        => $now,
             'changed'         => $now,
             'verb'            => 'Create',
-            'obj_type'        => 'Article',
+            // 'Note', as core stores an article — see the note in Cards.php.
+            'obj_type'        => 'Note',
             'item_type'       => ITEM_TYPE_ARTICLE,
             'item_thread_top' => 1,
             'item_origin'     => 1,
@@ -236,7 +239,15 @@ class Articles
             'plink'           => $mid,
             'term'            => $post_tags,
             'attach'          => $attachments,
+            'item_unseen'     => 0,
+            // item_store() falls back to the literal 'contacts' when this is
+            // omitted, so on a channel whose post_comments limit is anything
+            // else the item was gated differently from the same item made in
+            // redbasic. Core sets it on every item type.
+            'comment_policy'  => map_scope(\Zotlabs\Access\PermissionLimits::Get($uid, 'post_comments')),
         ];
+
+        $datarray += self::conversationTarget($uid, $channel['channel_hash'], $mid);
 
         // Core closes comments from the moment of publication when nocomment
         // is set (comments_closed = created); otherwise item_store leaves the

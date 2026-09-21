@@ -485,7 +485,14 @@ class Admin
                     Response::error(404, 'Registration not found');
 
                 if (intval($rs[0]['reg_uid'])) {
-                    q("DELETE FROM account WHERE account_id = %d", intval($rs[0]['reg_uid']));
+                    // account_remove(), not a raw DELETE: it refuses to remove
+                    // the last admin account, and it removes the account's
+                    // channels through channel_remove() first. The approve
+                    // branch above can auto_channel_create(), so a denied
+                    // registration may well own one — deleting the account row
+                    // on its own orphans the channel and federates nothing.
+                    require_once('include/channel.php');
+                    account_remove(intval($rs[0]['reg_uid']), true, false);
                 }
                 q("UPDATE register SET reg_vital = 0 WHERE reg_id = %d AND reg_vital = 1", $reg_id);
                 break;

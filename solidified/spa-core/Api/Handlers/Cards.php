@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Concerns\EmbedsItems;
 use Utsukta\SpaCore\Api\Concerns\ItemCollection;
+use Utsukta\SpaCore\Api\Concerns\SetsConversationTarget;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\ContentTypes;
 
@@ -15,6 +16,7 @@ class Cards
 {
     use EmbedsItems;
     use ItemCollection;
+    use SetsConversationTarget;
 
     const COLL_ITEM_TYPE    = ITEM_TYPE_CARD;
     const COLL_NAME         = 'card';
@@ -312,7 +314,11 @@ class Cards
             'received'        => $now,
             'changed'         => $now,
             'verb'            => 'Create',
-            'obj_type'        => 'Card',
+            // 'Note', as core stores a card (its obj_type comes from
+            // $_POST['obj_type'], which its card composer never sets). 'Card' is
+            // not an ActivityStreams type, so it federated as something no
+            // receiver maps.
+            'obj_type'        => 'Note',
             'item_type'       => ITEM_TYPE_CARD,
             'item_thread_top' => 1,
             'item_origin'     => 1,
@@ -330,7 +336,15 @@ class Cards
             'plink'           => $mid,
             'term'            => $post_tags,
             'attach'          => $attachments,
+            'item_unseen'     => 0,
+            // item_store() falls back to the literal 'contacts' when this is
+            // omitted, so on a channel whose post_comments limit is anything
+            // else the item was gated differently from the same item made in
+            // redbasic. Core sets it on every item type.
+            'comment_policy'  => map_scope(\Zotlabs\Access\PermissionLimits::Get($uid, 'post_comments')),
         ];
+
+        $datarray += self::conversationTarget($uid, $channel['channel_hash'], $mid);
 
         if ($slug) {
             $this->setSlugIconfig($datarray, $slug);

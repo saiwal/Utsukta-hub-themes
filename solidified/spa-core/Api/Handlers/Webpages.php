@@ -2,6 +2,7 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Concerns\SetsConversationTarget;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\ContentTypes;
 use Utsukta\SpaCore\Api\Concerns\ResolvesAcl;
@@ -11,6 +12,8 @@ require_once 'include/items.php';
 
 class Webpages
 {
+    use SetsConversationTarget;
+
     use EnforcesServiceClass;
     use ResolvesAcl;
     // GET /api/webpages/:nick               → list webpages  (owner only: write_pages)
@@ -306,14 +309,23 @@ class Webpages
             'allow_gid'       => $allow_gid,
             'deny_cid'        => $deny_cid,
             'deny_gid'        => $deny_gid,
-            'item_wall'       => 1,
+            // Core sets item_wall only for posts, cards and articles
+            // (Zotlabs\Module\Item::post) — a webpage/block is not a wall post.
+            'item_wall'       => 0,
             'item_origin'     => 1,
             'item_thread_top' => 1,
             'item_unseen'     => 0,
             'item_private'    => $item_private,
             'public_policy'   => $public_policy,
             'plink'           => $mid,
+            // item_store() falls back to the literal 'contacts' when this is
+            // omitted, so on a channel whose post_comments limit is anything
+            // else the item was gated differently from the same item made in
+            // redbasic. Core sets it on every item type.
+            'comment_policy'  => map_scope(\Zotlabs\Access\PermissionLimits::Get($uid, 'post_comments')),
         ];
+
+        $datarray += self::conversationTarget($uid, $owner['channel_hash'], $mid);
 
         // Register the WEBPAGE slug in iconfig (read by the page router and listing)
         \Zotlabs\Lib\IConfig::Set($datarray, 'system', 'WEBPAGE',

@@ -251,6 +251,35 @@ class Connections
     // adding a connection stays inside the SPA instead of navigating away to
     // the classic theme. service-class limits (total_channels) are enforced
     // inside Connect::connect() itself and surfaced via its 'message'.
+    /**
+     * Clone-sync one abook row. Core's Connedit does this after *every* edit
+     * (Zotlabs\Module\Connedit), and so do Defperms, Follow, Tokens and
+     * Permcat — an abook change that skips it leaves the channel's other hubs
+     * holding the old permissions forever, which is invisible from the hub you
+     * made the change on.
+     *
+     * The local ids are stripped because they are per-hub; abconfig carries the
+     * actual permission grants and has to ride along.
+     */
+    private function syncAbook(int $uid, int $abook_id): void
+    {
+        $r = q("SELECT * FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id), intval($uid));
+        if (!$r) {
+            return;
+        }
+
+        $clone = $r[0];
+        unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+
+        $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+        if ($abconfig) {
+            $clone['abconfig'] = $abconfig;
+        }
+
+        Libsync::build_sync_packet($uid, ['abook' => [$clone]], true);
+    }
+
     private function createConnection(int $uid): never
     {
         require_once 'include/network.php';
@@ -326,6 +355,8 @@ class Connections
         // Summon notifiers for the accept + permission handshake
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_accept', $abook_id]);
         \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_create', $abook_id]);
+
+        $this->syncAbook($uid, $abook_id);
 
         Response::send(['approved' => true]);
     }
@@ -423,6 +454,8 @@ class Connections
             $was_pending ? 'permission_create' : 'permission_update',
             $abook_id,
         ]);
+
+        $this->syncAbook($uid, $abook_id);
 
         Response::send(['updated' => true]);
     }
