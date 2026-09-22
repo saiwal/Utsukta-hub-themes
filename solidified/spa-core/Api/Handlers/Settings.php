@@ -141,6 +141,8 @@ class Settings
         $valid_composer_modes = ['modal', 'dock', 'page'];
         $composer_mode = get_pconfig($uid, 'spa', 'composer_mode', 'modal');
         if (!in_array($composer_mode, $valid_composer_modes, true)) $composer_mode = 'modal';
+        $post_mode = get_pconfig($uid, 'spa', 'post_mode', 'modal');
+        if (!in_array($post_mode, $valid_composer_modes, true)) $post_mode = 'modal';
 
         $valid_thread_modes = ['threaded', 'flat'];
         $thread_mode = get_pconfig($uid, 'spa', 'thread_mode', 'threaded');
@@ -166,6 +168,7 @@ class Settings
             'corner_radius' => $corner_radius,
             'comment_order' => $comment_order,
             'composer_mode' => $composer_mode,
+            'post_mode'     => $post_mode,
             'thread_mode' => $thread_mode,
             'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
         ]);
@@ -1096,6 +1099,8 @@ class Settings
 
         if (isset($data['composer_mode']) && in_array($data['composer_mode'], ['modal', 'dock', 'page'], true))
             set_pconfig($uid, 'spa', 'composer_mode', $data['composer_mode']);
+        if (isset($data['post_mode']) && in_array($data['post_mode'], ['modal', 'dock', 'page'], true))
+            set_pconfig($uid, 'spa', 'post_mode', $data['post_mode']);
 
         if (isset($data['thread_mode']) && in_array($data['thread_mode'], ['threaded', 'flat'], true))
             set_pconfig($uid, 'spa', 'thread_mode', $data['thread_mode']);
