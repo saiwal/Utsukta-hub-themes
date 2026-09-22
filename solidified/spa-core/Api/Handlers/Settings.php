@@ -927,7 +927,6 @@ class Settings
         q("UPDATE channel SET channel_notifyflags = %d WHERE channel_id = %d",
             intval($notify), intval($uid));
 
-        \Zotlabs\Lib\Libsync::build_sync_packet();
 
         Response::send(['status' => 'ok']);
     }
@@ -1133,7 +1132,6 @@ class Settings
             set_pconfig($uid, 'spa', 'local_only_posts', ((intval($data['local_only_posts']) == 1) ? 1 : 0));
 
         Master::Summon(['Directory', $uid]);
-        Libsync::build_sync_packet();
 
         Response::send(['status' => 'ok']);
     }
@@ -1201,7 +1199,6 @@ class Settings
         );
 
         Master::Summon(['Directory', $uid]);
-        Libsync::build_sync_packet();
 
         Response::send(['status' => 'ok']);
     }

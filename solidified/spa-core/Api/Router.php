@@ -107,6 +107,18 @@ class Router
             Response::error(405, 'Method not allowed');
         }
 
+        // Clone sync. PConfig::Set() stages every change it makes in
+        // App::$config[$uid]['transient'], and build_sync_packet() ships that
+        // alongside the channel row — so one hook here syncs any handler's
+        // pconfig writes instead of each one remembering to. Handlers exit
+        // inside Response::send(), hence shutdown rather than after the call.
+        // Channel-table writes still emit their own packet explicitly.
+        register_shutdown_function(function () {
+            $uid = local_channel();
+            if ($uid && !empty(\App::$config[$uid]['transient']))
+                \Zotlabs\Lib\Libsync::build_sync_packet($uid);
+        });
+
         $handler->$method();
     }
 }
