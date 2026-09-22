@@ -737,6 +737,136 @@ function runCases(string $nick, string $pass): void
     diff("[$pass] delete (tombstone)", row(intval($coreRoot['id'])), row(intval($spaRoot['id'])));
 }
 
+
+// ---------------------------------------------------------------------------
+// Delivery. The one thing a column diff cannot see.
+//
+// Adding the conversation target made item_store() also write an `Add`
+// collection activity and return its id as `approval_id`, and
+// Libzot::process_delivery() rejects a plain Create whose tgt_type is a
+// Collection unless it arrives as a relay or a collection operation — so the
+// Add is what carries the post to zot recipients. Core summons a second
+// Notifier for it; the SPA did not. The two stored rows stayed byte-identical
+// and this suite passed green while nothing was delivered to anyone.
+//
+// Probes are real public posts, so this only runs against a channel whose
+// connections are ALL local — nothing leaves the hub. PARITY_DELIVERY=1 forces
+// it on a channel with remote connections.
+// ---------------------------------------------------------------------------
+function deliveryCase(): void
+{
+    global $fail, $startedAt;
+
+    $force = (bool) getenv('PARITY_DELIVERY');
+    $rows  = q("SELECT c.channel_address nick, c.channel_id uid,
+               SUM(CASE WHEN lc.channel_id IS NOT NULL THEN 1 ELSE 0 END) loc,
+               SUM(CASE WHEN lc.channel_id IS NULL     THEN 1 ELSE 0 END) rem
+        FROM channel c
+        JOIN abook a ON a.abook_channel = c.channel_id AND a.abook_self = 0
+        LEFT JOIN channel lc ON lc.channel_hash = a.abook_xchan AND lc.channel_removed = 0
+        WHERE c.channel_removed = 0 AND c.channel_system = 0
+        GROUP BY c.channel_address, c.channel_id
+        HAVING loc > 0 " . ($force ? "" : "AND rem = 0") . "
+        ORDER BY loc DESC LIMIT 1");
+
+    if (!is_array($rows)) {
+        bad('[delivery] channel query did not return rows',
+            "      got " . (is_object($rows) ? get_class($rows) : gettype($rows))
+            . " — dba_pdo::q() only treats a string starting with 'select' as a\n"
+            . "      query, so the SQL must not begin with a newline\n");
+        return;
+    }
+
+    if (!$rows) {
+        echo "SKIP  delivery — no channel with local-only connections to probe with.\n";
+        echo "      Connect two local channels, or set PARITY_DELIVERY=1 to use one\n";
+        echo "      with remote connections (its probe posts really will federate).\n";
+        return;
+    }
+
+    $nick = $rows[0]['nick'];
+    $uid  = intval($rows[0]['uid']);
+    echo "\n[delivery] poster $nick (uid $uid, {$rows[0]['loc']} local / {$rows[0]['rem']} remote connections)\n";
+
+    $probe = function (string $side) use ($nick, $uid) {
+        $body = probeBody('deliv-' . $side);
+        if ($side === 'core') {
+            // no nopush here: delivery is the point
+            step('core', $nick, ['api_source' => 1, 'profile_uid' => $uid, 'webpage' => 0,
+                'contact_allow' => [], 'group_allow' => [], 'contact_deny' => [], 'group_deny' => [],
+                'title' => 'delivery probe', 'body' => $body]);
+        } else {
+            step('spa', $nick, ['scope' => 'public', 'profile_uid' => $uid,
+                'title' => 'delivery probe', 'body' => $body, 'mimetype' => 'text/bbcode']);
+        }
+        $r = q("SELECT mid FROM item WHERE uid = %d AND body = '%s' LIMIT 1",
+            intval($uid), dbesc($body));
+        return $r ? $r[0]['mid'] : '';
+    };
+
+    $coreMid = $probe('core');
+    $spaMid  = $probe('spa');
+
+    if (!$coreMid || !$spaMid) {
+        bad('[delivery] a probe was not stored at all');
+        return;
+    }
+
+    // Delivery is queued (Master::Summon -> QueueWorker), and local recipients
+    // are a second-level job, so wait for the queue to drain rather than sleep
+    // a fixed amount.
+    $deadline = time() + 90;
+    while (time() < $deadline) {
+        $q = q('SELECT COUNT(*) AS n FROM workerq');
+        if (!is_array($q) || intval($q[0]['n'] ?? 0) === 0) { sleep(3); break; }
+        sleep(2);
+    }
+
+    $spread = function (string $mid) {
+        $r = q("SELECT COUNT(DISTINCT uid) AS n FROM item WHERE mid = '%s'", dbesc($mid));
+        return is_array($r) ? intval($r[0]['n'] ?? 0) : 0;
+    };
+    // A local recipient's dreport is addressed by xchan hash; a remote one by
+    // URL. Only the local ones prove the local delivery path ran.
+    $localReports = function (string $mid) {
+        // a local recipient is addressed by xchan hash; remote ones by URL or
+        // hostname, both of which contain a dot. The %% are literal for q().
+        $r = q("SELECT COUNT(*) AS n FROM dreport
+                WHERE dreport_mid = '%s' AND dreport_recip NOT LIKE 'http%%'
+                  AND dreport_recip NOT LIKE '%%.%%'", dbesc($mid));
+        return is_array($r) ? intval($r[0]['n'] ?? 0) : 0;
+    };
+
+    $cN = $spread($coreMid);
+    $sN = $spread($spaMid);
+    echo "  copies: core=$cN  spa=$sN   local dreports: core=" . $localReports($coreMid)
+       . "  spa=" . $localReports($spaMid) . "\n";
+
+    $cN > 1
+        ? ok("[delivery] core reached $cN channels (the baseline)")
+        : bad("[delivery] core itself delivered nowhere — the probe setup is wrong, not the SPA",
+              "      this channel may have no reachable local recipient\n");
+
+    if ($cN > 1) {
+        $sN === $cN
+            ? ok("[delivery] spa reached the same $sN channels as core")
+            : bad("[delivery] spa reached $sN channel(s), core reached $cN",
+                  "      a public post the SPA stores identically to core is not being delivered\n");
+
+        $localReports($spaMid) > 0
+            ? ok('[delivery] spa produced local delivery reports')
+            : bad('[delivery] spa produced no local delivery report',
+                  "      the local recipients were never handed the packet at all\n");
+    }
+
+    // Clean up every copy and its reports, across all uids.
+    foreach ([$coreMid, $spaMid] as $mid) {
+        q("DELETE FROM dreport WHERE dreport_mid = '%s'", dbesc($mid));
+        q("DELETE FROM item WHERE mid = '%s' OR parent_mid = '%s'", dbesc($mid), dbesc($mid));
+    }
+    q("DELETE FROM item WHERE uid = %d AND created >= '%s'", intval($uid), dbesc($startedAt));
+}
+
 foreach (['default', 'strict'] as $pass) {
     if ($pass === 'strict') {
         // PERMS_NETWORK / PERMS_AUTHED: both map to values item_store never
@@ -753,6 +883,8 @@ foreach (['default', 'strict'] as $pass) {
     runCases($nick, $pass);
     restoreLimits();
 }
+
+deliveryCase();
 
 // ---------------------------------------------------------------------------
 // Cleanup — raw DELETE, not drop_item: a tombstone would federate.

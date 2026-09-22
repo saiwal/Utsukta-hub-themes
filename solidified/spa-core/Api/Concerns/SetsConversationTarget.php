@@ -14,6 +14,30 @@ namespace Utsukta\SpaCore\Api\Concerns;
  */
 trait SetsConversationTarget
 {
+    /**
+     * Deliver a stored item AND the collection activity item_store() created
+     * alongside it.
+     *
+     * Any item carrying a Collection target makes item_store() also write an
+     * `Add` activity and return its id as `approval_id` (include/items.php
+     * ~5364). That Add is not cosmetic: Libzot::process_delivery() *rejects* a
+     * plain Create whose tgt_type is a Collection unless it arrives as a
+     * relay or a collection operation ("not a collection activity"), so the Add
+     * is what actually carries the post to its recipients. Core summons a
+     * second Notifier for it at every store site (Zotlabs\Module\Item:1182,
+     * Like, Share, Vote); summoning only the main item delivers to remote AP
+     * inboxes but to no zot recipient at all.
+     */
+    private static function summonWithApproval(string $cmd, array $post): void
+    {
+        if (!empty($post['item_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', $cmd, $post['item_id']]);
+        }
+        if (!empty($post['approval_id'])) {
+            \Zotlabs\Daemon\Master::Summon(['Notifier', $cmd, $post['approval_id']]);
+        }
+    }
+
     // Conversation collection, mirroring core Zotlabs\Module\Item::post (the
     // block core labels "Set the conversation target"). Remote hubs thread
     // replies on this: both Activity::store() and Libzot::process_delivery()

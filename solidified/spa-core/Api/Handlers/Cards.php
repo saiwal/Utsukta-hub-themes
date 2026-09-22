@@ -362,7 +362,7 @@ class Cards
             Response::error(500, 'Failed to create card');
         }
 
-        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
+        self::summonWithApproval('wall-new', $result);
 
         Response::send([
             'uuid' => $result['item']['uuid'] ?? $uuid,

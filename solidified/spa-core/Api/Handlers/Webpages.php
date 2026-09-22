@@ -339,7 +339,7 @@ class Webpages
 
         $this->assignLayoutTemplate($uid, intval($post['item_id']), $body['layout_template'] ?? null);
 
-        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+        self::summonWithApproval('wall-new', $post);
 
         Response::send([
             'iid'  => $post['item_id'],

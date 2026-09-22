@@ -290,7 +290,7 @@ class Articles
         // summons the Notifier itself — summoning here too would federate the
         // article immediately and defeat the schedule.
         if (!$delayed) {
-            \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $result['item_id']]);
+            self::summonWithApproval('wall-new', $result);
         }
 
         Response::send([

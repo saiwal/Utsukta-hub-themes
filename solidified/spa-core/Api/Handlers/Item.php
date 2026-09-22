@@ -1086,7 +1086,7 @@ class Item
         // Delayed items are delivered by Daemon\Cron at publish time. Local-only
         // items are never delivered at all (see $localOnly above).
         if (!$delayed && !$localOnly) {
-            Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+            self::summonWithApproval('wall-new', $post);
         }
 
         // Fetch the stored item back fully formatted and return it
@@ -1282,7 +1282,7 @@ class Item
             q('UPDATE item SET item_hidden = 0 WHERE id = %d', intval($parent['id']));
         }
 
-        Master::Summon(['Notifier', 'comment-new', $post['item_id']]);
+        self::summonWithApproval('comment-new', $post);
 
         json_return_and_die([
             'success' => true,
@@ -1344,7 +1344,7 @@ class Item
             if (!$post['success']) {
                 json_return_and_die(['error' => 'Reaction failed']);
             }
-            Master::Summon(['Notifier', 'like', $post['item_id']]);
+            self::summonWithApproval('like', $post);
             $state = 'added';
         }
 
@@ -1406,7 +1406,7 @@ class Item
         if (!$post['success']) {
             json_return_and_die(['error' => 'RSVP reaction failed']);
         }
-        Master::Summon(['Notifier', 'like', $post['item_id']]);
+        self::summonWithApproval('like', $post);
 
         if (in_array($activityVerb, ['Accept', 'TentativeAccept']) && $target['obj_type'] === 'Event') {
             event_addtocal($target['id'], $uid);
@@ -2580,7 +2580,7 @@ class Item
             $post = item_store($datarray);
             if ($post['success']) {
                 retain_item($iid);
-                Master::Summon(['Notifier', 'like', $post['item_id']]);
+                self::summonWithApproval('like', $post);
             }
         }
 
@@ -2647,7 +2647,7 @@ class Item
             json_return_and_die(['error' => 'Failed to create reshare post']);
         }
 
-        \Zotlabs\Daemon\Master::Summon(['Notifier', 'wall-new', $post['item_id']]);
+        self::summonWithApproval('wall-new', $post);
 
         json_return_and_die([
             'success' => true,
