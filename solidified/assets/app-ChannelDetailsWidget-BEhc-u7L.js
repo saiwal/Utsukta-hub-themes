@@ -1,0 +1,1 @@
+import{O as e}from"./app-web-hRdjKvqh.js";import{t}from"./app-ProfileView-yvxY43ZV.js";function n(){return e(t,{})}export{n as default};
