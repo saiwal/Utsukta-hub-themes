@@ -714,38 +714,101 @@ class Item
     //         poll_answers?, poll_expire_value?, poll_expire_unit? }
     // scope: "public" | "contacts" | "private" | "custom"
     // For scope="custom" supply contact_allow/group_allow arrays of xchan hashes/group ids.
+    /**
+     * Drive core's own post handler.
+     *
+     * The SPA used to rebuild core's datarray field by field, and every
+     * invariant core applies had to be independently rediscovered — usually
+     * from a user report. See src/docs/dev/en/core-parity.md.
+     *
+     * Contract (verified against all 30 exits in Zotlabs\Module\Item::post):
+     * api_source makes it return instead of killme(); `dropitems`, `preview`
+     * and `return` are the only inputs that still reach an exit, so they are
+     * stripped; a create returns the item_store() result, an edit (post_id)
+     * returns the item_store_update() result, and a handled failure returns
+     * ['success' => false, 'message' => …].
+     */
+    private function coreItemPost(array $fields): array
+    {
+        require_once('include/items.php');
+
+        $saved = $_POST;
+        try {
+            $_POST = $fields;
+            $_POST['api_source'] = 1;
+            unset($_POST['dropitems'], $_POST['preview'], $_POST['return'], $_POST['jsreload']);
+
+            $res = (new \Zotlabs\Module\Item())->post();
+        } finally {
+            $_POST = $saved;
+        }
+
+        if (is_array($res) && ($res['success'] ?? true) === false) {
+            $msg = (string) ($res['message'] ?? 'post failed');
+            Response::error(self::coreFailureStatus($msg), $msg);
+        }
+
+        return is_array($res) ? $res : [];
+    }
+
+    /** Core's eight api_source failure messages, mapped onto HTTP codes. */
+    private static function coreFailureStatus(string $message): int
+    {
+        return match ($message) {
+            'permission denied', 'service class exception' => 403,
+            'no channel', 'no owner'                       => 404,
+            'no content', 'invalid post id',
+            'operation cancelled'                          => 400,
+            default                                        => 500,
+        };
+    }
+
+    /**
+     * The SPA's `scope` in core's terms. Core reads the ACL through
+     * AccessList::set_from_array($_POST), and with api_source and *no* ACL keys
+     * at all it falls back to the channel's own default ACL — which is exactly
+     * what `contacts` means here. Empty arrays are what mean public.
+     */
+    private static function coreAclFields(array $body, int $profileUid): array
+    {
+        $empty = ['contact_allow' => [], 'group_allow' => [], 'contact_deny' => [], 'group_deny' => []];
+
+        switch ($body['scope'] ?? 'contacts') {
+            case 'public':
+                return $empty;
+
+            case 'private':
+                $channel = channelx_by_n($profileUid);
+                if (!$channel) {
+                    Response::error(404, 'Channel not found');
+                }
+                return array_merge($empty, ['contact_allow' => [$channel['channel_hash']]]);
+
+            case 'custom':
+                $pick = fn(string $k) => is_array($body[$k] ?? null) ? array_values($body[$k]) : [];
+                $acl  = [
+                    'contact_allow' => $pick('contact_allow'),
+                    'group_allow'   => $pick('group_allow'),
+                    'contact_deny'  => $pick('contact_deny'),
+                    'group_deny'    => $pick('group_deny'),
+                ];
+                if (!$acl['contact_allow'] && !$acl['group_allow']) {
+                    Response::error(400, 'Select at least one connection or group to allow.');
+                }
+                return $acl;
+
+            default:   // 'contacts' — omit the keys entirely, see above
+                return [];
+        }
+    }
+
+    // POST /api/item — create a top-level post
     private function createPost(): void
     {
         $uid  = Auth::requireLocalJson();
         $body = Auth::$parsedBody;
 
-        // Quota check happens before any other work, matching core's own
-        // Zotlabs\Module\Item::post() placement (checked against the poster's
-        // own channel, not the wall owner's, for wall-to-wall posts).
-        $this->checkTopLevelItemLimit($uid, false);
-
-        $content    = trim($body['body']        ?? '');
-        $title      = trim($body['title']       ?? '');
-        $summary    = trim($body['summary']     ?? '');
-        $category   = trim($body['category']    ?? '');
-        $profileUid = intval($body['profile_uid'] ?? $uid);
-        $scope      = $body['scope']    ?? 'contacts';
-        $mimetype   = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
-        $expire     = trim($body['expire']      ?? '');
-        $location   = escape_tags(trim($body['location'] ?? ''));
-        $coord      = escape_tags(trim($body['coord']    ?? ''));
-        $nocomment  = !empty($body['nocomment']) ? 1 : 0;
-        $createdRaw = trim($body['created'] ?? '');
-
-        // "Local-only" post: stored with a real ACL (so item_permissions_sql()
-        // still grants access to visitors it allows) but never handed to the
-        // Notifier — it only surfaces by visiting this channel directly, never
-        // in anyone's Network stream or notifications. Gated server-side on
-        // the poster's own pconfig opt-in (Settings → Privacy) — the client
-        // flag alone is not trusted, so a disabled toggle can't be bypassed
-        // by calling the API directly.
-        $localOnly = (!empty($body['local_only']) && get_pconfig($uid, 'spa', 'local_only_posts')) ? 1 : 0;
-
+        $content = trim($body['body'] ?? '');
         if (!$content) {
             Response::error(400, 'body is required');
         }
@@ -756,348 +819,95 @@ class Item
         }
         $ob_hash = $observer['xchan_hash'];
 
-        if (!perm_is_allowed($profileUid, $ob_hash, 'post_wall')) {
-            Response::error(403, 'Permission denied');
-        }
+        $profileUid = intval($body['profile_uid'] ?? $uid);
+        $mimetype   = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
 
-        // Load wall owner's channel record (may differ from the logged-in channel)
-        require_once('include/channel.php');
-        $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', $profileUid);
-        if (!$r) {
-            Response::error(404, 'Channel not found');
-        }
-        $ownerChannel = $r[0];
+        // "Local-only" post: stored with a real ACL but never handed to the
+        // Notifier. Gated server-side on the poster's own pconfig opt-in, so a
+        // disabled toggle cannot be bypassed by calling the API directly.
+        // Expressed to core as nopush, since core owns the summon now.
+        $localOnly = (!empty($body['local_only']) && get_pconfig($uid, 'spa', 'local_only_posts')) ? 1 : 0;
 
-        // Wall-to-wall: author differs from wall owner
-        $wallToWall = ($ownerChannel['channel_hash'] !== $ob_hash);
-
-        // ACL: W2W always uses the wall owner's channel defaults.
-        // For owner posts, apply the scope the client requested.
-        $acl = new \Zotlabs\Access\AccessList($ownerChannel);
-
-        if (!$wallToWall) {
-            if ($scope === 'public') {
-                $acl->set(['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => '']);
-            } elseif ($scope === 'private') {
-                $acl->set(['allow_cid' => '<' . $ownerChannel['channel_hash'] . '>', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => '']);
-            } elseif ($scope === 'custom') {
-                $contactAllow = is_array($body['contact_allow'] ?? null) ? $body['contact_allow'] : [];
-                $groupAllow   = is_array($body['group_allow']   ?? null) ? $body['group_allow']   : [];
-                $contactDeny  = is_array($body['contact_deny']  ?? null) ? $body['contact_deny']  : [];
-                $groupDeny    = is_array($body['group_deny']    ?? null) ? $body['group_deny']    : [];
-                if (!$contactAllow && !$groupAllow) {
-                    Response::error(400, 'Select at least one connection or group to allow.');
-                }
-                $acl->set([
-                    'allow_cid' => implode('', array_map(fn($h) => '<' . $h . '>', $contactAllow)),
-                    'allow_gid' => implode('', array_map(fn($g) => '<' . $g . '>', $groupAllow)),
-                    'deny_cid'  => implode('', array_map(fn($h) => '<' . $h . '>', $contactDeny)),
-                    'deny_gid'  => implode('', array_map(fn($g) => '<' . $g . '>', $groupDeny)),
-                ]);
-            }
-            // 'contacts': keep the channel's default ACL from the AccessList constructor
-        }
-
-        // Wall-to-wall post to a forum ("group actor") channel: classic Hubzilla
-        // silently converts this into a direct message addressed to the forum's
-        // own xchan. item_store() below calls tag_deliver(), which already knows
-        // how to re-broadcast such a DM under the forum's identity to its
-        // followers (include/items.php, group-DM delivery branch) — no delivery
-        // code needed here, only the ACL/private-flag conversion that makes the
-        // item qualify.
-        if ($wallToWall && get_pconfig($profileUid, 'system', 'group_actor')) {
-            $acl->set([
-                'allow_cid' => '<' . $ownerChannel['channel_hash'] . '>',
-                'allow_gid' => '',
-                'deny_cid'  => '',
-                'deny_gid'  => '',
-            ]);
-        }
-
-        // Derive public_policy and comment_policy from the wall owner's permission limits
-        $viewPolicy    = PermissionLimits::Get($profileUid, 'view_stream');
-        $commentPolicy = PermissionLimits::Get($profileUid, 'post_comments');
-        $publicPolicy  = map_scope($viewPolicy, true);
-
-        $gacl            = $acl->get();
-        $strContactAllow = $gacl['allow_cid'];
-        $strGroupAllow   = $gacl['allow_gid'];
-        $strContactDeny  = $gacl['deny_cid'];
-        $strGroupDeny    = $gacl['deny_gid'];
-
-        $private = intval($acl->is_private() || $publicPolicy);
-
-        // A specific ACL overrides public_policy (same logic as core Item::post)
-        if (!empty_acl(['allow_cid' => $strContactAllow, 'allow_gid' => $strGroupAllow,
-                        'deny_cid'  => $strContactDeny,  'deny_gid'  => $strGroupDeny])) {
-            $publicPolicy = '';
-        }
-
-        // Markdown is an input format here, not a storage format: convert
-        // before the bbcode branch below so the result still gets
-        // cleanup_bbcode(), tag linkification and its term rows.
-        // Keep the Markdown the author typed so editing reopens in Markdown
-        // rather than the converted bbcode — stored after the save below,
-        // once there is an item id. '' when this was not Markdown.
+        // Markdown is an input format, not a storage format. Keep what the
+        // author typed so editing reopens in Markdown rather than the
+        // converted bbcode. '' when this was not Markdown.
         $mdSource = ($mimetype === 'text/markdown') ? $content : '';
         [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
 
-        $postTags    = [];
-        $attachments = [];
-
+        // Compact composer tokens core knows nothing about. Everything else the
+        // body needs — cleanup_bbcode, linkify_tags, set_linkified_perms, the
+        // private=2 rule, fix_attached_permissions, [attachment] extraction,
+        // emoji terms, categories — core does itself.
         if ($mimetype === 'text/bbcode') {
-            require_once('include/text.php');
-
-            $content = cleanup_bbcode($content);
-
-            // Linkify @mentions, #tags, !groups — modifies $content in place
-            $results = linkify_tags($content, $profileUid);
-            if ($results) {
-                set_linkified_perms($results, $strContactAllow, $strGroupAllow, $profileUid, $private, false);
-                foreach ($results as $result) {
-                    $s = $result['success'];
-                    if ($s['replaced']) {
-                        $postTags[] = [
-                            'uid'   => $profileUid,
-                            'ttype' => $s['termtype'],
-                            'otype' => TERM_OBJ_POST,
-                            'term'  => $s['term'],
-                            'url'   => $s['url'],
-                        ];
-                    }
-                }
-            }
-
-            // Contact-allow without group-allow → direct message between individuals
-            if ($strContactAllow && !$strGroupAllow) {
-                $private = 2;
-            }
-
-            // Sync file/photo ACL to match the post's final ACL
-            fix_attached_permissions($profileUid, $content, $strContactAllow, $strGroupAllow, $strContactDeny, $strGroupDeny);
-
-            // Extract [attachment] tags → attach array, strip them from body
-            if (preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
-                require_once('include/attach.php');
-                foreach ($match[2] as $i => $mtch) {
-                    $hash = substr($mtch, 0, strpos($mtch, ','));
-                    $rev  = intval(substr($mtch, strpos($mtch, ',')));
-                    $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
-                    if ($r['success']) {
-                        $attachments[] = [
-                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
-                            'length'   => $r['data']['filesize'],
-                            'type'     => $r['data']['filetype'],
-                            'title'    => urlencode($r['data']['filename']),
-                            'revision' => $r['data']['revision'],
-                        ];
-                    }
-                    $content = str_replace($match[1][$i], '', $content);
-                }
-            }
-
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
-
-            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
-        // Categories → term records (federate correctly via datarray['term'])
-        if ($category) {
-            foreach (array_filter(array_map('trim', explode(',', $category))) as $cat) {
-                $postTags[] = [
-                    'uid'   => $profileUid,
-                    'ttype' => TERM_CATEGORY,
-                    'otype' => TERM_OBJ_POST,
-                    'term'  => $cat,
-                    'url'   => channel_url($ownerChannel) . '?cat=' . urlencode($cat),
-                ];
-            }
-        }
-
-        $channel = App::get_channel();
-        $uuid    = item_message_id();
-        $mid     = z_root() . '/item/' . $uuid;
-        $now     = datetime_convert();
-
-        // Delayed publish ("time travel post", core feature delayed_posting):
-        // a future created date stores the item with item_delayed = 1, which
-        // hides it from all item_normal queries. Daemon\Cron flips the flag and
-        // summons the Notifier once the publish time arrives.
-        $created = $now;
-        $delayed = 0;
-        if ($createdRaw) {
-            $ts = datetime_convert(date_default_timezone_get(), 'UTC', $createdRaw);
-            if ($ts > $now) {
-                $created = $ts;
-                $delayed = 1;
-            }
-        }
-
-        $datarray = [
-            'aid'             => $channel['channel_account_id'],
-            'uid'             => $profileUid,
-            'uuid'            => $uuid,
-            'mid'             => $mid,
-            'parent_mid'      => $mid,
-            'thr_parent'      => $mid,
-            'owner_xchan'     => $ownerChannel['channel_hash'],
-            'author_xchan'    => $ob_hash,
-            'created'         => $created,
-            'edited'          => $now,
-            'commented'       => $now,
-            'received'        => $now,
-            'changed'         => $now,
-            'verb'            => 'Create',
-            'obj_type'        => 'Note',
-            'mimetype'        => $mimetype,
-            'title'           => $title,
-            'summary'         => $summary,
-            'body'            => $content,
-            'location'        => $location,
-            'coord'           => $coord,
-            'allow_cid'       => $strContactAllow,
-            'allow_gid'       => $strGroupAllow,
-            'deny_cid'        => $strContactDeny,
-            'deny_gid'        => $strGroupDeny,
-            'attach'          => $attachments,
-            'term'            => array_unique($postTags, SORT_REGULAR),
-            'item_wall'       => 1,
-            'item_origin'     => 1,
-            'item_thread_top' => 1,
-            'item_unseen'     => ($wallToWall ? 1 : 0),
-            'item_private'    => $private,
-            'item_delayed'    => $delayed,
-            'item_nocomment'  => $nocomment,
-            'public_policy'   => $publicPolicy,
-            'comment_policy'  => map_scope($commentPolicy),
-            'plink'           => $mid,
-            'route'           => '',
+        $fields = self::coreAclFields($body, $profileUid) + [
+            'profile_uid' => $profileUid,
+            'body'        => $content,
+            'mimetype'    => $mimetype,
+            'title'       => trim($body['title']    ?? ''),
+            'summary'     => trim($body['summary']  ?? ''),
+            'category'    => trim($body['category'] ?? ''),
+            'location'    => trim($body['location'] ?? ''),
+            'coord'       => trim($body['coord']    ?? ''),
+            'nocomment'   => !empty($body['nocomment']) ? 1 : 0,
+            'webpage'     => 0,
+            'nopush'      => $localOnly,
         ];
 
-        $datarray += self::conversationTarget($profileUid, $ownerChannel['channel_hash'], $mid);
-
-        // Core closes comments from the moment of publication when nocomment
-        // is set (comments_closed = created); otherwise item_store leaves the
-        // column at the DB null date (comments stay open).
-        if ($nocomment) {
-            $datarray['comments_closed'] = $created;
+        if (trim($body['expire'] ?? '')) {
+            $fields['expire'] = trim($body['expire']);
         }
 
-        if ($expire) {
-            $exp = datetime_convert(date_default_timezone_get(), 'UTC', $expire);
-            if ($exp > $now) {
-                $datarray['expires'] = $exp;
+        // Delayed publish: a future created date stores the item with
+        // item_delayed = 1 and Daemon\Cron delivers it when the time comes.
+        $createdRaw = trim($body['created'] ?? '');
+        if ($createdRaw) {
+            $ts = datetime_convert(date_default_timezone_get(), 'UTC', $createdRaw);
+            if ($ts > datetime_convert()) {
+                $fields['created'] = $createdRaw;
+                $fields['delayed'] = 1;
             }
         }
 
-        // Polls
-        $pollAnswers = $body['poll_answers'] ?? null;
-        if (is_array($pollAnswers)) {
-            $answers = array_values(array_filter(array_map(fn($a) => escape_tags(trim($a)), $pollAnswers)));
+        $answers = $body['poll_answers'] ?? null;
+        if (is_array($answers)) {
+            $answers = array_values(array_filter(array_map(fn($a) => trim((string) $a), $answers)));
             if (count($answers) >= 2) {
-                $expireValue = max(1, intval($body['poll_expire_value'] ?? 1));
-                $expireUnit  = in_array($body['poll_expire_unit'] ?? 'Days', ['Minutes', 'Hours', 'Days', 'Weeks'], true)
-                    ? $body['poll_expire_unit']
-                    : 'Days';
-                $opts        = array_map(
-                    fn($a) => ['name' => $a, 'type' => 'Note', 'replies' => ['type' => 'Collection', 'totalItems' => 0]],
-                    $answers
-                );
-                $pollEndTime = datetime_convert(date_default_timezone_get(), 'UTC',
-                    'now + ' . $expireValue . ' ' . $expireUnit, ATOM_TIME);
-                $datarray['obj_type'] = 'Question';
-                $datarray['obj']      = [
-                    'type'         => 'Question',
-                    'id'           => $mid,
-                    'url'          => $mid,
-                    'attributedTo' => channel_url($ownerChannel),
-                    'content'      => bbcode($content),
-                    'name'         => $title ?: '',
-                    'oneOf'        => $opts,
-                    'endTime'      => $pollEndTime,
-                    'to'           => [ACTIVITY_PUBLIC_INBOX],
-                ];
-                // Deliberately NOT setting 'expires' from the poll's end time.
-                // item.expires is what the expiry reaper deletes on, and core
-                // only ever sets it from the author's explicit expiry field
-                // (Zotlabs\Module\Item::post:561) — never from a poll. Setting
-                // it here made every poll made in the SPA delete itself, results
-                // and all, the moment it closed.
-                //
-                // Core closes comments on a poll when the poll closes
-                // (Zotlabs\Module\Item::post, the endTime branch) — otherwise a
-                // finished poll keeps taking replies here but not in redbasic.
-                $pollEnd = datetime_convert('UTC', 'UTC', $pollEndTime);
-                if ($pollEnd > \DBA::$dba->get_null_date()) {
-                    $datarray['comments_closed'] = $pollEnd;
-                }
+                $fields['poll_answers']          = $answers;
+                $fields['poll_expire_value']     = max(1, intval($body['poll_expire_value'] ?? 1));
+                $fields['poll_expire_unit']      = in_array($body['poll_expire_unit'] ?? 'Days',
+                    ['Minutes', 'Hours', 'Days', 'Weeks'], true) ? $body['poll_expire_unit'] : 'Days';
+                $fields['poll_multiple_answers'] = !empty($body['poll_multiple_answers']) ? 1 : 0;
             }
         }
 
-        if (self::isDuplicatePost($profileUid, $datarray['body'])) {
-            Response::error(409, 'Duplicate post suppressed');
-        }
+        $post = $this->coreItemPost($fields);
 
-        call_hooks('post_local', $datarray);
-
-        if (!empty($datarray['cancel'])) {
-            Response::error(400, 'Post cancelled');
-        }
-
-        // Index the embeds in the stored body — Cards' "Mentioned in" reads
-        // these instead of scanning bodies (Concerns\EmbedsItems).
-        $this->setEmbedIconfig($datarray, $datarray['body']);
-
-        $post = item_store($datarray);
-
-        if (!$post['success']) {
+        $iid = intval($post['item_id'] ?? 0);
+        if (!$iid) {
             Response::error(500, 'Failed to create post');
         }
 
+        // SPA-only side effects, keyed on the id core just returned.
         if ($localOnly) {
-            set_iconfig(intval($post['item_id']), 'spa', 'local_only', 1);
+            set_iconfig($iid, 'spa', 'local_only', 1);
         }
-
         if ($mdSource !== '') {
-            ContentTypes::rememberMarkdown(intval($post['item_id']), $mdSource, $content);
+            ContentTypes::rememberMarkdown($iid, $mdSource, $content);
         }
-
-        // Notify wall owner when someone posts on their wall (wall-to-wall)
-        if ($wallToWall) {
-            Enotify::submit([
-                'type'       => NOTIFY_WALL,
-                'from_xchan' => $ob_hash,
-                'to_xchan'   => $ownerChannel['channel_hash'],
-                'item'       => $datarray,
-                'link'       => z_root() . '/display/' . $uuid,
-                'verb'       => 'Create',
-                'otype'      => 'item',
-            ]);
-        } else {
-            // Update owner's last-post timestamp
-            q("UPDATE channel SET channel_lastpost = '%s' WHERE channel_id = %d",
-                dbesc($now), $profileUid);
-        }
-
-        $datarray['id'] = $post['item_id'];
-        call_hooks('post_local_end', $datarray);
-
-        // Delayed items are delivered by Daemon\Cron at publish time. Local-only
-        // items are never delivered at all (see $localOnly above).
-        if (!$delayed && !$localOnly) {
-            self::summonWithApproval('wall-new', $post);
-        }
+        $this->setEmbedIconfig($iid, $content);
 
         // Fetch the stored item back fully formatted and return it
-        $iid  = intval($post['item_id']);
         $rows = dbq('SELECT item.*, ' . self::reactionSubqueries() . " FROM item WHERE item.id = $iid LIMIT 1");
         if ($rows) {
             xchan_query($rows, true);
             $rows          = fetch_post_tags($rows, true);
             $formattedPost = $this->formatItem($rows[0], $ob_hash, $this->isPinnedItem($rows[0]));
         } else {
-            $formattedPost = ['iid' => $iid, 'mid' => $mid, 'uuid' => $uuid];
+            $formattedPost = ['iid' => $iid];
         }
 
         Response::send(['post' => $formattedPost, 'comments' => []]);
@@ -1108,187 +918,70 @@ class Item
     private function createComment(string $parentMid): void
     {
         $ob_hash = Auth::requireLoggedInJson();
-        $body = Auth::$parsedBody;
+        $body    = Auth::$parsedBody;
         $content = trim($body['body'] ?? '');
 
         if (!$content) {
             json_return_and_die(['error' => 'body is required']);
         }
 
-        $item_normal = item_normal();
-
-        // Resolve parent
+        // resolveItem is what turns the client's mid/uuid into an id the
+        // observer is actually allowed to see. Core takes it from there:
+        // copy_of_pubitem for a sys-channel parent, the comment permission
+        // check, re-rooting parent_mid to the thread top while keeping
+        // thr_parent on the item actually replied to, ACL inheritance,
+        // retain_item, the wall-to-wall NOTIFY_COMMENT and the photo unhide.
         $parent = $this->resolveItem($parentMid, $ob_hash);
         if (!$parent) {
             json_return_and_die(['error' => 'Parent item not found or permission denied']);
         }
 
-        // A pubstream-only parent lives on the sys channel. Commenting on it
-        // as-is would store the comment under *its* uid with item_origin = 1;
-        // core copies the thread into the commenter's own stream first. The
-        // copy belongs here and not in resolveItem(), which also serves the
-        // read, edit and delete paths, where creating rows would be wrong.
-        $sys = get_sys_channel();
-        if ($sys && intval($parent['uid']) === intval($sys['channel_id']) && local_channel()) {
-            $copy = copy_of_pubitem(App::get_channel(), $parent['mid']);
-            if ($copy) {
-                $parent = $copy;
-            }
-        }
-
-        // resolveItem only proves the observer can *view* the parent. Commenting
-        // is a separate permission — enforce the channel's comment policy /
-        // post_comments grant and closed-comment state, as core Item.php does.
+        // Core checks this too (and with a better abook_self fallback), but it
+        // answers with its own 'permission denied'. Checking here keeps the
+        // error shape this endpoint's callers expect.
         if (!can_comment_on_post($ob_hash, $parent)) {
             json_return_and_die(['error' => 'Commenting is not permitted on this post']);
         }
 
-        $profileUid = intval($parent['uid']);
-        $mimetype   = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
+        $mimetype = ContentTypes::validate($body['mimetype'] ?? null, ContentTypes::POST);
 
-        // Markdown is an input format here, not a storage format: convert
-        // before the bbcode branch below so the result still gets
-        // cleanup_bbcode(), tag linkification and its term rows.
-        // Keep the Markdown the author typed so editing reopens in Markdown
-        // rather than the converted bbcode — stored after the save below,
-        // once there is an item id. '' when this was not Markdown.
+        // Markdown is an input format, not a storage format; keep the source so
+        // editing reopens in Markdown. '' when this was not Markdown.
         $mdSource = ($mimetype === 'text/markdown') ? $content : '';
         [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
 
-        $postTags    = [];
-        $attachments = [];
-
         if ($mimetype === 'text/bbcode') {
-            require_once('include/text.php');
-
-            $content = cleanup_bbcode($content);
-
-            // Linkify @mentions, #tags, !groups. Unlike top-level posts the
-            // resulting tags never widen the thread ACL (core passes the
-            // parent item to set_linkified_perms, which makes it a no-op), so
-            // only the term records are collected here.
-            $results = linkify_tags($content, $profileUid);
-            if ($results) {
-                foreach ($results as $result) {
-                    $s = $result['success'];
-                    if ($s['replaced']) {
-                        $postTags[] = [
-                            'uid'   => $profileUid,
-                            'ttype' => $s['termtype'],
-                            'otype' => TERM_OBJ_POST,
-                            'term'  => $s['term'],
-                            'url'   => $s['url'],
-                        ];
-                    }
-                }
-            }
-
-            // Sync file/photo ACL to the thread's ACL so recipients can open them
-            fix_attached_permissions($profileUid, $content,
-                $parent['allow_cid'], $parent['allow_gid'],
-                $parent['deny_cid'], $parent['deny_gid']);
-
-            // Extract [attachment] tags → attach array, strip them from body
-            if (preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
-                require_once('include/attach.php');
-                foreach ($match[2] as $i => $mtch) {
-                    $hash = substr($mtch, 0, strpos($mtch, ','));
-                    $rev  = intval(substr($mtch, strpos($mtch, ',')));
-                    $r    = attach_by_hash_nodata($hash, $ob_hash, $rev);
-                    if ($r['success']) {
-                        $attachments[] = [
-                            'href'     => z_root() . '/attach/' . $r['data']['hash'],
-                            'length'   => $r['data']['filesize'],
-                            'type'     => $r['data']['filetype'],
-                            'title'    => urlencode($r['data']['filename']),
-                            'revision' => $r['data']['revision'],
-                        ];
-                    }
-                    $content = str_replace($match[1][$i], '', $content);
-                }
-            }
-
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
-
-            $postTags = array_merge($postTags, self::buildEmojiTerms($profileUid, $content));
         }
 
-        // Inherit ACL and privacy from parent
-        $datarray = self::buildItemArray(
-            profileUid: $profileUid,
-            content: $content,
-            title: trim($body['title'] ?? ''),
-            mimetype: $mimetype,
-            acl: [
-                'allow_cid' => $parent['allow_cid'],
-                'allow_gid' => $parent['allow_gid'],
-                'deny_cid' => $parent['deny_cid'],
-                'deny_gid' => $parent['deny_gid'],
-            ],
-            isWall: intval($parent['item_wall']) === 1,
-            parent: $parent,
-            term: $postTags,
-            attach: $attachments,
-        );
+        // parent (the id), never parent_mid: core's parent_mid branch is gated
+        // on local_channel(), and this endpoint accepts a remote/OWA commenter.
+        $post = $this->coreItemPost([
+            'profile_uid' => intval($parent['uid']),
+            'parent'      => intval($parent['id']),
+            'body'        => $content,
+            'mimetype'    => $mimetype,
+            'title'       => trim($body['title'] ?? ''),
+            'webpage'     => 0,
+        ]);
 
-        if (self::isDuplicatePost($profileUid, $datarray['body'])) {
-            json_return_and_die(['error' => 'Duplicate comment suppressed']);
-        }
-
-        call_hooks('post_local', $datarray);
-
-        if (!empty($datarray['cancel'])) {
-            json_return_and_die(['error' => 'Comment cancelled']);
-        }
-
-        $post = item_store($datarray);
-
-        if (!$post['success']) {
+        $iid = intval($post['item_id'] ?? 0);
+        if (!$iid) {
             json_return_and_die(['error' => 'Failed to post comment']);
         }
 
-        $datarray['id'] = $post['item_id'];
-        call_hooks('post_local_end', $datarray);
-
         if ($mdSource !== '') {
-            ContentTypes::rememberMarkdown(intval($post['item_id']), $mdSource, $content);
+            ContentTypes::rememberMarkdown($iid, $mdSource, $content);
         }
 
-        // Keep a thread you are taking part in from being expired out.
-        if (local_channel()) {
-            retain_item(intval($parent['parent']));
-        }
-
-        // Wall-to-wall comment: delivery never fires the notification, because
-        // the comment is stored under the wall owner's own uid.
-        if ($datarray['owner_xchan'] !== $datarray['author_xchan'] && intval($parent['item_wall'])) {
-            Enotify::submit([
-                'type'       => NOTIFY_COMMENT,
-                'from_xchan' => $datarray['author_xchan'],
-                'to_xchan'   => $datarray['owner_xchan'],
-                'item'       => $datarray,
-                'link'       => z_root() . '/display/' . $datarray['uuid'],
-                'verb'       => 'Create',
-                'otype'      => 'item',
-                'parent'     => intval($parent['parent']),
-                'parent_mid' => $parent['parent_mid'],
-            ]);
-        }
-
-        // Photo comments turn the photo item visible on the profile wall, so a
-        // new album doesn't dump every picture there at once.
-        if (intval($parent['item_hidden'])) {
-            q('UPDATE item SET item_hidden = 0 WHERE id = %d', intval($parent['id']));
-        }
-
-        self::summonWithApproval('comment-new', $post);
+        $row = q('SELECT mid, uuid FROM item WHERE id = %d LIMIT 1', intval($iid));
 
         json_return_and_die([
             'success' => true,
-            'iid' => $post['item_id'],
-            'mid' => $datarray['mid'],
-            'uuid' => $datarray['uuid'],
+            'iid'     => $iid,
+            'mid'     => $row[0]['mid']  ?? '',
+            'uuid'    => $row[0]['uuid'] ?? '',
         ]);
     }
 
@@ -2221,113 +1914,6 @@ class Item
         return $terms;
     }
 
-    // Build a minimal item datarray for item_store().
-    // Handles both top-level posts and comments.
-    private static function buildItemArray(
-        int $profileUid,
-        string $content,
-        string $title,
-        string $mimetype,
-        array $acl,
-        bool $isWall,
-        ?array $parent = null,
-        array $term = [],
-        array $attach = [],
-    ): array {
-        $channel = App::get_channel();
-        $observer = App::get_observer();
-        $uuid = item_message_id();
-        $mid = z_root() . '/item/' . $uuid;
-        $now = datetime_convert();
-        $isComment = $parent !== null;
-
-        $parentMid = $isComment ? $parent['mid'] : $mid;
-        $thrParent = $isComment ? $parent['mid'] : $mid;
-        $ownerHash = $isComment ? $parent['owner_xchan'] : $channel['channel_hash'];
-        // A specific ACL overrides public_policy outright (core Item::post).
-        $publicPolicy = '';
-        if (!$isComment && !($acl['allow_cid'] ?? '') && !($acl['allow_gid'] ?? '')
-            && !($acl['deny_cid'] ?? '') && !($acl['deny_gid'] ?? '')) {
-            $publicPolicy = map_scope(PermissionLimits::Get($profileUid, 'view_stream'), true);
-        }
-
-        // Comments inherit the thread's privacy verbatim (core Item::post) —
-        // deriving it from the ACL would downgrade a DM (private=2) to 1.
-        // A restricted view_stream policy makes an otherwise open post private
-        // too, or it would surface in the public stream regardless.
-        $private = $isComment
-            ? intval($parent['item_private'])
-            : (!empty($acl['allow_cid']) || !empty($acl['allow_gid']) || $publicPolicy ? 1 : 0);
-        // Comments are stored under the parent's owning account (App::get_channel()
-        // is empty for a remote/OWA commenter, who has no local channel here).
-        $aid = $isComment ? intval($parent['aid']) : intval($channel['channel_account_id'] ?? 0);
-
-        return [
-            'aid' => $aid,
-            'uid' => $profileUid,
-            'uuid' => $uuid,
-            'mid' => $mid,
-            'parent_mid' => $parentMid,
-            'thr_parent' => $thrParent,
-            'owner_xchan' => $ownerHash,
-            'author_xchan' => $observer['xchan_hash'],
-            'created' => $now,
-            'edited' => $now,
-            'commented' => $now,
-            'received' => $now,
-            'changed' => $now,
-            'verb' => 'Create',
-            'obj_type' => 'Note',
-            'mimetype' => $mimetype,
-            'title' => $title,
-            'body' => $content,
-            'term' => $term,
-            'attach' => $attach,
-            'allow_cid' => $acl['allow_cid'] ?? '',
-            'allow_gid' => $acl['allow_gid'] ?? '',
-            'deny_cid' => $acl['deny_cid'] ?? '',
-            'deny_gid' => $acl['deny_gid'] ?? '',
-            'item_wall' => $isWall ? 1 : 0,
-            'item_origin' => 1,
-            'item_thread_top' => $isComment ? 0 : 1,
-            // Core: a comment written by anyone other than the uid owner lands
-            // unseen, which is what raises their unread badge.
-            'item_unseen' => (local_channel() !== $profileUid) ? 1 : 0,
-            'item_private' => $private,
-            // Omitting these is not neutral: item_store() falls back to the
-            // literal 'contacts' for comment_policy, which costs the item its
-            // reply box for authenticated non-connections, and to '' for
-            // public_policy, which would make a reshare *more* visible than the
-            // channel's own posts. A comment inherits the thread's instead.
-            'comment_policy' => map_scope(PermissionLimits::Get($profileUid, 'post_comments')),
-            'public_policy' => $isComment ? $parent['public_policy'] : $publicPolicy,
-            'plink' => $mid,
-            'route' => $parent['route'] ?? '',
-        ] + self::conversationTarget($profileUid, $ownerHash, $mid, $parent);
-    }
-
-    // Core's 'suppress_duplicates' feature (Zotlabs\Module\Item::post): a second
-    // post or comment carrying the same body within two minutes is a
-    // double-submit, not a second thought. Feature-gated per channel exactly as
-    // core gates it, and never applied to an edit — re-saving a post two minutes
-    // after writing it, having changed only the title, is not a duplicate.
-    private static function isDuplicatePost(int $profileUid, string $body): bool
-    {
-        if (!feature_enabled($profileUid, 'suppress_duplicates')) {
-            return false;
-        }
-
-        $z = q("SELECT created FROM item WHERE uid = %d AND created > %s - INTERVAL %s
-                AND body = '%s' LIMIT 1",
-            intval($profileUid),
-            db_utcnow(),
-            db_quoteinterval('2 MINUTE'),
-            dbesc($body)
-        );
-
-        return (bool) $z;
-    }
-
     // Core's readable reaction body (Zotlabs\Module\Like::get ~:440-513):
     // "<actor> likes <author>'s <status>". Empty when either xchan is missing,
     // which is the same thing core's killme() amounts to for our purposes.
@@ -2591,7 +2177,7 @@ class Item
     // Body: { body? }  (optional additional text above the share block)
     private function createReshare(string $mid): void
     {
-        $uid = Auth::requireLocalJson();
+        $uid     = Auth::requireLocalJson();
         $ob_hash = get_observer_hash();
 
         $extraContent = trim(Auth::$parsedBody['body'] ?? '');
@@ -2601,14 +2187,17 @@ class Item
             json_return_and_die(['error' => 'Item not found or permission denied']);
         }
 
-        $iid = intval($item['id']);
-
-        // Same split as expandShareTags: app items (articles, cards) must not go
-        // through core Share::bbcode(), which would link the block at the
+        // Note this is NOT core's Share module. Core's Share is a boost — an
+        // Announce hung off the original thread, which the SPA spells /repeat.
+        // /reshare is a quote-post: an ordinary top-level Create carrying a
+        // [share] block, which is why it can go through Item::post at all.
+        //
+        // Same split as expandShareTags: app items (articles, cards) must not
+        // go through core Share::bbcode(), which would link the block at the
         // item's plink instead of its app page.
         $shareBlock = self::isAppItem($item)
             ? ''
-            : (new \Zotlabs\Lib\Share($iid))->bbcode();
+            : (new \Zotlabs\Lib\Share(intval($item['id'])))->bbcode();
 
         // Core Share::bbcode() also refuses to wrap posts whose body already
         // contains [/share] (i.e. reshares). Build the block ourselves then.
@@ -2624,36 +2213,33 @@ class Item
             ? $extraContent . "\r\n\r\n" . $shareBlock
             : $shareBlock;
 
-        $acl = self::scopeToAcl('public', $uid);
+        // A reshare is public: empty ACL arrays are what say so to core, and
+        // the source item is already refused above if it is not shareable.
+        $post = $this->coreItemPost([
+            'profile_uid'   => $uid,
+            'body'          => $content,
+            'mimetype'      => 'text/bbcode',
+            'webpage'       => 0,
+            'contact_allow' => [],
+            'group_allow'   => [],
+            'contact_deny'  => [],
+            'group_deny'    => [],
+        ]);
 
-        require_once('include/text.php');
-        $extraTerms = $extraContent ? self::buildEmojiTerms($uid, $extraContent) : [];
-
-        $datarray = self::buildItemArray(
-            profileUid: $uid,
-            content: $content,
-            title: '',
-            mimetype: 'text/bbcode',
-            acl: $acl,
-            isWall: true,
-            term: $extraTerms,
-        );
-
-        $this->setEmbedIconfig($datarray, $datarray['body']);
-
-        $post = item_store($datarray);
-
-        if (!$post['success']) {
+        $newId = intval($post['item_id'] ?? 0);
+        if (!$newId) {
             json_return_and_die(['error' => 'Failed to create reshare post']);
         }
 
-        self::summonWithApproval('wall-new', $post);
+        $this->setEmbedIconfig($newId, $content);
+
+        $row = q('SELECT mid, uuid FROM item WHERE id = %d LIMIT 1', intval($newId));
 
         json_return_and_die([
             'success' => true,
-            'iid'  => $post['item_id'],
-            'mid'  => $datarray['mid'],
-            'uuid' => $datarray['uuid'],
+            'iid'     => $newId,
+            'mid'     => $row[0]['mid']  ?? '',
+            'uuid'    => $row[0]['uuid'] ?? '',
         ]);
     }
 

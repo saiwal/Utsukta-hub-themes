@@ -77,31 +77,4 @@ trait SetsConversationTarget
         return ['target' => '', 'tgt_type' => ''];
     }
 
-    // Map a scope string to an ACL array
-    private static function scopeToAcl(string $scope, int $profileUid): array
-    {
-        if ($scope === 'private') {
-            $channel = App::get_channel();
-            return [
-                'allow_cid' => '<' . $channel['channel_hash'] . '>',
-                'allow_gid' => '',
-                'deny_cid' => '',
-                'deny_gid' => '',
-            ];
-        }
-        if ($scope === 'contacts') {
-            // Use the channel's configured default ACL
-            $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', $profileUid);
-            $acl = new \Zotlabs\Access\AccessList($r ? $r[0] : App::get_channel());
-            $g = $acl->get();
-            return [
-                'allow_cid' => $g['allow_cid'],
-                'allow_gid' => $g['allow_gid'],
-                'deny_cid' => $g['deny_cid'],
-                'deny_gid' => $g['deny_gid'],
-            ];
-        }
-        // public
-        return ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''];
-    }
 }

@@ -2,7 +2,12 @@
 if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; never runnable over HTTP
 /**
  * Check for the conversation Collection (item.target / item.tgt_type) that
- * Item::conversationTarget puts on every post, comment, reshare and poll answer.
+ * Item::conversationTarget puts on a poll answer.
+ *
+ * Posts, comments and reshares no longer come through here at all — they go
+ * through core's Zotlabs\Module\Item, which sets the target itself; see
+ * src/docs/dev/en/core-parity.md. conversationTarget() remains for the
+ * poll-vote path, and these cases pin its contract.
  *
  * Why it matters: Activity::store() and Libzot::process_delivery() both *drop* a
  * relayed comment whose parent carries a Collection target unless the receiving
@@ -55,9 +60,7 @@ require_once($autoload);
 
 $cls     = \Utsukta\SpaCore\Api\Handlers\Item::class;
 $target  = new ReflectionMethod($cls, 'conversationTarget');
-$build   = new ReflectionMethod($cls, 'buildItemArray');
 $target->setAccessible(true);
-$build->setAccessible(true);
 
 $uid       = intval($channel['channel_id']);
 $mine      = $channel['channel_hash'];
@@ -100,20 +103,11 @@ $remote['target'] = $remote['tgt_type'] = '';
 $t = $target->invoke(null, $uid, $remote['owner_xchan'], $newMid, $remote);
 check('remote thread without one stays empty', $t['target'] === '' && $t['tgt_type'] === '');
 
-// 5. The datarray buildItemArray actually hands item_store().
-$parent = $root + ['item_private' => 0, 'aid' => intval($channel['channel_account_id']),
-                   'public_policy' => '', 'route' => ''];
-$d = $build->invoke(null, $uid, 'body', '', 'text/bbcode',
-    ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''], true, $parent);
-check('comment datarray carries tgt_type',      ($d['tgt_type'] ?? '') === 'Collection');
-check('comment datarray carries the root conv', ($d['target']['id'] ?? '') === $conv($rootMid));
-check('comment datarray sets comment_policy',   !empty($d['comment_policy']));
-check('comment thr_parent is the replied-to item', $d['thr_parent'] === $rootMid);
-
-$d = $build->invoke(null, $uid, 'body', '', 'text/bbcode',
-    ['allow_cid' => '', 'allow_gid' => '', 'deny_cid' => '', 'deny_gid' => ''], true, null);
-check('reshare datarray opens its own collection',
-    ($d['tgt_type'] ?? '') === 'Collection' && ($d['target']['id'] ?? '') === $conv($d['mid']));
+// 5. buildItemArray() is gone: posts, comments and reshares go through core's
+//    Zotlabs\Module\Item now, which sets the target itself. parity.test.php
+//    asserts the resulting thread shape (root / reply / nested reply) end to
+//    end, so there is nothing left to reflect on here. conversationTarget()
+//    survives for the poll-vote path, which is what the cases above cover.
 
 // 6. The wire: prove the column is what puts `target` in the delivered activity.
 $r = q("SELECT * FROM item WHERE item_origin = 1 AND item_deleted = 0 AND tgt_type = 'Collection'

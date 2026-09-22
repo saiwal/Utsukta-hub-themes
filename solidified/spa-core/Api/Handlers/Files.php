@@ -246,7 +246,7 @@ class Files
         // An explicit scope wins over the arrays. 'contacts' has to be its own
         // branch: it and 'public' both arrive with empty arrays, so inferring the
         // audience from emptiness alone silently turns "connections" into "public"
-        // and unshares the file. Mirrors Item::scopeToAcl().
+        // and unshares the file.
         switch ($data['scope'] ?? null) {
             case 'private':
                 $channel   = \App::get_channel();
