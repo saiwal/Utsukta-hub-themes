@@ -1,1 +1,0 @@
-import{I as e}from"./app-web-BeXRvOD7.js";function t(t,n,r=e=>e,i=String){let a=n;try{let e=localStorage.getItem(t);e!==null&&(a=r(e)??n)}catch{}let[o,s]=e(a);return[o,e=>{s(()=>e);try{localStorage.setItem(t,i(e))}catch{}}]}var n=(...e)=>t=>e.includes(t)?t:void 0,r={parse:e=>e===`1`||e!==`0`&&void 0,format:e=>e?`1`:`0`};export{n,t as r,r as t};

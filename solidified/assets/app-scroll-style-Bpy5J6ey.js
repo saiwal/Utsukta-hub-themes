@@ -1,1 +1,0 @@
-import{M as e}from"./app-web-BeXRvOD7.js";import{t}from"./app-widget-layout-2qj_LTNY.js";import{n,r}from"./app-persisted-ChQKAm5v.js";var[i,a]=r(`hz-scroll-style`,`endless`,n(`endless`,`load_more`)),o=e(()=>t()?`load_more`:i());function s(){return o}function c(){return i}var l=a;export{l as n,s as r,c as t};
