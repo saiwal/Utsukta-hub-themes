@@ -1,1 +1,0 @@
-import{O as e}from"./app-web-hRdjKvqh.js";import{d as t}from"./app-routing-BMqWiR90.js";import{tn as n}from"./app-CRPysSS9.js";import{t as r}from"./app-notifyLink-LpMr70PP.js";function i(){let i=r(`/connections`+t().hash);return e(n,{href:i?`/directory/connections?open=${i}`:`/directory/connections`})}export{i as default};
