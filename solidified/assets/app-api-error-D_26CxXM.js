@@ -1,1 +1,0 @@
-function e(e){return e.length>200?e.slice(0,199).trimEnd()+`…`:e}async function t(t,n=``){let r=(await t.json().catch(()=>null))?.error?.message;return Error(r?e(r):`${n?n+` `:``}HTTP ${t.status}`)}export{e as n,t};

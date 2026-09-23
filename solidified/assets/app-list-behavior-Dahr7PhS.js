@@ -1,1 +1,0 @@
-import{n as e,r as t}from"./app-persisted-Bs1FsJ3x.js";var[n,r]=t(`hz-list-behavior`,`list`,e(`list`,`inbox`));function i(){return n}var a=r;export{i as n,a as t};
