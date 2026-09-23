@@ -76,6 +76,7 @@ class Router
         'weather'        => Handlers\Weather::class,
         'geocode'        => Handlers\Geocode::class,
         'link-meta'      => Handlers\Linkmeta::class,
+        'oembed'         => Handlers\Oembed::class,
         'announcements'  => Handlers\Announcements::class,
         'blocklist'      => Handlers\Blocklist::class,
         'notify'         => Handlers\Notify::class,

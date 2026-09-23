@@ -84,7 +84,7 @@ class Linkmeta
      * passes file:// and ftp://, and a valid URL may still point at loopback,
      * link-local (cloud metadata), or RFC1918 space.
      */
-    private static function isPublicHttpUrl(string $url): bool
+    public static function isPublicHttpUrl(string $url): bool
     {
         if (!$url || strlen($url) > 2048) {
             return false;
@@ -102,9 +102,11 @@ class Linkmeta
 
     /**
      * Fetch $url, following at most MAX_REDIRECTS hops and revalidating the
-     * host at every one. Returns ['body' => html, 'url' => final url] or null.
+     * host at every one. Returns ['body' => ..., 'url' => final url] or null.
+     * $want is a substring the Content-Type must contain (Oembed.php fetches
+     * its JSON through here too).
      */
-    private static function safeFetch(string $url): ?array
+    public static function safeFetch(string $url, string $want = 'html'): ?array
     {
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
             $parts = parse_url($url);
@@ -159,8 +161,8 @@ class Linkmeta
             if ($code < 200 || $code > 299 || $body === '') {
                 return null;
             }
-            if ($type && stripos($type, 'html') === false) {
-                return null;   // only HTML carries the meta tags we want
+            if ($type && stripos($type, $want) === false) {
+                return null;   // e.g. only HTML carries the meta tags we want
             }
             return ['body' => $body, 'url' => $url];
         }
@@ -256,6 +258,10 @@ class Linkmeta
             'title' => trim(preg_replace('/\s+/u', ' ', $title) ?? ''),
             'text'  => self::excerpt(trim(preg_replace('/\s+/u', ' ', $text) ?? '')),
             'image' => $image,
+            // The page advertises oEmbed, so the composer inserts [embed]
+            // rather than a preview card. Whether it actually plays is the
+            // viewer hub's embed policy — see Oembed.php.
+            'embed' => Oembed::discoverHref($html, $baseUrl) !== '',
         ];
     }
 
