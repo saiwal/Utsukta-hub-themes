@@ -745,7 +745,12 @@ class Item
 
         if (is_array($res) && ($res['success'] ?? true) === false) {
             $msg = (string) ($res['message'] ?? 'post failed');
-            Response::error(self::coreFailureStatus($msg), $msg);
+            // Core's wording hides the usual cause: the "Suppress duplicates"
+            // feature cancels a body identical to one posted in the last 2 min.
+            $text = $msg === 'operation cancelled'
+                ? 'Post cancelled: you posted the same text less than 2 minutes ago (duplicate suppression), or an addon blocked it.'
+                : $msg;
+            Response::error(self::coreFailureStatus($msg), $text);
         }
 
         return is_array($res) ? $res : [];
