@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./app-persisted-Bs1FsJ3x.js";var[n,r]=t(`hz-comment-order`,`oldest_first`,e(`oldest_first`,`newest_first`));function i(){return n}var a=r;export{i as n,a as t};

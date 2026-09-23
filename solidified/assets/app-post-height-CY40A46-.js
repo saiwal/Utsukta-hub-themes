@@ -1,0 +1,1 @@
+import{r as e}from"./app-persisted-Bs1FsJ3x.js";var t=e=>e<=0?0:Math.min(Math.max(e,100),5e3),[n,r]=e(`hz-post-height`,310,e=>Number.isFinite(Number(e))?t(Number(e)):void 0);function i(){return n}var a=n;function o(e){r(t(Number.isFinite(e)?e:310))}export{o as n,i as r,a as t};

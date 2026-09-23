@@ -1,0 +1,1 @@
+function e(e){try{if(e.startsWith(`http`)){let t=new URL(e);return t.pathname+t.search+t.hash}}catch{}return e}var t=/^\/connections#(\d+)$/;function n(n){if(!n)return null;let r=e(n).match(t);return r?Number(r[1]):null}function r(n){if(!n)return`#`;let r=e(n),i=r.match(t);return i?`/directory/connections?open=${i[1]}`:r}export{r as n,n as t};
