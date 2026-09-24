@@ -3,7 +3,7 @@
 /**
  * * Name: default
  *   * Description: Solidified default
- *   * Version: 0.5.3-beta
+ *   * Version: 0.5.4-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
  *   * ContentRegion: aside, right_aside_wrapper
