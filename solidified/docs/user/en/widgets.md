@@ -167,7 +167,7 @@ A single-article preview card showing the title, a short excerpt, and a read-mor
 
 ### Bookmarked Rooms
 
-Lists the chatrooms you've bookmarked for quick access, with a way to jump straight into a room or remove a bookmark.
+Lists the chatrooms you've bookmarked for quick access, with a way to jump straight into a room or remove a bookmark. A dot marks rooms on this hub with unread messages; a room on another hub opens there in a new tab, logged in as you, and never shows a dot — your browser can't check another hub for new messages.
 <!-- card_deck -->
 
 ### Card Deck
@@ -197,7 +197,7 @@ A single-room showcase card showing the room name and who's currently inside, wi
 
 ### Chatrooms
 
-Lists the channel's chatrooms with how many people are in each; click one to join it in a chat window that can be docked, maximised or minimised while you keep browsing. Shown in your dashboard's sidebar by default, and can also be placed in a page's main column.
+Lists the channel's chatrooms with how many people are in each, and a dot on any with unread messages; click one to join it in a chat window that can be docked, maximised or minimised while you keep browsing. Shown in your dashboard's sidebar by default, and can also be placed in a page's main column.
 <!-- clock_card -->
 
 ### Clock Card Widget

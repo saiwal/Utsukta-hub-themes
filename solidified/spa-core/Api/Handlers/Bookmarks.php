@@ -103,7 +103,7 @@ class Bookmarks
     private function getChatBookmarks(int $uid): void
     {
         $r = q(
-            "SELECT mi.mitem_id, mi.mitem_link, mi.mitem_desc
+            "SELECT mi.mitem_id, mi.mitem_link, mi.mitem_desc, mi.mitem_flags
              FROM menu_item mi
              JOIN menu m ON m.menu_id = mi.mitem_menu_id
              WHERE mi.mitem_channel_id = %d
@@ -117,9 +117,12 @@ class Bookmarks
 
         $items = [];
         foreach (($r ?: []) as $row) {
+            $link = self::unescapeStored($row['mitem_link']);
             $items[] = [
                 'id'    => intval($row['mitem_id']),
-                'url'   => self::unescapeStored($row['mitem_link']),
+                'url'   => $link,
+                // A room on another hub opens there; zid() keeps you logged in.
+                'visit_url' => (intval($row['mitem_flags']) & MENU_ITEM_ZID) ? zid($link) : $link,
                 'title' => self::unescapeStored($row['mitem_desc']),
             ];
         }
@@ -229,6 +232,12 @@ class Bookmarks
         ]);
     }
 
+    /** `https://hub/chat/<nick>/<room id>` — a room, not the room list. */
+    private static function isChatroomUrl(string $url): bool
+    {
+        return (bool)preg_match('#^https?://[^/]+/chat/[^/?\#]+/\d+/?(\?.*)?$#', $url);
+    }
+
     /**
      * Core's Bookmarks::init() — save the bookmarkable links out of one post —
      * plus the SPA's addition: any link in the body, not only the ones the
@@ -303,7 +312,11 @@ class Bookmarks
         ];
 
         foreach ($chosen as $t) {
-            bookmark_add($channel, $s[0], $t, $item['item_private'], $opts);
+            // A chatroom link (e.g. from an invite) becomes a room bookmark,
+            // so it lands in the Bookmarked Rooms widget like core's
+            // "Bookmark this room" does.
+            bookmark_add($channel, $s[0], $t, $item['item_private'],
+                $opts + ['ischat' => self::isChatroomUrl($t['url']) ? 1 : 0]);
         }
 
         Response::send(['success' => true, 'count' => count($chosen)]);

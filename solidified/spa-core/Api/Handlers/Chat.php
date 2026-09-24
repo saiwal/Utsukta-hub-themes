@@ -70,13 +70,13 @@ class Chat
         if ($arg3 === 'acl-options') {
             $this->getAclOptions();
         } elseif (!$this->roomId) {
-            $this->getRoomList();
+            $this->getRoomList($ob_hash);
         } else {
             $this->getRoomDetail($ob_hash);
         }
     }
 
-    private function getRoomList(): void
+    private function getRoomList(string $ob_hash): void
     {
         if (!\Zotlabs\Lib\Apps::system_app_installed($this->subjectUid, 'Chatrooms'))
             Response::error(403, 'Chatrooms app not installed');
@@ -96,12 +96,20 @@ class Chat
                 "SELECT created FROM chat WHERE chat_room = %d ORDER BY created DESC LIMIT 1",
                 intval($room_id)
             );
+            // Newest message by someone else: what the SPA's unread dot compares
+            // against, so your own messages (from another device) don't count.
+            $last_other = q(
+                "SELECT created FROM chat WHERE chat_room = %d AND chat_xchan != '%s' ORDER BY created DESC LIMIT 1",
+                intval($room_id),
+                dbesc($ob_hash)
+            );
             $result[] = [
                 'id'        => $room_id,
                 'name'      => $room['cr_name'],
                 'expire'    => intval($room['cr_expire']),
                 'in_room'   => $presence ? intval($presence[0]['total']) : 0,
                 'last_msg'  => $last_chat ? $last_chat[0]['created'] : null,
+                'last_other' => $last_other ? $last_other[0]['created'] : null,
                 'is_owner'  => (local_channel() && local_channel() == $this->subjectUid),
             ];
         }

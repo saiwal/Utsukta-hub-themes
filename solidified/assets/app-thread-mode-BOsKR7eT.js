@@ -1,0 +1,1 @@
+import{r as e}from"./app-persisted-Dx4xEl3p.js";var[t,n]=e(`hz-thread-mode`,!0,e=>e!==`flat`,e=>e?`threaded`:`flat`);function r(){return t}var i=n;export{r as n,i as t};

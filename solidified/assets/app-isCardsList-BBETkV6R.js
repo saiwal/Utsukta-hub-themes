@@ -1,0 +1,1 @@
+import{d as e}from"./app-routing-DVnanUVy.js";import{n as t,r as n}from"./app-persisted-Dx4xEl3p.js";var[r,i]=n(`hz-cards-view`,`board`,t(`board`,`kanban`));function a(){let t=e();return()=>{let e=t.pathname.split(`/`).filter(Boolean);return e[0]===`cards`&&e.length<=2}}export{r as n,i as r,a as t};

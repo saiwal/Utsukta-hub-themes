@@ -28,6 +28,23 @@ Once inside a room, you see:
 
 Type in the message input at the bottom and press **Enter** (or click the send button) to post your message. Messages appear immediately for everyone in the room.
 
+## New-Message Alerts
+
+Each chat window has a bell button in its title bar that cycles through three modes for that room:
+- **Sound** — a short chime when someone else posts
+- **Push** — a browser notification (your browser asks for permission the first time)
+- **Silent** — no alert (the default)
+
+Alerts only fire while you aren't looking at the room — the tab is in the background, the browser isn't focused, or the window is minimised — and only while the chat window is open. Your choice is remembered per room, in this browser.
+
+## Unread Rooms
+
+A room with messages you haven't seen yet gets a small coloured dot next to its name — in the Chat page's room list, the Chatrooms widget and the Bookmarked Rooms widget. Opening the room clears it. Your own messages never count as unread.
+
+The **Chat** item in the navigation also shows how many of *your own* rooms have unread messages. It checks about once a minute while the tab is visible, so a new message can take up to a minute to show.
+
+Unread state is kept in your browser: reading a room on your phone won't clear the dot on your laptop. Rooms you had never opened before this feature arrived start out as read.
+
 ## Leaving a Room
 
 Navigate away from the chatroom page to leave. You can return at any time and read recent history.
@@ -38,9 +55,17 @@ Navigate to `/chat/<their-nick>` to see the public chatrooms on another channel.
 
 > **Note:** The Chat app must be installed on the channel. The room owner can restrict access to specific connections or groups.
 
+## Invitations and Rooms on Other Hubs
+
+When the owner creates a room restricted to specific people, they can tick **Notify invited members** — each invitee gets a private post with a link to the room. The link logs you in on the owner's hub when you follow it, so the room recognises you even if your channel lives elsewhere.
+
+To keep the room for later, click the bookmark icon next to the room link (**Bookmark this link**): it is saved straight into your **Bookmarked Rooms**. (On an older invite the saved bookmark is titled "Join here" — rename it from the Bookmarks page.) You can also open the room and choose **Bookmark this room** from its menu.
+
+A chat window here can only join rooms on your own hub. A bookmarked room on another hub opens on that hub in a new tab, logged in as you, and doesn't get an unread dot — your browser can't check another hub for new messages.
+
 ## Bookmarked Rooms Widget
 
-Lists chatrooms you've bookmarked, with a quick link to jump back into any of them. Only visible to you, not visitors.
+Lists chatrooms you've bookmarked, with a quick link to jump back into any of them. Rooms on this hub show an unread dot; rooms on other hubs open there in a new tab. Only visible to you, not visitors.
 
 ## Room Card Widget
 
