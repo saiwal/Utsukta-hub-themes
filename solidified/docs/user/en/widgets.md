@@ -197,7 +197,7 @@ A single-room showcase card showing the room name and who's currently inside, wi
 
 ### Chatrooms
 
-Lists the channel's chatrooms with how many people are in each; click one to join it in a chat window that can be docked, maximised or minimised while you keep browsing. Shown on your dashboard by default, and can also be added to the sidebar.
+Lists the channel's chatrooms with how many people are in each; click one to join it in a chat window that can be docked, maximised or minimised while you keep browsing. Shown in your dashboard's sidebar by default, and can also be placed in a page's main column.
 <!-- clock_card -->
 
 ### Clock Card Widget
