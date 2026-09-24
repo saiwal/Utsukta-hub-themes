@@ -2374,7 +2374,7 @@ class Item
             $collapsed = $block;
             if (preg_match("/^\[share\s[^\]]*message_id='([^']+)'/is", $block, $mm)) {
                 $target = $this->resolveItem($mm[1], $ob_hash);
-                if ($target && $target['mimetype'] === 'text/bbcode') {
+                if ($target && self::embedBody($target) !== null) {
                     $isCard = intval($target['item_type']) === ITEM_TYPE_CARD;
                     // Cards additionally allow the owner's own private ones —
                     // buildEmbedBlock()'s ownPrivateOk gate, mirrored here so

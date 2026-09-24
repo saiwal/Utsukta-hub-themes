@@ -116,9 +116,20 @@ check('an article is never quote-federated',
 check('a card is never quote-federated',
     !str_contains($block(row($owner, $CARD, 0)), "quote='true'"));
 
-// ── Only bbcode can be embedded ─────────────────────────────────────────────
-check('a markdown body is not embeddable', $block(row($owner, $POST, 0, 'text/markdown')), '');
-check('a plain body is not embeddable',    $block(row($owner, $POST, 0, 'text/plain')), '');
+// ── Cards keep their authored format; the block carries it as bbcode ────────
+$fmt = function (string $mime, string $body) use ($owner, $CARD, $block) {
+    $r = row($owner, $CARD, 0, $mime);
+    $r['body'] = $body;
+    return $block($r);
+};
+check('a markdown card embeds as bbcode',
+    str_contains($fmt('text/markdown', '**bold**'), '[b]bold[/b]'));
+check('an html card embeds as bbcode',
+    str_contains($fmt('text/html', '<strong>bold</strong>'), '[b]bold[/b]'));
+check('a plain card embeds with its brackets literal',
+    str_contains($fmt('text/plain', '[b]x[/b]'), '[nobb][b]x[/b][/nobb]'));
+check('an empty mimetype is bbcode', str_contains($fmt('', 'x'), ']x[/share]'));
+check('an x-php body is not embeddable', $fmt('application/x-php', 'x'), '');
 
 // ── The privacy asymmetry ───────────────────────────────────────────────────
 // Save time, as the owner:

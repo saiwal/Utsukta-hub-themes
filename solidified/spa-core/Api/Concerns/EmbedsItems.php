@@ -50,7 +50,8 @@ trait EmbedsItems
      */
     protected function buildEmbedBlock(array $item, bool $forDisplay = false, bool $ownPrivateOk = false): string
     {
-        if (($item['mimetype'] ?? '') !== 'text/bbcode') {
+        $body = self::embedBody($item);
+        if ($body === null) {
             return '';
         }
 
@@ -116,10 +117,43 @@ trait EmbedsItems
             $bb .= '[h3][b]' . $item['title'] . '[/b][/h3]' . "\r\n";
         }
 
-        $bb .= $item['body'];
+        $bb .= $body;
         $bb .= '[/share]';
 
         return $bb;
+    }
+
+    /**
+     * An item's body as bbcode for a [share] block, or null when its format
+     * can't be embedded.
+     *
+     * A share block's body is always rendered as bbcode, but cards and
+     * articles keep their authored mimetype (see ContentTypes::toBbcode), so a
+     * markdown/html/plain card used to be refused outright — "Card not found
+     * or cannot be embedded" for a public card. Posts are always bbcode.
+     * x-php and the like stay refused: there is nothing safe to convert.
+     */
+    protected static function embedBody(array $item): ?string
+    {
+        $body = (string) ($item['body'] ?? '');
+
+        switch ($item['mimetype'] ?? '') {
+            case '':               // the schema default; prepare_text() treats it as bbcode
+            case 'text/bbcode':
+                return $body;
+            case 'text/markdown':
+                return \Utsukta\SpaCore\Api\ContentTypes::toBbcode(
+                    \Utsukta\SpaCore\Api\ContentTypes::decode($body, 'text/markdown'), 'text/markdown')[0];
+            case 'text/html':
+                require_once('include/html2bbcode.php');
+                return html2bbcode($body);
+            case 'text/plain':
+                // Stored escape_tags()'d, same as bbcode; [nobb] keeps any
+                // brackets in it literal.
+                return '[nobb]' . $body . '[/nobb]';
+            default:
+                return null;
+        }
     }
 
     // -------------------------------------------------------------------------
