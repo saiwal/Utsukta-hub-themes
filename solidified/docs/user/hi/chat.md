@@ -60,4 +60,8 @@ Chatroom पेज से navigate करके room छोड़ें। ब�
 
 Room बाद के लिए रखने को room link के पास वाले bookmark icon (**इस लिंक को बुकमार्क करें**) पर क्लिक करें: link सीधे आपके **Bookmarked Rooms** में जुड़ जाता है। (पुराने invite से सहेजे bookmark का नाम "Join here" होगा — Bookmarks पेज से उसे बदल लें।) आप room खोलकर उसके menu से **Bookmark this room** भी चुन सकते हैं।
 
-यहाँ की chat window सिर्फ़ आपके अपने hub के rooms join कर सकती है। दूसरे hub का bookmarked room उसी hub पर नए tab में, आपके login के साथ खुलता है, और उस पर unread dot नहीं दिखता — आपका browser दूसरे hub से नए संदेश नहीं जाँच सकता।
+यहाँ की chat window सिर्फ़ आपके अपने hub के rooms join कर सकती है। दूसरे hub का bookmarked room उसी hub पर नए tab में, आपके login के साथ खुलता है — अगर वह hub भी यही interface चलाता हो तो सीधे room में, पूरे पेज पर।
+
+दूसरे hub के bookmarked rooms पर भी unread dot दिखता है, और वे Chat badge में गिने जाते हैं — **अगर वह hub भी यही interface चलाता हो**: room bookmark करने पर owner का hub, कोई संदेश भेजे तो, आपके hub को बता देता है। यह हर room के लिए ज़्यादा से ज़्यादा 5 मिनट में एक बार होता है, और तब नहीं जब आप room में हों। Bookmark पर क्लिक करते ही dot हट जाता है। सिर्फ़ classic Hubzilla चलाने वाले hub के rooms पर dot कभी नहीं दिखता।
+
+ऐसे room के लिए आप **push notification** भी पा सकते हैं: Bookmarked Rooms widget में उसकी row पर bell पर क्लिक करें। पहली बार browser notification की अनुमति माँगेगा। Push default रूप से बंद है, हर room के लिए अलग सेट होता है, और उसी 5 मिनट की सीमा का पालन करता है। Notification पर tap करने से room उसके hub पर, आपके login के साथ खुलता है।

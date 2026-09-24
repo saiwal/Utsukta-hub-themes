@@ -1,1 +1,0 @@
-import{h as e}from"./app-solid-P6NIHsRG.js";import{f as t,p as n}from"./app-routing-DVnanUVy.js";import{o as r}from"./app-modal-host-D-FUWZ-L.js";function i(){let i=n(),a=t();return e(()=>{let e=parseInt(i.roomId);i.nick&&e&&r(i.nick,e),a(`/chat/${i.nick}`,{replace:!0})}),null}export{i as default};

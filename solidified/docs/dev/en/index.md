@@ -18,6 +18,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Api-reference](api-reference) — Frontend API reference
 - [Data-fetching](data-fetching) — TanStack Query caching, createQueryResource, mutations
 - [Stream-sorting](stream-sorting) — Post sort orders, the ranked (top/hot/discussed/controversial) algorithms, and the shared SortSelect control
+- [Chat-federation](chat-federation) — Unread dots for bookmarked rooms on other SPA hubs: signed subscribe/notice between hubs, storage, throttle
 - [Post-import](post-import) — Importing a federated post by URL: Zot vs ActivityPub, ancestor and reply discovery, the Lemmy fallback
 - [Offline](offline) — Service worker, fetch fallback, and the local message store
 - [Php-api](php-api) — Backend PHP API: router, auth, response, handlers

@@ -474,25 +474,13 @@ dry-run branch. No `Router.php` change — the section name comes from `\App::$a
 - `npx tsc -b` clean (catches any missing i18n key), `npm run build` clean, deployed PHP handlers
   match source (`diff` check).
 
-## Chat: unread state for rooms on other hubs
+## Chat: remote-room follow-ups
 
-**Status: known limitation, not planned.** The unread dot (`src/modules/chat/unread.ts`)
-compares a room's `last_other` from `GET /spa/chat/:nick` against per-browser seen
-timestamps. That endpoint reads the local `chat` table, and chatrooms never federate —
-a room lives only on its owner's hub. So a bookmarked room on another hub gets no dot
-and doesn't count toward the nav badge; the widget just opens it there via `visit_url`.
+Unread dots and opt-in Web Push for bookmarked rooms on other hubs shipped 2026-09-24, for hubs that
+both run spa-core (`chat-federation.md`). Left:
 
-Ways out, increasing cost:
-- **Server-side proxy**: have *our* hub fetch the remote room list on the viewer's behalf.
-  No API exists for it — core's remote chat is HTML (`/chat`, `/chatsvc`), and a signed
-  zot fetch of chat data isn't a thing core offers, so this needs a peer SPA hub on the
-  far end.
-- **Push from the owner's hub**: a `chat_post` hook (`Chatsvc.php:56`) on the room owner's
-  hub notifying bookmarkers — only reaches local channels there, same limitation mirrored.
-
-Also per-browser: seen timestamps are localStorage (`hz-chat-seen`), so reading on one
-device doesn't clear another's dot. Moving them to pconfig would fix that with a write
-endpoint; skipped until someone asks.
+- **Rooms on plain Hubzilla hubs** stay dot-less: core has no data API for chat.
+- **Seen state per browser** (`hz-chat-seen`); pconfig + a write endpoint would sync it.
 
 ## Collaborative editing (Yjs + y-websocket)
 

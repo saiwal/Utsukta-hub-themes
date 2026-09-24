@@ -14,6 +14,7 @@
  * Routes:
  *   GET    /spa/bookmarks                  → folders + items (own and connections')
  *   GET    /spa/bookmarks/chat             → chatroom bookmarks only
+ *   POST   /spa/bookmarks/chat-push        → Web Push for a remote room { id, push }
  *   POST   /spa/bookmarks                  → add one { url, title, menu_id?, menu_name?, ischat?, private? }
  *   POST   /spa/bookmarks/item             → save links out of a post { item, urls?, menu_id?, menu_name? }
  *   POST   /spa/bookmarks/folder           → create or rename a folder { menu_id?, name, desc? }
@@ -62,6 +63,10 @@ class Bookmarks
             // The chat module's "bookmark this room" depends on that.
             case $subpath === '':
                 $this->createBookmark($uid, $data);
+
+            // Chat bookmarks aren't gated on the Bookmarks app (see get()).
+            case $subpath === 'chat-push':
+                $this->setChatPush($uid, $data);
 
             case $subpath === 'item':
                 $this->requireApp($uid);
@@ -115,6 +120,10 @@ class Bookmarks
             MENU_ITEM_CHATROOM
         );
 
+        // Rooms on other hubs: their newest-message time arrives by notice (ChatFed).
+        $remote = ChatFed::remoteRoomState($uid, array_map(
+            fn($row) => self::unescapeStored($row['mitem_link']), $r ?: []));
+
         $items = [];
         foreach (($r ?: []) as $row) {
             $link = self::unescapeStored($row['mitem_link']);
@@ -123,6 +132,8 @@ class Bookmarks
                 'url'   => $link,
                 // A room on another hub opens there; zid() keeps you logged in.
                 'visit_url' => (intval($row['mitem_flags']) & MENU_ITEM_ZID) ? zid($link) : $link,
+                'last_other' => $remote[$link]['last_other'] ?? null,
+                'push'       => $remote[$link]['push'] ?? false,
                 'title' => self::unescapeStored($row['mitem_desc']),
             ];
         }
@@ -225,6 +236,8 @@ class Bookmarks
         // (see the read comment above), so core's /mitem owns that job.
         bookmark_add($channel, $channel, ['url' => $url, 'term' => $title],
             !empty($data['private']) ? 1 : 0, $opts);
+        if ($opts['ischat'])
+            ChatFed::queueSubscribe($uid, $url);
 
         Response::send([
             'success'  => true,
@@ -232,10 +245,26 @@ class Bookmarks
         ]);
     }
 
+    private function setChatPush(int $uid, array $data): never
+    {
+        $r = q("SELECT mi.mitem_link FROM menu_item mi
+                JOIN menu m ON m.menu_id = mi.mitem_menu_id
+                WHERE mi.mitem_id = %d AND mi.mitem_channel_id = %d
+                  AND (m.menu_flags & %d) AND (mi.mitem_flags & %d) LIMIT 1",
+            intval($data['id'] ?? 0), $uid, MENU_BOOKMARK, MENU_ITEM_CHATROOM);
+        if (!$r)
+            Response::error(404, 'Chat bookmark not found');
+
+        if (!ChatFed::setPush($uid, self::unescapeStored($r[0]['mitem_link']), !empty($data['push'])))
+            Response::error(400, 'Push is only for rooms on another hub');
+
+        Response::send(['success' => true]);
+    }
+
     /** `https://hub/chat/<nick>/<room id>` — a room, not the room list. */
     private static function isChatroomUrl(string $url): bool
     {
-        return (bool)preg_match('#^https?://[^/]+/chat/[^/?\#]+/\d+/?(\?.*)?$#', $url);
+        return ChatFed::parseRoomUrl($url) !== null;
     }
 
     /**
@@ -315,8 +344,10 @@ class Bookmarks
             // A chatroom link (e.g. from an invite) becomes a room bookmark,
             // so it lands in the Bookmarked Rooms widget like core's
             // "Bookmark this room" does.
-            bookmark_add($channel, $s[0], $t, $item['item_private'],
-                $opts + ['ischat' => self::isChatroomUrl($t['url']) ? 1 : 0]);
+            $ischat = self::isChatroomUrl($t['url']);
+            bookmark_add($channel, $s[0], $t, $item['item_private'], $opts + ['ischat' => $ischat ? 1 : 0]);
+            if ($ischat)
+                ChatFed::queueSubscribe($uid, $t['url']);
         }
 
         Response::send(['success' => true, 'count' => count($chosen)]);

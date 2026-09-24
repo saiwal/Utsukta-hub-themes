@@ -40,7 +40,7 @@ Your calendar and events, including RSVPs.
 
 ## Chat
 
-Chatrooms you've joined or created. A count on the item shows how many of your own rooms have unread messages.
+Chatrooms you've joined or created. A count on the item shows how many of your own rooms, and your bookmarked rooms, have unread messages.
 
 ## Webpages
 

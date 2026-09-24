@@ -82,6 +82,12 @@ comment paths. Known gap, deliberate: `Zotlabs\Module\Item` is the only thing
 that fires `post_content`, so the `mdpost` addon — and any other addon on that
 hook — is skipped when posting from the SPA. See `ContentTypes.php`.
 
+`call_hooks('chat_post')` runs in `Chat::sendMessage` before the insert, with
+core's `Chatsvc::post()` payload (`chat_room`, `chat_xchan`, `chat_text`) and
+storing the hook's `chat_text` — **fixed 2026-09-24**; SPA chat sends used to
+fire no hook at all. `chat_message` (`Chatroom::message()`, used by neither
+path) is not mirrored.
+
 ## Driving core's post handler from PHP
 
 `Zotlabs\Module\Item::post()` is callable directly — this is what

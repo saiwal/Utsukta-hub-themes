@@ -17,6 +17,7 @@ class Router
         'help' => Handlers\Help::class,
         'display' => Handlers\Display::class,
         'chat' => Handlers\Chat::class,
+        'chatfed' => Handlers\ChatFed::class,
         'cal' => Handlers\Cal::class,
         'addressbook' => Handlers\Addressbook::class,
         'pubsites' => Handlers\Pubsites::class,

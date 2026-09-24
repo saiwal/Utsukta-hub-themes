@@ -1255,8 +1255,13 @@ class Settings
         $name = notags(trim($data['name'] ?? ''));
         if (!$name) Response::error(400, 'Invalid request');
 
-        // All operations key on the whirlpool-hash guid used by Hubzilla for system apps
-        $guid = hash('whirlpool', $name);
+        // Key on the installed row's own guid: getIntegrationsSettings() matches
+        // rows by app_name, and a row can carry a guid that isn't the hash of that
+        // name (e.g. one installed under an older/translated name). Fall back to
+        // the whirlpool hash core uses for system apps when nothing is installed.
+        $row  = q("SELECT app_id FROM app WHERE app_channel = %d AND app_name = '%s' AND app_deleted = 0 LIMIT 1",
+            intval($uid), dbesc($name));
+        $guid = $row ? $row[0]['app_id'] : hash('whirlpool', $name);
 
         if ($action === 'install') {
             // translate=false — must match the canonical $name the frontend

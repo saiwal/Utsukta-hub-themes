@@ -78,8 +78,11 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 | **saved-searches** | `GET /saved-searches` | List saved search filters | list |
 | | `POST /saved-searches` | Create a saved search | new record |
 | | `DELETE /saved-searches/:tid` | Delete a saved search | `{ status }` |
-| **bookmarks** | `GET /bookmarks[/chat]` | All bookmark menus + items, or chatroom bookmarks only (each with `visit_url` — `zid()`-wrapped for zot links, what the widget opens for a room on another hub) | bookmarks |
+| **chatfed** | `POST /chatfed/subscribe` `{ room_url }` | Hub-to-hub, HTTP-signed, no session: subscribe the signer to a room on this hub | `{ success }` / 404 |
+| | `POST /chatfed/notice` `{ room_url, created, recipient }` | Hub-to-hub, signed by the room's owner: a bookmarked room has new messages (see `chat-federation.md`) | `{ success }` / 403 / 404 |
+| **bookmarks** | `GET /bookmarks[/chat]` | All bookmark menus + items, or chatroom bookmarks only (each with `visit_url` — `zid()`-wrapped for zot links, what the widget opens for a room on another hub — and, for a room on another hub, `last_other` from chat notices) | bookmarks |
 | | `POST /bookmarks` `{ url, title, ischat? }` | Add a bookmark | new bookmark |
+| | `POST /bookmarks/chat-push` `{ id, push }` | Web Push on/off for a chat bookmark on another hub (`push` is also on each `GET /bookmarks/chat` row) | `{ success }` |
 | | `POST /bookmarks/item` `{ item, urls?, menu_id?, menu_name? }` | Save links out of a post; a `/chat/<nick>/<id>` link is stored as a chatroom bookmark (`MENU_ITEM_CHATROOM`), so a saved invite lands in Bookmarked Rooms | `{ count }` |
 | | `DELETE /bookmarks/:id` | Remove a bookmark item | `{ status }` |
 | **notes** | `GET /notes` | List personal notes | list |

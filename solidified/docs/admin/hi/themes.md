@@ -20,6 +20,10 @@ Default theme नए users और visitors को apply होता है। �
 
 Server filesystem पर `extend/theme/` में theme folder रखें, फिर यह page reload करें।
 
+## इस Interface को Upgrade करने के बाद
+
+कुछ features Hubzilla server के hooks से जुड़ते हैं, और hooks सिर्फ़ theme enable होने पर register होते हैं। नया hook लाने वाले upgrade के बाद admin Themes पेज में theme को **एक बार disable करके फिर enable करें**। मौजूदा hooks: web push notifications, और hubs के बीच chat notices (दूसरे hub पर bookmark किए rooms के unread dots)।
+
 ## User Theme Choice
 
 Users **Settings → Display → Theme** में hub default override कर सकते हैं। Admin existing users पर theme force नहीं कर सकता — केवल नए users के लिए default बदला जा सकता है।

@@ -11,6 +11,9 @@ namespace {
 	 * Web Push subscriptions the recipient has registered via the SPA's
 	 * POST /api/push-subscription (stored in pconfig cat "webpush").
 	 *
+	 * Also hooked on spa-core's own "spa_webpush" (chat notices from another
+	 * hub, Api/Handlers/ChatFed.php), which passes the same datarray fields.
+	 *
 	 * $datarray fields used here (see Zotlabs\Lib\Enotify::submit()):
 	 *   uid (recipient channel_id), xname (sender display name), msg (final
 	 *   notification text), photo (sender avatar), link (permalink), hash.

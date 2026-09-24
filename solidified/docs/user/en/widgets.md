@@ -167,7 +167,7 @@ A single-article preview card showing the title, a short excerpt, and a read-mor
 
 ### Bookmarked Rooms
 
-Lists the chatrooms you've bookmarked for quick access, with a way to jump straight into a room or remove a bookmark. A dot marks rooms on this hub with unread messages; a room on another hub opens there in a new tab, logged in as you, and never shows a dot — your browser can't check another hub for new messages.
+Lists the chatrooms you've bookmarked for quick access, with a way to jump straight into a room or remove a bookmark. A dot marks rooms on this hub with unread messages; a room on another hub opens there in a new tab, logged in as you, and shows a dot only if that hub also runs this interface; its bell turns on push notifications for that room.
 <!-- card_deck -->
 
 ### Card Deck

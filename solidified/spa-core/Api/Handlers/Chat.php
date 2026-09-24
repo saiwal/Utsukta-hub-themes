@@ -605,6 +605,16 @@ class Chat
         // mimetype is taken as bbcode.
         [$text] = ContentTypes::toBbcode($text, (string) ($data['mimetype'] ?? 'text/bbcode'));
 
+        // Same hook, same point and same payload as core's Chatsvc::post(), so an
+        // addon listening for chat messages sees SPA sends too — and may rewrite
+        // chat_text before it is stored.
+        $arr = [
+            'chat_room'  => $this->roomId,
+            'chat_xchan' => $ob_hash,
+            'chat_text'  => $text,
+        ];
+        call_hooks('chat_post', $arr);
+
         // Hubzilla stores chat_text as str_rot47(base64url_encode($text))
         $r = q(
             "INSERT INTO chat (chat_room, chat_xchan, created, chat_text)
@@ -612,7 +622,7 @@ class Chat
             intval($this->roomId),
             dbesc($ob_hash),
             dbesc(datetime_convert()),
-            dbesc(str_rot47(base64url_encode($text)))
+            dbesc(str_rot47(base64url_encode($arr['chat_text'])))
         );
 
         if (!$r)
