@@ -193,6 +193,11 @@ In the Notepad this widget is called **Notebooks**, since a note's categories ar
 ### Chatroom Card
 
 A single-room showcase card showing the room name and who's currently inside, with a link to join. Add one per room you want to spotlight.
+<!-- chatrooms_list -->
+
+### Chatrooms
+
+Lists the channel's chatrooms with how many people are in each; click one to join it in a chat window that can be docked, maximised or minimised while you keep browsing. Shown on your dashboard by default, and can also be added to the sidebar.
 <!-- clock_card -->
 
 ### Clock Card Widget
@@ -288,11 +293,6 @@ Shows system and site notifications in your dashboard message feed, kept separat
 ### Notifications
 
 Live feed of your notifications (mentions, likes, comments, connection requests, and more), with a badge count and quick access to mark items read.
-<!-- pinned_chatrooms -->
-
-### Pinned Chat
-
-Keeps one or more chatrooms open and pinned in an accordion panel on the page, so you can follow and post to them without leaving what you're doing.
 <!-- pomodoro -->
 
 ### Pomodoro Widget

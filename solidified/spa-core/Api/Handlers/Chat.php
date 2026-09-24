@@ -22,6 +22,7 @@ use Zotlabs\Lib\Libsync;
 use Zotlabs\Access\AccessList;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\ContentTypes;
 
 class Chat
 {
@@ -195,46 +196,9 @@ class Chat
             Response::error(400, 'Room name required');
 
         $expire = max(0, intval($data['expire'] ?? 120));
-        $visibility = $data['visibility'] ?? 'public'; // 'public' | 'connections' | 'private' | 'custom'
-
         $channel = App::get_channel();
 
-        // Build ACL based on visibility choice
-        $allow_cid = '';
-        $allow_gid = '';
-        $deny_cid  = '';
-        $deny_gid  = '';
-
-        if ($visibility === 'connections') {
-            // Use the channel's default privacy group — same as Hubzilla's
-            // populate_acl() default. Falls back to empty (open to connections
-            // via perm_is_allowed) if no default group is set.
-            $default_group = $channel['channel_default_group'] ?? '';
-            if ($default_group) {
-                $allow_gid = '<' . $default_group . '>';
-            }
-        } elseif ($visibility === 'private') {
-            $allow_cid = '<' . $channel['channel_hash'] . '>';
-        } elseif ($visibility === 'custom') {
-            // Granular allow/deny per contact and group
-            foreach ((array)($data['allow_cid'] ?? []) as $h) {
-                $h = notags(trim($h));
-                if ($h) $allow_cid .= '<' . $h . '>';
-            }
-            foreach ((array)($data['allow_gid'] ?? []) as $h) {
-                $h = notags(trim($h));
-                if ($h) $allow_gid .= '<' . $h . '>';
-            }
-            foreach ((array)($data['deny_cid'] ?? []) as $h) {
-                $h = notags(trim($h));
-                if ($h) $deny_cid .= '<' . $h . '>';
-            }
-            foreach ((array)($data['deny_gid'] ?? []) as $h) {
-                $h = notags(trim($h));
-                if ($h) $deny_gid .= '<' . $h . '>';
-            }
-        }
-        // 'public' → all four remain empty strings
+        [$allow_cid, $allow_gid, $deny_cid, $deny_gid] = $this->aclFromVisibility($data, $channel);
 
         $arr = [
             'name'      => $name,
@@ -267,7 +231,7 @@ class Chat
         Response::send([
             'id'         => intval($x[0]['cr_id']),
             'name'       => $x[0]['cr_name'],
-            'visibility' => $visibility,
+            'visibility' => $data['visibility'] ?? 'public',
         ]);
     }
 
@@ -360,7 +324,82 @@ class Chat
             intval($uid)
         );
 
-        Response::send(['id' => $this->roomId, 'name' => $name, 'expire' => $expire]);
+        // Visibility is only rewritten when the body names one, so an
+        // expire-only update leaves the audience alone.
+        $acl = [$room[0]['allow_cid'], $room[0]['allow_gid'], $room[0]['deny_cid'], $room[0]['deny_gid']];
+        if (isset($data['visibility'])) {
+            $acl = $this->aclFromVisibility($data, App::get_channel());
+            q(
+                "UPDATE chatroom SET allow_cid = '%s', allow_gid = '%s', deny_cid = '%s', deny_gid = '%s'
+                 WHERE cr_id = %d AND cr_uid = %d",
+                dbesc($acl[0]),
+                dbesc($acl[1]),
+                dbesc($acl[2]),
+                dbesc($acl[3]),
+                intval($this->roomId),
+                intval($uid)
+            );
+        }
+
+        Response::send([
+            'id'       => $this->roomId,
+            'name'     => $name,
+            'expire'   => $expire,
+            'room_acl' => [
+                'allow_cid' => $this->expandAclString($acl[0]),
+                'allow_gid' => $this->expandAclString($acl[1]),
+                'deny_cid'  => $this->expandAclString($acl[2]),
+                'deny_gid'  => $this->expandAclString($acl[3]),
+            ],
+        ]);
+    }
+
+    /**
+     * The four ACL columns for a create/update body's `visibility`
+     * ('public' | 'connections' | 'private' | 'custom' with explicit lists).
+     * 'public' leaves all four empty.
+     *
+     * @return array{0:string,1:string,2:string,3:string}
+     */
+    private function aclFromVisibility(array $data, array $channel): array
+    {
+        $visibility = $data['visibility'] ?? 'public';
+        $allow_cid = '';
+        $allow_gid = '';
+        $deny_cid  = '';
+        $deny_gid  = '';
+
+        if ($visibility === 'connections') {
+            // Use the channel's default privacy group — same as Hubzilla's
+            // populate_acl() default. Falls back to empty (open to connections
+            // via perm_is_allowed) if no default group is set.
+            $default_group = $channel['channel_default_group'] ?? '';
+            if ($default_group) {
+                $allow_gid = '<' . $default_group . '>';
+            }
+        } elseif ($visibility === 'private') {
+            $allow_cid = '<' . $channel['channel_hash'] . '>';
+        } elseif ($visibility === 'custom') {
+            // Granular allow/deny per contact and group
+            foreach ((array)($data['allow_cid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $allow_cid .= '<' . $h . '>';
+            }
+            foreach ((array)($data['allow_gid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $allow_gid .= '<' . $h . '>';
+            }
+            foreach ((array)($data['deny_cid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $deny_cid .= '<' . $h . '>';
+            }
+            foreach ((array)($data['deny_gid'] ?? []) as $h) {
+                $h = notags(trim($h));
+                if ($h) $deny_gid .= '<' . $h . '>';
+            }
+        }
+
+        return [$allow_cid, $allow_gid, $deny_cid, $deny_gid];
     }
 
     private function dropRoom(): void
@@ -552,6 +591,11 @@ class Chat
         $text = trim($data['body'] ?? '');
         if (!$text)
             Response::error(400, 'Message body required');
+
+        // chat_text is bbcode (core's chat renders it that way), so a Markdown
+        // body is converted here exactly as Item.php does for posts. Any other
+        // mimetype is taken as bbcode.
+        [$text] = ContentTypes::toBbcode($text, (string) ($data['mimetype'] ?? 'text/bbcode'));
 
         // Hubzilla stores chat_text as str_rot47(base64url_encode($text))
         $r = q(
