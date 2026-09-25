@@ -1,0 +1,1 @@
+import{f as e}from"./app-solid-P6NIHsRG.js";import{pn as t}from"./app-D95oqWFM.js";function n(){return e(t,{href:`/login`})}export{n as default};
