@@ -1,1 +1,0 @@
-import{h as e}from"./app-solid-P6NIHsRG.js";import{d as t,f as n,p as r}from"./app-routing-DVnanUVy.js";import{o as i}from"./app-modal-host-OBAY3a4X.js";function a(){let a=r(),o=n(),s=t().hash===`#room`;return e(()=>{let e=parseInt(a.roomId);a.nick&&e&&i(a.nick,e,``,s?`page`:void 0),s||o(`/chat/${a.nick}`,{replace:!0})}),null}export{a as default};
