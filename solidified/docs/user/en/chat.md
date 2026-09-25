@@ -59,7 +59,7 @@ Navigate to `/chat/<their-nick>` to see the public chatrooms on another channel.
 
 When the owner creates a room restricted to specific people, they can tick **Notify invited members** — each invitee gets a private post with a link to the room. The link logs you in on the owner's hub when you follow it, so the room recognises you even if your channel lives elsewhere.
 
-To keep the room for later, click the bookmark icon next to the room link (**Bookmark this link**): it is saved straight into your **Bookmarked Rooms**. (On an older invite the saved bookmark is titled "Join here" — rename it from the Bookmarks page.) You can also open the room and choose **Bookmark this room** from its menu.
+To keep the room for later, click the bookmark icon next to the room link (**Bookmark this link**): it is saved straight into your **Bookmarked Rooms**. (On an older invite the saved bookmark is titled "Join here" — rename it from the Bookmarks page.) You can also open the room and click its bookmark button. When you're visiting a room on someone else's hub, that button opens **your own hub** in a new tab with a "Bookmark this chatroom" card: check the title, click **Save**, then **Back to the room**.
 
 A chat window here can only join rooms on your own hub. A bookmarked room on another hub opens on that hub in a new tab, logged in as you — straight into the room, full-page, if that hub also runs this interface.
 

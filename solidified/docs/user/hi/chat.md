@@ -58,7 +58,7 @@ Chatroom पेज से navigate करके room छोड़ें। ब�
 
 जब owner कुछ ख़ास लोगों तक सीमित room बनाता है, तो वह **Notify invited members** चुन सकता है — हर invitee को room के link वाली एक private post मिलती है। Link खोलने पर आप owner के hub पर logged in पहुँचते हैं, इसलिए आपका channel कहीं और हो तब भी room आपको पहचानता है।
 
-Room बाद के लिए रखने को room link के पास वाले bookmark icon (**इस लिंक को बुकमार्क करें**) पर क्लिक करें: link सीधे आपके **Bookmarked Rooms** में जुड़ जाता है। (पुराने invite से सहेजे bookmark का नाम "Join here" होगा — Bookmarks पेज से उसे बदल लें।) आप room खोलकर उसके menu से **Bookmark this room** भी चुन सकते हैं।
+Room बाद के लिए रखने को room link के पास वाले bookmark icon (**इस लिंक को बुकमार्क करें**) पर क्लिक करें: link सीधे आपके **Bookmarked Rooms** में जुड़ जाता है। (पुराने invite से सहेजे bookmark का नाम "Join here" होगा — Bookmarks पेज से उसे बदल लें।) आप room खोलकर उसका bookmark बटन भी दबा सकते हैं। किसी और के hub का room देखते समय वह बटन नए tab में **आपका अपना hub** खोलता है, जहाँ "इस चैटरूम को बुकमार्क करें" card मिलता है: title जाँचें, **Save** करें, फिर **Room पर वापस** जाएँ।
 
 यहाँ की chat window सिर्फ़ आपके अपने hub के rooms join कर सकती है। दूसरे hub का bookmarked room उसी hub पर नए tab में, आपके login के साथ खुलता है — अगर वह hub भी यही interface चलाता हो तो सीधे room में, पूरे पेज पर।
 

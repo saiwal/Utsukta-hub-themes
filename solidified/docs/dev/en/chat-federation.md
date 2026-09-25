@@ -66,6 +66,25 @@ still matches the owner's `…/chat/bob/7`.
 rooms). Remote rooms open on their own hub, so the SPA never sees their
 messages: clicking the bookmark marks the room seen *now*.
 
+## Bookmarking a room from another hub
+
+A visitor can't bookmark on the room's hub; the bookmark belongs on theirs.
+`POST /spa/chat/:nick/:room/messages` returns `bookmark_url` for a logged-in
+observer who isn't local: core's `get_bookmark_link($observer)` (their hub's
+`/rbmark?f=`, zot6 observers only) plus `url`, `title`, `ischat=1`, `private=1`
+for an ACL'd room, and `remote_return` — the same parameters `Module\Chat`
+builds for classic chat. `ChatWindow` shows it as the bookmark button for
+visitors.
+
+On a classic hub that link lands on core's `/rbmark` form. On an SPA hub the
+shell serves every page, so the `rbmark` module (`src/modules/rbmark/`) routes
+`/rbmark` to `RbmarkView`, which reads the same parameters, saves through
+`POST /spa/bookmarks` (so `ischat` subscribes as below) and links back to
+`remote_return`. It accepts any URL, like core's form, but only http(s) for
+both `url` and `remote_return`, since the link is attacker-craftable. It's
+its own module because `bookmarks` and `chat` are app-gated and the visitor's
+channel may have neither app.
+
 ## Triggers
 
 - **Subscribe**: `POST /spa/bookmarks` with `ischat`, and `POST /spa/bookmarks/item`

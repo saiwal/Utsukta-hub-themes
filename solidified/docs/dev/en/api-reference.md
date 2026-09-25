@@ -117,7 +117,7 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 | | `GET /cal/:nick?start=&end=` | Channel event feed for a date range (default: next 60 days) | event list |
 | | `POST /cal/:nick/:action/:id` (`toggle`/`edit`/`delete`/`share`/`unshare`) | Manage calendar visibility/sharing, edit or delete an event | `{ status }` |
 | **chat** | `GET /chat/:nick[/acl-options\|:room_id]` | Room list, ACL picker options, or one room's detail + presence. Each listed room carries `last_msg` and `last_other` (newest message *not* by the observer — what the SPA's unread dot compares against its per-browser `hz-chat-seen` timestamps, see `src/modules/chat/unread.ts`) | rooms / room detail |
-| | `POST /chat/:nick/:room_id/(send\|messages\|join\|leave\|drop)`, `POST /chat/:nick/new` | Send/fetch messages, join/leave presence, create/delete a room (owner) | message(s) / `{ status }` |
+| | `POST /chat/:nick/:room_id/(send\|messages\|join\|leave\|drop)`, `POST /chat/:nick/new` | Send/fetch messages, join/leave presence, create/delete a room (owner). `messages` carries `bookmark_url` for a visitor from another hub — their own hub's `/rbmark` link | message(s) / `{ status }` |
 | **cart** | `GET /cart/:nick/(catalog\|order\|payment-config\|payment-settings\|orders)` | Storefront catalog/order data; seller views for settings & orders | cart data |
 | | `POST /cart/:nick/:action` | Place order / update seller payment config | `{ status }` |
 | **portability** | `GET /portability/:datatype` | Export options / current export status | export info |
