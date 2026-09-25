@@ -233,7 +233,9 @@ class Profiles
             'gender'       => notags(trim($data['gender']       ?? $p['gender'])),
             'dob'          => notags(trim($data['dob']          ?? $p['dob'])),
             'about'        => escape_tags($data['about']        ?? $p['about']),
-            'keywords'     => notags(trim($data['keywords']     ?? $p['keywords'])),
+            // Space- or comma-separated in; stored as "a, b, c" so both core's
+            // directory sync (splits on spaces, trims commas) and Profile.php read it.
+            'keywords'     => implode(', ', preg_split('/[\s,]+/', notags(trim($data['keywords'] ?? $p['keywords'])), -1, PREG_SPLIT_NO_EMPTY)),
             'hide_friends' => intval($data['hide_friends']      ?? $p['hide_friends']),
             'publish'      => intval($data['publish']           ?? $p['publish']),
             'marital'      => notags(trim($data['marital']      ?? $p['marital'])),

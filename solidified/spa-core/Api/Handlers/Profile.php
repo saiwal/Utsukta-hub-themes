@@ -172,7 +172,7 @@ class Profile
             'address'         => $block ? '' : ($profile['address']   ?? ''),
             'hometown'        => $block ? '' : ($profile['hometown']  ?? ''),
             'homepage'        => $block ? '' : ($profile['homepage']  ?? ''),
-            'keywords'        => $block ? [] : array_values(array_filter(array_map('trim', explode(',', $profile['keywords'] ?? '')))),
+            'keywords'        => $block ? [] : preg_split('/[\s,]+/', $profile['keywords'] ?? '', -1, PREG_SPLIT_NO_EMPTY),
             'gender'          => $block ? '' : ($profile['gender']    ?? ''),
             'marital'         => $block ? '' : ($profile['marital']   ?? ''),
             'sexual'          => $block ? '' : ($profile['sexual']    ?? ''),
