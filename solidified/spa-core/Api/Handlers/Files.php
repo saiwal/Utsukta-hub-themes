@@ -14,6 +14,7 @@ use Zotlabs\Lib\Libsync;
  * GET  /api/files/:nick/quota            → storage used/limit in bytes
  * GET  /api/files/:nick/download/:hash   → download a file, or a folder as a zip
  * GET  /api/files/:nick/categories/:hash → list category terms for a file/folder
+ * POST /api/files/:nick/download         → several files as one zip (form field hashes=a,b)
  * POST /api/files/:nick/permissions      → update file ACL
  * POST /api/files/:nick/rename           → rename a file/folder in place
  * POST /api/files/:nick/move             → move a file/folder to another folder
@@ -106,6 +107,18 @@ class Files
 
         $owner    = $this->resolveChannel();
         $uid      = intval($owner['channel_id']);
+
+        // A read, not a write: a plain form POST (so the browser streams the zip
+        // to disk) open to any observer, visitors included, who may view storage.
+        // POST only because the hash list outgrows a URL; no CSRF token needed.
+        if ((\App::$argv[3] ?? '') === 'download') {
+            $ob_hash = get_observer_hash();
+            if (!perm_is_allowed($uid, $ob_hash, 'view_storage')) {
+                Response::error(403, 'Permission denied');
+            }
+            $this->downloadSelection($uid, $ob_hash, explode(',', (string) ($_POST['hashes'] ?? '')), $owner);
+        }
+
         $obs_hash = Auth::requireLoggedInJson();
 
         // write_storage is a channel-wide grant — any observer (local or
@@ -443,6 +456,56 @@ class Files
 
         header('Content-Type: application/zip');
         header('Content-Disposition: attachment; filename="' . addslashes($root['filename']) . '.zip"');
+        header('Content-Length: ' . filesize($zip_path));
+        readfile($zip_path);
+        unlink($zip_path);
+        exit;
+    }
+
+    /** Zip an explicit list of files (e.g. a photo multi-select). Folders and
+     *  rows the observer can't see are skipped; clashing names get a suffix,
+     *  since photos from different albums often share a filename. */
+    private function downloadSelection(int $uid, string $ob_hash, array $hashes, array $channel): void
+    {
+        $hashes = array_slice(array_filter(array_map('trim', $hashes)), 0, 500);
+        if (!$hashes) Response::error(400, 'Hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT filename, content, os_storage
+               FROM attach
+              WHERE uid = %d AND is_dir = 0 AND os_storage = 1
+                AND hash IN (" . implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes)) . ")
+                $sql_extra",
+            intval($uid)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        $tmp_dir = 'store/[data]/' . $channel['channel_address'] . '/tmp';
+        if (!is_dir($tmp_dir)) mkdir($tmp_dir, STORAGE_DEFAULT_PERMISSIONS, true);
+        $zip_path = $tmp_dir . '/zip_' . random_string(32) . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zip_path, \ZipArchive::CREATE) !== true) {
+            Response::error(500, 'Could not create zip archive');
+        }
+
+        $used = [];
+        foreach ($r as $row) {
+            $fname = $this->resolveStorePath($row['content'], $channel['channel_address']);
+            if (!is_file($fname)) continue;
+            $name = $row['filename'];
+            for ($n = 1; isset($used[$name]); $n++) {
+                $name = pathinfo($row['filename'], PATHINFO_FILENAME) . " ($n)"
+                      . (pathinfo($row['filename'], PATHINFO_EXTENSION) !== '' ? '.' . pathinfo($row['filename'], PATHINFO_EXTENSION) : '');
+            }
+            $used[$name] = true;
+            $zip->addFile($fname, $name);
+            $zip->setCompressionName($name, \ZipArchive::CM_STORE);
+        }
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . addslashes($channel['channel_address']) . '-photos.zip"');
         header('Content-Length: ' . filesize($zip_path));
         readfile($zip_path);
         unlink($zip_path);
