@@ -57,14 +57,13 @@ class Channel
         $hashtags = $_GET['tag']     ?? '';
         $category = $_GET['cat']     ?? '';
         $mid      = $_GET['mid']     ?? '';
-        $dm       = intval($_GET['dm'] ?? 0);
 
         $datequery  = (isset($_GET['dend'])   && is_a_date_arg($_GET['dend']))
             ? notags($_GET['dend'])   : '';
         $datequery2 = (isset($_GET['dbegin']) && is_a_date_arg($_GET['dbegin']))
             ? notags($_GET['dbegin']) : '';
 
-        if ($search || $hashtags || $category || $dm) {
+        if ($search || $hashtags || $category) {
             $nouveau = true;
         }
 
@@ -75,12 +74,7 @@ class Channel
         $uids            = ' AND item.uid = ' . $channel_uid . ' ';
         $item_thread_top = ' AND item_thread_top = 1 ';
         $blocked         = $this->blockedXchans($uid);
-        // dm=1 shows the whole DM conversation with this channel, so it must
-        // include the channel's *received* copies (item_wall = 0) as well as
-        // what it sent. item_permissions_sql() below is what fences visitors:
-        // a received copy carries an empty allow_cid, so it only ever matches
-        // for the observer who authored it, or for the channel owner.
-        $sql_extra       = ($dm ? '' : ' AND item.item_wall = 1 ')
+        $sql_extra       = ' AND item.item_wall = 1 '
             . $this->blockedSqlClause('item.author_xchan', $blocked)
             . $this->blockedSqlClause('item.owner_xchan', $blocked);
 
@@ -113,11 +107,8 @@ class Channel
             $nouveau = true;
         }
 
-        // Privacy fence — DMs are hidden from the general wall view by
-        // default, and are the only thing shown when dm=1 is requested.
-        $sql_extra .= $dm
-            ? ' AND item.item_private = 2 '
-            : ' AND item.item_private IN (0, 1) ';
+        // Privacy fence — DMs are hidden from the wall view.
+        $sql_extra .= ' AND item.item_private IN (0, 1) ';
 
         // Permission filter for non-owners
         $sql_extra .= item_permissions_sql($channel_uid, $observer_xchan);
@@ -148,7 +139,7 @@ class Channel
                 $rank_join
                 WHERE true $uids $item_normal
                 $sql_extra $sql_date
-                ORDER BY $ordering DESC" . ($dm ? "" : StreamOrdering::tiebreak()) . " $pager_sql");
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " $pager_sql");
 
             $rootCount = count($items ?: []);
 
@@ -163,7 +154,7 @@ class Channel
                 WHERE true $uids $item_thread_top $item_normal
                 AND item.mid = item.parent_mid
                 $sql_extra3 $sql_extra
-                ORDER BY $ordering DESC" . ($dm ? "" : StreamOrdering::tiebreak()) . " ";
+                ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " ";
 
             // See Network.php — ranked orders sort the whole candidate set
             // before they can return a page, so the ordered ids are cached and
@@ -258,6 +249,24 @@ class Channel
 
         $can_post_wall = perm_is_allowed($channel_uid, $observer_xchan, 'post_wall');
 
+        // What core's status_editor() would offer a visitor on this wall
+        // (Module/Channel.php): features and location follow the *owner's*
+        // settings, uploads need write_storage on the owner's storage, and a
+        // wall-to-wall post to a group actor becomes a DM to the forum.
+        $wall_compose = null;
+        if ($can_post_wall && $channel_uid !== $uid) {
+            $wall_compose = [
+                'name'           => $channel['channel_name'],
+                'is_group'       => (bool) get_pconfig($channel_uid, 'system', 'group_actor'),
+                'allow_location' => (bool) intval(get_pconfig($channel_uid, 'system', 'use_browser_location')),
+                'write_storage'  => perm_is_allowed($channel_uid, $observer_xchan, 'write_storage'),
+                'features'       => array_fill_keys(array_filter(
+                    ['content_expire', 'delayed_posting', 'categories', 'disable_comments', 'markdown', 'content_encrypt'],
+                    fn($f) => feature_enabled($channel_uid, $f)
+                ), true),
+            ];
+        }
+
         $meta = [
             'offset'        => $offset,
             'limit'         => $itemspage,
@@ -268,6 +277,7 @@ class Channel
             'ordering'      => $get_order,
             'cached'        => $cached,
             'can_post_wall' => $can_post_wall,
+            'wall_compose'  => $wall_compose,
         ];
         if ($showPinnedMeta) {
             $meta['pinned'] = $pinnedFormatted;
