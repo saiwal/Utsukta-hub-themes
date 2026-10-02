@@ -228,9 +228,19 @@ class Nav
                 $puid = intval($subject['channel_id']);
                 $p = get_all_perms($puid, $ob_hash);
 
+                // First url segment of every app the owner shows in their own
+                // nav (pinned or featured) — an app tab appears for visitors
+                // only when the owner has that app switched on in nav.
+                $owner_nav = [];
+                $nav_list = \Zotlabs\Lib\Apps::app_list($puid, false, ['nav_pinned_app', 'nav_featured_app']);
+                foreach (($nav_list ?: []) as $li) {
+                    $u = trim(explode(',', (string) ($li['app_url'] ?? ''))[0]);
+                    $u = str_replace(['$baseurl', z_root()], '', $u);
+                    $owner_nav[explode('/', ltrim($u, '/'))[0]] = true;
+                }
+
                 $channel_tabs[] = [
                     'id' => 'stream',
-                    'label' => t('Channel'),
                     'url' => z_root() . '/channel/' . $subject_nick,
                     'icon' => 'home',
                 ];
@@ -238,7 +248,6 @@ class Nav
                 if (!empty($p['view_profile']))
                     $channel_tabs[] = [
                         'id'    => 'profile',
-                        'label' => t('About'),
                         'url'   => z_root() . '/profile/' . $subject_nick,
                         'icon'  => 'person',
                     ];
@@ -247,7 +256,6 @@ class Nav
                     \Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
                     $channel_tabs[] = [
                         'id' => 'articles-tab',
-                        'label' => t('Articles'),
                         'url' => z_root() . '/articles/' . $subject_nick,
                         'icon' => 'articles',
                     ];
@@ -256,7 +264,6 @@ class Nav
                     \Zotlabs\Lib\Apps::addon_app_installed($puid, 'cards'))
                     $channel_tabs[] = [
                         'id' => 'cards-tab',
-                        'label' => t('Cards'),
                         'url' => z_root() . '/cards/' . $subject_nick,
                         'icon' => 'cards',
                     ];
@@ -264,13 +271,11 @@ class Nav
                 if (!empty($p['view_storage'])) {
                     $channel_tabs[] = [
                         'id' => 'photos',
-                        'label' => t('Photos'),
                         'url' => z_root() . '/photos/' . $subject_nick,
                         'icon' => 'image',
                     ];
                     $channel_tabs[] = [
                         'id' => 'files',
-                        'label' => t('Files'),
                         'url' => z_root() . '/cloud/' . $subject_nick,
                         'icon' => 'folder',
                     ];
@@ -279,7 +284,6 @@ class Nav
                 if (!empty($p['view_stream'])) {
                     $channel_tabs[] = [
                         'id' => 'calendar',
-                        'label' => t('Calendar'),
                         'url' => z_root() . '/cal/' . $subject_nick,
                         'icon' => 'calendar',
                     ];
@@ -290,7 +294,6 @@ class Nav
                     \Zotlabs\Lib\Chatroom::list_count($puid))
                     $channel_tabs[] = [
                         'id' => 'chat',
-                        'label' => t('Chatrooms'),
                         'url' => z_root() . '/chat/' . $subject_nick,
                         'icon' => 'chat',
                     ];
@@ -300,7 +303,6 @@ class Nav
                 if ($ob_hash && !$is_owner)
                     $channel_tabs[] = [
                         'id' => 'messenger',
-                        'label' => t('Messages'),
                         'url' => z_root() . '/messenger/' . $subject_nick,
                         'icon' => 'chat',
                     ];
@@ -311,7 +313,6 @@ class Nav
                     if ($has_bookmarks)
                         $channel_tabs[] = [
                             'id'    => 'bookmarks',
-                            'label' => t('Bookmarks'),
                             'url'   => z_root() . '/bookmarks',
                             'icon'  => 'bookmark',
                         ];
@@ -320,7 +321,6 @@ class Nav
                 if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Webpages'))
                     $channel_tabs[] = [
                         'id' => 'webpages',
-                        'label' => t('Webpages'),
                         'url' => z_root() . '/page/' . $subject_nick . '/home',
                         'icon' => 'webpages',
                     ];
@@ -328,7 +328,6 @@ class Nav
                 if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Wiki'))
                     $channel_tabs[] = [
                         'id' => 'wiki',
-                        'label' => t('Wiki'),
                         'url' => z_root() . '/wiki/' . $subject_nick,
                         'icon' => 'wiki',
                     ];
@@ -337,10 +336,20 @@ class Nav
                 if (!empty($skulist))
                     $channel_tabs[] = [
                         'id'    => 'shop',
-                        'label' => t('Shop'),
                         'url'   => z_root() . '/cart/' . $subject_nick,
                         'icon'  => 'cart',
                     ];
+
+                // Tab id → url segment of the app that backs it. Tabs not
+                // listed here (stream, profile, messenger, bookmarks, shop)
+                // aren't per-app nav toggles and stay permission-gated only.
+                $tab_app = [
+                    'articles-tab' => 'articles', 'cards-tab' => 'cards',
+                    'photos' => 'photos', 'files' => 'cloud', 'calendar' => 'cdav',
+                    'chat' => 'chat', 'webpages' => 'webpages', 'wiki' => 'wiki',
+                ];
+                $channel_tabs = array_values(array_filter($channel_tabs, fn($tab) =>
+                    !isset($tab_app[$tab['id']]) || isset($owner_nav[$tab_app[$tab['id']]])));
             }
         }
 
