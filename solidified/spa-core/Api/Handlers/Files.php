@@ -14,6 +14,7 @@ use Zotlabs\Lib\Libsync;
  * GET  /api/files/:nick/quota            → storage used/limit in bytes
  * GET  /api/files/:nick/download/:hash   → download a file, or a folder as a zip
  * GET  /api/files/:nick/categories/:hash → list category terms for a file/folder
+ * GET  /api/files/:nick/search?q=&folder= → name search within a folder's subtree
  * POST /api/files/:nick/download         → several files as one zip (form field hashes=a,b)
  * POST /api/files/:nick/permissions      → update file ACL
  * POST /api/files/:nick/rename           → rename a file/folder in place
@@ -66,6 +67,9 @@ class Files
                 break;
             case 'categories':
                 $this->getCategories($owner_uid, $ob_hash, $datum);
+                break;
+            case 'search':
+                $this->search($owner_uid, $ob_hash, (string) ($_GET['q'] ?? ''), (string) ($_GET['folder'] ?? ''));
                 break;
             default:
                 // Root folder (folder hash = '')
@@ -190,6 +194,68 @@ class Files
             // Collabora/WOPI editing, served by the `wopi` addon's own /wopi routes.
             'wopi'        => $this->wopiConfig(),
         ]);
+    }
+
+    // ── Search ────────────────────────────────────────────────────────────────
+    //
+    // Case-insensitive filename match anywhere under $folder_hash ('' = whole
+    // cloud). permissions_sql() is per-row, but a listing never reveals what
+    // sits inside a folder the observer can't see — so a hit only counts if
+    // every ancestor folder is visible too, and the scope check rides the same
+    // walk up the chain.
+
+    private const SEARCH_LIMIT = 200;
+
+    private function search(int $uid, string $ob_hash, string $q, string $folder_hash): void
+    {
+        $q = trim($q);
+        if (mb_strlen($q) < 2) {
+            Response::send([]);
+        }
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($q)) . '%';
+
+        $hits = q(
+            "SELECT " . self::ROW_COLUMNS . "
+               FROM attach
+              WHERE uid = %d
+                AND LOWER(filename) LIKE '%s'
+                $sql_extra
+              ORDER BY is_dir DESC, filename ASC
+              LIMIT %d",
+            intval($uid),
+            dbesc($like),
+            intval(self::SEARCH_LIMIT)
+        ) ?: [];
+
+        // hash => parent hash, for every folder the observer may see.
+        $dirs = [];
+        foreach ((q(
+            "SELECT hash, folder FROM attach WHERE uid = %d AND is_dir = 1 $sql_extra",
+            intval($uid)
+        ) ?: []) as $d) {
+            $dirs[$d['hash']] = $d['folder'];
+        }
+
+        $items = [];
+        foreach ($hits as $row) {
+            $parent  = $row['folder'];
+            $inScope = $folder_hash === '';
+            // Bounded by count($dirs) so a corrupt folder cycle can't spin.
+            for ($i = 0; $parent !== '' && $i <= count($dirs); $i++) {
+                if (!isset($dirs[$parent])) {
+                    continue 2; // hidden (or missing) ancestor
+                }
+                $inScope = $inScope || $parent === $folder_hash;
+                $parent  = $dirs[$parent];
+            }
+            if ($parent === '' && $inScope && $row['hash'] !== $folder_hash) {
+                $items[] = $this->formatRow($row);
+            }
+        }
+
+        Response::send($items, ['limit' => self::SEARCH_LIMIT]);
     }
 
     /**

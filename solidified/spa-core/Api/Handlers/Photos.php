@@ -109,6 +109,19 @@ class Photos
         ][$_GET['sort'] ?? 'date'] ?? 'photo.created';
         $dir = (($_GET['dir'] ?? 'desc') === 'asc') ? 'ASC' : 'DESC';
 
+        // ?albums=1: real albums only — drop the root folder and the automatic
+        // upload folders (the Uploads tab). Filtered in SQL, not after LIMIT, so
+        // a page of nothing but uploads can't come back empty and stall paging.
+        $albumFilter = '';
+        if (!empty($_GET['albums'])) {
+            $autoRx = $this->autoAlbumRegex($uid);
+            $auto = [];
+            foreach ((dbq("SELECT DISTINCT album FROM photo WHERE uid = $uid") ?: []) as $a) {
+                if (preg_match($autoRx, (string) $a['album'])) $auto[] = "'" . dbesc($a['album']) . "'";
+            }
+            $albumFilter = "AND photo.album != ''" . ($auto ? ' AND photo.album NOT IN (' . implode(',', $auto) . ')' : '');
+        }
+
         $r = dbq("SELECT photo.resource_id, photo.filename, photo.mimetype, photo.imgscale,
                          photo.title, photo.description, photo.is_nsfw, photo.album, photo.created,
                          photo.filesize,
@@ -119,6 +132,7 @@ class Photos
               WHERE photo.uid = $uid
                 AND photo.photo_usage IN (" . PHOTO_NORMAL . ',' . PHOTO_PROFILE . ")
                 AND photo.imgscale = 2
+                $albumFilter
                 $sql_extra
               ORDER BY $orderCol $dir
               LIMIT $limit OFFSET $start");
@@ -141,8 +155,14 @@ class Photos
                 'filesize' => intval($row['filesize'] ?? 0),
                 'src' => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
                 'link' => z_root() . '/photos/' . $channel['channel_address'] . '/image/' . $row['resource_id'],
+                'item_id' => null,
+                'like_count' => 0,
+                'comment_count' => 0,
+                'viewer_liked' => false,
             ];
         }
+
+        $this->attachTileCounts($out, $uid, $ob_hash);
 
         Response::send($out, [
             'can_write' => $can_write,
@@ -150,6 +170,58 @@ class Photos
             'limit'     => $limit,
             'has_more'  => $raw === $limit,
         ]);
+    }
+
+    // Like/comment counts for a page of grid tiles, in two queries for the whole
+    // page rather than getImage()'s per-photo pass. Same verb rules as getImage():
+    // Like rows for likes, Create/Update/EmojiReact children for comments.
+    private function attachTileCounts(array &$out, int $uid, string $ob_hash): void
+    {
+        if (!$out) return;
+        $sql_item    = item_permissions_sql($uid, $ob_hash);
+        $item_normal = item_normal($uid);
+        $rids = implode(',', array_map(fn($p) => "'" . dbesc($p['resource_id']) . "'", $out));
+
+        $linked = dbq("SELECT id, mid, resource_id FROM item
+                       WHERE uid = $uid AND resource_type = 'photo'
+                         AND resource_id IN ($rids)
+                         AND mid = parent_mid
+                         $sql_item") ?: [];
+        if (!$linked) return;
+
+        $byMid = [];
+        foreach ($linked as $l) $byMid[$l['mid']] = $l;
+        $mids = implode(',', array_map(fn($m) => "'" . dbesc($m) . "'", array_keys($byMid)));
+
+        $stats = [];
+        $kids = dbq("SELECT parent_mid, verb, author_xchan FROM item
+                     WHERE uid = $uid AND parent_mid IN ($mids) AND mid != parent_mid
+                       AND verb IN ('Like','Create','Update','EmojiReact')
+                       $item_normal
+                       $sql_item") ?: [];
+        foreach ($kids as $k) {
+            $rid = $byMid[$k['parent_mid']]['resource_id'];
+            $s = &$stats[$rid];
+            $s ??= ['likes' => 0, 'comments' => 0, 'liked' => false];
+            if ($k['verb'] === 'Like') {
+                $s['likes']++;
+                if ($ob_hash && $k['author_xchan'] === $ob_hash) $s['liked'] = true;
+            } else {
+                $s['comments']++;
+            }
+            unset($s);
+        }
+
+        $ids = [];
+        foreach ($linked as $l) $ids[$l['resource_id']] = intval($l['id']);
+        foreach ($out as &$p) {
+            $rid = $p['resource_id'];
+            $p['item_id']       = $ids[$rid] ?? null;
+            $p['like_count']    = $stats[$rid]['likes'] ?? 0;
+            $p['comment_count'] = $stats[$rid]['comments'] ?? 0;
+            $p['viewer_liked']  = $stats[$rid]['liked'] ?? false;
+        }
+        unset($p);
     }
 
     // Regex matching the channel's automatic photo-upload folders. Core stores
@@ -309,6 +381,8 @@ class Photos
                 'link' => z_root() . '/photos/' . $channel['channel_address'] . '/image/' . $row['resource_id'],
             ];
         }
+
+        $this->attachTileCounts($out, intval($channel['channel_id']), $ob_hash);
 
         Response::send($out, ['album_name' => $display_path, 'can_write' => $can_write]);
     }
