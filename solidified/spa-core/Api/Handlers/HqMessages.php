@@ -50,10 +50,28 @@ class HqMessages
 
     public function get(): void
     {
-        $uid = Auth::requireLocalGet();
-
         $offset = max(0, intval($_GET['offset'] ?? 0));
         $type = $_GET['type'] ?? '';
+
+        // Messenger on someone else's channel: `channel=<nick>` lists that
+        // channel's DM threads the observer (local or remote) is part of.
+        // Everything below then runs against the channel's uid, fenced by
+        // item_permissions_sql() — the same rule as /channel's old dm filter.
+        $visitor = null;
+        $nick = trim($_GET['channel'] ?? '');
+        if ($nick !== '') {
+            $target = channelx_by_nick($nick);
+            if (!$target || $type !== 'direct') {
+                Response::error(404, 'Not found');
+            }
+            if (intval($target['channel_id']) !== intval(local_channel())) {
+                $visitor = Auth::requireLoggedIn();
+                $uid = intval($target['channel_id']);
+            }
+        }
+        if (!$visitor) {
+            $uid = Auth::requireLocalGet();
+        }
         $file = $_GET['file'] ?? '';
         // `search` is the shared stream filter (body/title, see StreamFilters);
         // `author` is this endpoint's own name/address filter, which is what the
@@ -122,7 +140,12 @@ class HqMessages
         // disagree about privacy: `dm` and `star` already carry the right
         // rules (and `star`/`file` deliberately dismiss the public/private
         // fence, exactly as they do on /network).
-        $q = $_GET;
+        // A visitor gets no filters: several of them dismiss the privacy fence.
+        $q = $visitor ? ['dm' => '1'] : $_GET;
+        // `xchan` is ours ($xchan_sql above, which also matches threads we
+        // wrote *to* them). StreamFilters' own xchan rule is author/owner only,
+        // and ANDed on top it dropped exactly those threads.
+        unset($q['xchan']);
         switch ($type) {
             case 'direct':
                 $q['dm'] = '1';
@@ -140,7 +163,7 @@ class HqMessages
                 break;
         }
 
-        $channel = \App::get_channel();
+        $channel = $visitor ? channelx_by_n($uid) : \App::get_channel();
         $f = StreamFilters::build($q, $uid, [
             'alias' => 'i',
             'channel_hash' => $channel['channel_hash'] ?? '',
@@ -154,6 +177,10 @@ class HqMessages
         // the row-level ones (search, tag, unseen) match the first message of
         // the thread rather than any reply in it.
         $type_sql = ' AND i.item_thread_top = 1 ' . $f['extra'] . $f['options'] . $f['nets'] . $f['date'];
+        if ($visitor) {
+            $type_sql .= ' AND i.item_private = 2 '
+                . str_replace('item.', 'i.', item_permissions_sql($uid, $visitor));
+        }
 
         // Inbox filter chip. Distinct from the shared `unseen` filter, which is
         // row-level: an inbox thread counts as unread when a *reply* is unseen.
@@ -216,6 +243,36 @@ class HqMessages
             $this->applyInboxRules($items, $uid);
         }
 
+        // Messenger groups DM threads by who is on them: everyone but us. The
+        // channel, author, owner and ACL, looked up in one pass for the page.
+        // The channel is added because its received copies carry no ACL.
+        $me = $visitor ?: ($channel['channel_hash'] ?? '');
+        $threadPeople = fn(array $item) => array_values(array_diff(array_unique(array_merge(
+            [$channel['channel_hash'] ?? '', $item['author_xchan'], $item['owner_xchan']],
+            expand_acl($item['allow_cid'])
+        )), [$me, '']));
+        $people = [];
+        if ($type === 'direct') {
+            $hashes = [];
+            foreach ($items as $item) {
+                $hashes = array_merge($hashes, $threadPeople($item));
+            }
+            $hashes = array_values(array_unique($hashes));
+            if ($hashes) {
+                stringify_array_elms($hashes, true);
+                $rows = dbq("SELECT xchan_hash, xchan_name, xchan_addr, xchan_url, xchan_photo_s FROM xchan WHERE xchan_hash IN (" . implode(',', $hashes) . ")");
+                foreach ($rows ?: [] as $x) {
+                    $people[$x['xchan_hash']] = [
+                        'hash' => $x['xchan_hash'],
+                        'name' => Response::decodeEntities($x['xchan_name']),
+                        'addr' => $x['xchan_addr'] ?: $x['xchan_url'],
+                        'url' => $x['xchan_url'],
+                        'photo' => $x['xchan_photo_s'],
+                    ];
+                }
+            }
+        }
+
         $entries = [];
 
         foreach ($items as $item) {
@@ -231,7 +288,7 @@ class HqMessages
             }
 
             $info = '';
-            if ($type === 'direct') {
+            if ($type === 'direct' && !$visitor) {
                 $info .= $this->dmRecipients($item);
             }
 
@@ -293,9 +350,20 @@ class HqMessages
                     $icon = '';
             }
 
+            $participants = [];
+            if ($type === 'direct') {
+                foreach ($threadPeople($item) as $h) {
+                    if (isset($people[$h])) {
+                        $participants[] = $people[$h];
+                    }
+                }
+            }
+
             $entries[] = [
+                'participants' => $participants,
                 'author_name' => Response::decodeEntities($item['author']['xchan_name']),
                 'author_addr' => $item['author']['xchan_addr'] ?: $item['author']['xchan_url'],
+                'author_hash' => $item['author_xchan'],
                 'author_img' => $item['author']['xchan_photo_s'],
                 'info' => $info,
                 'created' => datetime_convert('UTC', date_default_timezone_get(), $item[$order_col]),
@@ -311,6 +379,15 @@ class HqMessages
                 'folders' => $folders,
                 'via' => $via,
             ];
+        }
+
+        // Read state, stars and folders are the channel owner's, not the visitor's.
+        if ($visitor) {
+            foreach ($entries as &$e) {
+                $e = array_merge($e, ['unseen_count' => '', 'unseen_class' => 'secondary',
+                    'unseen' => false, 'starred' => false, 'folders' => [], 'info' => $e['via'] ? t('via') . ' ' . $e['via'] : '']);
+            }
+            unset($e);
         }
 
         Response::send($entries, [

@@ -178,9 +178,10 @@ class Files
             intval($uid)
         );
 
+        $thumbs = $this->photoThumbs($uid, $r ?: []);
         $items = [];
         foreach (($r ?: []) as $row) {
-            $items[] = $this->formatRow($row);
+            $items[] = $this->formatRow($row) + ['thumb' => $thumbs[$row['hash']] ?? null];
         }
 
         Response::send($items, [
@@ -256,6 +257,34 @@ class Files
         }
 
         Response::send($items, ['limit' => self::SEARCH_LIMIT]);
+    }
+
+    /**
+     * Small-scale /photo URLs for the photo rows in a listing, keyed by hash, so
+     * the grid needn't pull every original. Scale 3 (320px) when it exists,
+     * else 2 (640px): core makes 3 only for sources wider than 320px, and /photo
+     * answers a missing scale with a placeholder rather than falling back. A
+     * photo with neither (tiny source) gets no entry — its original is small.
+     * /photo applies the photo's own ACL, so this only names the URL.
+     */
+    private function photoThumbs(int $uid, array $rows): array
+    {
+        $hashes = array_map(fn($r) => "'" . dbesc($r['hash']) . "'",
+            array_filter($rows, fn($r) => intval($r['is_photo'])));
+        if (!$hashes) return [];
+
+        $thumbs = [];
+        foreach ((q(
+            "SELECT resource_id, MAX(imgscale) AS scale
+               FROM photo
+              WHERE uid = %d AND imgscale IN (2, 3)
+                AND resource_id IN (" . implode(',', $hashes) . ")
+              GROUP BY resource_id",
+            intval($uid)
+        ) ?: []) as $p) {
+            $thumbs[$p['resource_id']] = '/photo/' . $p['resource_id'] . '-' . intval($p['scale']);
+        }
+        return $thumbs;
     }
 
     /**

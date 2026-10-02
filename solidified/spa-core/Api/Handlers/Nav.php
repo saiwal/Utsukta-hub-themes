@@ -295,6 +295,16 @@ class Nav
                         'icon' => 'chat',
                     ];
 
+                // Messenger: a logged-in visitor's DMs with this channel and
+                // the rooms it lets them into (the owner has it in their nav).
+                if ($ob_hash && !$is_owner)
+                    $channel_tabs[] = [
+                        'id' => 'messenger',
+                        'label' => t('Messages'),
+                        'url' => z_root() . '/messenger/' . $subject_nick,
+                        'icon' => 'chat',
+                    ];
+
                 if ($is_owner) {
                     $has_bookmarks = menu_list_count($uid, '', MENU_BOOKMARK)
                                    + menu_list_count($uid, '', MENU_SYSTEM | MENU_BOOKMARK);
