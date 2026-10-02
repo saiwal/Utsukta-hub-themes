@@ -14,7 +14,8 @@ use Zotlabs\Lib\Libsync;
  * GET  /api/files/:nick/quota            → storage used/limit in bytes
  * GET  /api/files/:nick/download/:hash   → download a file, or a folder as a zip
  * GET  /api/files/:nick/categories/:hash → list category terms for a file/folder
- * GET  /api/files/:nick/search?q=&folder= → name search within a folder's subtree
+ * GET  /api/files/:nick/search?term=&folder= → name search within a folder's subtree
+ *      (not `q`: Hubzilla routes on $_GET['q'] — nginx rewrites to index.php?q=<path>)
  * POST /api/files/:nick/download         → several files as one zip (form field hashes=a,b)
  * POST /api/files/:nick/permissions      → update file ACL
  * POST /api/files/:nick/rename           → rename a file/folder in place
@@ -69,7 +70,7 @@ class Files
                 $this->getCategories($owner_uid, $ob_hash, $datum);
                 break;
             case 'search':
-                $this->search($owner_uid, $ob_hash, (string) ($_GET['q'] ?? ''), (string) ($_GET['folder'] ?? ''));
+                $this->search($owner_uid, $ob_hash, (string) ($_GET['term'] ?? ''), (string) ($_GET['folder'] ?? ''));
                 break;
             default:
                 // Root folder (folder hash = '')
