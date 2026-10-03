@@ -25,7 +25,8 @@ class Pconfig
             'light','pastel-soft','warm-paper','mint','sakura','latte-cream',
             'dark','nord','dracula','monokai','one-dark','cyberpunk','rose-pine',
             'gruvbox-dark','gruvbox-light','catppuccin-latte','catppuccin-mocha',
-            'solarized-light','solarized-dark','tokyo-night','matrix','custom',
+            'solarized-light','solarized-dark','tokyo-night','matrix',
+            'high-contrast','high-contrast-light','custom',
         ];
 
         $bg_fit        = get_pconfig($cuid, 'spa', 'bg_fit',        'cover');
