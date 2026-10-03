@@ -2,6 +2,7 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\ColorSchemes;
 use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Access\PermissionLimits;
 use Zotlabs\Access\PermissionRoles;
@@ -105,15 +106,8 @@ class Settings
         $bg_fit = get_pconfig($uid, 'spa', 'bg_fit', 'cover');
         if (!in_array($bg_fit, $valid_bg_fits, true)) $bg_fit = 'cover';
 
-        $valid_color_schemes = [
-            'light', 'pastel-soft', 'warm-paper', 'mint', 'sakura', 'latte-cream',
-            'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
-            'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
-            'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-            'high-contrast', 'high-contrast-light', 'custom',
-        ];
         $color_scheme = get_pconfig($uid, 'spa', 'color_scheme', 'light');
-        if (!in_array($color_scheme, $valid_color_schemes, true)) $color_scheme = 'light';
+        if (!ColorSchemes::valid($color_scheme)) $color_scheme = 'light';
 
         $custom_theme_colors = null;
         if ($color_scheme === 'custom') {
@@ -1050,14 +1044,7 @@ class Settings
         if (isset($data['font_family']) && in_array($data['font_family'], $valid_font_families_post, true))
             set_pconfig($uid, 'spa', 'font_family', $data['font_family']);
 
-        $valid_color_schemes_post = [
-            'light', 'pastel-soft', 'warm-paper', 'mint', 'sakura', 'latte-cream',
-            'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
-            'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
-            'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-            'high-contrast', 'high-contrast-light', 'custom',
-        ];
-        if (isset($data['color_scheme']) && in_array($data['color_scheme'], $valid_color_schemes_post, true))
+        if (isset($data['color_scheme']) && ColorSchemes::valid($data['color_scheme']))
             set_pconfig($uid, 'spa', 'color_scheme', $data['color_scheme']);
 
         if (isset($data['custom_theme_colors'])) {

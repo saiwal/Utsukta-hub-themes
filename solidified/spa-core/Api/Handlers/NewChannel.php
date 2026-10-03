@@ -6,6 +6,7 @@ use App;
 use Zotlabs\Lib\Apps;
 use Zotlabs\Lib\Config;
 use Zotlabs\Access\PermissionRoles;
+use Utsukta\SpaCore\Api\ColorSchemes;
 use Utsukta\SpaCore\Api\Response;
 
 class NewChannel
@@ -316,14 +317,7 @@ class NewChannel
 
     private function applyDisplaySettings(int $uid, array $body): void
     {
-        $valid_color_schemes = [
-            'light', 'pastel-soft', 'warm-paper', 'mint', 'sakura', 'latte-cream',
-            'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
-            'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
-            'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-            'high-contrast', 'high-contrast-light', 'custom',
-        ];
-        if (isset($body['color_scheme']) && in_array($body['color_scheme'], $valid_color_schemes, true)) {
+        if (isset($body['color_scheme']) && ColorSchemes::valid($body['color_scheme'])) {
             set_pconfig($uid, 'spa', 'color_scheme', $body['color_scheme']);
         }
 

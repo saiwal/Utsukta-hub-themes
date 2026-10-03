@@ -1,6 +1,7 @@
 <?php
 namespace Utsukta\SpaCore\Api\Handlers;
 
+use Utsukta\SpaCore\Api\ColorSchemes;
 use Utsukta\SpaCore\Api\Response;
 
 class Pconfig
@@ -21,13 +22,6 @@ class Pconfig
             'righteous','playwrite-england','comic','opendyslexic',
             'inter','atkinson-hyperlegible','literata','jetbrains-mono',
         ];
-        $valid_schemes = [
-            'light','pastel-soft','warm-paper','mint','sakura','latte-cream',
-            'dark','nord','dracula','monokai','one-dark','cyberpunk','rose-pine',
-            'gruvbox-dark','gruvbox-light','catppuccin-latte','catppuccin-mocha',
-            'solarized-light','solarized-dark','tokyo-night','matrix',
-            'high-contrast','high-contrast-light','custom',
-        ];
 
         $bg_fit        = get_pconfig($cuid, 'spa', 'bg_fit',        'cover');
         $font_size     = get_pconfig($cuid, 'spa', 'font_size',     '');
@@ -40,7 +34,7 @@ class Pconfig
             'bg_fit'        => in_array($bg_fit,        $valid_fits,     true) ? $bg_fit        : 'cover',
             'font_size'     => in_array($font_size,     $valid_sizes,    true) ? $font_size     : '',
             'font_family'   => in_array($font_family,   $valid_families, true) ? $font_family   : '',
-            'color_scheme'  => in_array($color_scheme,  $valid_schemes,  true) ? $color_scheme  : '',
+            'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme  : '',
             'corner_radius' => in_array($corner_radius, $valid_radii,    true) ? $corner_radius : '',
         ];
 
