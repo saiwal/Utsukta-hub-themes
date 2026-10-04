@@ -274,7 +274,9 @@ trait FormatsItems
         ];
     }
 
-    private function formatItem(array $item, string $observer_xchan, bool $isPinned = false): array
+    // The observer's own reactions, read from the reaction_verbs blob that
+    // ReactionCounts::subqueries() selects. Shared with Item::getCounts().
+    protected function viewerReactionFlags(array $item, string $observer_xchan): array
     {
         $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
 
@@ -293,6 +295,13 @@ trait FormatsItems
                 if ($verb === 'TentativeAccept') $maybe = true;
             }
         }
+
+        return [$liked, $disliked, $repeated, $attending, $declining, $maybe];
+    }
+
+    private function formatItem(array $item, string $observer_xchan, bool $isPinned = false): array
+    {
+        [$liked, $disliked, $repeated, $attending, $declining, $maybe] = $this->viewerReactionFlags($item, $observer_xchan);
 
         return [
             'uuid' => $item['uuid'],

@@ -69,6 +69,11 @@ class Item
         $GET_VERBS = ['comments', 'likes', 'dislikes', 'repeats', 'folders', 'delivery', 'compose', 'sharepreview', 'cardpreview'];
         $segs  = array_slice(App::$argv, 2);
         $n     = count($segs);
+
+        if ($segs === ['counts']) {
+            $this->getCounts();
+            return;
+        }
         $verb  = '';
         $extra = 'all';
 
@@ -220,6 +225,47 @@ class Item
     // =========================================================================
     // GET handlers
     // =========================================================================
+
+    // GET /spa/item/counts?uid=<profile_uid>&uuids[]=…
+    // Live reaction/comment counts for posts already on screen — the stream's
+    // poll only asks for posts newer than its top one, so without this a
+    // like or reply on a loaded post never shows up until a reload. Keyed by
+    // uuid (not mid) to keep the query string short: it rides a GET so a
+    // visitor polling a channel page needs no CSRF token.
+    private const COUNTS_MAX = 50;
+
+    private function getCounts(): void
+    {
+        $uid   = intval($_GET['uid'] ?? 0);
+        $uuids = array_slice(array_filter((array)($_GET['uuids'] ?? []), 'is_string'), 0, self::COUNTS_MAX);
+        if (!$uid || !$uuids) {
+            Response::send([]);
+        }
+
+        $ob_hash = get_observer_hash();
+        $in = implode(',', array_map(fn($u) => "'" . dbesc($u) . "'", $uuids));
+        $rows = dbq('SELECT item.uuid, item.mid, item.parent, item.uid,
+            ' . self::reactionSubqueries() . "
+            FROM item
+            WHERE item.uid = $uid
+              AND item.uuid IN ($in)
+            " . item_normal() . item_permissions_sql($uid, $ob_hash));
+
+        $out = [];
+        foreach ($rows ?: [] as $r) {
+            [$liked, $disliked, $repeated] = $this->viewerReactionFlags($r, $ob_hash);
+            $out[$r['uuid']] = [
+                'like_count'      => intval($r['like_count']),
+                'dislike_count'   => intval($r['dislike_count']),
+                'announce_count'  => intval($r['announce_count']),
+                'comment_count'   => intval($r['comment_count']),
+                'viewer_liked'    => $liked,
+                'viewer_disliked' => $disliked,
+                'viewer_repeated' => $repeated,
+            ];
+        }
+        Response::send($out);
+    }
 
     // GET /api/item/:mid
     // Returns the thread root item. Comments are NOT inlined — fetch separately.
