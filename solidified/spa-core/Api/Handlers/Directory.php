@@ -70,11 +70,12 @@ class Directory
         $ds_order = self::ORDER_MAP[$order] ?? '';
 
         $params = [
-            'f'            => '',
-            'return_total' => 1,
-            'n'            => self::LIMIT,
-            'p'            => $page,
+            'f' => '',
+            'n' => self::LIMIT,
+            'p' => $page,
         ];
+        // No return_total: it costs dirsearch a second full LIKE '%…%' scan of
+        // xchan, and core never asks for it. meta.total is just this page's count.
 
         // dirsearch defaults 'safe' to 1 (on) when the param is absent, so the
         // off case must be sent explicitly rather than merely omitted.
@@ -116,7 +117,7 @@ class Directory
         }
 
         $results = $j['results'] ?? [];
-        $total   = intval($j['total_items'] ?? $j['records'] ?? count($results));
+        $total   = count($results);
 
         Response::send(
             $this->formatResults($results, $local_channel, $safe),
