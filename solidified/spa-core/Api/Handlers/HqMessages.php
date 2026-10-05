@@ -186,7 +186,7 @@ class HqMessages
         // row-level: an inbox thread counts as unread when a *reply* is unseen.
         if ($unread) {
             $type_sql .= " AND (i.item_unseen = 1 OR EXISTS (
-                SELECT 1 FROM item cu WHERE cu.uid = i.uid AND cu.parent = i.parent
+                SELECT 1 FROM item cu WHERE cu.uid = " . intval($uid) . " AND cu.parent = i.parent
                 AND cu.item_unseen = 1 AND cu.item_thread_top = 0
             )) ";
         }
@@ -197,7 +197,7 @@ class HqMessages
             || (($q['file'] ?? '') === self::TRASH);
         if (!$viewingTrash) {
             $type_sql .= " AND i.id NOT IN (SELECT oid FROM term
-                WHERE ttype = " . intval(TERM_FILE) . " AND uid = i.uid
+                WHERE ttype = " . intval(TERM_FILE) . " AND uid = " . intval($uid) . "
                 AND term = '" . protect_sprintf(dbesc(self::TRASH)) . "') ";
         }
 
