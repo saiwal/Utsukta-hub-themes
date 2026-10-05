@@ -190,9 +190,9 @@ class Cal
             $event = [
                 'id'          => intval($rr['id']),
                 'uri'         => $rr['event_hash'],
-                'title'       => html_entity_decode($rr['summary'],     ENT_COMPAT, 'UTF-8'),
-                'description' => html_entity_decode($rr['description'], ENT_COMPAT, 'UTF-8'),
-                'location'    => html_entity_decode($rr['location'],    ENT_COMPAT, 'UTF-8'),
+                'title'       => Response::decodeEntities($rr['summary']),
+                'description' => Response::decodeEntities($rr['description']),
+                'location'    => Response::decodeEntities($rr['location']),
                 'start'       => $startIso,
                 'end'         => $endIso,
                 'allDay'      => !$rr['adjust'],

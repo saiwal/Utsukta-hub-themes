@@ -184,7 +184,7 @@ class Webpages
             $pages[] = [
                 'iid'        => intval($row['iid']),
                 'mid'        => $row['mid'],
-                'title'      => $row['title'],
+                'title'      => Response::decodeEntities($row['title']),
                 'pagelink'   => $pagelink,
                 'mimetype'   => $row['mimetype'],
                 'created'    => $row['created'],

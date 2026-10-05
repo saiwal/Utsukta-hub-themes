@@ -256,7 +256,7 @@ class Channel
         $wall_compose = null;
         if ($can_post_wall && $channel_uid !== $uid) {
             $wall_compose = [
-                'name'           => $channel['channel_name'],
+                'name'           => Response::decodeEntities($channel['channel_name']),
                 'is_group'       => (bool) get_pconfig($channel_uid, 'system', 'group_actor'),
                 'allow_location' => (bool) intval(get_pconfig($channel_uid, 'system', 'use_browser_location')),
                 'write_storage'  => perm_is_allowed($channel_uid, $observer_xchan, 'write_storage'),

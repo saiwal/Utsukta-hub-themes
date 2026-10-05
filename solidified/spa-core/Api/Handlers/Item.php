@@ -2335,8 +2335,8 @@ class Item
         json_return_and_die([
             'success'  => true,
             'body'     => $body,
-            'title'    => $item['title'],
-            'summary'  => $item['summary'],
+            'title'    => Response::decodeEntities($item['title']),
+            'summary'  => Response::decodeEntities($item['summary']),
             'mimetype' => $mimetype,
             'category' => $cats ? implode(',', array_column($cats, 'term')) : '',
         ]);

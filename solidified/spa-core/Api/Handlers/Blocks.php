@@ -135,7 +135,7 @@ class Blocks
             $blocks[] = [
                 'iid'        => intval($row['iid']),
                 'mid'        => $row['mid'],
-                'title'      => $row['title'],
+                'title'      => Response::decodeEntities($row['title']),
                 'name'       => $row['name'],
                 'mimetype'   => $row['mimetype'],
                 'created'    => $row['created'],

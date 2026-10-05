@@ -132,7 +132,7 @@ class Moderate
             'obj_type' => $item['obj_type'],
             'created'  => $item['created'],
             'is_reply' => $isReply,
-            'title'    => $item['title'],
+            'title'    => Response::decodeEntities($item['title']),
             'body'     => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
             'mimetype' => $item['mimetype'] ?? '',
             'author'   => [
@@ -145,7 +145,7 @@ class Moderate
                 ],
             ],
             'target' => $target ? [
-                'title'     => $target['title'],
+                'title'     => Response::decodeEntities($target['title']),
                 'body'      => ContentTypes::decode($target['body'], $target['mimetype'] ?? ''),
                 'mimetype'  => $target['mimetype'] ?? '',
                 'permalink' => $target['plink'],

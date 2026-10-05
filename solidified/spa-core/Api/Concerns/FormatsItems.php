@@ -3,6 +3,7 @@
 namespace Utsukta\SpaCore\Api\Concerns;
 
 use Utsukta\SpaCore\Api\ContentTypes;
+use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\IConfig;
 
 trait FormatsItems
@@ -348,7 +349,7 @@ trait FormatsItems
             'created' => $item['created'],
             'edited' => $item['edited'],
             'commented' => $item['commented'],
-            'title' => $item['title'],
+            'title' => Response::decodeEntities($item['title']),
             // Raw body in its own authoring format, paired with the mimetype
             // that says how to render it — the client mirrors core's
             // prepare_text() switch in spa-core/src/lib/renderBody.ts.

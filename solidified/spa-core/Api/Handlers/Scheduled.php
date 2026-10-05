@@ -42,7 +42,7 @@ class Scheduled
             'iid'     => intval($r['id']),
             'uuid'    => $r['uuid'],
             'mid'     => $r['mid'],
-            'title'   => $r['title'],
+            'title'   => Response::decodeEntities($r['title']),
             'body'    => $r['body'],
             'created' => $r['created'],
             // item_private = 2 is a DM (same test FormatsItems uses for the

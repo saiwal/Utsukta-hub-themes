@@ -240,7 +240,7 @@ class ChannelActivities
 
             $i[] = [
                 'url' => z_root() . '/page/' . $this->nick . '/' . $rr['v'],
-                'title' => $rr['title'],
+                'title' => Response::decodeEntities($rr['title']),
                 'summary' => $summary,
                 'footer' => datetime_convert('UTC', date_default_timezone_get(), $rr['edited']),
             ];

@@ -146,8 +146,8 @@ class Photos
             $out[] = [
                 'resource_id' => $row['resource_id'],
                 'filename' => $row['filename'],
-                'title' => $row['title'] ?? '',
-                'description' => $row['description'] ?? '',
+                'title' => Response::decodeEntities($row['title'] ?? ''),
+                'description' => Response::decodeEntities($row['description'] ?? ''),
                 'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
                 'is_private' => $this->rowIsPrivate($row, $uid, $fhash),
                 'album' => $row['album'],
@@ -371,8 +371,8 @@ class Photos
             $out[] = [
                 'resource_id' => $row['resource_id'],
                 'filename' => $row['filename'],
-                'title' => $row['title'] ?? '',
-                'description' => $row['description'] ?? '',
+                'title' => Response::decodeEntities($row['title'] ?? ''),
+                'description' => Response::decodeEntities($row['description'] ?? ''),
                 'is_nsfw' => (bool) intval($row['is_nsfw'] ?? 0),
                 'is_private' => $this->rowIsPrivate($row, intval($channel['channel_id']), $albumHash),
                 'album' => $row['album'],
@@ -566,8 +566,8 @@ class Photos
         Response::send([
             'resource_id' => $ph[0]['resource_id'],
             'filename' => $ph[0]['filename'],
-            'title' => $ph[0]['title'] ?? '',
-            'description' => $ph[0]['description'],
+            'title' => Response::decodeEntities($ph[0]['title'] ?? ''),
+            'description' => Response::decodeEntities($ph[0]['description']),
             'album' => $ph[0]['album'],
             'album_link' => $x ? z_root() . '/photos/' . $channel['channel_address'] . '/album/' . $x[0]['folder'] : null,
             'created' => $ph[0]['created'],
@@ -1023,8 +1023,8 @@ class Photos
             $out[]  = [
                 'resource_id' => $row['resource_id'],
                 'filename'    => $row['filename'],
-                'title'       => $row['title'] ?? '',
-                'description' => $row['description'] ?? '',
+                'title'       => Response::decodeEntities($row['title'] ?? ''),
+                'description' => Response::decodeEntities($row['description'] ?? ''),
                 'is_nsfw'     => (bool) intval($row['is_nsfw'] ?? 0),
                 'is_private'  => $this->rowIsPrivate($row, intval($channel['channel_id']), ''),
                 'album'       => $row['album'],

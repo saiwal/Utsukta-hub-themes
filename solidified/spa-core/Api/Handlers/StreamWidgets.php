@@ -145,7 +145,7 @@ class StreamWidgets
 
         $popular = array_map(fn($item) => [
             'uuid'         => $item['uuid'],
-            'title'        => $item['title'] ?? '',
+            'title'        => Response::decodeEntities($item['title'] ?? ''),
             'body'         => $item['body']  ?? '',
             'authorName'   => Response::decodeEntities($item['author']['xchan_name'] ?? ''),
             'authorAvatar' => $item['author']['xchan_photo_m'] ?? '',

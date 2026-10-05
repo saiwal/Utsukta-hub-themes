@@ -116,7 +116,7 @@ class Nav
                 $channels[] = [
                     'id'   => intval($ch['channel_id']),
                     'nick' => $ch['channel_address'],
-                    'name' => $ch['channel_name'],
+                    'name' => Response::decodeEntities($ch['channel_name']),
                 ];
             }
         }
