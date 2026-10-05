@@ -324,7 +324,7 @@ class HqMessages
             // The title is a subject line (a DM's, most often) — sent as its
             // own field so the list can show it above the body excerpt rather
             // than in place of it.
-            $title = $item['title'] ? substr_words($item['title'], 140) : '';
+            $title = $item['title'] ? substr_words(Response::decodeEntities($item['title']), 140) : '';
 
             $summary = $item['summary'];
             if (!$summary) {
