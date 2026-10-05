@@ -20,7 +20,7 @@ trait FormatsItems
     private function pasteLocalQuote(string $body, array $item): string
     {
         if (str_contains($body, '[/share]')
-            || !preg_match('/RE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
+            || !preg_match('/\bRE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
             return $body;
         }
 

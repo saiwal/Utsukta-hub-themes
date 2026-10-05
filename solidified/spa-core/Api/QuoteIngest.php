@@ -28,7 +28,7 @@ class QuoteIngest
         if (intval($arr['item_origin'] ?? 0)
             || !in_array($arr['mimetype'] ?? '', ['', 'text/bbcode'], true)
             || str_contains($body, '[/share]')
-            || !preg_match('/RE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
+            || !preg_match('/\bRE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
             return;
         }
 
@@ -61,7 +61,9 @@ class QuoteIngest
      */
     public static function quoteFromObj(mixed $obj, string $url): array
     {
-        $obj  = (new \Zotlabs\Lib\ASObjectStorage($obj))->decode();
+        // Inlined ASObjectStorage::decode(): that class is newer than 11.4.x,
+        // and a missing class here 500s every stream page holding a quote.
+        $obj  = is_string($obj) ? (json_decode($obj, true) ?? $obj) : $obj;
         $html = is_array($obj) && is_string($obj['content'] ?? null) ? $obj['content'] : '';
         if (!str_contains($html, 'shared_container')) {
             return [];
