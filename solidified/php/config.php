@@ -13,6 +13,7 @@ namespace {
 		register_hook('daemon_addon', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_daemon');
 		register_hook('post_remote', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
 		register_hook('post_remote_update', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
+		register_hook('item_stored', 'view/theme/solidified/hooks/forumnotify.php', 'solidified_forum_item_stored');
   }
 
   function solidified_theme_admin_disable() {
@@ -23,6 +24,7 @@ namespace {
 		unregister_hook('daemon_addon', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_daemon');
 		unregister_hook('post_remote', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
 		unregister_hook('post_remote_update', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
+		unregister_hook('item_stored', 'view/theme/solidified/hooks/forumnotify.php', 'solidified_forum_item_stored');
   }
 
   function theme_admin(&$a) {
