@@ -29,15 +29,16 @@ trait FormatsItems
         $r = q("SELECT id, uid FROM item WHERE mid = '%s' AND item_deleted = 0
                 ORDER BY (uid = %d) DESC LIMIT 1",
             dbesc($m[1]), intval($item['uid'] ?? 0));
-        if (!$r) {
-            return $body;
-        }
-        $v = q("SELECT * FROM item WHERE id = %d " . item_permissions_sql(intval($r[0]['uid'])), intval($r[0]['id']));
+        $v  = $r ? q("SELECT * FROM item WHERE id = %d " . item_permissions_sql(intval($r[0]['uid'])), intval($r[0]['id'])) : [];
         $bb = $v ? $this->buildEmbedBlock($v[0]) : '';
 
-        return $bb
-            ? \Zotlabs\Lib\Activity::pasteQuote($body, ['url' => $v[0]['plink'], 'mid' => $v[0]['mid'], 'bbcode' => $bb])
-            : $body;
+        // No readable local copy: rows stored before QuoteIngest existed can
+        // still be rebuilt from the sender's rendering in item.obj.
+        $quote = $bb
+            ? ['url' => $v[0]['plink'], 'mid' => $v[0]['mid'], 'bbcode' => $bb]
+            : \Utsukta\SpaCore\Api\QuoteIngest::quoteFromObj($item['obj'] ?? null, $m[1]);
+
+        return $quote ? \Zotlabs\Lib\Activity::pasteQuote($body, $quote) : $body;
     }
 
     // Comma-joined display names of everyone on a direct message's ACL —

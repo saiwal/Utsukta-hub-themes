@@ -40,9 +40,64 @@ class QuoteIngest
             return;
         }
 
-        $quote = Activity::get_quote($m[1]);   // ASCache'd, so N local recipients fetch once
+        // ASCache'd, so N local recipients fetch once. The origin may refuse
+        // the quoted post outright (hub.hubzilla.hu 404s some before any
+        // signature check), so fall back to what the sender rendered.
+        $quote = Activity::get_quote($m[1]) ?: self::quoteFromObj($arr['obj'] ?? null, $m[1]);
         if (!empty($quote['bbcode'])) {
             $arr['body'] = Activity::pasteQuote($body, $quote);
         }
+    }
+
+    /**
+     * The quote rebuilt from the sender's own rendering: a Hubzilla sender's
+     * `content` HTML already carries the quoted post as a shared_container
+     * div, and core keeps that object in item.obj. Returns get_quote()'s
+     * shape, or [] when there is no such div.
+     *
+     * ponytail: scrapes core's share markup (include/bbcode.php
+     * bb_ShareAttributes); a markup change there makes this return [] and the
+     * post falls back to the bare link, nothing worse.
+     */
+    public static function quoteFromObj(mixed $obj, string $url): array
+    {
+        $obj  = (new \Zotlabs\Lib\ASObjectStorage($obj))->decode();
+        $html = is_array($obj) && is_string($obj['content'] ?? null) ? $obj['content'] : '';
+        if (!str_contains($html, 'shared_container')) {
+            return [];
+        }
+
+        $doc = new \DOMDocument();
+        @$doc->loadHTML('<?xml encoding="utf-8"?>' . $html, LIBXML_NONET);
+        $xp  = new \DOMXPath($doc);
+        $cls = fn(string $c) => "contains(concat(' ', normalize-space(@class), ' '), ' $c ')";
+
+        $content = $xp->query("//div[{$cls('reshared-content')}]")->item(0);
+        $header  = $xp->query("//div[{$cls('shared_header')}]")->item(0);
+        if (!$content || !$header) {
+            return [];
+        }
+
+        $img     = $xp->query('.//img', $header)->item(0);
+        $profile = $xp->query('.//a', $header)->item(0)?->getAttribute('href') ?? '';
+        $posted  = $xp->query(".//span[{$cls('autotime')}]", $header)->item(0)?->getAttribute('title') ?? '';
+        $inner   = '';
+        foreach ($content->childNodes as $n) {
+            $inner .= $doc->saveHTML($n);
+        }
+
+        // Remote-supplied attribute values: a ' or ] would end the attribute
+        // (or the tag) early and let the sender inject attributes.
+        $a = fn(?string $v) => str_replace(["'", ']', '['], '', (string) $v);
+
+        require_once 'include/html2bbcode.php';
+        $bb = "[share author='" . urlencode($img?->getAttribute('alt') ?? '') .
+            "' profile='" . $a($profile) .
+            "' avatar='" . $a($img?->getAttribute('src')) .
+            "' link='" . $a($url) .
+            "' auth='false' posted='" . ($posted ? datetime_convert('UTC', 'UTC', $posted) : '') .
+            "' message_id='" . $a($url) . "']" . html2bbcode($inner) . '[/share]';
+
+        return ['bbcode' => $bb, 'url' => $url, 'mid' => $url];
     }
 }
