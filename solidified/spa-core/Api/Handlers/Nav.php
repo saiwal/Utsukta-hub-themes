@@ -289,18 +289,10 @@ class Nav
                     ];
                 }
 
-                if (!empty($p['chat']) &&
-                    \Zotlabs\Lib\Apps::system_app_installed($puid, 'Chatrooms') &&
-                    \Zotlabs\Lib\Chatroom::list_count($puid))
-                    $channel_tabs[] = [
-                        'id' => 'chat',
-                        'url' => z_root() . '/chat/' . $subject_nick,
-                        'icon' => 'chat',
-                    ];
-
-                // Messenger: a logged-in visitor's DMs with this channel and
-                // the rooms it lets them into (the owner has it in their nav).
-                if ($ob_hash && !$is_owner)
+                // Messenger: a visitor's DMs with this channel and the rooms it
+                // lets them into (the owner has it in their nav). Anonymous
+                // visitors get it too — the route sends them to log in.
+                if (!$is_owner)
                     $channel_tabs[] = [
                         'id' => 'messenger',
                         'url' => z_root() . '/messenger/' . $subject_nick,
@@ -346,7 +338,7 @@ class Nav
                 $tab_app = [
                     'articles-tab' => 'articles', 'cards-tab' => 'cards',
                     'photos' => 'photos', 'files' => 'cloud', 'calendar' => 'cdav',
-                    'chat' => 'chat', 'webpages' => 'webpages', 'wiki' => 'wiki',
+                    'webpages' => 'webpages', 'wiki' => 'wiki',
                 ];
                 $channel_tabs = array_values(array_filter($channel_tabs, fn($tab) =>
                     !isset($tab_app[$tab['id']]) || isset($owner_nav[$tab_app[$tab['id']]])));
@@ -404,6 +396,17 @@ class Nav
             $$listName = array_values(array_filter(
                 $$listName ?: [],
                 fn($app) => $notInvite($app['url'] ?? '')
+            ));
+        }
+
+        // Chatrooms open in Messenger (it serves /chat/*), which has its own
+        // nav item, so a Chatrooms tile would be a second door to it. Nav
+        // lists only: the app stays in system_apps/installed_apps, since being
+        // installed is what turns on Messenger's Rooms tab.
+        foreach (['pinned', 'featured'] as $listName) {
+            $$listName = array_values(array_filter(
+                $$listName,
+                fn($app) => !preg_match('#/chat(/|$)#', (string) parse_url($app['url'] ?? '', PHP_URL_PATH))
             ));
         }
 
