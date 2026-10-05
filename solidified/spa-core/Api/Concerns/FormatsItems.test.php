@@ -178,5 +178,24 @@ if ($comment) {
     skip('no comment in this database');
 }
 
+// ── Zot quote-post: "RE: <url>" with no [share] block ─────────────────────
+// Core pastes the share only on AP ingest; a zot copy keeps the bare line.
+$quoted = pick("i.item_type = 0 AND i.item_thread_top = 1 AND i.item_private = 0
+    AND i.mimetype = 'text/bbcode' AND i.body NOT LIKE '%[/share]%' AND i.body != ''");
+if ($quoted) {
+    actAs($quoted);
+    $q   = q("SELECT * FROM item WHERE id = %d", intval($quoted['id']))[0];
+    $m   = new ReflectionMethod(Utsukta\SpaCore\Api\Handlers\Network::class, 'pasteLocalQuote');
+    $m->setAccessible(true);
+    $h   = new Utsukta\SpaCore\Api\Handlers\Network();
+    $out = $m->invoke($h, "RE: {$q['mid']}\r\n\r\nhi", ['uid' => $q['uid']]);
+    check('RE: <local mid> pastes a share block', str_contains($out, "message_id='{$q['mid']}'"));
+    check('the RE: line itself is replaced', !str_contains($out, 'RE: '));
+    $miss = "RE: https://nowhere.invalid/item/x\r\nhi";
+    check('RE: <unknown url> is left alone', $m->invoke($h, $miss, ['uid' => $q['uid']]), $miss);
+} else {
+    skip('no public bbcode post to quote');
+}
+
 echo "\n" . ($fail ? "$fail check(s) failed\n" : "all checks passed\n");
 exit($fail ? 1 : 0);

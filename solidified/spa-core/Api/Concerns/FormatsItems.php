@@ -7,6 +7,36 @@ use Zotlabs\Lib\IConfig;
 
 trait FormatsItems
 {
+    use EmbedsItems;
+
+    // A Hubzilla quote-post arrives over zot as a bare "RE: <url>" line plus
+    // quoteUrl. Core pastes the [share] block only on ActivityPub ingest
+    // (Activity::decode_note -> pasteQuote); redbasic hides the gap with a
+    // render-time oembed. Paste it here from the local copy of the quoted
+    // item. ponytail: local copies only, so a quote of a post this hub never
+    // received still shows the link. Activity::get_quote() would fetch it,
+    // but that's one remote round-trip per stream row.
+    private function pasteLocalQuote(string $body, array $item): string
+    {
+        if (str_contains($body, '[/share]')
+            || !preg_match('/RE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
+            return $body;
+        }
+
+        $r = q("SELECT id, uid FROM item WHERE (mid = '%s' OR plink = '%s') AND item_deleted = 0
+                ORDER BY (uid = %d) DESC LIMIT 1",
+            dbesc($m[1]), dbesc($m[1]), intval($item['uid'] ?? 0));
+        if (!$r) {
+            return $body;
+        }
+        $v = q("SELECT * FROM item WHERE id = %d " . item_permissions_sql(intval($r[0]['uid'])), intval($r[0]['id']));
+        $bb = $v ? $this->buildEmbedBlock($v[0]) : '';
+
+        return $bb
+            ? \Zotlabs\Lib\Activity::pasteQuote($body, ['url' => $v[0]['plink'], 'mid' => $v[0]['mid'], 'bbcode' => $bb])
+            : $body;
+    }
+
     // Comma-joined display names of everyone on a direct message's ACL —
     // author_name/owner only tell you who *sent* a given row, not the other
     // participants, which matters for group DMs. Mirrors
@@ -322,7 +352,9 @@ trait FormatsItems
             // that z_input_filter() applies to markdown at save time.
             // item.mimetype defaults to '' in the schema and core treats that
             // as bbcode, so pass it through rather than normalising here.
-            'body' => ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'body' => in_array($item['mimetype'] ?? '', ['', 'text/bbcode'])
+                ? $this->pasteLocalQuote($item['body'], $item)
+                : ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
             'mimetype' => $item['mimetype'] ?? '',
             'verb' => $item['verb'],
             'obj_type' => $item['obj_type'],

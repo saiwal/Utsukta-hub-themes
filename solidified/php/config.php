@@ -11,6 +11,8 @@ namespace {
 		register_hook('spa_webpush', 'view/theme/solidified/hooks/webpush.php', 'solidified_webpush_send');
 		register_hook('chat_post', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_chat_post');
 		register_hook('daemon_addon', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_daemon');
+		register_hook('post_remote', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
+		register_hook('post_remote_update', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
   }
 
   function solidified_theme_admin_disable() {
@@ -19,6 +21,8 @@ namespace {
 		unregister_hook('spa_webpush', 'view/theme/solidified/hooks/webpush.php', 'solidified_webpush_send');
 		unregister_hook('chat_post', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_chat_post');
 		unregister_hook('daemon_addon', 'view/theme/solidified/hooks/chatfed.php', 'solidified_chatfed_daemon');
+		unregister_hook('post_remote', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
+		unregister_hook('post_remote_update', 'view/theme/solidified/hooks/quotes.php', 'solidified_quote_post_remote');
   }
 
   function theme_admin(&$a) {
