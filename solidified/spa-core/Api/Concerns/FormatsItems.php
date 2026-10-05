@@ -23,9 +23,12 @@ trait FormatsItems
             return $body;
         }
 
-        $r = q("SELECT id, uid FROM item WHERE (mid = '%s' OR plink = '%s') AND item_deleted = 0
+        // mid only: item.plink has no index, and an OR on it turned this into
+        // a full item-table scan on every render. A Hubzilla quote url is the
+        // quoted item's mid anyway.
+        $r = q("SELECT id, uid FROM item WHERE mid = '%s' AND item_deleted = 0
                 ORDER BY (uid = %d) DESC LIMIT 1",
-            dbesc($m[1]), dbesc($m[1]), intval($item['uid'] ?? 0));
+            dbesc($m[1]), intval($item['uid'] ?? 0));
         if (!$r) {
             return $body;
         }
