@@ -106,6 +106,9 @@ class Pconfig
             $response = [
                 'uid'      => $uid,
                 'channel'  => $nick,
+                // Identical on every clone, unlike xchan_addr (which names the
+                // primary hub) — the only reliable "is this me?" key.
+                'hash'     => (string) ($channel['channel_hash'] ?? ''),
                 // zidify_links() equivalent on the client needs the observer's
                 // webbie to reach ACL-restricted media on other hubs.
                 'my_address' => (string) (get_my_address() ?: channel_reddress($channel)),

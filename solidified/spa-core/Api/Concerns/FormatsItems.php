@@ -241,6 +241,24 @@ trait FormatsItems
             }
         }
 
+        // A forum's repost of the viewer's own post: authored by the forum, so
+        // the participation check above misses it, but ForumNotify notifies the
+        // viewer about it — show it as followed for the same reason.
+        $forumRoots = dbq(
+            "SELECT item.mid, item.body FROM item
+             LEFT JOIN xchan ON xchan_hash = item.author_xchan
+             WHERE item.uid = $uid
+               AND item.mid IN ('$inList')
+               AND item.item_thread_top = 1
+               AND xchan_pubforum = 1
+               AND item.body LIKE '%portable_id=''$obs''%'"
+        );
+        foreach (($forumRoots ?: []) as $fr) {
+            if (!isset($map[$fr['mid']]) && \Utsukta\SpaCore\Api\ForumNotify::isRepostOfMine($fr, $observer_xchan)) {
+                $map[$fr['mid']] = true;
+            }
+        }
+
         foreach ($items as &$item) {
             $item['viewer_following'] = $map[$item['parent_mid']] ?? false;
         }
