@@ -7,7 +7,7 @@ Inline preview for files opened from Cloud/Files or a stream attachment, instead
 `packages/spa-core/src/lib/filePreview.ts` exports `classifyPreview(mimetype, filename): PreviewKind`, the single source of truth for "what can we preview inline":
 
 ```typescript
-export type PreviewKind = "pdf" | "epub" | "video" | "audio" | "image" | "markdown" | "text" | "none";
+export type PreviewKind = "pdf" | "epub" | "video" | "audio" | "image" | "markdown" | "html" | "csv" | "json" | "bbcode" | "text" | "none";
 ```
 
 It checks mimetype first, then falls back to a filename-extension regex per kind — attach records don't always carry a precise `filetype` (e.g. generic `application/octet-stream`), and without the fallback those files would silently stay download-only. `kind === "none"` means no inline preview exists; callers fall back to `window.open(davUrl, "_blank")`.
@@ -24,7 +24,11 @@ Callers: `src/modules/files/widgets/FilesContentWidget.tsx` (`openItem()`) and `
 - **video** / **audio** — native `<video>`/`<audio>`, enhanced via `mountPlyr()` (`@utsukta/spa-core/lib/usePlyr`, the already-installed `plyr` package).
 - **text** — fetched as a string via `fetchText()`, rendered as a numbered, monospace line list. `fetchText`/`fetchBlobUrl`/`fetchArrayBuffer` all share a guard: if the response's `content-type` doesn't match what's expected, they throw instead of handing the caller HTML — some routes fall back to serving the SPA's own HTML shell (auth/routing issue, wrong hash) instead of the real file, and blindly trusting that body would boot a second, broken copy of the app inside an `<iframe>` or corrupt a text preview.
 - **markdown** — same fetch as text, parsed with `marked.parse()` and sanitized with `sanitizeHtml()` (dompurify-based, from spa-core) before `innerHTML`.
-- Size guard: `TEXT_PREVIEW_MAX_BYTES` (2MB) — text/markdown previews over that show a "too large, use Download" message instead of fetching. No analogous cap on epub/pdf/video/audio.
+- **html** — same fetch as text, rendered via `<iframe srcdoc>` with `sandbox="allow-popups allow-popups-to-escape-sandbox"` — no `allow-scripts`/`allow-same-origin`, so uploaded HTML can't run JS or reach the session. A prepended `<base target="_blank">` opens links in a new tab. Relative assets (images, CSS) don't resolve.
+- **csv** — same fetch as text, parsed by `parseCsv()` (`filePreview.ts`, quoted fields + `""` escapes; tab-delimited for `.tsv` / `text/tab-separated-values`) into a table whose first row is the sticky header. Check: `node --experimental-strip-types packages/spa-core/src/lib/filePreview.test.ts`.
+- **json** — pretty-printed (`JSON.stringify(…, null, 2)`) into the text line list; unparseable JSON falls back to the raw text. `.excalidraw` is classified first, so scenes never land here.
+- **bbcode** — `.bb`/`.bbcode`, rendered with spa-core's `bbcode()` and `sanitizeHtml()`, like markdown.
+- Size guard: `TEXT_PREVIEW_MAX_BYTES` (2MB) — all text-fetched previews (text/markdown/html/csv/json/bbcode) over that show a "too large, use Download" message instead of fetching. No analogous cap on epub/pdf/video/audio.
 - Editing: image and video kinds additionally get an "Edit" button (`ImageEditor` / `VideoEditor`, lazy-loaded) — unrelated to preview classification.
 
 ## Adding a New Previewable Format
