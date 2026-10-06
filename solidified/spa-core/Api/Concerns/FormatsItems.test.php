@@ -131,7 +131,7 @@ if ($md) {
 
 // A boost/Announce keeps the booster in source_xchan; the owner block has to
 // report them, or the reader sees no attribution for who shared it.
-$boost = pick("i.source_xchan != ''");
+$boost = pick("i.source_xchan != '' AND i.verb = 'Announce'");
 if ($boost) {
     $ob  = actAs($boost);
     $out = fmt('Item', intval($boost['id']), $ob);
@@ -195,6 +195,24 @@ if ($quoted) {
     check('RE: <unknown url> is left alone', $m->invoke($h, $miss, ['uid' => $q['uid']]), $miss);
 } else {
     skip('no public bbcode post to quote');
+}
+
+// Clone sync rewrites the origin hub url inside share blocks, leaving another
+// local channel's photo; avatar/profile must come back from portable_id.
+$someone = q("SELECT xchan_hash, xchan_url, xchan_photo_s FROM xchan WHERE xchan_photo_s != '' LIMIT 1");
+if ($someone) {
+    $s   = $someone[0];
+    $m   = new ReflectionMethod(Utsukta\SpaCore\Api\Handlers\Network::class, 'repairShareAuthors');
+    $m->setAccessible(true);
+    $bad = "x [share author='A' profile='https://clone.invalid/channel/a' avatar='https://clone.invalid/photo/profile/s/2' link='https://clone.invalid/item/1' portable_id='{$s['xchan_hash']}']q[/share]";
+    $out = $m->invoke(new Utsukta\SpaCore\Api\Handlers\Network(), $bad);
+    check('share avatar re-derived from portable_id', str_contains($out, "avatar='{$s['xchan_photo_s']}'"));
+    check('share profile re-derived from portable_id', str_contains($out, "profile='{$s['xchan_url']}'"));
+    check('share link left alone', str_contains($out, "link='https://clone.invalid/item/1'"));
+    $unk = "[share avatar='a' portable_id='nobody-here']q[/share]";
+    check('unknown portable_id is left alone', $m->invoke(new Utsukta\SpaCore\Api\Handlers\Network(), $unk), $unk);
+} else {
+    skip('no xchan with a photo');
 }
 
 echo "\n" . ($fail ? "$fail check(s) failed\n" : "all checks passed\n");

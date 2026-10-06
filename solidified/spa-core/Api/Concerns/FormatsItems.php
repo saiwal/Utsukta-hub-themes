@@ -42,6 +42,37 @@ trait FormatsItems
         return $quote ? \Zotlabs\Lib\Activity::pasteQuote($body, $quote) : $body;
     }
 
+    // Core's clone sync (import_items -> item_url_replace, include/text.php
+    // "FIXME: ignore anything in a share tag") rewrites the origin hub's url
+    // to the clone's everywhere in a top-level body, share blocks included —
+    // so a quoted author's https://origin/photo/profile/s/<id> becomes the
+    // clone's /photo/profile/s/<id>: some other local channel's face. Re-derive
+    // avatar/profile from the xchan the block names by portable_id instead.
+    // ponytail: link= is rewritten too and left alone; it's a plink, often
+    // still resolvable on the clone.
+    private function repairShareAuthors(string $body): string
+    {
+        if (!preg_match_all("/\\[share\\b[^\\]]*\\bportable_id='([^']+)'/", $body, $m)) {
+            return $body;
+        }
+        $in = implode("','", array_map('dbesc', array_unique($m[1])));
+        $x = [];
+        foreach ((q("SELECT xchan_hash, xchan_url, xchan_photo_s FROM xchan WHERE xchan_hash IN ('$in')") ?: []) as $r) {
+            $x[$r['xchan_hash']] = $r;
+        }
+        return preg_replace_callback("/\\[share\\b[^\\]]*\\]/", function ($tag) use ($x) {
+            if (!preg_match("/\\bportable_id='([^']+)'/", $tag[0], $p) || !isset($x[$p[1]])) {
+                return $tag[0];
+            }
+            $r = $x[$p[1]];
+            return preg_replace(
+                ["/\\bavatar='[^']*'/", "/\\bprofile='[^']*'/"],
+                ["avatar='" . str_replace('$', '\\$', $r['xchan_photo_s']) . "'", "profile='" . str_replace('$', '\\$', $r['xchan_url']) . "'"],
+                $tag[0]
+            );
+        }, $body);
+    }
+
     // Comma-joined display names of everyone on a direct message's ACL —
     // author_name/owner only tell you who *sent* a given row, not the other
     // participants, which matters for group DMs. Mirrors
@@ -376,7 +407,7 @@ trait FormatsItems
             // item.mimetype defaults to '' in the schema and core treats that
             // as bbcode, so pass it through rather than normalising here.
             'body' => in_array($item['mimetype'] ?? '', ['', 'text/bbcode'])
-                ? $this->pasteLocalQuote($item['body'], $item)
+                ? $this->repairShareAuthors($this->pasteLocalQuote($item['body'], $item))
                 : ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
             'mimetype' => $item['mimetype'] ?? '',
             'verb' => $item['verb'],
@@ -415,8 +446,11 @@ trait FormatsItems
                 ],
             ],
             'owner' => (function () use ($item): ?array {
-                // Hubzilla Announce: original content is fetched, booster stored in source_xchan
-                if (!empty($item['source_xchan']) && !empty($item['source'])) {
+                // Hubzilla Announce: original content is fetched, booster stored in source_xchan.
+                // Announce only, like core's ThreadItem::check_wall_to_wall(): on
+                // anything else source_xchan is a relay detail, and clone sync
+                // (encode_item) drops it — so a "via" would show on one hub only.
+                if (($item['verb'] ?? '') === 'Announce' && !empty($item['source_xchan']) && !empty($item['source'])) {
                     $x = $item['source'];
                     return [
                         'name'    => htmlspecialchars_decode(urldecode($x['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
