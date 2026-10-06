@@ -41,7 +41,7 @@ class ForumNotify
             intval($item['parent']),
             intval($uid)
         );
-        if (!$p || !self::isRepostOfMine($p[0], $uid, $me)) {
+        if (!$p || !self::isRepostOfMine($p[0], $me)) {
             return;
         }
         $parent = $p[0];
@@ -94,20 +94,16 @@ class ForumNotify
     }
 
     /**
-     * Does this forum thread root share an item $me wrote in channel $uid?
-     * The [share]'s message_id is the original DM's mid; checking that the
-     * channel holds it *as author* keeps a forum share of somebody else's post
-     * (or a forged message_id) from subscribing us to the thread.
+     * Does this forum thread root share a post $me wrote? Read from the
+     * share's portable_id (the author's xchan hash), not by looking the
+     * original up: a post made on the forum's own wall is stored only in the
+     * forum's channel, so the sender never holds a copy. Only the first
+     * [share] counts: a DM that itself quotes my post is wrapped as an outer
+     * share by its own author.
      */
-    public static function isRepostOfMine(array $parent, int $uid, string $me): bool
+    public static function isRepostOfMine(array $parent, string $me): bool
     {
-        if (!preg_match("/\[share\b[^\]]*\bmessage_id='([^']+)'/", (string) $parent['body'], $m)) {
-            return false;
-        }
-        return (bool) q("select id from item where mid = '%s' and uid = %d and author_xchan = '%s' limit 1",
-            dbesc($m[1]),
-            intval($uid),
-            dbesc($me)
-        );
+        return preg_match("/\\[share\\b[^\\]]*\\bportable_id='([^']+)'/", (string) $parent['body'], $m)
+            && $m[1] === $me;
     }
 }
