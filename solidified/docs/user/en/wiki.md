@@ -19,7 +19,7 @@ A channel can have **multiple wikis** — each wiki is like a mini-site with its
 
 ## Reading a Wiki Page
 
-Wiki pages are written in BBCode or Markdown and rendered as formatted HTML. A breadcrumb trail at the top shows where you are.
+Wiki pages are written in BBCode or Markdown and rendered as formatted HTML. A breadcrumb trail at the top shows where you are. Mermaid code blocks are drawn as diagrams — see [Diagrams](diagrams).
 
 [IMAGE: Single wiki page with rendered content and breadcrumb]
 

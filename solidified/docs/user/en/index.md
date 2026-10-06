@@ -44,6 +44,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Settings](settings) — All settings: display, profile, privacy, notifications, account
 - [Games](games) — Puzzle games: overview, controls, and per-game descriptions
 - [Excalidraw](excalidraw) — Hand-drawn-style whiteboard for sketches and diagrams
+- [Diagrams](diagrams) — Flowcharts, sequence diagrams, charts and more, written as text (Mermaid)
 
 ## Quick Tips
 

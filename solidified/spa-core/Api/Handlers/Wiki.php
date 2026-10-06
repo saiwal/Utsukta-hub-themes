@@ -93,13 +93,36 @@ class Wiki
     }
 
     /**
+     * Core's bbcode() renders [code=lang] as a bare <pre><code> and drops the
+     * language, so a [code=mermaid] block would reach the SPA's
+     * hydrateMermaid() unmarked. Swap each block for an alphanumeric token
+     * (survives bbcode/smilies/link conversion untouched) and return the
+     * token → <pre><code class="language-mermaid"> map to restore after.
+     * The body is stored escaped; double_encode=false keeps that idempotent.
+     */
+    public static function extractMermaid(string $content): array
+    {
+        $diagrams = [];
+        $salt = bin2hex(random_bytes(6));
+        $content = preg_replace_callback('/\[code=mermaid\](.*?)\[\/code\]/is', function ($m) use (&$diagrams, $salt) {
+            $token = 'spamermaid' . $salt . count($diagrams);
+            $diagrams[$token] = '<pre><code class="language-mermaid">'
+                . htmlspecialchars(trim($m[1]), ENT_QUOTES, 'UTF-8', false)
+                . '</code></pre>';
+            return $token;
+        }, $content);
+        return [$content, $diagrams];
+    }
+
+    /**
      * Render raw wiki page content → HTML string.
      */
     private function renderContent(string $content, string $mimeType, string $wikiPath): string
     {
         if ($mimeType === 'text/bbcode') {
+            [$content, $diagrams] = self::extractMermaid($content);
             $html = zidify_links(smilies(bbcode($content, ['tryoembed' => false])));
-            return \NativeWikiPage::convert_links($html, $wikiPath);
+            return strtr(\NativeWikiPage::convert_links($html, $wikiPath), $diagrams);
         }
         if ($mimeType === 'text/plain') {
             return str_replace(
@@ -108,9 +131,8 @@ class Wiki
                 htmlentities($content, ENT_COMPAT, 'UTF-8', false)
             );
         }
-        // text/markdown (default)
-        $unescaped = MarkdownSoap::unescape($content);
-        $linked    = \NativeWikiPage::convert_links($unescaped, $wikiPath);
+        // text/markdown (default) — already unescaped by the caller
+        $linked    = \NativeWikiPage::convert_links($content, $wikiPath);
         $bb        = \NativeWikiPage::bbcode($linked);
         $md        = MarkdownExtra::defaultTransform($bb);
         return \NativeWikiPage::generate_toc(zidify_text($md));
@@ -360,6 +382,13 @@ class Wiki
         $hookinfo = ['content' => $raw, 'mimetype' => $mimeType];
         call_hooks('wiki_preprocess', $hookinfo);
         $raw = $hookinfo['content'];
+
+        // Markdown is stored htmlspecialchars-escaped (MarkdownSoap). Unescape
+        // once here so the editor gets real source ("-->", not "--&gt;") and
+        // the renderer the same text — as core's Mod_Wiki does.
+        if ($mimeType === 'text/markdown') {
+            $raw = MarkdownSoap::unescape($raw);
+        }
 
         $rendered = $this->renderContent($raw, $mimeType, $wikiPath);
 
