@@ -12,6 +12,7 @@ require_once ('include/crypto.php');
 use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
 use Zotlabs\Lib\Enotify;
+use Zotlabs\Lib\ObjCache;
 use Zotlabs\Access\PermissionLimits;
 use App;
 use Utsukta\SpaCore\Api\Auth;
@@ -1592,12 +1593,21 @@ class Item
                 $item[0]['deny_cid'],  $item[0]['deny_gid']);
         }
 
+        // Re-sign the new body, as item_store_update() does via item_sign().
+        // Keeping the old sig would fail verification against the edited body;
+        // item_sign() only signs when the channel is the author, else sig is blank.
+        $signed = ['uid' => $uid, 'author_xchan' => $item[0]['author_xchan'], 'body' => $content];
+        item_sign($signed);
+
         q("UPDATE item SET body = '%s', title = '%s', summary = '%s', mimetype = '%s',
-                           attach = '%s', edited = '%s', changed = '%s'
+                           attach = '%s', edited = '%s', changed = '%s',
+                           sig = '%s', item_verified = %d
            WHERE id = %d AND uid = %d",
             dbesc($content), dbesc($title), dbesc($summary), dbesc($mimetype),
             dbesc($attachments ? json_encode($attachments) : ''),
-            dbesc($now), dbesc($now), $iid, $uid);
+            dbesc($now), dbesc($now),
+            dbesc($signed['sig'] ?? ''), intval($signed['item_verified'] ?? 0),
+            $iid, $uid);
 
         // By item id, not datarray: this path updates the row itself rather
         // than going through item_store_update(), so nothing else would write
@@ -1658,6 +1668,12 @@ class Item
             q("UPDATE iconfig SET v = '%s' WHERE iid = %d AND cat = 'system' AND k = 'WEBPAGE'",
                 dbesc($slug), $iid);
         }
+
+        // Notifier re-sends the cached signed activity for this mid when one
+        // exists (Daemon/Notifier.php ~321), and the first local delivery cached
+        // the original Create. Core's editor overwrites it after
+        // item_store_update(); dropping it makes Notifier encode the edited row.
+        ObjCache::Delete($item[0]['mid']);
 
         // Local-only posts (see createPost()) never federate — including edits,
         // which would otherwise be the first thing ever delivered for them.
