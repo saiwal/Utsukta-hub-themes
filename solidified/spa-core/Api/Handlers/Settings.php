@@ -4,6 +4,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\ColorSchemes;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\SpaFeatures;
 use Zotlabs\Access\PermissionLimits;
 use Zotlabs\Access\PermissionRoles;
 use Zotlabs\Access\Permissions;
@@ -1489,7 +1490,7 @@ class Settings
         $uid = local_channel();
         require_once('include/features.php');
 
-        $features_raw = get_features(false);
+        $features_raw = SpaFeatures::merge(get_features(false));
         $result = [];
 
         foreach ($features_raw as $group_key => $group) {
@@ -1510,7 +1511,7 @@ class Settings
                     'label'       => $item[1] ?? $name,
                     'description' => $item[2] ?? '',
                     'group'       => $group_label,
-                    'enabled'     => (bool) feature_enabled($uid, $name),
+                    'enabled'     => SpaFeatures::enabled($uid, $name),
                 ];
             }
         }
@@ -1531,7 +1532,7 @@ class Settings
         // one the SPA excludes from its Features UI.
         if (in_array($feature, self::EXCLUDED_FEATURES, true)) Response::error(400, 'Unknown feature');
 
-        $features_raw = get_features(false);
+        $features_raw = SpaFeatures::merge(get_features(false));
         $valid = false;
         foreach ($features_raw as $group_key => $group) {
             if (!is_array($group) || in_array($group_key, self::EXCLUDED_FEATURE_GROUPS, true)) continue;

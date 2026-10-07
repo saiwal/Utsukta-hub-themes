@@ -66,6 +66,46 @@ Without it the editor showed `A--&gt;B`.
   stricter allowlist; check it keeps `class` on `<code>` before adding the
   hydrator to post rendering.
 
+## Composer (`shared/editor/diagram/`)
+
+A toolbar button opens `DiagramComposerModal` (source + debounced live
+preview). It follows `EditorCapabilities.latexMode` rather than adding a
+setting of its own — that flag already says "federated body" vs "in-app body":
+
+- **`image`** (post, comment, dm, quick, chat): `renderMermaidToPngFile()` →
+  `wallAttach` → `[img width=…]` plus the source in
+  `[open=Diagram source][code]…[/code][/open]`. Plain `[code]`, not
+  `[code=mermaid]`, or an in-app reader would draw it twice. Shown only where
+  `bbTokens()` holds, like the LaTeX image insert.
+- **`live`** (article, card, wiki, webpage, block, note): a mermaid code block
+  spelled for the body's format — ```` ```mermaid ```` in markdown,
+  `<pre><code class="language-mermaid">` in HTML, `[code=mermaid]` otherwise.
+  Hidden in text/plain.
+
+`renderMermaidImage.ts` renders with an `%%{init}%%` directive (light theme,
+SVG-text labels) instead of `mermaid.initialize()`, so the shared instance's
+reader-facing config from `hydrateMermaid` is untouched. Labels as SVG text,
+not `<foreignObject>` HTML, are what keep the canvas rasterizable; the canvas is
+filled white because mermaid's SVG background is transparent. Both the
+preview and the export use that look, so the preview is the uploaded image.
+
+WYSIWYG inserts go through `bbcodeToHtml()` so `htmlToSource()` round-trips
+them on blur. Its `pre` case keeps `[code=lang]` and maps U+00A0 back to a
+space — before this, one WYSIWYG edit turned any `[code=mermaid]` (or
+`[code=php]`) into plain `[code]`. Pinned in `htmlToSource.test.ts`.
+
+**Gate:** the diagram and LaTeX buttons are Settings → Features → Editor
+toggles, `spa_diagrams` (default off) and `spa_latex` (default on, so existing
+users keep it), checked with `isFeatureEnabled()` in the toolbar. They're
+SPA-only, so `Api/SpaFeatures.php` merges them into core's `editor` group at
+the three places that read `get_features()` (Features GET, its POST
+validation, `/spa/pconfig`) — not through core's `get_features` hook, which
+would also list them in classic Hubzilla's settings and need a theme
+re-enable. Read them via `SpaFeatures::enabled()`, never `feature_enabled()`:
+core resolves an unset feature's default from a list without them, so both
+would read false. The gate is authoring only; `hydrateMermaid` and
+`hydrateLatex` render for every reader. Check: `Api/SpaFeatures.test.php`.
+
 ## Bundle and offline
 
 `mermaid` is a direct dependency, deduped with the copy Excalidraw already pulls

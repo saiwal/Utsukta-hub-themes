@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\ColorSchemes;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\SpaFeatures;
 
 class Pconfig
 {
@@ -95,10 +96,10 @@ class Pconfig
 
             require_once 'include/features.php';
             $features = [];
-            foreach (get_features(false) as $cat) {
+            foreach (SpaFeatures::merge(get_features(false)) as $cat) {
                 foreach ($cat as $item) {
                     if (is_array($item)) {
-                        $features[$item[0]] = (bool) feature_enabled($uid, $item[0]);
+                        $features[$item[0]] = SpaFeatures::enabled($uid, $item[0]);
                     }
                 }
             }

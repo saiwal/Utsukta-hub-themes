@@ -10,7 +10,16 @@ You can draw flowcharts, sequence diagrams, charts and more by writing them as t
 - **Webpages**
 - **Notepad**
 
-Diagrams are **not** drawn in the Network stream or on channel posts yet — there they show as a code block.
+Typed into a post as a code block, a diagram is **not** drawn in the Network stream or on channel posts — there it shows as code. Use the diagram button instead (below).
+
+## The diagram button
+
+Turn it on in **Settings → Features**, under **Editor → Diagrams** (it's off by default; **LaTeX equations** sits next to it). The editor toolbar then gets a diagram button that opens a window where you type the diagram and see a live preview.
+
+- **Posts, comments and direct messages:** the diagram is turned into a picture and uploaded, like a LaTeX equation. Everyone sees the picture, even on other hubs and on Mastodon. The diagram's text goes underneath in a collapsed **Diagram source** section, so you or anyone else can copy it, change it and insert it again.
+- **Wiki, articles, cards, webpages and notepad:** the button inserts the diagram as text, which is drawn every time the page is shown. You can edit it directly later.
+
+The setting only controls the button. Diagrams other people wrote always show, whether you have it on or not.
 
 ## Writing a diagram
 
