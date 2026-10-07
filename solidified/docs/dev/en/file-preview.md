@@ -28,7 +28,7 @@ Callers: `src/modules/files/widgets/FilesContentWidget.tsx` (`openItem()`) and `
 - **csv** — same fetch as text, parsed by `parseCsv()` (`filePreview.ts`, quoted fields + `""` escapes; tab-delimited for `.tsv` / `text/tab-separated-values`) into a table whose first row is the sticky header. Check: `node --experimental-strip-types packages/spa-core/src/lib/filePreview.test.ts`.
 - **json** — pretty-printed (`JSON.stringify(…, null, 2)`) into the text line list; unparseable JSON falls back to the raw text. `.excalidraw` is classified first, so scenes never land here.
 - **bbcode** — `.bb`/`.bbcode`, rendered with spa-core's `bbcode()` and `sanitizeHtml()`, like markdown.
-- Size guard: `TEXT_PREVIEW_MAX_BYTES` (2MB) — all text-fetched previews (text/markdown/html/csv/json/bbcode) over that show a "too large, use Download" message instead of fetching. No analogous cap on epub/pdf/video/audio.
+- Size guard: `TEXT_PREVIEW_MAX_BYTES` (2MB; `HTML_PREVIEW_MAX_BYTES` = 50MB for html, which renders natively in the iframe instead of one DOM node per line) — all text-fetched previews (text/markdown/html/csv/json/bbcode) over that show a "too large, use Download" message instead of fetching. No analogous cap on epub/pdf/video/audio.
 - Editing: image and video kinds additionally get an "Edit" button (`ImageEditor` / `VideoEditor`, lazy-loaded) — unrelated to preview classification.
 
 ## Adding a New Previewable Format
