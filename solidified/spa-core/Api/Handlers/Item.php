@@ -1675,10 +1675,18 @@ class Item
         // item_store_update(); dropping it makes Notifier encode the edited row.
         ObjCache::Delete($item[0]['mid']);
 
+        // The tail item_store_update() runs (include/items.php ~2456): wrap the
+        // edited object in a fresh collection Add and clone-sync both. Zot hubs
+        // reject a bare Update of a Collection-targeted post as "not a
+        // collection activity" — a status DReport drops, so it never even
+        // shows in the delivery report — so the Add is what carries the edit.
+        $updated = q("SELECT * FROM item WHERE id = %d", $iid);
+        $post = addToCollectionAndSync(['success' => true, 'item' => $updated[0], 'item_id' => $iid]);
+
         // Local-only posts (see createPost()) never federate — including edits,
         // which would otherwise be the first thing ever delivered for them.
         if (!get_iconfig($iid, 'spa', 'local_only')) {
-            Master::Summon(['Notifier', 'edit_post', $iid]);
+            self::summonWithApproval('edit_post', $post);
         }
 
         Response::send(['success' => true]);
