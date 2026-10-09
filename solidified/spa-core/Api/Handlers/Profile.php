@@ -320,47 +320,78 @@ class Profile
         $hide_friends = !empty($prow[0]['hide_friends']);
         $is_owner     = (local_channel() === $uid);
 
-        if ($hide_friends && !$is_owner) {
+        // Same gates as core's /viewconnections: the owner's hide_friends,
+        // public-access lockdown, and the view_contacts permission.
+        if (!$is_owner && ($hide_friends || observer_prohibited()
+                || !perm_is_allowed($uid, get_observer_hash(), 'view_contacts'))) {
             Response::send(['connections' => [], 'total' => 0, 'hidden' => true]);
             return;
         }
 
-        $limit = min(24, max(1, (int) ($_GET['limit'] ?? 24)));
+        $limit = min(60, max(1, (int) ($_GET['limit'] ?? 24)));
         $start = max(0, (int) ($_GET['start'] ?? 0));
 
+        // Connections the owner marked hidden, and hidden/dead xchans, are
+        // only listed to the owner (core does the same).
+        $where = "abook.abook_channel = %d
+               AND abook.abook_self = 0 AND abook.abook_blocked = 0
+               AND abook.abook_pending = 0 AND abook.abook_archived = 0
+               AND abook.abook_ignored = 0
+               AND xchan.xchan_orphan = 0 AND xchan.xchan_deleted = 0"
+            . ($is_owner ? '' : ' AND abook.abook_hidden = 0 AND xchan.xchan_hidden = 0');
+
+        // xprof is the profile each channel publishes to the directory, so
+        // it is public by definition; only the non-personal fields are read.
         $rows = q(
-            "SELECT xchan.xchan_name, xchan.xchan_addr,
-                    xchan.xchan_photo_m, xchan.xchan_url,
+            "SELECT xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
+                    xchan.xchan_photo_m, xchan.xchan_url, xchan.xchan_network,
+                    xprof.xprof_desc, xprof.xprof_locale, xprof.xprof_region, xprof.xprof_country,
                     channel.channel_address AS local_nick
              FROM abook
-             LEFT JOIN xchan   ON abook.abook_xchan   = xchan.xchan_hash
+             JOIN xchan        ON abook.abook_xchan   = xchan.xchan_hash
+             LEFT JOIN xprof   ON xprof.xprof_hash    = xchan.xchan_hash
              LEFT JOIN channel ON channel.channel_hash = xchan.xchan_hash
-             WHERE abook.abook_channel  = %d
-               AND abook.abook_self     = 0
-               AND abook.abook_blocked  = 0
-               AND abook.abook_pending  = 0
-               AND abook.abook_archived = 0
+             WHERE $where
              ORDER BY xchan.xchan_name ASC
              LIMIT %d OFFSET %d",
             intval($uid),
             intval($limit),
             intval($start)
-        );
+        ) ?: [];
 
         $total_row = q(
             "SELECT COUNT(*) AS total FROM abook
-             WHERE abook_channel = %d AND abook_self = 0
-               AND abook_blocked = 0 AND abook_pending = 0 AND abook_archived = 0",
+             JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             WHERE $where",
             intval($uid)
         );
 
+        // Which of these the local viewer is already connected to (or is),
+        // so the page only offers Connect where it means something.
+        // null = viewer can't connect from here (anonymous / remote).
+        $viewer_uid = local_channel();
+        $mine = null;
+        if ($viewer_uid && $rows) {
+            $hashes = implode(',', array_map(fn($r) => "'" . dbesc($r['xchan_hash']) . "'", $rows));
+            $own = q("SELECT abook_xchan FROM abook WHERE abook_channel = %d AND abook_xchan IN ($hashes)",
+                intval($viewer_uid)) ?: [];
+            $mine = array_flip(array_column($own, 'abook_xchan'));
+            $mine[get_observer_hash()] = true;
+        }
+
         $connections = array_map(fn($r) => [
-            'name'       => Response::decodeEntities($r['xchan_name'] ?? ''),
-            'address'    => $r['xchan_addr']         ?? '',
-            'photo'      => $r['xchan_photo_m']      ?? '',
-            'url'        => $r['xchan_url']           ?? '',
-            'local_nick' => $r['local_nick']          ?: null,
-        ], $rows ?: []);
+            'name'        => Response::decodeEntities($r['xchan_name'] ?? ''),
+            'address'     => $r['xchan_addr']    ?? '',
+            'photo'       => $r['xchan_photo_m'] ?? '',
+            'url'         => $r['xchan_url']     ?? '',
+            'local_nick'  => $r['local_nick']    ?: null,
+            'network'     => $r['xchan_network'] ?? '',
+            'description' => Response::decodeEntities($r['xprof_desc'] ?? ''),
+            'location'    => implode(', ', array_filter([
+                $r['xprof_locale'] ?? '', $r['xprof_region'] ?? '', $r['xprof_country'] ?? '',
+            ])),
+            'viewer_connected' => $mine === null ? null : isset($mine[$r['xchan_hash']]),
+        ], $rows);
 
         Response::send([
             'connections' => $connections,

@@ -170,7 +170,7 @@ class Connections
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
              $base_where
-             ORDER BY $sql_order
+             ORDER BY $sql_order, abook.abook_id
              LIMIT %d OFFSET %d",
             intval($uid),
             $limit,
