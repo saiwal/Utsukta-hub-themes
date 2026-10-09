@@ -123,20 +123,32 @@ class Connections
             'connected'      => 'abook.abook_created ASC',
             'connected_desc' => 'abook.abook_created DESC',
             'recent'         => 'xchan.xchan_updated DESC',
-            'unseen'         => 'unseen DESC, xchan.xchan_name ASC',
             default          => 'xchan.xchan_name ASC',
         };
 
         // ?unseen=1 (or order=unseen): unread top-level posts per connection,
-        // counted by owner_xchan like core's Forums widget, in one grouped join.
+        // counted by owner_xchan like core's Forums widget. Its own query on
+        // purpose: alone it rides the (uid, item_unseen) index and touches only
+        // unread rows; as a derived-table join MySQL planned it badly enough to
+        // time out on a large hub. The handful of unread owners then feed the
+        // sort as a CASE, which needs no join at all.
         $with_unseen = !empty($_GET['unseen']) || $order_key === 'unseen';
-        $unseen_col  = $with_unseen ? ', COALESCE(ux.n, 0) AS unseen' : '';
-        $unseen_join = $with_unseen
-            ? 'LEFT JOIN (SELECT owner_xchan, COUNT(*) AS n FROM item
-                          WHERE uid = ' . intval($uid) . ' AND item_unseen = 1 AND item_thread_top = 1 '
-                          . item_normal($uid) . '
-                          GROUP BY owner_xchan) ux ON ux.owner_xchan = xchan.xchan_hash'
-            : '';
+        $unseen = [];
+        if ($with_unseen) {
+            $counts = q("SELECT owner_xchan, COUNT(*) AS n FROM item
+                         WHERE uid = %d AND item_unseen = 1 AND item_thread_top = 1 "
+                         . item_normal($uid) . " GROUP BY owner_xchan",
+                intval($uid));
+            $unseen = array_map('intval', array_column($counts ?: [], 'n', 'owner_xchan'));
+        }
+        if ($order_key === 'unseen') {
+            $cases = '';
+            foreach ($unseen as $hash => $n) {
+                $cases .= " WHEN '" . protect_sprintf(dbesc($hash)) . "' THEN " . $n;
+            }
+            $sql_order = ($cases ? "CASE xchan.xchan_hash $cases ELSE 0 END DESC, " : '')
+                . 'xchan.xchan_name ASC';
+        }
 
         $base_where = "WHERE abook.abook_channel = %d
                          AND abook.abook_self    = 0
@@ -161,10 +173,9 @@ class Connections
                     abook.abook_incl, abook.abook_excl,
                     xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                     xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
-                    xchan.xchan_pubforum, xchan.xchan_updated $unseen_col
+                    xchan.xchan_pubforum, xchan.xchan_updated
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
-             $unseen_join
              $base_where
              ORDER BY $sql_order
              LIMIT %d OFFSET %d",
@@ -180,7 +191,7 @@ class Connections
         );
 
         if ($with_unseen) {
-            foreach ($connections as $i => &$c) $c['unseen'] = intval($rows[$i]['unseen']);
+            foreach ($connections as &$c) $c['unseen'] = $unseen[$c['xchan_hash']] ?? 0;
             unset($c);
         }
 
