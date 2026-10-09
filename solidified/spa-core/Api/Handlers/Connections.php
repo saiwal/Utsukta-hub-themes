@@ -126,13 +126,14 @@ class Connections
             default          => 'xchan.xchan_name ASC',
         };
 
-        // ?unseen=1 (or order=unseen): unread top-level posts per connection,
-        // counted by owner_xchan like core's Forums widget. Its own query on
-        // purpose: alone it rides the (uid, item_unseen) index and touches only
-        // unread rows; as a derived-table join MySQL planned it badly enough to
-        // time out on a large hub. The handful of unread owners then feed the
-        // sort as a CASE, which needs no join at all.
-        $with_unseen = !empty($_GET['unseen']) || $order_key === 'unseen';
+        // ?unseen=1: unread top-level posts per connection, counted by
+        // owner_xchan like core's Forums widget. Its own query on purpose:
+        // alone it rides the (uid, item_unseen) index and touches only unread
+        // rows; as a derived-table join MySQL planned it badly enough to time
+        // out on a large hub. Not a sort key: counts change between page
+        // fetches, so offset paging over them repeats/skips rows — the client
+        // sorts the (small) forum list itself.
+        $with_unseen = !empty($_GET['unseen']);
         $unseen = [];
         if ($with_unseen) {
             $counts = q("SELECT owner_xchan, COUNT(*) AS n FROM item
@@ -140,14 +141,6 @@ class Connections
                          . item_normal($uid) . " GROUP BY owner_xchan",
                 intval($uid));
             $unseen = array_map('intval', array_column($counts ?: [], 'n', 'owner_xchan'));
-        }
-        if ($order_key === 'unseen') {
-            $cases = '';
-            foreach ($unseen as $hash => $n) {
-                $cases .= " WHEN '" . protect_sprintf(dbesc($hash)) . "' THEN " . $n;
-            }
-            $sql_order = ($cases ? "CASE xchan.xchan_hash $cases ELSE 0 END DESC, " : '')
-                . 'xchan.xchan_name ASC';
         }
 
         $base_where = "WHERE abook.abook_channel = %d
