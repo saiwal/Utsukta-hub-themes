@@ -104,7 +104,11 @@ class Connections
         $offset     = max(0, intval($_GET['start'] ?? 0));
 
         $sql_filter = $this->filterClause($filter);
-        $sql_filter .= $type === 'forum' ? ' AND xchan.xchan_pubforum = 1 ' : '';
+        $sql_filter .= match ($type) {
+            'forum'  => ' AND xchan.xchan_pubforum = 1 ',
+            'person' => ' AND xchan.xchan_pubforum = 0 ',
+            default  => '',
+        };
 
         $sql_search = '';
         if ($search !== '') {
@@ -119,8 +123,20 @@ class Connections
             'connected'      => 'abook.abook_created ASC',
             'connected_desc' => 'abook.abook_created DESC',
             'recent'         => 'xchan.xchan_updated DESC',
+            'unseen'         => 'unseen DESC, xchan.xchan_name ASC',
             default          => 'xchan.xchan_name ASC',
         };
+
+        // ?unseen=1 (or order=unseen): unread top-level posts per connection,
+        // counted by owner_xchan like core's Forums widget, in one grouped join.
+        $with_unseen = !empty($_GET['unseen']) || $order_key === 'unseen';
+        $unseen_col  = $with_unseen ? ', COALESCE(ux.n, 0) AS unseen' : '';
+        $unseen_join = $with_unseen
+            ? 'LEFT JOIN (SELECT owner_xchan, COUNT(*) AS n FROM item
+                          WHERE uid = ' . intval($uid) . ' AND item_unseen = 1 AND item_thread_top = 1 '
+                          . item_normal($uid) . '
+                          GROUP BY owner_xchan) ux ON ux.owner_xchan = xchan.xchan_hash'
+            : '';
 
         $base_where = "WHERE abook.abook_channel = %d
                          AND abook.abook_self    = 0
@@ -145,9 +161,10 @@ class Connections
                     abook.abook_incl, abook.abook_excl,
                     xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                     xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
-                    xchan.xchan_pubforum, xchan.xchan_updated
+                    xchan.xchan_pubforum, xchan.xchan_updated $unseen_col
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             $unseen_join
              $base_where
              ORDER BY $sql_order
              LIMIT %d OFFSET %d",
@@ -161,6 +178,11 @@ class Connections
             fn($row) => $this->formatRow($row, $theirPerms[$row['xchan_hash']] ?? []),
             $rows ?: []
         );
+
+        if ($with_unseen) {
+            foreach ($connections as $i => &$c) $c['unseen'] = intval($rows[$i]['unseen']);
+            unset($c);
+        }
 
         Response::send($connections, [
             'total'  => $total,
