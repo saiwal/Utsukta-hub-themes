@@ -296,12 +296,21 @@ The selected range is shown **in the order's own label** — "Most discussed
 (Week)" — rather than as a separate always-visible control, and the range
 options open in a **floating popover** anchored under the tab row. Both exist
 for the same reason: a second inline group of range buttons resized the toolbar
-every time a ranked order was picked. A chevron on the active range-aware tab
-marks it as openable; clicking that tab again toggles the popover, and picking
-a range closes it.
+every time a ranked order was picked. Each range-aware order is a **split
+button**: the label picks the order (with the current range), the chevron beside
+it opens the range popover for that order *without* reloading the feed, and
+picking a range applies order + range in one reload and closes it. The narrow
+dropdown does the same per row, the chevron folding the range chips in and out.
 
 Props mirror `ViewSwitcher`'s: `order`, `range`, `onChange(order, range?)`, and
 `available?` to restrict which orders are offered.
+
+On `/network` the four ranked orders are opt-in: Settings → Features → Network →
+**Advanced Sorting** (`spa_advanced_sort`, off by default, an `SpaFeatures`
+toggle). With it off `StreamFilters` passes `available` = latest / active /
+unthreaded, and `sortPref()` ignores a remembered ranked order. A ranked
+`?order=` in the URL still works — the toggle hides choices, it doesn't block
+the API.
 
 Picking a non-range-aware order clears `range`, so a stale `?range=` can't
 linger in the URL where nothing reads it.
