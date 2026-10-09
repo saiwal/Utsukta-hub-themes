@@ -51,7 +51,7 @@ class StreamWidgets
                AND term.ttype = " . intval(TERM_HASHTAG) . "
                AND term.otype = " . intval(TERM_OBJ_POST) . "
                AND item.item_thread_top = 1
-               AND item.item_wall       = 1
+               " . $this->wallSql() . "
                $perm_sql $item_normal
              GROUP BY term.term
              ORDER BY total DESC
@@ -84,7 +84,7 @@ class StreamWidgets
                AND term.ttype = " . intval(TERM_CATEGORY) . "
                AND term.otype = " . intval(TERM_OBJ_POST) . "
                AND item.item_thread_top = 1
-               AND item.item_wall       = 1
+               " . $this->wallSql() . "
                $perm_sql $item_normal
              GROUP BY term.term
              ORDER BY total DESC"
@@ -126,7 +126,7 @@ class StreamWidgets
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
-               AND item.item_wall       = 1
+               " . $this->wallSql() . "
                AND item.item_type       = " . intval($item_type_val) . "
                AND item.item_private   IN (0, 1)
                AND item.obj_type       NOT IN ('Event', '" . dbesc(ACTIVITY_OBJ_EVENT) . "')
@@ -226,7 +226,7 @@ class StreamWidgets
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
-               AND item.item_wall       = 1
+               " . $this->wallSql() . "
                AND item.item_deleted    = 0
                AND item.item_private   IN (0, 1)
                AND item.verb           != 'Add'
@@ -289,7 +289,7 @@ class StreamWidgets
              FROM item
              WHERE item.uid             = " . intval($uid) . "
                AND item.item_thread_top = 1
-               AND item.item_wall       = 1
+               " . $this->wallSql() . "
                AND item.item_deleted    = 0
                AND item.item_private   IN (0, 1)
                AND item.verb           != 'Add'
@@ -345,6 +345,17 @@ class StreamWidgets
     {
         $type = $_GET['type'] ?? '';
         return in_array($type, ['articles', 'cards', 'notes'], true) ? $type : 'posts';
+    }
+
+    /**
+     * item_wall only separates a channel's own posts from delivered ones.
+     * Article/card/note rows are always the owner's, but older or imported
+     * ones carry item_wall = 0 — core's card_tagadelic() doesn't filter on it
+     * and neither does the app's own list, so the widgets mustn't either.
+     */
+    private function wallSql(): string
+    {
+        return $this->itemType() === 'posts' ? ' AND item.item_wall = 1 ' : '';
     }
 
     /**
