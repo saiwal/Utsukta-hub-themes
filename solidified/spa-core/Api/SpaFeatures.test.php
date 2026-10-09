@@ -34,13 +34,15 @@ $names = array_map(fn($i) => is_array($i) ? $i[0] : null, SpaFeatures::merge(get
 check('spa_latex in editor group', in_array('spa_latex', $names, true));
 check('spa_diagrams in editor group', in_array('spa_diagrams', $names, true));
 check('core editor features kept', count(array_filter($names)) > 2);
+check('spa_advanced_sort in network group', in_array('spa_advanced_sort', array_map(fn($i) => is_array($i) ? $i[0] : null, SpaFeatures::merge(get_features(false))['network']), true));
 
 $saved = [];
-foreach (['spa_latex', 'spa_diagrams'] as $n) $saved[$n] = get_pconfig($uid, 'feature', $n, null);
+foreach (['spa_latex', 'spa_diagrams', 'spa_advanced_sort'] as $n) $saved[$n] = get_pconfig($uid, 'feature', $n, null);
 
-foreach (['spa_latex', 'spa_diagrams'] as $n) del_pconfig($uid, 'feature', $n);
+foreach (['spa_latex', 'spa_diagrams', 'spa_advanced_sort'] as $n) del_pconfig($uid, 'feature', $n);
 check('latex on by default', SpaFeatures::enabled($uid, 'spa_latex') === true);
 check('diagrams off by default', SpaFeatures::enabled($uid, 'spa_diagrams') === false);
+check('advanced sort off by default', SpaFeatures::enabled($uid, 'spa_advanced_sort') === false);
 
 set_pconfig($uid, 'feature', 'spa_latex', 0);
 set_pconfig($uid, 'feature', 'spa_diagrams', 1);
