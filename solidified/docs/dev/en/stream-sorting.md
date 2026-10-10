@@ -305,10 +305,12 @@ dropdown does the same per row, the chevron folding the range chips in and out.
 Props mirror `ViewSwitcher`'s: `order`, `range`, `onChange(order, range?)`, and
 `available?` to restrict which orders are offered.
 
-On `/network` the four ranked orders are opt-in: Settings → Features → Network →
+The ranked orders are opt-in on both `/network` and the channel feed: Settings → Features → Network →
 **Advanced Sorting** (`spa_advanced_sort`, off by default, an `SpaFeatures`
 toggle). With it off `StreamFilters` passes `available` = latest / active /
-unthreaded, and `sortPref()` ignores a remembered ranked order. A ranked
+unthreaded (`ChannelFeedShell` does the same, dropping its Top / Most
+discussed), and `sortPref()` ignores a remembered ranked order. It is the
+*viewer's* toggle, so anonymous and remote visitors only get the basic three. A ranked
 `?order=` in the URL still works — the toggle hides choices, it doesn't block
 the API.
 
