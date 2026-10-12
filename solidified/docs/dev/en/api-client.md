@@ -8,7 +8,7 @@ not unwrap the JSON envelope — so call sites stay explicit about status
 handling.
 
 > An older `api.ts` exported `apiGet` / `moduleGet` / `modulePost` against
-> `/spa/z/1.0/`. Those were removed; nothing in the tree uses them. If you find
+> `/api/z/1.0/`. Those were removed; nothing in the tree uses them. If you find
 > them referenced anywhere, that reference is stale.
 
 Most component code should not call the network layer directly for GETs — reads

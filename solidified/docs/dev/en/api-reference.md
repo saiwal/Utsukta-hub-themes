@@ -3,7 +3,7 @@
 Source: `packages/spa-core/php/Api/` in [saiwal/Hubzilla-Solidified-Source](https://github.com/saiwal/Hubzilla-Solidified-Source)
 Namespace: `Utsukta\SpaCore\Api`. All routes are dispatched by `Router.php` from `/spa/<resource>[/...]`, where `<resource>` selects a handler class and the handler's `get()` / `post()` / `delete()` method runs based on HTTP verb. Unknown resource → `404`; unsupported verb on a known resource → `405`.
 
-> The URL prefix is `/spa/`, not `/api/` — deliberately, so the theme's route registration doesn't shadow Hubzilla's classic `/api/z/1.0/` surface. Many handler docblocks still write `/api/…`; that is a cosmetic leftover, the routes are `/spa/…`.
+> The URL prefix is `/spa/`, not `/api/` — deliberately, so the theme's route registration doesn't shadow Hubzilla's classic `/api/z/1.0/` surface.
 
 ## Response Envelope (global, from `Response.php`)
 

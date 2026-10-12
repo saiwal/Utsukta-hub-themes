@@ -2,99 +2,115 @@
 
 ## अवलोकन
 
-सभी API संचार पतले fetch रैपर्स से होता है। दो सेट हैं:
+सारा API संचार एक पतले रैपर, `apiFetch`, से होता है जो
+`packages/spa-core/src/lib/fetch.ts` में है। यह कच्चा `Response` लौटाता है — JSON
+एनवेलप को खोलता नहीं — ताकि कॉल साइट status हैंडलिंग के बारे में स्पष्ट रहें।
 
-- **`apiGet`** — Hubzilla का बिल्ट-इन REST API, `/spa/z/1.0/` पर
-- **`moduleGet` / `modulePost`** — SPA का खुद का PHP API, `/spa/*` पर
+> एक पुरानी `api.ts` `/api/z/1.0/` के लिए `apiGet` / `moduleGet` / `modulePost`
+> एक्सपोर्ट करती थी। वे हटा दिए गए हैं; ट्री में कोई उन्हें उपयोग नहीं करता। अगर
+> कहीं उनका ज़िक्र मिले, तो वह पुराना है।
 
-फ़ाइल: `src/shared/lib/api.ts`
+ज़्यादातर कंपोनेंट कोड को GET के लिए सीधे नेटवर्क लेयर कॉल नहीं करनी चाहिए — रीड
+TanStack Query कैश से होते हैं; देखें [data-fetching.md](data-fetching.md)।
 
-## apiGet
+## apiFetch
 
 ```typescript
-import { apiGet } from "@/shared/lib/api";
+import { apiFetch, apiError } from "@utsukta/spa-core/lib/fetch";
 
-const result = await apiGet<MyType>("channel/alice");
-// → GET /spa/z/1.0/channel/alice
+const res = await apiFetch("/spa/network?start=0");
+if (!res.ok) throw await apiError(res);
+const { data } = await res.json();
 ```
 
-Hubzilla के नेटिव Zot API एंडपॉइंट के लिए उपयोग होता है। non-2xx रिस्पॉन्स पर Error थ्रो करता है।
+हर रिक्वेस्ट पर यह जोड़ता है:
 
-## moduleGet
+- `credentials: "include"`
+- `Content-Type: application/json`
 
-```typescript
-import { moduleGet } from "@/shared/lib/api";
+और `POST` / `PUT` / `PATCH` / `DELETE` पर:
 
-const data = await moduleGet<MyType>("api/network?start=0");
-// → GET /spa/network?start=0
-```
+- `X-CSRF-Token`, `getCsrfToken()` से फ़ेच किया हुआ
 
-SPA-स्पेसिफ़िक PHP API हैंडलर के लिए उपयोग होता है।
+`init.headers` में दिए गए हेडर मर्ज होते हैं, और CSRF हेडर सबसे आख़िर में लगता है
+ताकि वह गलती से ओवरराइट न हो।
 
-## modulePost
+### स्वचालित CSRF रीट्राई
 
-```typescript
-import { modulePost } from "@/shared/lib/api";
+अगर कोई म्यूटेटिंग रिक्वेस्ट `403` लौटाए और बॉडी CSRF एरर हो
+(`error.code === "csrf_invalid"` या `error.message === "Invalid CSRF token"`),
+तो `apiFetch` `resetCsrfToken()` कॉल करता है और नए टोकन के साथ रिक्वेस्ट **एक बार**
+दोबारा भेजता है। हाथ से लिखे `fetch` की बजाय इसे पसंद करने की मुख्य वजह यही है —
+वरना 30-मिनट के टोकन कैश से लंबा चलने वाला सेशन सेव पर फ़ेल हो जाता है।
 
-const result = await modulePost<MyType>("api/item/abc123/like", {});
-// → POST /spa/item/abc123/like
-//   Content-Type: application/json
-//   body: {}
-```
-
-PHP API पर सभी POST रिक्वेस्ट के लिए ज़रूरी है:
-1. `Content-Type: application/json`
-2. वैध CSRF टोकन (नीचे देखें)
-
-`modulePost` कंटेंट टाइप हेडर सेट करता है लेकिन CSRF टोकन अपने आप नहीं जोड़ता — कॉलर को टोकन फ़ेच करके शामिल करना होगा (जब PHP हैंडलर `Auth::requireLocalJson()` चेक करे)।
-
-## CSRF टोकन मैनेजमेंट
-
-फ़ाइल: `src/shared/lib/csrf.ts`
-
-PHP API को सभी state-changing POST रिक्वेस्ट के लिए CSRF टोकन चाहिए। टोकन `/spa/csrf` से एक बार फ़ेच होता है और 30 मिनट तक कैश रहता है।
+### म्यूटेशन लिखना
 
 ```typescript
-import { getCsrfToken, resetCsrfToken } from "@/shared/lib/csrf";
-
-// टोकन फ़ेच करें (या कैश्ड लौटाएं)
-const token = await getCsrfToken();
-
-// कैश अमान्य करें (जैसे 403 के बाद)
-resetCsrfToken();
-```
-
-टोकन को request header के रूप में पास करना इस कोडबेस का मानक पैटर्न है:
-
-```typescript
-const token = await getCsrfToken();
-const res = await fetch("/spa/item", {
-  method: "POST",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json",
-    "X-CSRF-Token": token,
-  },
-  body: JSON.stringify(payload),
-});
-```
-
-## एरर हैंडलिंग
-
-fetch रैपर non-2xx रिस्पॉन्स पर HTTP status कोड संदेश वाला plain `Error` थ्रो करते हैं। एरर पकड़ना और UI स्टेट अपडेट करना मॉड्यूल-लेवल कोड की ज़िम्मेदारी है।
-
-```typescript
-try {
-  const data = await moduleGet<Post[]>("api/network");
-} catch (err) {
-  console.error("नेटवर्क लोड नहीं हुआ:", err);
-  setError("पोस्ट लोड नहीं हो सकीं।");
+export async function renameThing(id: number, name: string) {
+  const res = await apiFetch(`/spa/thing/${id}/edit`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw await apiError(res);
+  return (await res.json()).data;
 }
 ```
 
+## कब कच्चा `fetch` उपयोग करें
+
+`apiFetch` हमेशा JSON कंटेंट टाइप सेट करता है, इसलिए दो मामलों में इसे छोड़ना होगा:
+
+- **Multipart अपलोड** — `FormData` बनाएं और `X-CSRF-Token` खुद सेट करें
+  (`Avatar.php`, `Photos.php` और vCard/iCal इम्पोर्ट पाथ ऐसा करते हैं)।
+- **फ़ाइल डाउनलोड** — सादा `<a href>` उपयोग करें; हैंडलर एनवेलप लौटाने की बजाय
+  अपने हेडर लिखकर `exit` करता है (देखें `Cal.php` का `?export=ical` और `Files.php`)।
+
+दोनों ऑफ़लाइन-सुरक्षित रहते हैं:
+`packages/spa-core/src/lib/offline-fallback.ts` का fetch fallback `window.fetch` को
+ग्लोबली रैप करता है, हर कॉल साइट के नीचे।
+
+## एरर हैंडलिंग
+
+`apiError(res, label?)` रिस्पॉन्स से एक `Error` बनाता है, खाली status कोड की बजाय
+सर्वर के `error.message` को प्राथमिकता देता है, और उसे 200 अक्षरों तक काटता है
+(सर्वर संदेशों में PHP stack trace हो सकता है)।
+
+```typescript
+import { apiError, truncateError } from "@utsukta/spa-core/lib/fetch";
+```
+
+इसे दिखाने का मानक पैटर्न:
+
+```typescript
+import { toast } from "@utsukta/spa-core/store/toast";
+
+try {
+  await renameThing(id, name);
+} catch (err) {
+  toast.error(err instanceof Error ? err.message : "Rename failed");
+}
+```
+
+## CSRF टोकन मैनेजमेंट
+
+फ़ाइल: `packages/spa-core/src/lib/csrf.ts`
+
+टोकन `/spa/csrf` से एक बार फ़ेच होता है और 30 मिनट तक कैश रहता है। `apiFetch`
+यह आपके लिए संभालता है; इसे सीधे सिर्फ़ ऊपर के कच्चे-`fetch` मामलों में कॉल करें।
+
+```typescript
+import { getCsrfToken, resetCsrfToken } from "@utsukta/spa-core/lib/csrf";
+
+const token = await getCsrfToken();  // कैश्ड, या फ़ेच किया हुआ
+resetCsrfToken();                    // अमान्य करें (जैसे 403 के बाद)
+```
+
+सर्वर पर, `Auth::requireLocalJson()` हेडर को `$_SESSION['solidified_csrf']` से
+मिलाता है।
+
 ## API रिस्पॉन्स एनवेलप
 
-सभी PHP API रिस्पॉन्स एक समान एनवेलप उपयोग करते हैं (देखें [php-api.txt](php-api.txt)):
+सभी PHP API रिस्पॉन्स एक समान एनवेलप उपयोग करते हैं (देखें [php-api.md](php-api.md)):
 
 ```json
 { "data": <payload> }
@@ -102,12 +118,18 @@ try {
 { "error": { "status": 404, "message": "Not found" } }
 ```
 
-fetch कॉलर में आमतौर पर `data` फ़ील्ड को destructure किया जाता है।
+`data` को मॉड्यूल की `api.ts` में खोलें, ताकि views और widgets कभी एनवेलप न देखें।
 
 ## Dev प्रॉक्सी
 
-डेवलपमेंट में Vite dev सर्वर रिक्वेस्ट प्रॉक्सी करता है:
-- `/spa/*` → `https://hz-ddev.ddev.site/spa/*`
-- `/perfstats` → वही टार्गेट
+Vite dev सर्वर `https://hz-ddev.ddev.site` पर प्रॉक्सी करता है, इसलिए मॉड्यूल कोड
+dev और प्रोडक्शन दोनों में relative `/spa/` URL उपयोग कर सकता है।
 
-इसका मतलब है कि मॉड्यूल कोड dev और प्रोडक्शन दोनों में relative `/spa/` URL उपयोग कर सकता है।
+सीधे प्रॉक्सी होते हैं: `/spa`, `/perfstats`, `/cloud`, `/photo`, `/attach`,
+`/wall_upload`, `/wall_attach`, `/item`, `/acl`, `/follow`, `/subthread`,
+`/sse_bs`, `/starred`, `/smilies`।
+
+`/hq`, `/notify`, `/notifications` और `/cdav` **SPA रूट भी हैं**, इसलिए वे सिर्फ़ ऐप
+के अपने `fetch()` के लिए प्रॉक्सी होते हैं — ब्राउज़र नेविगेशन
+(`sec-fetch-mode: navigate`) dev सर्वर पर ही रहते हैं, ताकि हार्ड रीलोड पर भी
+पुरानी थीम की बजाय SPA खुले।

@@ -98,10 +98,15 @@ API कॉल के लिए उपयोग होने वाला nick �
 हर मॉड्यूल में आमतौर पर डेटा फ़ेचिंग के लिए `createResource` उपयोग करने वाला `store/store.ts` होता है:
 
 ```typescript
-// उदाहरण पैटर्न
+// उदाहरण पैटर्न — मॉड्यूल-लेवल स्टोर createResource पर रहते हैं क्योंकि उनके पास
+// कंपोनेंट कॉन्टेक्स्ट नहीं होता। कंपोनेंट के अंदर createQueryResource पसंद करें।
 const [posts, { refetch }] = createResource(
-  () => `network?start=${offset()}`,
-  (key) => moduleGet(`api/${key}`)
+  () => `/spa/network?start=${offset()}`,
+  async (url) => {
+    const res = await apiFetch(url);
+    if (!res.ok) throw await apiError(res);
+    return (await res.json()).data;
+  },
 );
 ```
 
