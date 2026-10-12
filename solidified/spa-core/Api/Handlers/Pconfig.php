@@ -2,6 +2,7 @@
 namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\ColorSchemes;
+use Utsukta\SpaCore\Api\HubDefaults;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\SpaFeatures;
 
@@ -14,29 +15,15 @@ class Pconfig
 
         $cuid = intval($ch['channel_id']);
 
-        $valid_fits    = ['tile', 'cover'];
-        $valid_sizes   = ['small', 'medium', 'large', 'xl'];
-        $valid_radii   = ['none', 'sm', 'default', 'lg', 'xl'];
-        $valid_families = [
-            'system','serif','monospace','nunito','saira','share-tech',
-            'playfair','libre-baskerville','comfortaa','space-mono','iosevka',
-            'righteous','playwrite-england','comic','opendyslexic',
-            'inter','atkinson-hyperlegible','literata','jetbrains-mono',
-        ];
-
-        $bg_fit        = get_pconfig($cuid, 'spa', 'bg_fit',        'cover');
-        $font_size     = get_pconfig($cuid, 'spa', 'font_size',     '');
-        $font_family   = get_pconfig($cuid, 'spa', 'font_family',   '');
-        $color_scheme  = get_pconfig($cuid, 'spa', 'color_scheme',  '');
-        $corner_radius = get_pconfig($cuid, 'spa', 'corner_radius', '');
+        $color_scheme = get_pconfig($cuid, 'spa', 'color_scheme', null);
 
         $result = [
-            'bg_url'        => (string) get_pconfig($cuid, 'spa', 'bg_url', ''),
-            'bg_fit'        => in_array($bg_fit,        $valid_fits,     true) ? $bg_fit        : 'cover',
-            'font_size'     => in_array($font_size,     $valid_sizes,    true) ? $font_size     : '',
-            'font_family'   => in_array($font_family,   $valid_families, true) ? $font_family   : '',
-            'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme  : '',
-            'corner_radius' => in_array($corner_radius, $valid_radii,    true) ? $corner_radius : '',
+            'bg_url'        => (string) get_pconfig($cuid, 'spa', 'bg_url', HubDefaults::value('bg_url')),
+            'bg_fit'        => HubDefaults::pref($cuid, 'bg_fit'),
+            'font_size'     => HubDefaults::pref($cuid, 'font_size'),
+            'font_family'   => HubDefaults::pref($cuid, 'font_family'),
+            'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme : HubDefaults::value('color_scheme'),
+            'corner_radius' => HubDefaults::pref($cuid, 'corner_radius'),
         ];
 
         if ($result['color_scheme'] === 'custom') {
@@ -115,7 +102,7 @@ class Pconfig
                 'my_address' => (string) (get_my_address() ?: channel_reddress($channel)),
                 'is_admin' => is_site_admin(),
                 'system'   => $config['system']  ?? [],
-                'spa'      => $config['spa']     ?? [],
+                'spa'      => ($config['spa'] ?? []) + HubDefaults::get(),
                 'features' => $features,
                 'nsfw'     => [
                     'words' => $nsfw_installed ? (string) ($config['nsfw']['words'] ?? 'nsfw,contentwarning') : '',
@@ -144,8 +131,9 @@ class Pconfig
             ];
             if ($channel_param !== '') {
                 $page_spa = self::channelSpa($channel_param);
-                if ($page_spa !== null) $base['spa'] = $page_spa;
+                if ($page_spa !== null) $base['spa'] = $page_spa + HubDefaults::get();
             }
+            $base['spa'] = $base['spa'] ?? HubDefaults::get();
             Response::send($base + self::siteBlock());
         }
 
@@ -156,7 +144,7 @@ class Pconfig
                 Response::send([
                     'uid'     => 0,
                     'channel' => $channel_param,
-                    'spa'     => $page_spa,
+                    'spa'     => $page_spa + HubDefaults::get(),
                 ] + self::siteBlock());
             }
         }
@@ -165,6 +153,7 @@ class Pconfig
         Response::send([
             'uid'     => 0,
             'channel' => '',
+            'spa'     => HubDefaults::get(),
         ] + self::siteBlock());
     }
 }

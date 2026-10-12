@@ -3,6 +3,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\ColorSchemes;
+use Utsukta\SpaCore\Api\HubDefaults;
 use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\SpaFeatures;
 use Zotlabs\Access\PermissionLimits;
@@ -93,22 +94,12 @@ class Settings
             if (strlen(trim($x)) && is_dir("view/theme/$x"))
                 $allowed_themes[] = trim($x);
 
-        $valid_font_sizes    = ['small', 'medium', 'large', 'xl'];
-        $valid_font_families = ['system', 'serif', 'monospace', 'nunito', 'saira', 'share-tech', 'playfair', 'libre-baskerville', 'comfortaa', 'space-mono', 'iosevka', 'righteous', 'playwrite-england', 'comic', 'opendyslexic', 'inter', 'atkinson-hyperlegible', 'literata', 'jetbrains-mono'];
-
-        $font_size   = get_pconfig($uid, 'spa', 'font_size', 'medium');
-        $font_family = get_pconfig($uid, 'spa', 'font_family', 'system');
-
-        if (!in_array($font_size, $valid_font_sizes, true))     $font_size   = 'medium';
-        if (!in_array($font_family, $valid_font_families, true)) $font_family = 'system';
-
-        $valid_bg_fits = ['tile', 'cover'];
-        $bg_url = get_pconfig($uid, 'spa', 'bg_url', '');
-        $bg_fit = get_pconfig($uid, 'spa', 'bg_fit', 'cover');
-        if (!in_array($bg_fit, $valid_bg_fits, true)) $bg_fit = 'cover';
-
-        $color_scheme = get_pconfig($uid, 'spa', 'color_scheme', 'light');
-        if (!ColorSchemes::valid($color_scheme)) $color_scheme = 'light';
+        $font_size     = HubDefaults::pref($uid, 'font_size');
+        $font_family   = HubDefaults::pref($uid, 'font_family');
+        $bg_url        = get_pconfig($uid, 'spa', 'bg_url', HubDefaults::value('bg_url'));
+        $bg_fit        = HubDefaults::pref($uid, 'bg_fit');
+        $color_scheme  = get_pconfig($uid, 'spa', 'color_scheme', null);
+        if (!ColorSchemes::valid($color_scheme)) $color_scheme = HubDefaults::value('color_scheme');
 
         $custom_theme_colors = null;
         if ($color_scheme === 'custom') {
@@ -116,32 +107,14 @@ class Settings
             if ($stored) $custom_theme_colors = $stored;
         }
 
-        $valid_scroll_styles = ['endless', 'load_more'];
-        $scroll_style = get_pconfig($uid, 'spa', 'scroll_style', 'endless');
-        if (!in_array($scroll_style, $valid_scroll_styles, true)) $scroll_style = 'endless';
-
+        $scroll_style  = HubDefaults::pref($uid, 'scroll_style');
         // Collapsed post-body height in px; 0 = never collapse.
-        $post_height = intval(get_pconfig($uid, 'spa', 'post_height', 310));
-        if ($post_height > 0) $post_height = min(max($post_height, 100), 5000);
-        else $post_height = 0;
-
-        $valid_corner_radii = ['none', 'sm', 'default', 'lg', 'xl'];
-        $corner_radius = get_pconfig($uid, 'spa', 'corner_radius', 'default');
-        if (!in_array($corner_radius, $valid_corner_radii, true)) $corner_radius = 'default';
-
-        $valid_comment_orders = ['oldest_first', 'newest_first'];
-        $comment_order = get_pconfig($uid, 'spa', 'comment_order', 'oldest_first');
-        if (!in_array($comment_order, $valid_comment_orders, true)) $comment_order = 'oldest_first';
-
-        $valid_composer_modes = ['modal', 'dock', 'page'];
-        $composer_mode = get_pconfig($uid, 'spa', 'composer_mode', 'modal');
-        if (!in_array($composer_mode, $valid_composer_modes, true)) $composer_mode = 'modal';
-        $post_mode = get_pconfig($uid, 'spa', 'post_mode', 'modal');
-        if (!in_array($post_mode, $valid_composer_modes, true)) $post_mode = 'modal';
-
-        $valid_thread_modes = ['threaded', 'flat'];
-        $thread_mode = get_pconfig($uid, 'spa', 'thread_mode', 'threaded');
-        if (!in_array($thread_mode, $valid_thread_modes, true)) $thread_mode = 'threaded';
+        $post_height   = intval(HubDefaults::pref($uid, 'post_height'));
+        $corner_radius = HubDefaults::pref($uid, 'corner_radius');
+        $comment_order = HubDefaults::pref($uid, 'comment_order');
+        $composer_mode = HubDefaults::pref($uid, 'composer_mode');
+        $post_mode     = HubDefaults::pref($uid, 'post_mode');
+        $thread_mode   = HubDefaults::pref($uid, 'thread_mode');
 
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
@@ -1038,8 +1011,8 @@ class Settings
                 dbesc($theme_val), intval($uid));
             $_SESSION['theme'] = $theme_val;
         }
-        $valid_font_sizes_post    = ['small', 'medium', 'large', 'xl'];
-        $valid_font_families_post = ['system', 'serif', 'monospace', 'nunito', 'saira', 'share-tech', 'playfair', 'libre-baskerville', 'comfortaa', 'space-mono', 'iosevka', 'righteous', 'playwrite-england', 'comic', 'opendyslexic', 'inter', 'atkinson-hyperlegible', 'literata', 'jetbrains-mono'];
+        $valid_font_sizes_post    = HubDefaults::FONT_SIZES;
+        $valid_font_families_post = HubDefaults::FONT_FAMILIES;
         if (isset($data['font_size']) && in_array($data['font_size'], $valid_font_sizes_post, true))
             set_pconfig($uid, 'spa', 'font_size', $data['font_size']);
         if (isset($data['font_family']) && in_array($data['font_family'], $valid_font_families_post, true))
