@@ -5,7 +5,7 @@ use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\Cache;
 
 /**
- * GET /api/weather?place=<place name>&unit=c|f
+ * GET /spa/weather?place=<place name>&unit=c|f
  *
  * Server-side geocode + current-conditions lookup for the SPA's Weather
  * widget, proxied through Open-Meteo (no API key required) — kept server-side

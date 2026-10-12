@@ -7,27 +7,27 @@ use Utsukta\SpaCore\Api\Response;
 /**
  * Cart JSON API — direct DB/pconfig implementation.
  *
- * GET  /api/cart/:nick/catalog
- * GET  /api/cart/:nick/catalog?all=1           (seller — includes inactive)
- * GET  /api/cart/:nick/order
- * GET  /api/cart/:nick/payment-config
- * GET  /api/cart/:nick/payment-settings        (seller)
- * GET  /api/cart/:nick/orders                  (seller)
- * GET  /api/cart/:nick/orders/:hash            (seller)
- * POST /api/cart/:nick/item                    {sku, qty?}
- * POST /api/cart/:nick/item/remove             {sku}
- * POST /api/cart/:nick/item/qty                {sku, qty}
- * POST /api/cart/:nick/checkout                — manual checkout (contact seller)
- * POST /api/cart/:nick/payment-settings              (seller) {paypal:{…}, razorpay:{…}, cashfree:{…}, upi:{…}, manual:{…}}
- * POST /api/cart/:nick/paypal/create-order           {order_hash} → {paypal_order_id}
- * POST /api/cart/:nick/paypal/capture                {paypal_order_id, order_hash} → {paid}
- * POST /api/cart/:nick/razorpay/create-order         {order_hash} → {razorpay_order_id, key_id, amount, currency}
- * POST /api/cart/:nick/razorpay/verify               {razorpay_order_id, razorpay_payment_id, razorpay_signature, order_hash}
- * POST /api/cart/:nick/cashfree/create-order         {order_hash, customer_phone} → {payment_session_id, mode}
- * POST /api/cart/:nick/cashfree/verify               {order_hash} → {paid}
- * POST /api/cart/:nick/orders/:hash/markpaid
- * POST /api/cart/:nick/orders/:hash/note       {text}
- * POST /api/cart/:nick/orders/:hash/items/:id/fulfill|cancel
+ * GET  /spa/cart/:nick/catalog
+ * GET  /spa/cart/:nick/catalog?all=1           (seller — includes inactive)
+ * GET  /spa/cart/:nick/order
+ * GET  /spa/cart/:nick/payment-config
+ * GET  /spa/cart/:nick/payment-settings        (seller)
+ * GET  /spa/cart/:nick/orders                  (seller)
+ * GET  /spa/cart/:nick/orders/:hash            (seller)
+ * POST /spa/cart/:nick/item                    {sku, qty?}
+ * POST /spa/cart/:nick/item/remove             {sku}
+ * POST /spa/cart/:nick/item/qty                {sku, qty}
+ * POST /spa/cart/:nick/checkout                — manual checkout (contact seller)
+ * POST /spa/cart/:nick/payment-settings              (seller) {paypal:{…}, razorpay:{…}, cashfree:{…}, upi:{…}, manual:{…}}
+ * POST /spa/cart/:nick/paypal/create-order           {order_hash} → {paypal_order_id}
+ * POST /spa/cart/:nick/paypal/capture                {paypal_order_id, order_hash} → {paid}
+ * POST /spa/cart/:nick/razorpay/create-order         {order_hash} → {razorpay_order_id, key_id, amount, currency}
+ * POST /spa/cart/:nick/razorpay/verify               {razorpay_order_id, razorpay_payment_id, razorpay_signature, order_hash}
+ * POST /spa/cart/:nick/cashfree/create-order         {order_hash, customer_phone} → {payment_session_id, mode}
+ * POST /spa/cart/:nick/cashfree/verify               {order_hash} → {paid}
+ * POST /spa/cart/:nick/orders/:hash/markpaid
+ * POST /spa/cart/:nick/orders/:hash/note       {text}
+ * POST /spa/cart/:nick/orders/:hash/items/:id/fulfill|cancel
  */
 class Cart
 {

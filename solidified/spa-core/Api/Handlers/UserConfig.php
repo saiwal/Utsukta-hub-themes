@@ -5,7 +5,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 use Utsukta\SpaCore\Api\Response;
 
 /**
- * GET /api/userconfig
+ * GET /spa/userconfig
  *
  * Returns viewer identity, pconfig, and app lists (pinned / featured / system).
  * Safe for all viewer types: local, remote, anonymous.

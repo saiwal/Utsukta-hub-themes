@@ -7,7 +7,7 @@ use Utsukta\SpaCore\Api\ContentTypes;
 
 class Notes
 {
-    // POST /api/notes
+    // POST /spa/notes
     // Body (JSON): { body, mimetype?, category? }
     // Creates a personal note directly via item_store(), bypassing the legacy
     // /item endpoint which would also create a blank companion Add activity.
@@ -133,7 +133,7 @@ class Notes
         Response::send(['mid' => $mid]);
     }
 
-    // GET /api/notes
+    // GET /spa/notes
     // Lists the authenticated user's personal notes (ITEM_TYPE_CUSTOM items).
     // These never appear in streams or federate — the Notifier skips type != 0.
     // Query params: start (int, default 0), limit (int, default 20),

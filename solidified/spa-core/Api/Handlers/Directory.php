@@ -5,7 +5,7 @@ use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 
 /**
- * GET /api/directory
+ * GET /spa/directory
  *
  * Delegates to /dirsearch — the same endpoint the core Directory module uses —
  * so remote-channel profile data comes from the federated directory rather than

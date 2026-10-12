@@ -7,7 +7,7 @@ use Zotlabs\Lib\Libzot;
 /**
  * Remote (reverse magic) authentication.
  *
- * POST /api/rmagic  { address, dest? }
+ * POST /spa/rmagic  { address, dest? }
  *
  * Resolves the visitor's home hub from their channel address and returns
  * the hub's /magic OWA handshake URL. Unlike core's /rmagic module (which

@@ -16,9 +16,9 @@ class Webpages
 
     use EnforcesServiceClass;
     use ResolvesAcl;
-    // GET /api/webpages/:nick               → list webpages  (owner only: write_pages)
-    // GET /api/webpages/:nick?pagelink=…    → render page    (public: view_pages)
-    // GET /api/webpages/:nick?mid=…         → render page    (public: view_pages)
+    // GET /spa/webpages/:nick               → list webpages  (owner only: write_pages)
+    // GET /spa/webpages/:nick?pagelink=…    → render page    (public: view_pages)
+    // GET /spa/webpages/:nick?mid=…         → render page    (public: view_pages)
     public function get(): void
     {
         $nick = \App::$argv[2] ?? '';
@@ -198,7 +198,7 @@ class Webpages
         Response::send($pages, ['channel' => $nick, 'count' => count($pages)]);
     }
 
-    // POST /api/webpages
+    // POST /spa/webpages
     // Body (JSON): { "action": "create", "nick": "…", title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
     // Body (JSON): { "action": "update", "nick": "…", uuid, title, summary, body, mimetype, pagetitle, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
     // Body (JSON): { "action": "delete", "nick": "…", "iid": 123 }

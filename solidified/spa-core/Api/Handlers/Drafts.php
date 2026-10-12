@@ -10,10 +10,10 @@ use Utsukta\SpaCore\Api\ContentTypes;
 
 class Drafts
 {
-    // GET  /api/drafts[?type=post,article]  → list drafts for the local channel by content type
-    // POST /api/drafts               → create a new draft
-    // POST /api/drafts/:mid          → update an existing draft
-    // POST /api/drafts/:mid/delete   → delete a draft
+    // GET  /spa/drafts[?type=post,article]  → list drafts for the local channel by content type
+    // POST /spa/drafts               → create a new draft
+    // POST /spa/drafts/:mid          → update an existing draft
+    // POST /spa/drafts/:mid/delete   → delete a draft
 
     public function get(): void
     {

@@ -46,7 +46,7 @@ class Profile
         return '';
     }
 
-    // ── /api/profile/:nick ───────────────────────────────────────────────────
+    // ── /spa/profile/:nick ───────────────────────────────────────────────────
 
     private function getProfile(): void {
         $nick = \App::$argv[2] ?? null;
@@ -299,7 +299,7 @@ class Profile
         ]);
     }
 
-    // ── /api/profile/:nick/connections ───────────────────────────────────────
+    // ── /spa/profile/:nick/connections ───────────────────────────────────────
 
     private function getConnections(): void {
         $nick = \App::$argv[2] ?? null;
@@ -400,7 +400,7 @@ class Profile
         ]);
     }
 
-    // ── /api/profile/:nick/activity ──────────────────────────────────────────
+    // ── /spa/profile/:nick/activity ──────────────────────────────────────────
     //
     // Per-day wall-post counts for the last DAYS days, for the Activity
     // Heatmap widget. Respects the same visibility rules as the channel

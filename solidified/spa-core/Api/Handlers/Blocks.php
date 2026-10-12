@@ -14,9 +14,9 @@ class Blocks
     use SetsConversationTarget;
 
     use ResolvesAcl;
-    // GET /api/blocks/:nick            → list blocks   (owner only: write_pages)
-    // GET /api/blocks/:nick?name=…    → fetch block    (ACL-gated: item_permissions_sql)
-    // GET /api/blocks/:nick?iid=…     → fetch block    (owner only: write_pages, for SPA editor)
+    // GET /spa/blocks/:nick            → list blocks   (owner only: write_pages)
+    // GET /spa/blocks/:nick?name=…    → fetch block    (ACL-gated: item_permissions_sql)
+    // GET /spa/blocks/:nick?iid=…     → fetch block    (owner only: write_pages, for SPA editor)
     public function get(): void
     {
         $nick = \App::$argv[2] ?? '';
@@ -147,7 +147,7 @@ class Blocks
         Response::send($blocks, ['channel' => $nick, 'count' => count($blocks)]);
     }
 
-    // POST /api/blocks
+    // POST /spa/blocks
     // Body (JSON): { "action": "create", "nick": "…", title, body, mimetype, name, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
     // Body (JSON): { "action": "update", "nick": "…", uuid, title, body, mimetype, name, scope, allow_cid[], allow_gid[], deny_cid[], deny_gid[] }
     // Body (JSON): { "action": "delete", "nick": "…", "iid": 123 }

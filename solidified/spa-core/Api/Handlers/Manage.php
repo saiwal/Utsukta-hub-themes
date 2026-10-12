@@ -6,7 +6,7 @@ use Utsukta\SpaCore\Api\Response;
 
 class Manage
 {
-    // ── GET /api/manage ───────────────────────────────────────────────────────
+    // ── GET /spa/manage ───────────────────────────────────────────────────────
 
     public function get(): void
     {
@@ -27,7 +27,7 @@ class Manage
         ]);
     }
 
-    // ── POST /api/manage ──────────────────────────────────────────────────────
+    // ── POST /spa/manage ──────────────────────────────────────────────────────
 
     public function post(): void
     {

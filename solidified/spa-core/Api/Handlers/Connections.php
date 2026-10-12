@@ -10,14 +10,14 @@ use Zotlabs\Daemon\Master;
 
 class Connections
 {
-    // GET /api/connections
-    // GET /api/connections?address=<xchan_addr>       — exact single-connection lookup
-    // GET /api/connections?id=<abook_id>               — exact single-connection lookup by id
-    // GET /api/connections/permcats                   — list available permission roles
-    // GET /api/connections/permcats?name=<role>        — a single role's permission grid
-    // GET /api/connections/:id/perms                  — bidirectional perms + incl/excl filters
-    // GET /api/connections/:id/groups                 — privacy group IDs for a connection
-    // GET /api/connections/:id/profile                — assigned profile id for a connection
+    // GET /spa/connections
+    // GET /spa/connections?address=<xchan_addr>       — exact single-connection lookup
+    // GET /spa/connections?id=<abook_id>               — exact single-connection lookup by id
+    // GET /spa/connections/permcats                   — list available permission roles
+    // GET /spa/connections/permcats?name=<role>        — a single role's permission grid
+    // GET /spa/connections/:id/perms                  — bidirectional perms + incl/excl filters
+    // GET /spa/connections/:id/groups                 — privacy group IDs for a connection
+    // GET /spa/connections/:id/profile                — assigned profile id for a connection
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
@@ -198,16 +198,16 @@ class Connections
         ]);
     }
 
-    // POST /api/connections/permcats      — create a custom permission role, or
+    // POST /spa/connections/permcats      — create a custom permission role, or
     //                                        update an existing custom role's permission grid
     //                                        (body: { name, perms?: string[] }), or toggle
     //                                        the default-for-new-contacts role (body: { name, set_default: bool })
-    // POST /api/connections/permcats/assign-group — bulk-assign a role to every member of a
+    // POST /spa/connections/permcats/assign-group — bulk-assign a role to every member of a
     //                                        privacy group (body: { name, gid })
-    // POST /api/connections/connect       — add a new connection (body: { url })
-    // POST /api/connections/:id/approve  — approve a pending connection
-    // POST /api/connections/:id/refresh  — re-pull permissions/profile from the remote contact
-    // POST /api/connections/:id          — update role / closeness
+    // POST /spa/connections/connect       — add a new connection (body: { url })
+    // POST /spa/connections/:id/approve  — approve a pending connection
+    // POST /spa/connections/:id/refresh  — re-pull permissions/profile from the remote contact
+    // POST /spa/connections/:id          — update role / closeness
     public function post(): void
     {
         $uid = Auth::requireLocalJson();
@@ -247,8 +247,8 @@ class Connections
         }
     }
 
-    // DELETE /api/connections/permcats?name=<role>  — delete a custom permission role
-    // DELETE /api/connections/:id                   — remove a connection
+    // DELETE /spa/connections/permcats?name=<role>  — delete a custom permission role
+    // DELETE /spa/connections/:id                   — remove a connection
     public function delete(): void
     {
         $sub = \App::$argv[2] ?? '';

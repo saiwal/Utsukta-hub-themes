@@ -22,12 +22,12 @@ class Help {
             'nav'    => $this->handleNav(),
             'topic'  => $this->handleTopic(),
             'search' => $this->handleSearch(),
-            default  => Response::error(400, 'Missing action: /api/help/nav, /api/help/topic or /api/help/search'),
+            default  => Response::error(400, 'Missing action: /spa/help/nav, /spa/help/topic or /spa/help/search'),
         };
     }
 
     // ── nav tree ──────────────────────────────────────────────────────────────
-    // GET /api/help/nav?section=user&lang=en
+    // GET /spa/help/nav?section=user&lang=en
 
     private function handleNav(): void {
         $section = $this->slugParam('section', 'user');
@@ -55,7 +55,7 @@ class Help {
     }
 
     // ── topic content ─────────────────────────────────────────────────────────
-    // GET /api/help/topic?section=user&lang=en&topic=network
+    // GET /spa/help/topic?section=user&lang=en&topic=network
 
     private function handleTopic(): void {
         $section = $this->slugParam('section', 'user');
@@ -168,7 +168,7 @@ class Help {
     }
 
     // ── search ────────────────────────────────────────────────────────────────
-    // GET /api/help/search?section=user&lang=en&q=federation
+    // GET /spa/help/search?section=user&lang=en&q=federation
 
     private function handleSearch(): void {
         $section = $this->slugParam('section', 'user');

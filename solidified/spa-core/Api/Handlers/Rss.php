@@ -6,7 +6,7 @@ use Utsukta\SpaCore\Api\Concerns\ValidatesRemoteHost;
 use Zotlabs\Lib\Cache;
 
 /**
- * GET /api/rss-feed?url=<feed url>&limit=<n>
+ * GET /spa/rss-feed?url=<feed url>&limit=<n>
  *
  * Server-side fetch + parse of an RSS/Atom feed for the SPA's RSS widget —
  * browsers can't fetch cross-origin feeds. Public: the widget renders for

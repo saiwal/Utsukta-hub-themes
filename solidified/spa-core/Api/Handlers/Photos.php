@@ -38,9 +38,9 @@ class Photos
         }
     }
 
-    // GET /api/photos/:nick           → album list
-    // GET /api/photos/:nick/album/:hash → photos in album
-    // GET /api/photos/:nick/image/:id   → single photo detail
+    // GET /spa/photos/:nick           → album list
+    // GET /spa/photos/:nick/album/:hash → photos in album
+    // GET /spa/photos/:nick/image/:id   → single photo detail
 
     public function get(): void
     {
@@ -64,7 +64,7 @@ class Photos
         $datatype = \App::$argv[3] ?? 'summary';
         $datum    = \App::$argv[4] ?? '';
 
-        // GET /api/photos/:nick/(image|album)/:id/acl
+        // GET /spa/photos/:nick/(image|album)/:id/acl
         if ((\App::$argv[5] ?? '') === 'acl') {
             if (!local_channel() || local_channel() != $owner_uid)
                 Response::error(403, 'Owner access required');
@@ -387,7 +387,7 @@ class Photos
         Response::send($out, ['album_name' => $display_path, 'can_write' => $can_write]);
     }
 
-    // ── GET /api/photos/:nick/image/:id — single photo ────────────────────────
+    // ── GET /spa/photos/:nick/image/:id — single photo ────────────────────────
 
     private function getImage(array $channel, string $ob_hash, string $resourceId, bool $can_write): void
     {
@@ -591,7 +591,7 @@ class Photos
         ]);
     }
 
-    // ── POST /api/photos/:nick/image/:resource_id/edit ────────────────────────
+    // ── POST /spa/photos/:nick/image/:resource_id/edit ────────────────────────
     // Saves the edited image as a NEW copy in the same album; never touches the original.
 
     /** write_storage is a channel-wide grant — any observer (local or remote) holding it may edit, not just the owner. */
@@ -614,7 +614,7 @@ class Photos
 
         $datatype = \App::$argv[3] ?? '';
 
-        // POST /api/photos/:nick/albums — create a new album (JSON)
+        // POST /spa/photos/:nick/albums — create a new album (JSON)
         if ($datatype === 'albums') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -622,7 +622,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/images/move — batch move photos into an album (JSON)
+        // POST /spa/photos/:nick/images/move — batch move photos into an album (JSON)
         if ($datatype === 'images' && (\App::$argv[4] ?? '') === 'move') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -630,7 +630,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/image/:id/rename — rename photo (JSON)
+        // POST /spa/photos/:nick/image/:id/rename — rename photo (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'rename') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -638,7 +638,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/image/:id/title — update title (JSON)
+        // POST /spa/photos/:nick/image/:id/title — update title (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'title') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -646,7 +646,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/image/:id/description — update description (JSON)
+        // POST /spa/photos/:nick/image/:id/description — update description (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'description') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -654,7 +654,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/image/:id/nsfw — toggle NSFW flag (JSON)
+        // POST /spa/photos/:nick/image/:id/nsfw — toggle NSFW flag (JSON)
         if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'nsfw') {
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
@@ -662,7 +662,7 @@ class Photos
             return;
         }
 
-        // POST /api/photos/:nick/(image|album)/:id/acl — save privacy ACL (JSON)
+        // POST /spa/photos/:nick/(image|album)/:id/acl — save privacy ACL (JSON)
         // ACL changes stay owner-only — write_storage access shouldn't let a
         // visitor grant themselves (or others) broader access.
         if (in_array($datatype, ['image', 'album']) && (\App::$argv[5] ?? '') === 'acl') {
@@ -692,7 +692,7 @@ class Photos
             Response::error(400, 'No file uploaded');
         }
 
-        // ── POST /api/photos/:nick/image/upload ─────────────────────────────────
+        // ── POST /spa/photos/:nick/image/upload ─────────────────────────────────
         // Upload a new photo to the user's library (no original required).
         if ($origId === 'upload') {
             $album = trim($_POST['album'] ?? '');
@@ -882,7 +882,7 @@ class Photos
         ]);
     }
 
-    // ── DELETE /api/photos/:nick/* ────────────────────────────────────────────
+    // ── DELETE /spa/photos/:nick/* ────────────────────────────────────────────
 
     public function delete(): void
     {
@@ -1085,7 +1085,7 @@ class Photos
         return $ids ? '<' . implode('><', $ids) . '>' : '';
     }
 
-    // ── GET /api/photos/:nick/(image|album)/:id/acl ───────────────────────────
+    // ── GET /spa/photos/:nick/(image|album)/:id/acl ───────────────────────────
 
     private function getAcl(array $channel, string $type, string $datum): void
     {
@@ -1134,7 +1134,7 @@ class Photos
         ]);
     }
 
-    // ── POST /api/photos/:nick/(image|album)/:id/acl ──────────────────────────
+    // ── POST /spa/photos/:nick/(image|album)/:id/acl ──────────────────────────
 
     private function postAcl(int $uid, array $channel, string $type, string $datum): void
     {
@@ -1180,7 +1180,7 @@ class Photos
         Response::send(['ok' => true]);
     }
 
-    // ── POST /api/photos/:nick/image/:id/title ────────────────────────────────
+    // ── POST /spa/photos/:nick/image/:id/title ────────────────────────────────
 
     private function updateTitle(int $uid, string $resourceId): void
     {
@@ -1198,7 +1198,7 @@ class Photos
         Response::send(['title' => $title]);
     }
 
-    // ── POST /api/photos/:nick/image/:id/description ──────────────────────────
+    // ── POST /spa/photos/:nick/image/:id/description ──────────────────────────
 
     private function updateDescription(int $uid, string $resourceId): void
     {
@@ -1216,7 +1216,7 @@ class Photos
         Response::send(['description' => $desc]);
     }
 
-    // ── POST /api/photos/:nick/image/:id/nsfw ────────────────────────────────
+    // ── POST /spa/photos/:nick/image/:id/nsfw ────────────────────────────────
 
     private function updateNsfw(int $uid, string $resourceId): void
     {
@@ -1234,7 +1234,7 @@ class Photos
         Response::send(['is_nsfw' => (bool) $is_nsfw]);
     }
 
-    // ── POST /api/photos/:nick/image/:id/rename ───────────────────────────────
+    // ── POST /spa/photos/:nick/image/:id/rename ───────────────────────────────
 
     private function renamePhoto(int $uid, array $channel, string $resourceId): void
     {
@@ -1263,7 +1263,7 @@ class Photos
         Response::send(['filename' => $newName]);
     }
 
-    // ── POST /api/photos/:nick/albums — create album ──────────────────────────
+    // ── POST /spa/photos/:nick/albums — create album ──────────────────────────
 
     private function createAlbum(array $channel): void
     {

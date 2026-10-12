@@ -11,7 +11,7 @@ use Utsukta\SpaCore\Api\Response;
 
 class NewChannel
 {
-    // ── GET /api/new-channel[/autofill|/checkaddr] ──────────────────────────────
+    // ── GET /spa/new-channel[/autofill|/checkaddr] ──────────────────────────────
 
     public function get(): void
     {
@@ -30,7 +30,7 @@ class NewChannel
         $this->meta($account);
     }
 
-    // ── POST /api/new-channel ────────────────────────────────────────────────────
+    // ── POST /spa/new-channel ────────────────────────────────────────────────────
 
     public function post(): void
     {

@@ -6,9 +6,9 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 
 /**
- * GET    /api/saved-searches        — list all saved searches for the current user
- * POST   /api/saved-searches        — create a new saved search
- * DELETE /api/saved-searches/:tid   — delete a saved search by its term id
+ * GET    /spa/saved-searches        — list all saved searches for the current user
+ * POST   /spa/saved-searches        — create a new saved search
+ * DELETE /spa/saved-searches/:tid   — delete a saved search by its term id
  *
  * Uses the core `term` table with ttype = TERM_SAVEDSEARCH (6).
  * The search label is stored in `term`; the full filter params (JSON) go in `url`.

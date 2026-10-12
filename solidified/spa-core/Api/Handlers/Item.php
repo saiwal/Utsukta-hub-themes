@@ -37,29 +37,29 @@ class Item
 
     // ── Entry points ──────────────────────────────────────────────────────────
     //
-    // GET  /api/item                         -> 400
-    // GET  /api/item/:mid                    -> item + thread root details
-    // GET  /api/item/:mid/comments           -> all comments
-    // GET  /api/item/:mid/comments/:count    -> paginated comments (?offset, ?order)
-    //      /api/item/:mid/comments?around=X  -> ancestors + sibling window around comment X
-    // GET  /api/item/:mid/likes              -> who liked
-    // GET  /api/item/:mid/dislikes           -> who disliked
-    // GET  /api/item/:mid/repeats            -> who repeated
+    // GET  /spa/item                         -> 400
+    // GET  /spa/item/:mid                    -> item + thread root details
+    // GET  /spa/item/:mid/comments           -> all comments
+    // GET  /spa/item/:mid/comments/:count    -> paginated comments (?offset, ?order)
+    //      /spa/item/:mid/comments?around=X  -> ancestors + sibling window around comment X
+    // GET  /spa/item/:mid/likes              -> who liked
+    // GET  /spa/item/:mid/dislikes           -> who disliked
+    // GET  /spa/item/:mid/repeats            -> who repeated
     //
-    // POST /api/item/:mid/like               -> toggle like
-    // POST /api/item/:mid/dislike            -> toggle dislike
-    // POST /api/item/:mid/repeat             -> toggle repeat
-    // POST /api/item/:mid/star               -> toggle starred
-    // POST /api/item/:mid/pin                -> toggle pinned (channel wall)
-    // POST /api/item/:mid/addtocal           -> import event into viewer's calendar
-    // POST /api/item/:mid/comment            -> post a comment
-    // POST /api/item/:mid/delete             -> delete item
-    // POST /api/item/:mid/edit               -> edit item body/title
-    // POST /api/item/:mid/follow             -> follow thread (core: subthread/sub)
-    // POST /api/item/:mid/unfollow           -> unfollow thread (core: subthread/unsub)
-    // POST /api/item/:mid/fetchreplies       -> pull one more level of a remote thread
-    // POST /api/item                         -> create new top-level post
-    // POST /api/item/:mid                    -> (same as comment — alias)
+    // POST /spa/item/:mid/like               -> toggle like
+    // POST /spa/item/:mid/dislike            -> toggle dislike
+    // POST /spa/item/:mid/repeat             -> toggle repeat
+    // POST /spa/item/:mid/star               -> toggle starred
+    // POST /spa/item/:mid/pin                -> toggle pinned (channel wall)
+    // POST /spa/item/:mid/addtocal           -> import event into viewer's calendar
+    // POST /spa/item/:mid/comment            -> post a comment
+    // POST /spa/item/:mid/delete             -> delete item
+    // POST /spa/item/:mid/edit               -> edit item body/title
+    // POST /spa/item/:mid/follow             -> follow thread (core: subthread/sub)
+    // POST /spa/item/:mid/unfollow           -> unfollow thread (core: subthread/unsub)
+    // POST /spa/item/:mid/fetchreplies       -> pull one more level of a remote thread
+    // POST /spa/item                         -> create new top-level post
+    // POST /spa/item/:mid                    -> (same as comment — alias)
 
     public function get(): void
     {
@@ -217,7 +217,7 @@ class Item
                 $this->fetchMoreReplies($mid);
                 break;
             default:
-                // POST /api/item/:mid with no verb → comment (convenience alias)
+                // POST /spa/item/:mid with no verb → comment (convenience alias)
                 $this->createComment($mid);
                 break;
         }
@@ -268,7 +268,7 @@ class Item
         Response::send($out);
     }
 
-    // GET /api/item/:mid
+    // GET /spa/item/:mid
     // Returns the thread root item. Comments are NOT inlined — fetch separately.
     private function getItem(string $mid): void
     {
@@ -305,8 +305,8 @@ class Item
         json_return_and_die(['item' => $this->formatItem($row, $ob_hash, $this->isPinnedItem($row))]);
     }
 
-    // GET /api/item/:mid/comments
-    // GET /api/item/:mid/comments/:count   (:count = integer or "all")
+    // GET /spa/item/:mid/comments
+    // GET /spa/item/:mid/comments/:count   (:count = integer or "all")
     //
     // Comment view mode (the "thread_mode" display setting) picks between two
     // shapes, both paginated:
@@ -702,7 +702,7 @@ class Item
         ];
     }
 
-    // GET /api/item/:mid/likes|dislikes|repeats
+    // GET /spa/item/:mid/likes|dislikes|repeats
     // Returns the xchan profiles of reactors — useful for "who liked this" popups
     private function getReactions(string $mid, string $activityVerb): void
     {
@@ -755,7 +755,7 @@ class Item
     // POST handlers
     // =========================================================================
 
-    // POST /api/item
+    // POST /spa/item
     // Body: { profile_uid, body, title?, scope?, summary?, category?, expire?,
     //         contact_allow?, group_allow?, contact_deny?, group_deny?,
     //         poll_answers?, poll_expire_value?, poll_expire_unit? }
@@ -854,7 +854,7 @@ class Item
         }
     }
 
-    // POST /api/item — create a top-level post
+    // POST /spa/item — create a top-level post
     private function createPost(): void
     {
         $uid  = Auth::requireLocalJson();
@@ -965,7 +965,7 @@ class Item
         Response::send(['post' => $formattedPost, 'comments' => []]);
     }
 
-    // POST /api/item/:mid/comment  (or POST /api/item/:mid with no verb)
+    // POST /spa/item/:mid/comment  (or POST /spa/item/:mid with no verb)
     // Body: { body, title? }
     private function createComment(string $parentMid): void
     {
@@ -1037,7 +1037,7 @@ class Item
         ]);
     }
 
-    // POST /api/item/:mid/like|dislike|repeat
+    // POST /spa/item/:mid/like|dislike|repeat
     // Toggles: sends the reaction if not present, drops it if already present.
     // Returns: { success, state: "added"|"removed", like_count, ... }
     private function toggleReaction(string $mid, string $activityVerb): void
@@ -1098,7 +1098,7 @@ class Item
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
     }
 
-    // POST /api/item/:mid/accept|reject|tentativeaccept
+    // POST /spa/item/:mid/accept|reject|tentativeaccept
     // Exclusive RSVP toggle: removes conflicting RSVP verbs, toggles the chosen one.
     private function toggleRsvpReaction(string $mid, string $activityVerb): void
     {
@@ -1161,7 +1161,7 @@ class Item
         json_return_and_die(array_merge(['success' => true, 'state' => $state], $counts));
     }
 
-    // POST /api/item/:mid/addtocal
+    // POST /spa/item/:mid/addtocal
     // Imports an Event item into the viewer's own calendar without recording
     // an RSVP reaction (mirrors the Accept/TentativeAccept side effect in
     // toggleRsvpReaction() above, callable directly from the stream's "more
@@ -1188,7 +1188,7 @@ class Item
         json_return_and_die(['success' => true]);
     }
 
-    // POST /api/item/:mid/star
+    // POST /spa/item/:mid/star
     // Toggles the starred flag on the item (local only — not federated).
     // An explicit {"starred": bool} sets that state instead: a bulk "star
     // these 12" must be idempotent rather than 12 independent toggles.
@@ -1214,7 +1214,7 @@ class Item
         json_return_and_die(['success' => true, 'starred' => (bool) $newState]);
     }
 
-    // POST /api/item/:mid/pin
+    // POST /spa/item/:mid/pin
     // Toggles pinned state of a top-level, non-private wall post owned by the
     // local channel. Core parity (Zotlabs/Module/Pin.php): pconfig-backed
     // ('pinned' cat, ITEM_TYPE_POST key), synced to clones via Libsync. Unlike
@@ -1261,7 +1261,7 @@ class Item
         json_return_and_die(['success' => true, 'pinned' => !$isPinned]);
     }
 
-    // POST /api/item/:mid/fetchreplies
+    // POST /spa/item/:mid/fetchreplies
     //
     // Descend one more level into a remote (ActivityPub) thread. Every item in
     // the thread that has no local children is a place the conversation may
@@ -1338,7 +1338,7 @@ class Item
         return $r ? intval($r[0]['c']) : 0;
     }
 
-    // POST /api/item/:mid/follow | /api/item/:mid/unfollow
+    // POST /spa/item/:mid/follow | /spa/item/:mid/unfollow
     // Mirrors core Mod_Subthread: records a Follow (sub) or Ignore (unsub)
     // activity authored by the viewer on the thread top of their own copy of
     // the thread. The activity is local-only (no delivery), and the latest
@@ -1465,7 +1465,7 @@ class Item
         json_return_and_die(['success' => true, 'following' => $follow]);
     }
 
-    // POST /api/item/:mid/edit
+    // POST /spa/item/:mid/edit
     // JSON body: { body, title?, summary?, mimetype?, pagetitle?, category? }
     // Only the item owner can edit.
     //
@@ -1692,7 +1692,7 @@ class Item
         Response::send(['success' => true]);
     }
 
-    // POST /api/item/:mid/delete
+    // POST /spa/item/:mid/delete
     // Owner or admin only. Federated drop.
     private function deleteItem(string $mid): void
     {
@@ -1787,7 +1787,7 @@ class Item
 
     // Resolve a mid (or uuid) to a readable item row, permission-checked.
     // Accepts full mid (zot6 URL), short uuid, or b64-encoded mid.
-    // GET /api/item/:mid/folders
+    // GET /spa/item/:mid/folders
     // Returns the folder names this post is currently filed under for the local user.
     private function getItemFolders(string $mid): void
     {
@@ -1807,10 +1807,10 @@ class Item
         json_return_and_die(['data' => $rows ? array_column($rows, 'term') : []]);
     }
 
-    // POST /api/item/:mid/saveto
+    // POST /spa/item/:mid/saveto
     // Body: { "name": "folder name" }            → add to folder
     // Body: { "name": "folder name", "remove": true } → remove from folder
-    // POST /api/item/:mid/seen  {"seen": bool}
+    // POST /spa/item/:mid/seen  {"seen": bool}
     // Marks a thread read or unread. Core's /sse_bs endpoint (see markSeen.ts)
     // only ever clears item_unseen, so mark-as-unread has no other path.
     private function setSeen(string $mid): void
@@ -1873,7 +1873,7 @@ class Item
         json_return_and_die(['data' => ['folders' => $rows ? array_column($rows, 'term') : []]]);
     }
 
-    // GET /api/item/:mid/delivery
+    // GET /spa/item/:mid/delivery
     // Returns delivery report entries for a post authored by the logged-in user.
     private function getDeliveryReport(string $mid): void
     {
@@ -2142,7 +2142,7 @@ class Item
     // Shared item formatter — same shape as your existing network/channel items
 
 
-    // POST /api/item/:mid/vote
+    // POST /spa/item/:mid/vote
     // Body: { "answer": "Option name" } or { "answer": ["Option A", "Option B"] } for multi-choice
     private function voteOnPoll(string $mid): void
     {
@@ -2248,7 +2248,7 @@ class Item
         json_return_and_die(['success' => true]);
     }
 
-    // POST /api/item/:mid/reshare
+    // POST /spa/item/:mid/reshare
     // Body: { body? }  (optional additional text above the share block)
     private function createReshare(string $mid): void
     {
@@ -2318,7 +2318,7 @@ class Item
         ]);
     }
 
-    // GET /api/item/:mid/compose
+    // GET /spa/item/:mid/compose
     // Returns the item's source fields for the edit composer. Full
     // [share …]…[/share] blocks are collapsed to compact [share=<id>][/share]
     // tags (the form the composer works with, mirroring core jot) so the
@@ -2366,7 +2366,7 @@ class Item
         ]);
     }
 
-    // GET /api/item/:id/sharepreview   (:id = numeric item id)
+    // GET /spa/item/:id/sharepreview   (:id = numeric item id)
     // Returns the expanded [share …] block for a compact [share=<id>] tag so
     // the composer can render the reshared content inside the WYSIWYG.
     // Display-only: unlike the save-time expandShareTags (which must refuse
@@ -2387,7 +2387,7 @@ class Item
         json_return_and_die(['success' => true, 'bbcode' => $bb]);
     }
 
-    // GET /api/item/:id/cardpreview   (:id = numeric item id)
+    // GET /spa/item/:id/cardpreview   (:id = numeric item id)
     // Returns the expanded [card …][/card] block for a compact [card=<id>] tag
     // so the composer can render the embedded card inside the WYSIWYG.
     // Display-only, same as getSharePreview above: the preview may render any

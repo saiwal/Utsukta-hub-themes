@@ -6,11 +6,11 @@ use Utsukta\SpaCore\Api\Response;
 use Zotlabs\Lib\Config;
 
 /**
- * GET    /api/push-subscription → { publicKey } — VAPID public key, generated
+ * GET    /spa/push-subscription → { publicKey } — VAPID public key, generated
  *        (and persisted site-wide via Config) on first request if missing.
- * POST   /api/push-subscription → body { subscription: PushSubscriptionJSON }
+ * POST   /spa/push-subscription → body { subscription: PushSubscriptionJSON }
  *        stores/updates one browser's subscription for the local user.
- * DELETE /api/push-subscription → body { endpoint } — drops one subscription
+ * DELETE /spa/push-subscription → body { endpoint } — drops one subscription
  *        (e.g. on opt-out, or when the browser reports it as expired).
  *
  * Subscriptions are stored per user as a JSON object keyed by endpoint URL in

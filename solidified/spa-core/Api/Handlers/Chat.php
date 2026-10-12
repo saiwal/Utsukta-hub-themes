@@ -3,15 +3,15 @@
  * Utsukta\SpaCore\Api\Handlers\Chat
  *
  * Routes:
- *   GET  /api/chat/:nick              → room list
- *   GET  /api/chat/:nick/acl-options  → connections + groups for create form
- *   GET  /api/chat/:nick/:room_id     → room detail + presence
- *   POST /api/chat/:nick/:room_id/send   → post message
- *   POST /api/chat/:nick/:room_id/messages → fetch messages (paginated)
- *   POST /api/chat/:nick/:room_id/join    → enter room (set presence)
- *   POST /api/chat/:nick/:room_id/leave   → leave room (clear presence)
- *   POST /api/chat/:nick/new              → create chatroom (owner only)
- *   POST /api/chat/:nick/:room_id/drop    → delete chatroom (owner only)
+ *   GET  /spa/chat/:nick              → room list
+ *   GET  /spa/chat/:nick/acl-options  → connections + groups for create form
+ *   GET  /spa/chat/:nick/:room_id     → room detail + presence
+ *   POST /spa/chat/:nick/:room_id/send   → post message
+ *   POST /spa/chat/:nick/:room_id/messages → fetch messages (paginated)
+ *   POST /spa/chat/:nick/:room_id/join    → enter room (set presence)
+ *   POST /spa/chat/:nick/:room_id/leave   → leave room (clear presence)
+ *   POST /spa/chat/:nick/new              → create chatroom (owner only)
+ *   POST /spa/chat/:nick/:room_id/drop    → delete chatroom (owner only)
  */
 
 namespace Utsukta\SpaCore\Api\Handlers;
@@ -159,7 +159,7 @@ class Chat
 
         $arg3 = \App::$argv[3] ?? '';
 
-        // Create room: POST /api/chat/:nick/new
+        // Create room: POST /spa/chat/:nick/new
         if ($arg3 === 'new') {
             $this->createRoom();
             return;

@@ -5,12 +5,12 @@
  *
  * Endpoints
  * ─────────
- * GET  /api/wiki/:nick                         → list wikis for channel
- * GET  /api/wiki/:nick/:wikiName               → list pages in a wiki
- * GET  /api/wiki/:nick/:wikiName/:pageName     → fetch rendered + raw page content
- * POST /api/wiki/:nick                         → create a new wiki
- * POST /api/wiki/:nick/:wikiName/:pageName     → save (upsert) page content
- * DELETE /api/wiki/:nick/:wikiName/:pageName   → delete a page
+ * GET  /spa/wiki/:nick                         → list wikis for channel
+ * GET  /spa/wiki/:nick/:wikiName               → list pages in a wiki
+ * GET  /spa/wiki/:nick/:wikiName/:pageName     → fetch rendered + raw page content
+ * POST /spa/wiki/:nick                         → create a new wiki
+ * POST /spa/wiki/:nick/:wikiName/:pageName     → save (upsert) page content
+ * DELETE /spa/wiki/:nick/:wikiName/:pageName   → delete a page
  *
  * Route registration (Router.php $map):
  *   'wiki' => Handlers\Wiki::class,
@@ -254,7 +254,7 @@ class Wiki
 
         $argc = count(\App::$argv);
 
-        // ── GET /api/wiki/:nick  →  list wikis ────────────────────────────────
+        // ── GET /spa/wiki/:nick  →  list wikis ────────────────────────────────
         if ($argc === 3) {
             $result = \NativeWiki::listwikis($owner, $obs_hash);
             $wikis  = [];
@@ -296,7 +296,7 @@ class Wiki
             Response::error(403, 'Permission denied');
         }
 
-        // ── GET /api/wiki/:nick/:wikiName  →  page list ───────────────────────
+        // ── GET /spa/wiki/:nick/:wikiName  →  page list ───────────────────────
         if ($argc === 4) {
             // Signature: page_list($channel_id, $observer_hash, $resource_id)
             $result = \NativeWikiPage::page_list($uid, $obs_hash, $rid);
@@ -314,7 +314,7 @@ class Wiki
             ]);
         }
 
-        // ── GET /api/wiki/:nick/:wikiName/acl  →  wiki ACL ───────────────────
+        // ── GET /spa/wiki/:nick/:wikiName/acl  →  wiki ACL ───────────────────
         if ($argc === 5 && \App::$argv[4] === 'acl') {
             if (!local_channel() || local_channel() !== intval($uid)) {
                 Response::error(403, 'Owner access required');
@@ -323,7 +323,7 @@ class Wiki
             return;
         }
 
-        // ── GET /api/wiki/:nick/:wikiName/:pageName/history  →  page history ───
+        // ── GET /spa/wiki/:nick/:wikiName/:pageName/history  →  page history ───
         if ($this->lastArgIs('history')) {
             $pageParts   = $this->pagePartsWithout('history');
             $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
@@ -342,7 +342,7 @@ class Wiki
             Response::send(['history' => $result['history'] ?? []]);
         }
 
-        // ── GET /api/wiki/:nick/:wikiName/:pageName  →  page content ──────────
+        // ── GET /spa/wiki/:nick/:wikiName/:pageName  →  page content ──────────
         // Optional ?revision=N returns a specific historical revision.
         $pageParts   = array_slice(\App::$argv, 4);
         $pageUrlName = \NativeWiki::name_decode(implode('/', $pageParts));
@@ -419,7 +419,7 @@ class Wiki
         $data = Auth::$parsedBody;
         $argc = count(\App::$argv);
 
-        // ── POST /api/wiki/:nick  →  create wiki ──────────────────────────────
+        // ── POST /spa/wiki/:nick  →  create wiki ──────────────────────────────
         // No wiki resource exists yet to carry a per-resource ACL, so creation
         // stays owner-only.
         if ($argc === 3) {
@@ -494,9 +494,9 @@ class Wiki
             ], [], 201);
         }
 
-        // ── POST /api/wiki/:nick/:wikiName/:pageName/revert  →  revert page ────
-        // ── POST /api/wiki/:nick/:wikiName/:pageName/rename  →  rename page ───
-        // ── POST /api/wiki/:nick/:wikiName/:pageName         →  save page  ────
+        // ── POST /spa/wiki/:nick/:wikiName/:pageName/revert  →  revert page ────
+        // ── POST /spa/wiki/:nick/:wikiName/:pageName/rename  →  rename page ───
+        // ── POST /spa/wiki/:nick/:wikiName/:pageName         →  save page  ────
         $wikiName    = \NativeWiki::name_decode(\App::$argv[3] ?? '');
         $w           = $this->resolveWiki($owner, $wikiName);
         $rid         = $w['resource_id'];
@@ -506,7 +506,7 @@ class Wiki
             Response::error(403, 'Permission denied');
         }
 
-        // ── POST /api/wiki/:nick/:wikiName/acl  →  save wiki ACL ─────────────
+        // ── POST /spa/wiki/:nick/:wikiName/acl  →  save wiki ACL ─────────────
         // Changing the ACL itself stays owner-only — write_wiki access to the
         // resource shouldn't let a visitor grant themselves broader access.
         if ($argc === 5 && \App::$argv[4] === 'acl') {
@@ -686,7 +686,7 @@ class Wiki
         $this->requireAddon($uid);
         $argc = count(\App::$argv);
 
-        // ── DELETE /api/wiki/:nick/:wikiName  →  delete entire wiki ──────────
+        // ── DELETE /spa/wiki/:nick/:wikiName  →  delete entire wiki ──────────
         // Deletes the whole resource (and its ACL), so this stays owner-only.
         if ($argc === 4) {
             if (!local_channel() || local_channel() !== $uid) {

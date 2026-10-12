@@ -5,7 +5,7 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 
 /**
- * POST /api/widget-layout
+ * POST /spa/widget-layout
  *
  * Body: { layout: { version: 1, modules: { <moduleId>: { <slot>: [entries] } } } }
  *       { layout: null } clears the saved layout (revert everything to defaults).
@@ -17,7 +17,7 @@ use Utsukta\SpaCore\Api\Response;
  * handed back to the widget, capped at CONFIG_MAX_BYTES of JSON.
  *
  * Stored as JSON in pconfig cat "spa", key "widget_layout" — delivered to the
- * SPA at boot via GET /api/pconfig. Widget/module ids are opaque strings here;
+ * SPA at boot via GET /spa/pconfig. Widget/module ids are opaque strings here;
  * the SPA validates them against its widget registry when rendering.
  */
 class WidgetLayout

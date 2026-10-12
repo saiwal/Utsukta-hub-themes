@@ -8,8 +8,8 @@ use Zotlabs\Lib\Config;
 /**
  * Site-wide announcements for the SPA's Site Announcements widget.
  *
- * GET  /api/announcements          → local channel only, most recent MAX_SHOWN first
- * POST /api/announcements          → admin only: { action: 'create', title, body }
+ * GET  /spa/announcements          → local channel only, most recent MAX_SHOWN first
+ * POST /spa/announcements          → admin only: { action: 'create', title, body }
  *                                                { action: 'delete', id }
  *
  * Stored as a JSON array under system config 'spa_announcements', capped at

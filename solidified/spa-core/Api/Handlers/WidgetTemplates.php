@@ -5,8 +5,8 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 
 /**
- * GET  /api/widget-templates → the owner's saved layout templates.
- * POST /api/widget-templates → create/rename/delete a template, or replace
+ * GET  /spa/widget-templates → the owner's saved layout templates.
+ * POST /spa/widget-templates → create/rename/delete a template, or replace
  *      one template's widget list for a slot.
  *
  * A template is a reusable, named widget arrangement that a webpage (or,
