@@ -1,7 +1,7 @@
 <?php
 // Api/Handlers/Itemsrc.php
 //
-// GET /api/item-source/:iid
+// GET /spa/item-source/:iid
 //
 // Returns the ActivityPub source object for a post or comment.
 // Mirrors the logic of core Viewsrc but returns clean JSON with no HTML.

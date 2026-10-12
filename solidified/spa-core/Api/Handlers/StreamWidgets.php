@@ -12,10 +12,10 @@ class StreamWidgets
         require_once 'include/channel.php';
         require_once 'include/taxonomy.php';
 
-        // URL: /api/stream-widgets/tags
-        //      /api/stream-widgets/categories
-        //      /api/stream-widgets/popular
-        //      /api/stream-widgets/series
+        // URL: /spa/stream-widgets/tags
+        //      /spa/stream-widgets/categories
+        //      /spa/stream-widgets/popular
+        //      /spa/stream-widgets/series
         $sub = \App::$argv[2] ?? null;
 
         if (!$sub) {
@@ -33,7 +33,7 @@ class StreamWidgets
         };
     }
 
-    // ── /api/stream-widgets/tags ─────────────────────────────────────────────
+    // ── /spa/stream-widgets/tags ─────────────────────────────────────────────
 
     private function getTags(): void
     {
@@ -66,7 +66,7 @@ class StreamWidgets
         Response::send(['tags' => $tags]);
     }
 
-    // ── /api/stream-widgets/categories ──────────────────────────────────────
+    // ── /spa/stream-widgets/categories ──────────────────────────────────────
 
     private function getCategories(): void
     {
@@ -99,7 +99,7 @@ class StreamWidgets
         Response::send(['categories' => $categories]);
     }
 
-    // ── /api/stream-widgets/popular ──────────────────────────────────────────
+    // ── /spa/stream-widgets/popular ──────────────────────────────────────────
     // Most commented thread-top items for the channel, permission-aware.
 
     private function getPopular(): void
@@ -156,7 +156,7 @@ class StreamWidgets
         Response::send(['popular' => $popular]);
     }
 
-    // ── /api/stream-widgets/series ───────────────────────────────────────────
+    // ── /spa/stream-widgets/series ───────────────────────────────────────────
     // Distinct ordered groupings for the channel, with member counts. Only
     // meaningful for the two types that have them: type=articles (series,
     // iconfig cat 'article'/'series') and type=cards (decks, cat 'card'/'deck').
@@ -199,7 +199,7 @@ class StreamWidgets
         Response::send(['series' => $series]);
     }
 
-    // ── /api/stream-widgets/archive ──────────────────────────────────────────
+    // ── /spa/stream-widgets/archive ──────────────────────────────────────────
 
     private function getArchive(): void
     {
@@ -250,7 +250,7 @@ class StreamWidgets
         Response::send(['archive' => array_values($years)]);
     }
 
-    // ── /api/stream-widgets/archive-days ─────────────────────────────────────
+    // ── /spa/stream-widgets/archive-days ─────────────────────────────────────
     // Day-of-month post counts for a single year+month, used to plot dots on
     // a calendar-style archive widget.
 

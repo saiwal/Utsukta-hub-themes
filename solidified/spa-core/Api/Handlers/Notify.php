@@ -3,7 +3,7 @@
  * Utsukta\SpaCore\Api\Handlers\Notify
  *
  * Routes:
- *   GET /api/notify/:id  → look up one `notify` table row, mark it seen
+ *   GET /spa/notify/:id  → look up one `notify` table row, mark it seen
  *                          (mirrors Zotlabs/Module/Notify.php's `view` action),
  *                          and return its target link for the SPA to redirect to.
  */

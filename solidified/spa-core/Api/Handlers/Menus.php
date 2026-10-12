@@ -12,16 +12,16 @@ require_once 'include/security.php';
  * Comanche webpage menus) exposed to the SPA menu widgets and the webpages
  * menu manager.
  *
- *   GET  /api/menus                          → own menus (owner)
- *   GET  /api/menus/:id                      → one menu + raw flat items (owner, for the editor)
- *   GET  /api/menus/:nick/:name              → resolved nested item tree (observer-permission filtered)
+ *   GET  /spa/menus                          → own menus (owner)
+ *   GET  /spa/menus/:id                      → one menu + raw flat items (owner, for the editor)
+ *   GET  /spa/menus/:nick/:name              → resolved nested item tree (observer-permission filtered)
  *
- *   POST /api/menus/create                   { name, desc? }
- *   POST /api/menus/:id/edit                 { name, desc? }
- *   POST /api/menus/:id/delete
- *   POST /api/menus/:id/items/create         { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
- *   POST /api/menus/:id/items/:iid/edit      { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
- *   POST /api/menus/:id/items/:iid/delete
+ *   POST /spa/menus/create                   { name, desc? }
+ *   POST /spa/menus/:id/edit                 { name, desc? }
+ *   POST /spa/menus/:id/delete
+ *   POST /spa/menus/:id/items/create         { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
+ *   POST /spa/menus/:id/items/:iid/edit      { label, link, order?, zid?, newwin?, scope?, contact_allow?, group_allow?, contact_deny?, group_deny? }
+ *   POST /spa/menus/:id/items/:iid/delete
  *
  * Nesting convention: Hubzilla menu items are flat, so an item whose link is
  * "menu:<other-menu-name>" is expanded into a submenu holding that menu's
@@ -78,7 +78,7 @@ class Menus
         ]);
     }
 
-    // ── GET /api/menus/:id — raw flat items for the CRUD editor ────────────
+    // ── GET /spa/menus/:id — raw flat items for the CRUD editor ────────────
     private function getRaw(int $uid, int $menu_id): never
     {
         $menu = q(
@@ -118,7 +118,7 @@ class Menus
         ]);
     }
 
-    // ── GET /api/menus/:nick/:name — observer-filtered nested tree ─────────
+    // ── GET /spa/menus/:nick/:name — observer-filtered nested tree ─────────
     private function getTree(string $nick, string $name): never
     {
         $r = q(
@@ -288,7 +288,7 @@ class Menus
         Response::send(['success' => true]);
     }
 
-    // ── POST /api/menus/:id/items/… ─────────────────────────────────────────
+    // ── POST /spa/menus/:id/items/… ─────────────────────────────────────────
     private function postItem(int $uid, int $menu_id, array $body): never
     {
         $arg4 = \App::$argv[4] ?? '';

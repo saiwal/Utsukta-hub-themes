@@ -10,13 +10,13 @@ use App;
 /**
  * Privacy Groups handler
  *
- * GET    /api/privacy-groups            → list all groups for local channel
- * GET    /api/privacy-groups/:id        → single group + member list
- * GET    /api/privacy-groups/:id/members → contacts NOT in group (for picker)
- * POST   /api/privacy-groups            → create  { name, visible }
- * POST   /api/privacy-groups/:id        → update  { name?, visible?, set_default_acl?, set_default_group? }
- * POST   /api/privacy-groups/:id/toggle → toggle  { xchan_hash }
- * DELETE /api/privacy-groups/:id        → delete
+ * GET    /spa/privacy-groups            → list all groups for local channel
+ * GET    /spa/privacy-groups/:id        → single group + member list
+ * GET    /spa/privacy-groups/:id/members → contacts NOT in group (for picker)
+ * POST   /spa/privacy-groups            → create  { name, visible }
+ * POST   /spa/privacy-groups/:id        → update  { name?, visible?, set_default_acl?, set_default_group? }
+ * POST   /spa/privacy-groups/:id/toggle → toggle  { xchan_hash }
+ * DELETE /spa/privacy-groups/:id        → delete
  *
  * Register in Router.php $map:
  *   'privacy-groups' => Handlers\PrivacyGroups::class,

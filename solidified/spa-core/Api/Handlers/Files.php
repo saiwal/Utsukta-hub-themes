@@ -8,20 +8,20 @@ use Zotlabs\Lib\Libsync;
 /**
  * Files (cloud storage) handler
  *
- * GET  /api/files/:nick                  → list root folder
- * GET  /api/files/:nick/folder/:hash     → list folder by hash ('' = root)
- * GET  /api/files/:nick/meta/:hash       → single file metadata + ACL
- * GET  /api/files/:nick/quota            → storage used/limit in bytes
- * GET  /api/files/:nick/download/:hash   → download a file, or a folder as a zip
- * GET  /api/files/:nick/categories/:hash → list category terms for a file/folder
- * GET  /api/files/:nick/search?term=&folder= → name search within a folder's subtree
+ * GET  /spa/files/:nick                  → list root folder
+ * GET  /spa/files/:nick/folder/:hash     → list folder by hash ('' = root)
+ * GET  /spa/files/:nick/meta/:hash       → single file metadata + ACL
+ * GET  /spa/files/:nick/quota            → storage used/limit in bytes
+ * GET  /spa/files/:nick/download/:hash   → download a file, or a folder as a zip
+ * GET  /spa/files/:nick/categories/:hash → list category terms for a file/folder
+ * GET  /spa/files/:nick/search?term=&folder= → name search within a folder's subtree
  *      (not `q`: Hubzilla routes on $_GET['q'] — nginx rewrites to index.php?q=<path>)
- * POST /api/files/:nick/download         → several files as one zip (form field hashes=a,b)
- * POST /api/files/:nick/permissions      → update file ACL
- * POST /api/files/:nick/rename           → rename a file/folder in place
- * POST /api/files/:nick/move             → move a file/folder to another folder
- * POST /api/files/:nick/copy             → copy a file/folder to another folder
- * POST /api/files/:nick/categories       → replace category terms for a file/folder
+ * POST /spa/files/:nick/download         → several files as one zip (form field hashes=a,b)
+ * POST /spa/files/:nick/permissions      → update file ACL
+ * POST /spa/files/:nick/rename           → rename a file/folder in place
+ * POST /spa/files/:nick/move             → move a file/folder to another folder
+ * POST /spa/files/:nick/copy             → copy a file/folder to another folder
+ * POST /spa/files/:nick/categories       → replace category terms for a file/folder
  *
  * Register in Router.php $map:
  *   'files' => Handlers\Files::class,

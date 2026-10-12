@@ -3,7 +3,7 @@
  * Utsukta\SpaCore\Api\Handlers\Notifications
  *
  * Routes:
- *   GET /api/notifications → full "System Notifications" list (mirrors
+ *   GET /spa/notifications → full "System Notifications" list (mirrors
  *   Zotlabs/Module/Notifications.php::get()): up to 50 `notify` rows, unseen
  *   first, padded with seen rows so the SPA can show more than the
  *   unseen-only set /sse_bs/notify (and the SPA's /notify page) return.

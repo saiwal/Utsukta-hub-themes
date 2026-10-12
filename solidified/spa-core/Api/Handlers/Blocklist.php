@@ -8,8 +8,8 @@ use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 use Zotlabs\Lib\Config;
 
 /**
- * GET  /api/blocklist  -> the local channel's personal block list
- * POST /api/blocklist  -> { action: "block"|"unblock"|"siteblock", author: hash|webbie }
+ * GET  /spa/blocklist  -> the local channel's personal block list
+ * POST /spa/blocklist  -> { action: "block"|"unblock"|"siteblock", author: hash|webbie }
  *
  * "block"/"unblock" manage the personal list (pconfig system/blocked, same
  * storage classic Hubzilla's superblock addon uses). "siteblock" is admin-only

@@ -22,13 +22,13 @@ use Utsukta\SpaCore\Api\ContentTypes;
 
 class Moderate
 {
-    // GET  /api/moderate                  -> list pending items for local_channel()
-    // GET  /api/moderate?mid=<mid>         -> pending Like/Dislike/Announce on one post/comment
+    // GET  /spa/moderate                  -> list pending items for local_channel()
+    // GET  /spa/moderate?mid=<mid>         -> pending Like/Dislike/Announce on one post/comment
     //                                         (feeds the inline "pending reactions" panel — comments
     //                                         get an inline approve/deny affordance instead, so this
     //                                         scoped view only needs to cover reactions)
-    // POST /api/moderate/:id/approve      -> unblock + re-notify
-    // POST /api/moderate/:id/drop         -> delete
+    // POST /spa/moderate/:id/approve      -> unblock + re-notify
+    // POST /spa/moderate/:id/drop         -> delete
     public function get(): void
     {
         $uid = Auth::requireLocalGet();

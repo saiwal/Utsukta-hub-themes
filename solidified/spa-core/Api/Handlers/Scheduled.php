@@ -16,9 +16,9 @@ use Zotlabs\Daemon\Master;
  */
 class Scheduled
 {
-    // GET  /api/scheduled           → list the local channel's pending posts
-    // POST /api/scheduled/publish   → { uuid } publish immediately
-    // POST /api/scheduled/delete    → { uuid } cancel (delete) a pending post
+    // GET  /spa/scheduled           → list the local channel's pending posts
+    // POST /spa/scheduled/publish   → { uuid } publish immediately
+    // POST /spa/scheduled/delete    → { uuid } cancel (delete) a pending post
 
     public function get(): void
     {

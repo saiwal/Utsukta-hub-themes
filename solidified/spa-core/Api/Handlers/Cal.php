@@ -12,21 +12,21 @@ require_once('include/event.php');
 require_once('include/items.php');
 
 /**
- * GET /api/cal/calendars                      — list CalDAV calendars + channel calendar
- * GET /api/cal/:nick                          — channel event feed (ISO date range or upcoming 60 days)
+ * GET /spa/cal/calendars                      — list CalDAV calendars + channel calendar
+ * GET /spa/cal/:nick                          — channel event feed (ISO date range or upcoming 60 days)
  *   ?start=2026-05-01&end=2026-06-01
  *   ?id=<event_id>                            — single event detail
  *   ?export=ical                              — download as iCal (.ics)
  *   ?cat=<name>                               — filter by category (channel calendar only)
  *
- * POST /api/cal                               — create event (JSON body)
- * POST /api/cal/import                        — import iCal (JSON body: { ical: "..." })
- * POST /api/cal/calendar/create               — create CalDAV calendar
- * POST /api/cal/calendar/:id/toggle           — toggle pconfig visibility
- * POST /api/cal/calendar/:id/edit             — rename / recolor
- * POST /api/cal/calendar/:id/delete           — delete CalDAV calendar
- * POST /api/cal/calendar/:id/share            — invite sharee
- * POST /api/cal/calendar/:id/unshare          — remove sharee
+ * POST /spa/cal                               — create event (JSON body)
+ * POST /spa/cal/import                        — import iCal (JSON body: { ical: "..." })
+ * POST /spa/cal/calendar/create               — create CalDAV calendar
+ * POST /spa/cal/calendar/:id/toggle           — toggle pconfig visibility
+ * POST /spa/cal/calendar/:id/edit             — rename / recolor
+ * POST /spa/cal/calendar/:id/delete           — delete CalDAV calendar
+ * POST /spa/cal/calendar/:id/share            — invite sharee
+ * POST /spa/cal/calendar/:id/unshare          — remove sharee
  */
 class Cal
 {
@@ -1166,7 +1166,7 @@ class Cal
             'displayname' => Response::decodeEntities($channel['channel_name']),
             'color'       => '#3a87ad',
             'enabled'     => $chcal_enabled,
-            'exportUrl'   => '/api/cal/' . $channel['channel_address'] . '?export=ical',
+            'exportUrl'   => '/spa/cal/' . $channel['channel_address'] . '?export=ical',
         ];
 
         $local_channels = [];
