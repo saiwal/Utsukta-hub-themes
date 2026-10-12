@@ -110,6 +110,10 @@ class Connections
             default  => '',
         };
 
+        // ?perms=post_comments,send_stream: only contacts that granted us every
+        // listed their_perms key; ?perms=none: contacts that granted none of them.
+        $sql_filter .= $this->permsClause($uid, $_GET['perms'] ?? '');
+
         $sql_search = '';
         if ($search !== '') {
             $sql_search = " AND (xchan.xchan_name LIKE '%%"
@@ -791,6 +795,21 @@ class Connections
         };
     }
 
+    private const PERM_KEYS = ['post_comments', 'send_stream', 'post_wall'];
+
+    private function permsClause(int $uid, string $param): string
+    {
+        $granted = fn(string $k) => "EXISTS (SELECT 1 FROM abconfig WHERE abconfig.chan = " . intval($uid)
+            . " AND abconfig.xchan = abook.abook_xchan AND abconfig.cat = 'their_perms'"
+            . " AND abconfig.k = '$k' AND abconfig.v = '1')";
+        $keys = explode(',', $param);
+        if (in_array('none', $keys, true)) {
+            return ' AND NOT (' . implode(' OR ', array_map($granted, self::PERM_KEYS)) . ') ';
+        }
+        $keys = array_intersect(self::PERM_KEYS, $keys);
+        return $keys ? ' AND ' . implode(' AND ', array_map($granted, $keys)) . ' ' : '';
+    }
+
     // Bulk-fetches the 'their_perms' abconfig rows for a batch of xchans in a single
     // query, avoiding a get_all_perms()-style per-row lookup on the connections list.
     private function bulkTheirPerms(int $uid, array $hashes): array
@@ -823,8 +842,7 @@ class Connections
 
         // Mirrors classic Hubzilla's connections "traffic light": these 3 their_perms
         // keys indicate what the contact has granted the local channel.
-        $permKeys = ['post_comments', 'send_stream', 'post_wall'];
-        $grantedPerms = array_values(array_filter($permKeys, fn($k) => !empty($theirPerms[$k])));
+        $grantedPerms = array_values(array_filter(self::PERM_KEYS, fn($k) => !empty($theirPerms[$k])));
 
         $raw_profile = intval($row['abook_profile'] ?? 0);
         return [
