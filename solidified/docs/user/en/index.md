@@ -38,6 +38,7 @@ New here? Read [Getting-started](getting-started) first — it covers logging in
 - [Webpages](webpages) — Webpages app: static pages on your channel
 - [Cart](cart) — Shopping cart: browsing, checkout, and order history
 - [Notepad](notepad) — Notes: private personal scratchpad
+- [Jellyfin](jellyfin) — Music and video from your Jellyfin server: player, sharing, parties, clips
 - [Connections](connections) — Connections, directory, privacy groups
 - [Notifications](notifications) — Notification bell and notification list
 - [Widgets](widgets) — Customizing sidebar widgets: adding, removing, reordering, pinned widgets
