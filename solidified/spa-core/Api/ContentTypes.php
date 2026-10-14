@@ -82,8 +82,9 @@ final class ContentTypes
     // the converted body still gets tag linkification and its term rows.
     //
     // The mdpost addon does the same job for core's composer, from a
-    // 'post_content' hook that only Zotlabs\Module\Item fires — this handler
-    // does not, so there is no double conversion. What the SPA does share with
+    // 'post_content' hook in Zotlabs\Module\Item. Item::coreItemPost() goes
+    // through that module, so it unhooks mdpost for the call — a second pass
+    // over the converted bbcode mangles it. What the SPA does share with
     // it is the toggle: composing in Markdown is gated on mdpost's own
     // 'markdown' feature rather than a second SPA-specific one.
     //
@@ -118,6 +119,19 @@ final class ContentTypes
     // composer would show something the posted item does not.
     private static function gfmToBbcode(string $md): string
     {
+        // A list may interrupt a paragraph in GFM ("Intro\n- one" is a list in
+        // marked) but not in MarkdownExtra, which leaves the items as literal
+        // "- one" lines. Insert the blank line MarkdownExtra wants. As in GFM,
+        // only a bullet or an ordered list starting at 1 interrupts, so prose
+        // like "in\n2026. we" stays prose. The previous line must start
+        // unindented and not be a list item itself, so items and their
+        // continuation lines are left alone.
+        $md = preg_replace_callback(
+            '/(```[\s\S]*?```)|^((?![-*+][ \t]|\d+[.)][ \t])\S.*)\n(?=[ \t]{0,3}(?:[-*+]|1[.)])[ \t]+\S)/m',
+            fn(array $m) => $m[1] !== '' ? $m[1] : $m[2] . "\n\n",
+            $md
+        );
+
         // ~~struck~~ -> [s]struck[/s]. Not inside a fenced or inline code span.
         $md = preg_replace_callback(
             '/(```[\s\S]*?```|`[^`\n]*`)|~~(?!\s)(.+?)(?<!\s)~~/s',
@@ -180,11 +194,19 @@ final class ContentTypes
     // edited somewhere else — the classic UI, a clone, an addon — item.body no
     // longer corresponds to this Markdown, and restoring it would silently
     // revert that edit. Mismatch means fall back to bbcode.
+    //
+    // Hashed from the stored row, not the converted text: on create, core
+    // linkifies hashtags and mentions after we hand it the body, so the text
+    // we converted is not what lands in item.body.
 
-    public static function rememberMarkdown(int $iid, string $markdown, string $bbcode): void
+    public static function rememberMarkdown(int $iid, string $markdown): void
     {
+        $r = q("SELECT body FROM item WHERE id = %d LIMIT 1", $iid);
+        if (!$r) {
+            return;
+        }
         set_iconfig($iid, 'spa', 'md_source', $markdown);
-        set_iconfig($iid, 'spa', 'md_hash', sha1($bbcode));
+        set_iconfig($iid, 'spa', 'md_hash', sha1($r[0]['body']));
     }
 
     /** Drop a stored source — call when an item is saved as anything but Markdown. */
