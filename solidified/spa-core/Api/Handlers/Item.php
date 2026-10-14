@@ -1957,12 +1957,34 @@ class Item
                 return $r[0];
         }
 
-        // Fall back to any publicly accessible copy
-        $permission_sql = item_permissions_sql(0, $ob_hash);
+        // Fall back to any copy the observer may see — checked against each
+        // copy's OWNER channel, as Display.php does. item_permissions_sql(0, …)
+        // can't resolve the observer's group membership or 'contacts' scope, so
+        // a connections-only post on a channel where the visitor holds no copy
+        // of their own (e.g. a friend's clone on another hub) was unreachable.
         $r = dbq("SELECT * FROM item
                   WHERE item.$col = '$midEsc'
                     AND item.item_deleted = 0
-                    $permission_sql
+                  ORDER BY item_wall DESC");
+
+        foreach ($r ?: [] as $row) {
+            $uid = intval($row['uid']);
+            if (!perm_is_allowed($uid, $ob_hash, 'view_stream')) {
+                continue;
+            }
+            $ok = dbq('SELECT id FROM item WHERE id = ' . intval($row['id'])
+                . item_permissions_sql($uid, $ob_hash) . ' LIMIT 1');
+            if ($ok) {
+                return $row;
+            }
+        }
+
+        // Core /display's owner-less check — a public copy in a channel whose
+        // stream the observer can't view still resolves there, so keep it.
+        $r = dbq("SELECT * FROM item
+                  WHERE item.$col = '$midEsc'
+                    AND item.item_deleted = 0
+                    " . item_permissions_sql(0, $ob_hash) . "
                   ORDER BY item_wall DESC
                   LIMIT 1");
 
