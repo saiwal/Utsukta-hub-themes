@@ -24,3 +24,12 @@ foreach (headers_list() as $solidified_hdr) {
 	}
 }
 unset($solidified_hdr);
+
+// Allow blob: frames under core's opt-in CSP (system.content_security_policy).
+// FilePreviewModal shows PDFs in an <iframe src="blob:…"> (a blob carries no
+// Content-Disposition, so the browser renders instead of downloading), and
+// core's default frame-src 'self' doesn't cover blob:. Inserted per request
+// rather than register_hook()ed so existing hubs need no theme re-enable.
+\Zotlabs\Extend\Hook::insert('content_security_policy', function (&$csp) {
+	$csp['frame-src'][] = 'blob:';
+});
