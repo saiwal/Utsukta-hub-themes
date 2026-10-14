@@ -75,6 +75,7 @@ class Router
         'rss-feed'       => Handlers\Rss::class,
         'feed'           => Handlers\Feed::class,
         'weather'        => Handlers\Weather::class,
+        'jellyfin-nowplaying' => Handlers\JellyfinNowPlaying::class,
         'geocode'        => Handlers\Geocode::class,
         'link-meta'      => Handlers\Linkmeta::class,
         'oembed'         => Handlers\Oembed::class,

@@ -7,6 +7,8 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Overview](overview) — Architecture overview, tech stack, project layout
 - [Module-system](module-system) — Creating, registering, and gating feature modules
 - [Slot-system](slot-system) — Injecting widgets into layout regions
+- [Design-guidelines](design-guidelines) — How a module should look: page anatomy, tokens, type, controls, motion, and a redesign checklist (reference: the Jellyfin module)
+- [Jellyfin](jellyfin) — Jellyfin player: browser-direct architecture, player store, remote/WebSocket, SyncPlay parties, video/HLS, clips, profile card, API quirks
 - [Drafts](drafts) — Draft storage, the composer autosave/pending-draft mechanism, and the HQ DraftsWidget
 - [Cards-kanban](cards-kanban) — Card metadata, the card face, and the kanban board (boards as categories, columns as decks)
 - [Help-mode](help-mode) — The click-to-see-docs contextual help overlay

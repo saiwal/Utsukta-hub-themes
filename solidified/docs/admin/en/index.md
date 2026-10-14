@@ -16,6 +16,7 @@ This guide covers the Admin panel at `/admin`. It is visible only to accounts wi
 - [Themes](themes) — Installed themes management
 - [Profile-fields](profile-fields) — Custom profile field definitions
 - [Db-updates](db-updates) — Pending database schema updates
+- [Jellyfin](jellyfin) — The per-user Jellyfin player: what reaches the hub, what it stores, CSP and SyncPlay notes
 
 ## Accessing the Admin Panel
 
