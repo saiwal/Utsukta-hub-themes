@@ -780,14 +780,27 @@ class Item
         require_once('include/items.php');
 
         $saved = $_POST;
+        // The mdpost addon's post_content hook runs markdown_to_bb() over every
+        // bbcode body core's Item module sees. Ours is already bbcode
+        // (ContentTypes::toBbcode()), and a second pass mangles it — "[*]a\n[*]b"
+        // comes back as "[[i]]a\n[[/i]]b". Unhook it for this call only.
+        $savedHook = \App::$hooks['post_content'] ?? null;
         try {
             $_POST = $fields;
             $_POST['api_source'] = 1;
             unset($_POST['dropitems'], $_POST['preview'], $_POST['return'], $_POST['jsreload']);
+            if ($savedHook !== null) {
+                \App::$hooks['post_content'] = array_values(array_filter(
+                    $savedHook, fn($h) => ($h[1] ?? '') !== 'mdpost_post_content'
+                ));
+            }
 
             $res = (new \Zotlabs\Module\Item())->post();
         } finally {
             $_POST = $saved;
+            if ($savedHook !== null) {
+                \App::$hooks['post_content'] = $savedHook;
+            }
         }
 
         if (is_array($res) && ($res['success'] ?? true) === false) {
@@ -948,7 +961,7 @@ class Item
             set_iconfig($iid, 'spa', 'local_only', 1);
         }
         if ($mdSource !== '') {
-            ContentTypes::rememberMarkdown($iid, $mdSource, $content);
+            ContentTypes::rememberMarkdown($iid, $mdSource);
         }
         $this->setEmbedIconfig($iid, $content);
 
@@ -1024,7 +1037,7 @@ class Item
         }
 
         if ($mdSource !== '') {
-            ContentTypes::rememberMarkdown($iid, $mdSource, $content);
+            ContentTypes::rememberMarkdown($iid, $mdSource);
         }
 
         $row = q('SELECT mid, uuid FROM item WHERE id = %d LIMIT 1', intval($iid));
@@ -1619,7 +1632,7 @@ class Item
         // that a later edit would restore over the top of it.
         if (intval($item[0]['item_type']) === ITEM_TYPE_POST) {
             if ($mdSource !== '') {
-                ContentTypes::rememberMarkdown($iid, $mdSource, $content);
+                ContentTypes::rememberMarkdown($iid, $mdSource);
             } else {
                 ContentTypes::forgetMarkdown($iid);
             }
