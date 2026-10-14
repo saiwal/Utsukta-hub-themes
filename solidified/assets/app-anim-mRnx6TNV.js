@@ -1,0 +1,1 @@
+import{dt as e,ft as t,mt as n,pt as r}from"./app-DIzNfHsp.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(e),s=a(t),c=a(r),l=a(n);export{l as i,s as n,c as r,o as t};
