@@ -24,6 +24,7 @@ If **content_security_policy** is enabled in the site configuration, the policy 
 | Profile "Listening now" audience | pconfig `spa` / `jf_np_audience` (`off`, `self`, `connections`, `public`) | Off by default. Set by the user in the player's settings. |
 | Current track for that card | pconfig `spa` / `jf_np_state` (title, artist, album, a small cover thumbnail as a data URL, timestamp) | Pushed by the user's browser while playing; treated as stale after 20 minutes; deleted when the audience is set to off. |
 | Shared covers and screenshots | the user's photo albums (Wall Photos) | Uploaded through `wall_attach` when the user shares. |
+| "Remember on my hub" sign-ins (opt-in) | pconfig `spa_vault` / `jellyfin` and `_vault` | **End-to-end encrypted** in the user's browser with a passphrase only the user knows (PBKDF2 + AES-GCM), then additionally sealed with the channel key pair. Admins and the hub can't read it; a forgotten passphrase can't be recovered. Synced to clones like other pconfig. |
 | Shared clips | the user's cloud files | Uploaded through `wall_attach` when the user shares a clip (MP4, at most one minute). |
 
 The endpoint is `GET/POST /spa/jellyfin-nowplaying` (handler `JellyfinNowPlaying`). Visitors' reads are checked against the owner's chosen audience; writes require the owner's session and CSRF token.

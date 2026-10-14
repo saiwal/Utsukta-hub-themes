@@ -14,6 +14,18 @@ The first time you open Jellyfin, enter your server's address and your Jellyfin 
 - Your browser talks to your Jellyfin server directly; your hub never sees your media. That means the device you're using must be able to reach the server. A server only reachable at home works while you're at home (or on your VPN).
 - Use an **https://** address. Your hub is served over HTTPS, so browsers block a plain `http://` server (a warning appears under the address field if you type one).
 
+### Remember on my hub
+
+Tick **Remember on my hub** when signing in, and your other browsers — and your channel's clones on other hubs — can sign in to that server without your Jellyfin password. (Your Jellyfin server needs Quick Connect enabled, which it is by default.)
+
+The first time, you choose a **vault passphrase**. Your sign-ins are encrypted with it in your browser before they reach your hub, so your hub — and its admin — can't read them. Each new browser asks for the passphrase once; after that it's remembered there.
+
+- **Forget it?** It can't be recovered: **⋯ → Settings → Reset vault** deletes the saved sign-ins so you can choose a new passphrase.
+- **⋯ → Forget on my hub** removes the current server; browsers already signed in stay signed in.
+- **⋯ → Settings → Lock on this browser** makes this browser ask for the passphrase again.
+
+One limit applies to any website: your hub serves the app itself, so you're trusting it not to be tampered with. The encryption keeps what's stored unreadable.
+
 ### More than one server
 
 Open the **⋯** menu at the top right to switch between servers, or choose **Add a server**. The page title shows the name of the server you're browsing. **Sign out of …** in the same menu signs out of the current server only.
