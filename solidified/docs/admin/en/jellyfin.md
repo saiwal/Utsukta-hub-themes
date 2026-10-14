@@ -11,7 +11,7 @@ Consequences worth knowing when supporting users:
 - The user's device must be able to reach their Jellyfin server. A home-only server works only on that network or over a VPN.
 - The server must be served over **HTTPS** with a certificate the browser trusts — the hub is HTTPS, and browsers block `http://` requests from it.
 - Jellyfin sends permissive CORS headers by default; no Jellyfin configuration is needed for browsing and playback.
-- Recent browsers may ask once whether the hub may connect to devices on the local network (when the Jellyfin server has a private address). It must be allowed.
+- **Local Network Access.** When the Jellyfin address resolves to a private IP (a home server, or *split DNS* that gives LAN clients the internal address), browsers treat the public hub reaching it as a local-network request. Chrome asks once to allow "devices on your local network"; it must be allowed. Firefox (`network.lna.*`, on by default) lets plain image/stream requests through but **cancels CORS preflights** — sign-in and the devices list fail with "CORS request did not succeed. Status code: (null)" while the server itself answers fine. The `Access-Control-Allow-Private-Network` header does not help Firefox. Workarounds: give LAN clients the public address too (drop the split-DNS override for that host), reach the server over a VPN with a public-resolving name, or the user sets `network.lna.blocking` to `false`.
 
 ## Content Security Policy
 
