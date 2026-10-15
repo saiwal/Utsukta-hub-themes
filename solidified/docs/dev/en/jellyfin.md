@@ -54,6 +54,48 @@ browser.
 and repeat for resume-after-reload. A restored queue loads nothing until the
 user presses play (`resumeAt`). Tracks from signed-out servers are dropped.
 
+## Hub vault — sign-ins for other browsers and clones
+
+Opt-in ("Remember on my hub" at sign-in), **end-to-end encrypted**: the hub
+and its admin store only ciphertext. Generic pieces, meant for reuse by later
+integrations (PeerTube, Matrix…):
+
+- **`spa-core/lib/vault.ts`** — encrypts in the browser. A vault passphrase
+  (one per channel, chosen by the user) → PBKDF2-SHA256, 600 000 iterations →
+  AES-256-GCM; each entry `{v, iv, ct}` with AAD `"<integration>/<key>"`, so
+  an entry moved to another slot fails to open. Public metadata (KDF name and
+  iterations, salt, an encrypted check value to recognise a wrong passphrase)
+  lives in integration `_vault` key `meta` — recorded so the KDF can move to
+  Argon2id later. The derived key is cached per browser in IndexedDB as a
+  **non-extractable** `CryptoKey`, keyed by the channel hash (shared by
+  clones): unlock once per browser. API: `vaultStatus()` (`new` / `locked` /
+  `unlocked`), `unlockVault(passphrase)` (sets it on a new vault),
+  `lockVault()`, `resetVault(integrations)` (a forgotten passphrase can't be
+  recovered), `vaultList<T>()`, `vaultPut()`, `vaultDelete()`.
+- **`Handlers/Vault.php`** — `GET/POST /spa/vault/<integration>`, owner only
+  (CSRF on writes); stores the opaque map in pconfig `spa_vault/<integration>`,
+  additionally sealed with the channel key pair (keeps even the ciphertext out
+  of logs — core logs whole sync packets at `LOGGER_DATA` — and dumps), synced
+  to clones by the router's shutdown hook. ≤ 8 KB per entry, ≤ 32 per
+  integration. Refuses to seal without a public key (core's `aes_encapsulate`
+  would log the plaintext). Check: `npm run test:php -- Vault`.
+
+The limit every web app has: the hub serves this JavaScript, so a malicious
+admin could ship code that captures the passphrase as it's typed. The vault
+stops an admin *reading what's stored*, not tampering with the app.
+
+Jellyfin's use (`store.ts`): one entry per server, in a slot named by
+`SHA-256("jellyfin:" + ServerId)` (the hub doesn't learn which server), holding
+an **anchor** — a separate Jellyfin session ("Hubzilla (stored)", made with the
+password at sign-in) never used for playback. `syncFromHub()` (once per page
+load, from the mini-player) gives a browser lacking a stored server **its own**
+token via Quick Connect approved by the anchor (`quickConnectNewDevice()`), so
+each browser stays its own Jellyfin session (remote control and SyncPlay need
+that); the browser does it, so the hub still never contacts Jellyfin. Locked
+vault → `vaultLocked()` and `VaultUnlock.tsx` offers the passphrase. A
+device-only sign-out lands in `hubSkip` so the next sync doesn't undo it;
+"Forget on my hub" revokes the anchor and deletes the entry.
+
 ## Music player (`store.ts`)
 
 A single module-level `<audio>` (created outside any component, so playback

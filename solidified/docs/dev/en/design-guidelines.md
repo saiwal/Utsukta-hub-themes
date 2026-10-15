@@ -265,8 +265,9 @@ rule).
 
 ## Shared helpers
 
-`iconBtn`, `primaryPill`, `ghostPill`, `Art` and the skeletons currently live
-in `src/modules/jellyfin/ui.tsx`, and the motion presets in
-`src/modules/jellyfin/anim.ts`. When a second module adopts this guideline,
-move them to `src/shared/` (`shared/views/ui.tsx`, `shared/views/anim.ts`)
-rather than importing across modules.
+`iconBtn`, `primaryPill`, `ghostPill` and `SkeletonRows` live in
+`src/shared/views/ui.tsx`, and the motion presets (`fade`, `pop`, `slideDown`,
+`slideUp`, reduced-motion aware) in `src/shared/views/anim.ts`. Jellyfin
+re-exports them from its own `ui.tsx` / `anim.ts`; `Art` and the other
+skeletons are still Jellyfin-only. Calendar (`src/modules/calendar/`) is the
+second module built to this guideline.

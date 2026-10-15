@@ -1,0 +1,1 @@
+import{d as e}from"./app-routing-DVnanUVy.js";function t(){let t=e();return()=>{let e=t.pathname.split(`/`).filter(Boolean);return e[0]===`articles`?e.length<=2?`list`:e.length===3&&e[2]===`series`?`series`:null:null}}function n(){let e=t();return()=>e()===`list`}export{n,t};

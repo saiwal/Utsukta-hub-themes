@@ -12,7 +12,20 @@ The first time you open Jellyfin, enter your server's address and your Jellyfin 
 
 - Your password is used once to sign in and is never stored. The sign-in is remembered in this browser only — sign in once on each device.
 - Your browser talks to your Jellyfin server directly; your hub never sees your media. That means the device you're using must be able to reach the server. A server only reachable at home works while you're at home (or on your VPN).
+- **Server on your home network?** Browsers protect your local network from websites, so connecting from your hub to a home-network address can be blocked. Chrome asks once: allow it. Firefox blocks sign-in silently ("Couldn't reach the server"); in `about:config` set `network.lna.blocking` to `false`, or ask whoever runs your network to let home devices use the server's public address.
 - Use an **https://** address. Your hub is served over HTTPS, so browsers block a plain `http://` server (a warning appears under the address field if you type one).
+
+### Remember on my hub
+
+Tick **Remember on my hub** when signing in, and your other browsers — and your channel's clones on other hubs — can sign in to that server without your Jellyfin password. (Your Jellyfin server needs Quick Connect enabled, which it is by default.)
+
+The first time, you choose a **vault passphrase**. Your sign-ins are encrypted with it in your browser before they reach your hub, so your hub — and its admin — can't read them. Each new browser asks for the passphrase once; after that it's remembered there.
+
+- **Forget it?** It can't be recovered: **⋯ → Settings → Reset vault** deletes the saved sign-ins so you can choose a new passphrase.
+- **⋯ → Forget on my hub** removes the current server; browsers already signed in stay signed in.
+- **⋯ → Settings → Lock on this browser** makes this browser ask for the passphrase again.
+
+One limit applies to any website: your hub serves the app itself, so you're trusting it not to be tampered with. The encryption keeps what's stored unreadable.
 
 ### More than one server
 
