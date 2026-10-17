@@ -1253,18 +1253,14 @@ class Item
         // Compare to '' — the default list is [ITEM_TYPE_POST] = "0", which ?: treats as empty.
         $pinTypes = implode(',', array_map('intval', (array) Config::Get('system', 'pin_types', [ITEM_TYPE_POST])));
         if ($pinTypes === '') $pinTypes = '-1';
-        $item = dbq("SELECT id, uuid, item_type FROM item
+        $item = dbq("SELECT id, uuid, item_type, item_private, item_wall, item_delayed FROM item
                      WHERE item.$col = '$midEsc' AND item.uid = $uid
                        AND item.id = item.parent
-                       AND item.item_private = 0
-                       AND item.item_wall = 1
-                       AND item.item_delayed = 0
                        AND item.item_deleted = 0
-                       AND item.item_type IN ($pinTypes)
                      LIMIT 1");
 
         if (!$item) {
-            json_return_and_die(['error' => 'Item not found, not eligible, or permission denied']);
+            Response::error(404, 'Item not found');
         }
 
         $midb64 = $item[0]['uuid'];
@@ -1272,6 +1268,15 @@ class Item
         $pinned = get_pconfig($uid, 'pinned', $itemType, []);
         $pinned = is_array($pinned) ? $pinned : [];
         $isPinned = in_array($midb64, $pinned, true);
+
+        // The rule gates pinning only. Unpinning must always work: core's
+        // Pin module skips the item_wall check, and a federated update can
+        // later flip item_wall to 0, so a pinned post can stop being pinnable.
+        if (!$isPinned && (intval($item[0]['item_private']) || !intval($item[0]['item_wall'])
+                || intval($item[0]['item_delayed'])
+                || !in_array($itemType, array_map('intval', explode(',', $pinTypes)), true))) {
+            Response::error(403, 'Item is not eligible for pinning');
+        }
 
         $pinned = $isPinned
             ? array_values(array_diff($pinned, [$midb64]))
