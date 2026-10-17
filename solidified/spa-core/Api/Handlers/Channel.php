@@ -267,7 +267,14 @@ class Channel
             ];
         }
 
+        // No channel_created column exists; the self abook row is written at
+        // channel creation (create_identity), so it stands in. Feeds the
+        // newspaper masthead's "Vol." (channel age in years).
+        $selfAbook = q("SELECT abook_created FROM abook WHERE abook_channel = %d AND abook_self = 1 LIMIT 1",
+            intval($channel_uid));
+
         $meta = [
+            'channel_created' => $selfAbook && $selfAbook[0]['abook_created'] > '1000' ? $selfAbook[0]['abook_created'] : null,
             'offset'        => $offset,
             'limit'         => $itemspage,
             'count'         => count($out),
