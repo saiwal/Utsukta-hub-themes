@@ -31,7 +31,7 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use App;
 use Zotlabs\Lib\Cache;
-use Zotlabs\Lib\QueueWorker;
+use Zotlabs\Daemon\Master;
 use Zotlabs\Web\HTTPSig;
 use Utsukta\SpaCore\Api\Response;
 
@@ -111,7 +111,7 @@ class ChatFed
             dbesc($roomId . '.%')
         );
         if ($any)
-            QueueWorker::Summon(['Addon', 'spa_chatfed', 'notice', $roomId, (string)($arr['chat_xchan'] ?? '')]);
+            Master::Summon(['Addon', 'spa_chatfed', 'notice', $roomId, (string)($arr['chat_xchan'] ?? '')]);
     }
 
     private static function sendNotices(int $roomId, string $sender): void
@@ -254,7 +254,7 @@ class ChatFed
         if (!$room || $room['host'] === self::localHost())
             return;
         set_pconfig($uid, 'spa_chat_subscribed', md5($room['url']), datetime_convert());
-        QueueWorker::Summon(['Addon', 'spa_chatfed', 'subscribe', $uid, $room['url']]);
+        Master::Summon(['Addon', 'spa_chatfed', 'subscribe', $uid, $room['url']]);
     }
 
     private static function sendSubscribe(int $uid, string $url): void

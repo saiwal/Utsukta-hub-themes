@@ -11,6 +11,7 @@ require_once ('include/crypto.php');
 
 use Zotlabs\Daemon\Master;
 use Zotlabs\Lib\Libsync;
+use Zotlabs\Lib\Config;
 use Zotlabs\Lib\Enotify;
 use Zotlabs\Lib\ObjCache;
 use Zotlabs\Access\PermissionLimits;
@@ -1246,12 +1247,20 @@ class Item
         $col = (str_contains($mid, '/') || str_contains($mid, ':')) ? 'mid' : 'uuid';
         $midEsc = dbesc($mid);
 
-        $item = dbq("SELECT id, uuid FROM item
+        // Mirrors core's pinnable rule (ThreadItem): own wall, top-level,
+        // public, published (not delayed), and an item_type in system/pin_types.
+        // "-1" keeps an emptied pin_types list valid SQL (matches nothing).
+        // Compare to '' — the default list is [ITEM_TYPE_POST] = "0", which ?: treats as empty.
+        $pinTypes = implode(',', array_map('intval', (array) Config::Get('system', 'pin_types', [ITEM_TYPE_POST])));
+        if ($pinTypes === '') $pinTypes = '-1';
+        $item = dbq("SELECT id, uuid, item_type FROM item
                      WHERE item.$col = '$midEsc' AND item.uid = $uid
                        AND item.id = item.parent
                        AND item.item_private = 0
                        AND item.item_wall = 1
+                       AND item.item_delayed = 0
                        AND item.item_deleted = 0
+                       AND item.item_type IN ($pinTypes)
                      LIMIT 1");
 
         if (!$item) {
@@ -1259,7 +1268,8 @@ class Item
         }
 
         $midb64 = $item[0]['uuid'];
-        $pinned = get_pconfig($uid, 'pinned', ITEM_TYPE_POST, []);
+        $itemType = intval($item[0]['item_type']);
+        $pinned = get_pconfig($uid, 'pinned', $itemType, []);
         $pinned = is_array($pinned) ? $pinned : [];
         $isPinned = in_array($midb64, $pinned, true);
 
@@ -1267,7 +1277,7 @@ class Item
             ? array_values(array_diff($pinned, [$midb64]))
             : [...$pinned, $midb64];
 
-        set_pconfig($uid, 'pinned', ITEM_TYPE_POST, $pinned);
+        set_pconfig($uid, 'pinned', $itemType, $pinned);
 
         Libsync::build_sync_packet($uid, ['config']);
 

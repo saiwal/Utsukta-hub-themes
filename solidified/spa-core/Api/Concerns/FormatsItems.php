@@ -423,6 +423,8 @@ trait FormatsItems
             'profile_uid' => intval($item['uid']),
             'flags' => array_values(array_filter([
                 intval($item['item_thread_top']) ? 'thread_parent' : null,
+                // On its channel's own wall (owner_xchan is the channel) — gates Pin.
+                intval($item['item_wall'] ?? 0) ? 'wall' : null,
                 intval($item['item_private']) ? 'private' : null,
                 intval($item['item_private']) === 2 ? 'direct_message' : null,
                 intval($item['item_starred']) ? 'starred' : null,
