@@ -101,6 +101,8 @@ class Pconfig
                 // webbie to reach ACL-restricted media on other hubs.
                 'my_address' => (string) (get_my_address() ?: channel_reddress($channel)),
                 'is_admin' => is_site_admin(),
+                // Site-wide 'Allow Feeds as Connections' (admin/site); gates the RSS filters.
+                'feed_contacts' => (bool) intval(\Zotlabs\Lib\Config::Get('system', 'feed_contacts')),
                 'system'   => $config['system']  ?? [],
                 'spa'      => ($config['spa'] ?? []) + HubDefaults::get(),
                 'features' => $features,

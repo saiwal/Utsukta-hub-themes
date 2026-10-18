@@ -13,8 +13,10 @@ use Zotlabs\Lib\Libsync;
  * GET  /spa/files/:nick/meta/:hash       → single file metadata + ACL
  * GET  /spa/files/:nick/quota            → storage used/limit in bytes
  * GET  /spa/files/:nick/download/:hash   → download a file, or a folder as a zip
+ * GET  /spa/files/:nick/categories       → every category in use, with visible-item counts
  * GET  /spa/files/:nick/categories/:hash → list category terms for a file/folder
  * GET  /spa/files/:nick/search?term=&folder= → name search within a folder's subtree
+ * GET  /spa/files/:nick/search?cat=&folder=  → items carrying a category, same subtree rules
  *      (not `q`: Hubzilla routes on $_GET['q'] — nginx rewrites to index.php?q=<path>)
  * POST /spa/files/:nick/download         → several files as one zip (form field hashes=a,b)
  * POST /spa/files/:nick/permissions      → update file ACL
@@ -67,10 +69,11 @@ class Files
                 $this->download($owner_uid, $ob_hash, $datum, $channel);
                 break;
             case 'categories':
+                if ($datum === '') $this->listCategories($owner_uid, $ob_hash);
                 $this->getCategories($owner_uid, $ob_hash, $datum);
                 break;
             case 'search':
-                $this->search($owner_uid, $ob_hash, (string) ($_GET['term'] ?? ''), (string) ($_GET['folder'] ?? ''));
+                $this->search($owner_uid, $ob_hash, (string) ($_GET['term'] ?? ''), (string) ($_GET['folder'] ?? ''), (string) ($_GET['cat'] ?? ''));
                 break;
             default:
                 // Root folder (folder hash = '')
@@ -208,27 +211,38 @@ class Files
 
     private const SEARCH_LIMIT = 200;
 
-    private function search(int $uid, string $ob_hash, string $q, string $folder_hash): void
+    private function search(int $uid, string $ob_hash, string $q, string $folder_hash, string $cat = ''): void
     {
-        $q = trim($q);
-        if (mb_strlen($q) < 2) {
+        $q   = trim($q);
+        $cat = trim($cat);
+        if ($cat === '' && mb_strlen($q) < 2) {
             Response::send([]);
         }
 
         $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
-        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($q)) . '%';
+
+        // q() vsprintf()s the query, so values ride as args — the LIKE pattern's
+        // own % would otherwise be read as a format spec.
+        if ($cat !== '') {
+            $match = "id IN (SELECT oid FROM term WHERE uid = %d AND otype = %d AND ttype = %d AND term = '%s')";
+            $args  = [intval($uid), TERM_OBJ_FILE, TERM_CATEGORY, dbesc($cat)];
+        } else {
+            $like  = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($q)) . '%';
+            $match = "LOWER(filename) LIKE '%s'";
+            $args  = [dbesc($like)];
+        }
 
         $hits = q(
             "SELECT " . self::ROW_COLUMNS . "
                FROM attach
               WHERE uid = %d
-                AND LOWER(filename) LIKE '%s'
+                AND $match
                 $sql_extra
               ORDER BY is_dir DESC, filename ASC
               LIMIT %d",
             intval($uid),
-            dbesc($like),
-            intval(self::SEARCH_LIMIT)
+            ...$args,
+            ...[intval(self::SEARCH_LIMIT)]
         ) ?: [];
 
         // hash => parent hash, for every folder the observer may see.
@@ -651,6 +665,26 @@ class Files
     }
 
     // ── Categories (term table, otype = TERM_OBJ_FILE) ──────────────────────
+
+    // Counts are per-row ACL only (no ancestor walk like search()), so an item in
+    // a hidden folder still counts; its name never leaks — search() drops it.
+    private function listCategories(int $uid, string $ob_hash): void
+    {
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT term.term AS name, COUNT(*) AS total
+               FROM term JOIN attach ON attach.id = term.oid AND attach.uid = term.uid
+              WHERE term.uid = %d AND term.otype = %d AND term.ttype = %d
+                $sql_extra
+              GROUP BY term.term
+              ORDER BY total DESC, term.term ASC",
+            intval($uid), TERM_OBJ_FILE, TERM_CATEGORY
+        );
+        Response::send(array_map(
+            fn($t) => ['name' => $t['name'], 'count' => intval($t['total'])],
+            $r ?: []
+        ));
+    }
 
     private function getCategories(int $uid, string $ob_hash, string $hash): void
     {

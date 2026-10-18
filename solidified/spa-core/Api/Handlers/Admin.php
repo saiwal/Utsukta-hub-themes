@@ -1353,61 +1353,94 @@ class Admin
 
     // ── Logs ──────────────────────────────────────────────────────────────────
 
+    private const LOG_CHUNK = 262144; // max bytes read per request
+
+    // Format: {ISO8601}:{LOG_LEVEL}:{logid}:{file}:{line}:{fn}: {message}
+    private const LOG_RE = '/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z)):(LOG_\w+):([^:]+):([^:]+):(\d+):([^:]+): (.*)$/';
+
+    /**
+     * Tail the logfile. Without `after`: the last LOG_CHUNK bytes, newest 500
+     * entries. With `after=<byte offset>` (from a previous response's `offset`):
+     * only what was appended since, so the live view polls cheaply. A file
+     * smaller than `after` was rotated/truncated — re-tail it and say `reset`.
+     */
     private function getLogs(): void
     {
         $logfile = Config::Get('system', 'logfile', '');
         $entries = [];
+        $offset  = 0;
+        $reset   = false;
+        $after   = isset($_GET['after']) ? intval($_GET['after']) : -1;
 
         if ($logfile && is_readable($logfile)) {
-            $fp = fopen($logfile, 'r');
-            if ($fp) {
-                fseek($fp, 0, SEEK_END);
-                $size = ftell($fp);
-                $read = min($size, 262144); // last 256 KB
-                fseek($fp, -$read, SEEK_END);
-                $raw  = fread($fp, $read);
+            clearstatcache(true, $logfile);
+            $size = (int) filesize($logfile);
+            if ($after > $size) { $after = -1; $reset = true; }
+
+            $start = $after >= 0 ? max($after, $size - self::LOG_CHUNK) : max(0, $size - self::LOG_CHUNK);
+            $raw   = '';
+            if ($size > $start && ($fp = fopen($logfile, 'r'))) {
+                fseek($fp, $start);
+                $raw = (string) fread($fp, $size - $start);
                 fclose($fp);
-
-                $all  = array_filter(explode("\n", $raw));
-                $tail = array_slice($all, -500);
-
-                // Format: {ISO8601}:{LOG_LEVEL}:{logid}:{file}:{line}:{fn}: {message}
-                $re = '/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z)):(LOG_\w+):([^:]+):([^:]+):(\d+):([^:]+): (.*)$/';
-
-                foreach (array_reverse($tail) as $line) {
-                    if (!$line) continue;
-                    if (preg_match($re, $line, $m)) {
-                        $entries[] = [
-                            'ts'      => $m[1],
-                            'level'   => $m[2],
-                            'logid'   => $m[3],
-                            'file'    => $m[4],
-                            'line'    => intval($m[5]),
-                            'fn'      => $m[6],
-                            'message' => $m[7],
-                        ];
-                    } else {
-                        // Unparseable line — carry it as-is
-                        $entries[] = [
-                            'ts'      => null,
-                            'level'   => 'LOG_UNDEFINED',
-                            'logid'   => null,
-                            'file'    => null,
-                            'line'    => null,
-                            'fn'      => null,
-                            'message' => $line,
-                        ];
-                    }
-                }
             }
+
+            // Mid-line seek (initial tail, or a poll that fell >CHUNK behind): drop the partial first line
+            if ($start > 0 && $start !== $after && ($nl = strpos($raw, "\n")) !== false) {
+                $raw    = substr($raw, $nl + 1);
+                $start += $nl + 1;
+            }
+            // Consume only whole lines — the writer may be mid-line; the rest comes next poll
+            $lastNl = strrpos($raw, "\n");
+            $raw    = $lastNl === false ? '' : substr($raw, 0, $lastNl);
+            $offset = $lastNl === false ? $start : $start + $lastNl + 1;
+
+            $entries = self::parseLogChunk($raw);
+            if ($after < 0) $entries = array_slice($entries, -500);
+            $entries = array_reverse($entries);
         }
 
         Response::send([
             'logfile'    => $logfile ?: null,
+            'readable'   => $logfile ? is_readable($logfile) : false,
             'debugging'  => (bool) Config::Get('system', 'debugging'),
             'loglevel'   => intval(Config::Get('system', 'loglevel', 0)),
+            'offset'     => $offset,
+            'reset'      => $reset,
             'entries'    => $entries,
         ]);
+    }
+
+    /**
+     * Parse log text into entries, oldest first. A line that doesn't start a
+     * new entry (LOGGER_DATA print_r dumps span many lines) is folded into the
+     * previous entry's message; only a leading orphan stands alone.
+     */
+    public static function parseLogChunk(string $raw): array
+    {
+        $entries = [];
+        foreach (explode("\n", $raw) as $line) {
+            if ($line === '') continue;
+            if (preg_match(self::LOG_RE, $line, $m)) {
+                $entries[] = [
+                    'ts'      => $m[1],
+                    'level'   => $m[2],
+                    'logid'   => $m[3],
+                    'file'    => $m[4],
+                    'line'    => intval($m[5]),
+                    'fn'      => $m[6],
+                    'message' => $m[7],
+                ];
+            } elseif ($entries) {
+                $entries[count($entries) - 1]['message'] .= "\n" . $line;
+            } else {
+                $entries[] = [
+                    'ts' => null, 'level' => 'LOG_UNDEFINED', 'logid' => null,
+                    'file' => null, 'line' => null, 'fn' => null, 'message' => $line,
+                ];
+            }
+        }
+        return $entries;
     }
 
     private function postLogs(): void
