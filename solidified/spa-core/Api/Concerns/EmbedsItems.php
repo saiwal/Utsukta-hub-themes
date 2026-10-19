@@ -347,6 +347,33 @@ trait EmbedsItems
     }
 
     /**
+     * Whether every compact [share=<id>]/[card=<id>] token in $body would
+     * still expand on save — same lookups as expandShareTags/expandCardTags,
+     * minus the 422. Item::collapseShareTags gates on it, so the edit
+     * composer is never handed a token that save would refuse.
+     */
+    protected function embedTokensResolve(string $body): bool
+    {
+        preg_match_all('/\[share=(\d+)\]/i', $body, $shares);
+        foreach ($shares[1] as $id) {
+            $item = $this->permittedItemById(intval($id));
+            if (!$item || $this->buildEmbedBlock($item) === '') {
+                return false;
+            }
+        }
+
+        preg_match_all('/\[card=(\d+)\]/i', $body, $cards);
+        foreach ($cards[1] as $id) {
+            $item = $this->permittedItemById(intval($id), ITEM_TYPE_CARD);
+            if (!$item || $this->buildEmbedBlock($item, ownPrivateOk: true) === '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Whether this item's [share] block should link to its app page rather
      * than its plink. Keeps the type list in one place beside appItemLink().
      */

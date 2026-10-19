@@ -37,10 +37,12 @@ A Markdown body still carries bbcode — the attachment bar inserts `[img]`/
 source. Anything bbcode passes through `markdown_to_bb()` untouched, which is
 why "translate to bbcode first" is the standard way to add a construct.
 
-The Markdown you actually typed is kept beside the item (`iconfig` cat `spa`,
-key `md_source`, with `md_hash` guarding staleness) so re-opening a post for
-editing gives you your source back rather than the converted bbcode. See
-`ContentTypes::rememberMarkdown()`.
+Markdown is input-only, as in core: the post is stored as bbcode and editing
+reopens that bbcode. The SPA used to keep the typed source beside the item
+(`iconfig` cat `spa`, keys `md_source`/`md_hash`) and reopen it instead, but
+that copy still held compact `[share=<id>]`/`[card=<id>]` tokens, whose target
+rows can be gone by the next edit — the editor then lost the embed and the save
+failed with a 422. Rows written back then are simply no longer read.
 
 ## Which syntax is handled where
 
