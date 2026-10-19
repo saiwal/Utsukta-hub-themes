@@ -182,49 +182,4 @@ final class ContentTypes
             $md
         );
     }
-
-    // ── Remembering the Markdown an item was written in ────────────────────
-    //
-    // toBbcode() is one-way, so without this a post composed in Markdown
-    // reopens for editing as the converted bbcode. Keep the original beside
-    // the item (iconfig cat 'spa', the same place local_only lives) so the
-    // edit composer can hand back what the author actually typed.
-    //
-    // The hash guards against the source going stale: if the item is later
-    // edited somewhere else — the classic UI, a clone, an addon — item.body no
-    // longer corresponds to this Markdown, and restoring it would silently
-    // revert that edit. Mismatch means fall back to bbcode.
-    //
-    // Hashed from the stored row, not the converted text: on create, core
-    // linkifies hashtags and mentions after we hand it the body, so the text
-    // we converted is not what lands in item.body.
-
-    public static function rememberMarkdown(int $iid, string $markdown): void
-    {
-        $r = q("SELECT body FROM item WHERE id = %d LIMIT 1", $iid);
-        if (!$r) {
-            return;
-        }
-        set_iconfig($iid, 'spa', 'md_source', $markdown);
-        set_iconfig($iid, 'spa', 'md_hash', sha1($r[0]['body']));
-    }
-
-    /** Drop a stored source — call when an item is saved as anything but Markdown. */
-    public static function forgetMarkdown(int $iid): void
-    {
-        del_iconfig($iid, 'spa', 'md_source');
-        del_iconfig($iid, 'spa', 'md_hash');
-    }
-
-    /** The Markdown an item was written in, or '' if there is none or it is stale. */
-    public static function recallMarkdown(int $iid, string $currentBody): string
-    {
-        $src = get_iconfig($iid, 'spa', 'md_source');
-        if (!is_string($src) || $src === '') {
-            return '';
-        }
-
-        $hash = get_iconfig($iid, 'spa', 'md_hash');
-        return (is_string($hash) && hash_equals($hash, sha1($currentBody))) ? $src : '';
-    }
 }

@@ -91,7 +91,7 @@ $iid > 0
     ? ok('response carries a numeric data.post.iid')
     : bad('response shape', "      got " . substr(json_encode($res), 0, 200) . "\n");
 
-// ── 2. Markdown is converted for storage, source kept for the editor ───────
+// ── 2. Markdown is converted for storage ─────────────────────────────────
 $md  = "feat md " . bin2hex(random_bytes(4)) . "\n\n**bold** and _em_";
 $res = post($nick, ['scope' => 'public', 'profile_uid' => $uid,
     'body' => $md, 'mimetype' => 'text/markdown']);
@@ -101,7 +101,6 @@ $probes[] = $iid;
 if (!$iid) { bad('markdown post was not stored'); }
 else {
     $row  = q('SELECT body, mimetype FROM item WHERE id = %d LIMIT 1', intval($iid))[0];
-    $recall = \Utsukta\SpaCore\Api\ContentTypes::recallMarkdown($iid, $row['body']);
 
     $row['mimetype'] === 'text/bbcode'
         ? ok('markdown is stored as bbcode')
@@ -109,9 +108,6 @@ else {
     str_contains($row['body'], '[b]')
         ? ok('markdown emphasis became bbcode')
         : bad('markdown conversion', "      body: " . substr($row['body'], 0, 90) . "\n");
-    $recall === $md
-        ? ok('the Markdown source round-trips for the editor')
-        : bad('md_source recall', "      got " . substr($recall, 0, 90) . "\n");
 }
 
 // ── 3. delayed publish ─────────────────────────────────────────────────────
