@@ -1,0 +1,1 @@
+import{f as e}from"./app-solid-P6NIHsRG.js";import{vn as t}from"./app-Jz22nLYE.js";import{t as n}from"./app-PopularPostsWidget-8gbBqahZ.js";function r(){return e(n,{get channelNick(){return t()()},type:`cards`})}export{r as default};
