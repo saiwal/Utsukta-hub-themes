@@ -17,6 +17,7 @@ use Utsukta\SpaCore\Api\Response;
 use Utsukta\SpaCore\Api\Concerns\FormatsItems;
 use Utsukta\SpaCore\Api\Concerns\StreamFilters;
 use Utsukta\SpaCore\Api\Concerns\FilesByRules;
+use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 
 require_once 'include/items.php';
 require_once 'include/text.php';
@@ -27,6 +28,7 @@ class HqMessages
 {
     use FormatsItems;
     use FilesByRules;
+    use FiltersBlockedChannels;
 
     /** File-tag folder the inbox uses as its trash can. Items tagged with it
      *  are hidden from every feed except the Trash folder view itself — the
@@ -181,6 +183,11 @@ class HqMessages
             $type_sql .= ' AND i.item_private = 2 '
                 . str_replace('item.', 'i.', item_permissions_sql($uid, $visitor));
         }
+
+        // The viewer's own blocklist (superblock's messages_widget hook), even
+        // when listing another channel's DMs as a visitor.
+        $viewer = intval(local_channel());
+        $type_sql .= protect_sprintf($this->blockedItemSql($viewer, $this->blockedXchans($viewer), 'i'));
 
         // Inbox filter chip. Distinct from the shared `unseen` filter, which is
         // row-level: an inbox thread counts as unread when a *reply* is unseen.
@@ -405,9 +412,10 @@ class HqMessages
             $search_sql = " AND (notify.xname LIKE '$search_like' OR hubloc.hubloc_addr LIKE '$search_like') ";
         }
 
+        $blocked_sql = protect_sprintf($this->blockedSqlClause('notify.hash', $this->blockedXchans($uid)));
         $notices = q("SELECT notify.*, max(hubloc.hubloc_addr) as hubloc_addr FROM notify
             LEFT JOIN hubloc ON notify.url = hubloc.hubloc_id_url
-            WHERE notify.uid = %d $search_sql AND hubloc.hubloc_primary = 1
+            WHERE notify.uid = %d $search_sql $blocked_sql AND hubloc.hubloc_primary = 1
             GROUP BY notify.id ORDER BY notify.created DESC LIMIT $limit OFFSET $offset",
             intval($uid)
         );

@@ -63,8 +63,7 @@ class Network
             'observer_xchan' => $observer_xchan,
             'item_normal' => $item_normal,
             'flat' => $nouveau,
-            'extra' => $this->blockedSqlClause('item.author_xchan', $blocked)
-                     . $this->blockedSqlClause('item.owner_xchan', $blocked),
+            'extra' => $this->blockedItemSql($uid, $blocked),
         ]);
 
         $sql_extra = $f['extra'];

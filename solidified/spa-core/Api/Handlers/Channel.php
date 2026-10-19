@@ -75,8 +75,7 @@ class Channel
         $item_thread_top = ' AND item_thread_top = 1 ';
         $blocked         = $this->blockedXchans($uid);
         $sql_extra       = ' AND item.item_wall = 1 '
-            . $this->blockedSqlClause('item.author_xchan', $blocked)
-            . $this->blockedSqlClause('item.owner_xchan', $blocked);
+            . $this->blockedItemSql($uid, $blocked);
 
         // Verb whitelist — exclude reactions and federation noise.
         // Core's channel module (Zotlabs/Module/Channel.php) has no verb filter:
