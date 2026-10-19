@@ -13,33 +13,40 @@ namespace Utsukta\SpaCore\Api\Handlers;
 
 use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\Concerns\FiltersBlockedChannels;
 
 class Notifications
 {
+    use FiltersBlockedChannels;
+
     public function get(): void
     {
         $uid = Auth::requireLocalGet();
 
         require_once('include/bbcode.php');
 
+        // superblock's enotify_format hook hides a blocked sender's notices;
+        // this list reads `notify` directly and never runs it.
+        $bsql = protect_sprintf($this->blockedSqlClause('hash', $this->blockedXchans($uid)));
+
         $countRow = q(
-            "SELECT count(*) AS total FROM notify WHERE uid = %d AND seen = 0",
+            "SELECT count(*) AS total FROM notify WHERE uid = %d AND seen = 0 $bsql",
             intval($uid)
         );
         $unseenTotal = intval($countRow[0]['total'] ?? 0);
 
         if ($unseenTotal > 49) {
             $rows = q(
-                "SELECT * FROM notify WHERE uid = %d AND seen = 0 ORDER BY created DESC LIMIT 50",
+                "SELECT * FROM notify WHERE uid = %d AND seen = 0 $bsql ORDER BY created DESC LIMIT 50",
                 intval($uid)
             );
         } else {
             $unseen = q(
-                "SELECT * FROM notify WHERE uid = %d AND seen = 0 ORDER BY created DESC LIMIT 50",
+                "SELECT * FROM notify WHERE uid = %d AND seen = 0 $bsql ORDER BY created DESC LIMIT 50",
                 intval($uid)
             );
             $seen = q(
-                "SELECT * FROM notify WHERE uid = %d AND seen = 1 ORDER BY created DESC LIMIT %d",
+                "SELECT * FROM notify WHERE uid = %d AND seen = 1 $bsql ORDER BY created DESC LIMIT %d",
                 intval($uid),
                 intval(50 - $unseenTotal)
             );

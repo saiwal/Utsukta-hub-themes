@@ -161,7 +161,8 @@ class Display
         // Root stays visible even if blocked — flagged so the frontend can
         // swap in a placeholder instead of hard-hiding a direct permalink.
         $root_item['blocked'] = $this->isBlockedHash($blocked, $root_item['author']['hash'] ?? null)
-            || (!empty($root_item['owner']) && $this->isBlockedHash($blocked, $root_item['owner']['hash'] ?? null));
+            || (!empty($root_item['owner']) && $this->isBlockedHash($blocked, $root_item['owner']['hash'] ?? null))
+            || $this->bodySharesBlocked($item['body'] ?? '', $blocked, intval(local_channel()));
 
         // Was this thread pulled in by URL (Search.php) rather than delivered?
         // A delivered thread arrives with its comments and keeps receiving them;

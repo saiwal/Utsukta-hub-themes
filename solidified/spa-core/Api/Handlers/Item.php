@@ -357,8 +357,7 @@ class Item
         $rootId = intval($root['id']);
 
         $blocked = $this->blockedXchans(local_channel());
-        $blocked_sql = $this->blockedSqlClause('item.author_xchan', $blocked)
-            . $this->blockedSqlClause('item.owner_xchan', $blocked);
+        $blocked_sql = $this->blockedItemSql(intval(local_channel()), $blocked);
 
         $around = trim((string)($_GET['around'] ?? ''));
         // Permalinks from classic notifications carry a b64.-encoded mid.

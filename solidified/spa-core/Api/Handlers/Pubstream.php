@@ -55,8 +55,7 @@ class Pubstream {
 
         $blocked          = local_channel() ? $this->blockedXchans(local_channel()) : [];
         $sql_extra        = item_permissions_sql($sys_id)
-            . $this->blockedSqlClause('item.author_xchan', $blocked)
-            . $this->blockedSqlClause('owner_xchan', $blocked);
+            . $this->blockedItemSql(intval(local_channel()), $blocked);
         $item_normal      = item_normal();
         $thread_top       = " and item.item_thread_top = 1 ";
         $ordering         = Config::Get('system', 'pubstream_ordering', 'created');
