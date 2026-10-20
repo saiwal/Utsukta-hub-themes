@@ -198,7 +198,11 @@ class Cal
                 'allDay'      => !$rr['adjust'],
                 'nofinish'    => (bool) $rr['nofinish'],
                 'timezone'    => $tz,
-                'rw'          => true,
+                // rw gates delete (the owner may drop anything in their calendar);
+                // editable mirrors core Channel_calendar: only the event's own author.
+                'rw'          => $is_owner,
+                'editable'    => $is_owner
+                    && ($rr['author_xchan'] ?: $rr['event_xchan']) === $viewer_channel['channel_hash'],
                 'plink'       => $rr['plink'] ?? '',
                 'html'        => $html,
                 // fetch_post_tags() above already hydrated $rr['term']. Emitted as an
@@ -402,6 +406,11 @@ class Cal
             Response::error(404, 'Event not found');
         }
         $existing = $r[0];
+        // A connection's event shared into this calendar isn't ours to rewrite —
+        // the save below would also re-stamp event_xchan with our hash.
+        if ($existing['event_xchan'] !== $channel['channel_hash']) {
+            Response::error(403, 'Permission denied');
+        }
 
         $title       = trim($body['title'] ?? '');
         $description = trim($body['description'] ?? '');
