@@ -59,8 +59,8 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
   the selected tab is a Tab stop. `variant="underline"` is for in-page
   sections (jellyfin library); `stretch` splits the width equally. A switcher
   made of links (help) stays links.
-- **Square icon buttons** on the right:
-  `p-1.5 rounded-lg border border-rim bg-surface text-muted hover:bg-elevated hover:text-txt`, icons at 15px.
+- **Outlined icon buttons** on the right: `<IconButton variant="outline">`
+  (round and bordered, matching the pill buttons beside it), icons at 15px.
   Search expands inline into a field and a submit button. Use a small accent
   dot on a button (`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent`)
   for "something here" state rather than a count badge.
@@ -170,7 +170,7 @@ swaps the look there (default in `packages/spa-ui`, per-theme overrides in its
 `variant` (`primary` default, `ghost`, `danger`) and `size` (`md` = `h-10` pill,
 `sm` = `h-8` pill for dense rows and headers). `IconButton` requires `label`
 (becomes `title` + `aria-label`) and takes `variant` (`default`, `danger`,
-`square` for the header button), `size` and `pressed`. Style a link as a button
+`outline` for the header button), `size` and `pressed`. Style a link as a button
 with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
 `ghostPill` strings remain for code not yet migrated.
 
@@ -179,7 +179,7 @@ with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
 | `<Button>`: filled accent pill | The single main action of the view |
 | `<Button variant="ghost">`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
 | `<IconButton>`: bare round icon | Everything else (♥, Share, ⋯, transport, close) |
-| `<IconButton variant="square">` | Header only (see above) |
+| `<IconButton variant="outline">` | Header only (see above) |
 | `<Input>` / `<Select>` / `<Textarea>` (`@ui/Field`): bordered box, accent focus ring | Every text field, select and textarea. `size="sm"` in dense rows and widget configs; width comes from the call site (`class="w-full"`) |
 | `<Field label hint error>` (`@ui/Field`) around one of those | Any labelled field. It wires `for`/`id`, `aria-describedby` and `aria-invalid` itself — never pass ids by hand. Check: `node scripts/check-ui.mjs` |
 | `<Toggle label hint>` / `<Switch>` (`@ui/Toggle`) | Any on/off setting: `Toggle` is the labelled row (label + hint left, switch right), `Switch` the bare control (give it `label` for an accessible name). Native checkbox: `name` submits `"1"`. Return a promise from `onChange` for async toggles that can fail |
@@ -292,7 +292,7 @@ rule).
 ## Redesign checklist
 
 1. Split the routed view into a locked header and content widget.
-2. Header: title, switcher if the module has halves, square icon buttons, ⋯ menu.
+2. Header: title, switcher if the module has halves, outlined icon buttons, ⋯ menu.
 3. Remove bordered cards; regroup with space and `bg-elevated/40`.
 4. Find the one primary action per view and make it the only `primaryPill`.
 5. Turn labelled secondary buttons into `iconBtn` (with `title`/`aria-label`)
