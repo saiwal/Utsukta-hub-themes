@@ -91,6 +91,43 @@ copy of solidified's full UI. Concretely:
   `THEMES` array (shared infra, iterated by the color-scheme picker
   regardless of theme) — an id with no block here just silently falls back
   to `:root`'s colors. Recolor freely; keep the selectors.
+- **`src/ui/`** — **empty, on purpose** (plus a README). Modules import the
+  UI primitives as `@ui/<Name>`, and `uiShadow` (from
+  `@utsukta/spa-ui/vite-plugin`, wired in `vite.config.ts`) resolves each one
+  to `src/ui/<Name>.tsx` **if this theme has that file**, and to the default
+  implementation in `packages/spa-ui/src/` otherwise. `tsconfig.app.json`'s
+  `paths` fallback array mirrors that for the editor, and `index.css`'s
+  `@source "../../spa-ui/src"` makes Tailwind generate the defaults' classes.
+  So a theme overrides one primitive without forking the rest; see the table
+  below for what exists.
+
+  - `@ui-base/<Name>` is always the default — import it to wrap rather than
+    replace (`export * from "@ui-base/Button"` + your own `Button`).
+  - The defaults import each other through `@ui/…`, so an overridden `Button`
+    is also Modal's close button and Menu's trigger.
+  - The props contract every override must satisfy is
+    `@utsukta/spa-core/types/ui.types.ts`: accept every prop, pass the rest to
+    the native element, keep the stated behaviour. `node scripts/check-ui.mjs`
+    asserts the defaults' accessibility wiring; keep the same roles and aria.
+  - Adding or deleting an override restarts the dev server, since it changes
+    what an import resolves to.
+  - Every default carries `hz-*` hook classes (`hz-btn hz-btn-primary`,
+    `hz-card`, `hz-input`, …), so a plain-CSS theme can restyle without
+    overriding any file at all.
+
+  | File | Exports | A replacement must keep |
+  |---|---|---|
+  | `Button` | `Button`, `IconButton`, `buttonClass()`, `iconButtonClass()` | `IconButton`'s `label` as title + aria-label |
+  | `Field` | `Input`, `Select`, `Textarea`, `Field`, `inputClass()` | label `for` → control `id`, hint/error → `aria-describedby`, error → `aria-invalid` |
+  | `Toggle` | `Switch`, `Toggle`, `switchClass` | a native checkbox, so forms submit it |
+  | `Card` | `Card`, `CardHeader`, `cardClass()` | — |
+  | `Modal` | `Modal`, `ModalPanel`, `modalPanelClass()` | focus trap, Escape, inert page, focus restore |
+  | `Menu` | `Menu`, `MenuItem`, `MenuSeparator`, `useMenu` | `role="menu"`/`menuitem`, arrow keys, Escape → trigger |
+  | `Tabs` | `Tabs` | `role="tablist"`/`tab`, one Tab stop, arrow keys |
+  | `Spinner` | `Spinner` | `aria-hidden` unless labelled |
+  | `Badge` | `Badge`, `CountBadge`, `badgeClass()` | `CountBadge` hidden at 0 |
+  | `Avatar` | `Avatar` (helpers: `@utsukta/spa-core/lib/avatar`) | initials fallback on a missing *or* broken photo |
+  | `EmptyState` | `EmptyState` | — |
 - **`src/styles/fonts.css`** — genuinely blank. Solidified's font files
   aren't copied, so neither is the CSS that references them. Note
   `@utsukta/spa-core/lib/typography.ts`'s `FONT_FAMILIES` map includes a

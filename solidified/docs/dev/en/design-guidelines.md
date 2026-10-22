@@ -54,10 +54,11 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
 - **Title** on the left: `text-xl font-bold text-txt`. Name what the user is
   looking at (Jellyfin uses the server's name, falling back to "Jellyfin").
 - **Segmented switcher** in the middle, for a module's top-level halves (Music /
-  Video, Board / Kanban): `flex gap-1 p-1 bg-elevated rounded-lg w-fit mx-auto`.
-  The active segment is `bg-accent text-accent-fg font-semibold`, the others
-  `text-muted hover:text-txt`, all `px-3 py-1 text-xs rounded-md font-medium`.
-  Mark it with `aria-pressed`.
+  Video, Board / Kanban): `<Tabs label value onChange items class="mx-auto">`
+  (`@ui/Tabs`). It renders `role="tablist"`/`tab`, arrow keys switch, and only
+  the selected tab is a Tab stop. `variant="underline"` is for in-page
+  sections (jellyfin library); `stretch` splits the width equally. A switcher
+  made of links (help) stays links.
 - **Square icon buttons** on the right:
   `p-1.5 rounded-lg border border-rim bg-surface text-muted hover:bg-elevated hover:text-txt`, icons at 15px.
   Search expands inline into a field and a submit button. Use a small accent
@@ -65,6 +66,13 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
   for "something here" state rather than a count badge.
 - **⋯ menu** for everything secondary (account switching, settings, sign
   out). Don't add another visible button for it.
+  Build it with `<Menu label>` + `<MenuItem icon onClick>` / `<MenuSeparator>`
+  (`@ui/Menu`): it renders `role="menu"`, arrow/Home/End focus, Escape back to
+  the trigger, and closes after an item. `trigger` swaps the default ⋯ button
+  (spread its props onto yours); `href`/`download` make a link item; `danger`
+  for destructive items; `keepOpen` for items that swap to a sub-panel;
+  `useMenu().close()` for a form inside the menu. Value pickers (sort, view,
+  language) are not menus.
 - `flex-wrap` on the row, so an open search field drops to its own line at
   phone width instead of overflowing.
 
@@ -122,13 +130,20 @@ custom scheme.
 | `accent-fg` | Text and icons on an accent fill |
 | `accent-txt` | **Accent as text**: current item, highlighted lyric, active icon |
 | `accent-muted` | Soft accent backgrounds |
+| `danger` / `success` / `warning` | Status, with the same four roles as accent: the bare name for fills, borders and dots, `-fg` on that fill, `-txt` as text, `-muted` for soft backgrounds |
+
+Statuses never use raw `red-*` / `green-*` / `amber-*`: those skip both the theme
+and the custom-scheme editor. `dark:` pairs are unnecessary, because each preset
+sets its own contrast-checked values. Raw palette colours remain for
+*categories* only (platform badges, file-type icons, the scrapbook palette).
 
 Use opacity modifiers for softness instead of new colours: `bg-elevated/40`
 (grouping), `bg-elevated/60` (selected row), `bg-surface/85` with
 `backdrop-blur-xl` (floating), `text-muted/60` (de-emphasised), `ring-rim/40`.
 
 Text in the accent colour uses `text-accent-txt`, never `text-accent`: the plain
-accent is tuned for fills and can be unreadable as text in some schemes.
+accent is tuned for fills and can be unreadable as text in some schemes. The
+same applies to statuses: an error message is `text-danger-txt`.
 
 ## Type
 
@@ -149,16 +164,29 @@ label above every heading, and long `A · B · C` detail strings.
 
 ## Controls
 
-Reference: `jellyfin/ui.tsx` (`iconBtn`, `primaryPill`, `ghostPill`).
+Use `Button` / `IconButton` from `@ui/Button`, not hand-written classes: a theme
+swaps the look there (default in `packages/spa-ui`, per-theme overrides in its
+`src/ui/` — see theme-scaffold.md) (contract in spa-core `types/ui.types.ts`). `Button` takes
+`variant` (`primary` default, `ghost`, `danger`) and `size` (`md` = `h-10` pill,
+`sm` = `h-8` pill for dense rows and headers). `IconButton` requires `label`
+(becomes `title` + `aria-label`) and takes `variant` (`default`, `danger`,
+`square` for the header button), `size` and `pressed`. Style a link as a button
+with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
+`ghostPill` strings remain for code not yet migrated.
 
 | Control | When |
 |---|---|
-| `primaryPill`: filled accent, `h-10 rounded-full` | The single main action of the view |
-| `ghostPill`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
-| `iconBtn`: bare round icon | Everything else (♥, Share, ⋯, transport, close) |
-| Header square button | Header only (see above) |
-| Underlined field: `bg-transparent border-0 border-b border-rim focus:border-accent` | Inputs and selects in content and dialogs |
-| Bordered field (Cards style) | Header search only |
+| `<Button>`: filled accent pill | The single main action of the view |
+| `<Button variant="ghost">`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
+| `<IconButton>`: bare round icon | Everything else (♥, Share, ⋯, transport, close) |
+| `<IconButton variant="square">` | Header only (see above) |
+| `<Input>` / `<Select>` / `<Textarea>` (`@ui/Field`): bordered box, accent focus ring | Every text field, select and textarea. `size="sm"` in dense rows and widget configs; width comes from the call site (`class="w-full"`) |
+| `<Field label hint error>` (`@ui/Field`) around one of those | Any labelled field. It wires `for`/`id`, `aria-describedby` and `aria-invalid` itself — never pass ids by hand. Check: `node scripts/check-ui.mjs` |
+| `<Toggle label hint>` / `<Switch>` (`@ui/Toggle`) | Any on/off setting: `Toggle` is the labelled row (label + hint left, switch right), `Switch` the bare control (give it `label` for an accessible name). Native checkbox: `name` submits `"1"`. Return a promise from `onChange` for async toggles that can fail |
+| `<Spinner size tone>` (`@ui/Spinner`) | Busy states. Ring in `currentColor` (so inside a button it takes the button's colour); `tone="accent"` for a standalone loader, which should also get `label` to become a `role="status"`. A refresh icon spinning while it reloads stays an icon |
+| `<Badge tone size>` / `<CountBadge n>` (`@ui/Badge`) | `Badge` is a tag (`rounded-md`): `tone` neutral/accent/danger/success/warning, `size="sm"` beside metadata. `CountBadge` is the solid unread bubble — hidden at 0, `99+` above `max`, `label` for accessible text. Categorical colours (post type, platform) stay raw |
+| `<Avatar src name size>` (`@ui/Avatar`) | Any person/channel picture. `size` in spacing units (`8` = `w-8`). Falls back to initials on a name-derived hue when there is no photo **or it fails to load**; no name → a person icon. Decorative by default; `alt` only when no name is printed beside it. `shape="rounded"` for square-ish slots. Not for product photos or app icons. Responsive sizes (`sm:w-22`) need a plain `<img>` |
+| `<EmptyState icon action size>` (`@ui/EmptyState`) | "Nothing here" for an empty list, folder or view. `size="sm"` inside a panel or list, default for a whole view; `action` takes a `Button` or a link styled with `buttonClass()` |
 
 Every icon-only button has `title` and `aria-label`. Toggles use `aria-pressed`
 and show "on" with `text-accent-txt`, not a border. Destructive or rare actions
@@ -166,8 +194,23 @@ go in a ⋯ menu.
 
 ## Surfaces
 
-- **No bordered cards.** Use `rounded-2xl bg-elevated/40 p-4` when a group
-  genuinely needs a surface (the party panel), otherwise just spacing.
+- **Panels are `<Card>`** (`@ui/Card`): bordered `bg-surface`, `rounded-xl`;
+  `raised` adds a small shadow. It has no padding of its own — pass
+  `class="p-4"` (or a layout) at the call site. A header bar inside is
+  `<CardHeader>` (bottom rule, `px-4 py-3`). Use `cardClass()` when the surface
+  must stay an `<li>`/`<form>`/`<section>`. Only group with a card when a group
+  genuinely needs a surface; otherwise just spacing. Dialog panels are not
+  cards (they keep their large shadow).
+- **Dialogs are `<Modal>` + `<ModalPanel>`** (`@ui/Modal`). `Modal` is the
+  native `<dialog>` layer (focus trap, Escape, inert page, focus restore);
+  `ModalPanel` is the box — a card with `shadow-2xl`, `size` `sm`/`md`/`lg`/`xl`
+  for its max width. Give it `title` (+ `onClose` for a close button,
+  `description` for a muted line under it) and the dialog is named and
+  described for you — no `labelledBy`, no hand-built header bar; `footer`
+  renders the action bar. Only a header with more than a title (an icon badge,
+  an avatar, extra buttons) stays hand-built.
+  Animated panels (`Motion.div`) use `modalPanelClass(size)`. Bottom sheets
+  and full-screen viewers stay bespoke.
 - **Lists:** `space-y-0.5`, rows `rounded-xl px-3 py-1`,
   `hover:bg-elevated/40`, current row `bg-elevated/60` with `text-accent-txt`.
   No dividers, no outer border. Row actions can fade in on hover, but must
