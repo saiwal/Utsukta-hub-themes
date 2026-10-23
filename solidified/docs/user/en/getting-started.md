@@ -38,11 +38,11 @@ Context-sensitive widgets — notifications, upcoming events, and module-specifi
 ## Mobile Layout
 
 On phones and small tablets, the interface switches to a single-column layout:
-- A **bottom tab bar** gives quick access to your most-used sections.
-- The left sidebar slides in from the left when you tap the menu icon.
-- The right sidebar is hidden; widgets appear inline.
+- A **bottom bar** holds your account menu, the app drawer, a favorites quick menu, this page's actions and the sidebar panel.
+- The **app drawer** (apps button) opens with the site brand, your favorites expanded, then collapsible Social, Productivity and System sections; utility icons sit under the brand and a search box is pinned at the bottom.
+- The right sidebar slides in from the right when you tap the panel button.
 
-![IMAGE: Mobile layout with bottom tab bar](getting-started/mobile-layout.png)
+![IMAGE: Mobile layout with bottom bar and app drawer](getting-started/mobile-layout.png)
 
 ## Navigation
 

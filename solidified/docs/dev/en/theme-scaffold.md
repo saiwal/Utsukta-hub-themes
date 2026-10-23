@@ -62,7 +62,7 @@ copy of solidified's full UI. Concretely:
   branding in these; copied verbatim.
 - **`src/Layout.tsx`, `src/shared/views/{NavItem,Slot}.tsx`** — **minimal
   starters, not solidified's real ones.** `Layout.tsx` calls
-  `useLayoutChrome()` from spa-core (the same hook solidified's ~750-line
+  `useLayoutChrome()` from spa-core (the same hook solidified's
   Layout.tsx uses) for all state — nav data, panel open/close, page-chrome
   mode, drag-to-reorder, scroll tracking — and renders bare-bones markup
   around it. `Slot.tsx` resolves and renders a slot's default widgets only:
@@ -73,11 +73,15 @@ copy of solidified's full UI. Concretely:
   runs without them — they're just not built out yet. Read solidified's own
   versions of these three files as the reference for the full pattern, and
   `slot-system.md` for the complete `WidgetDef`/layout-override reference.
+  Solidified's `Layout.tsx` keeps only the shell; its nav surfaces live in
+  `src/shared/views/layout/` — `DesktopMenu.tsx` (rail, action-items
+  overlay, channel switcher) and `MobileMenu.tsx` ("more" drawer + bottom
+  tab bar), both fed the one `useLayoutChrome()` result as a prop.
 - **Not mounted at all in the starter `Layout.tsx`**: `HelpOverlay`,
   `ToastContainer`, `ConnectionRequestModalHost`, `FeedModalHost`,
   `RemoteAuthBanner`, the mobile "more" overflow drawer, the desktop
   action-items overlay, the channel switcher. Add them back (copying from
-  solidified's `Layout.tsx`/`shared/views/`) once you need those features —
+  solidified's `Layout.tsx`/`shared/views/`, menus in `shared/views/layout/`) once you need those features —
   their absence doesn't break anything else, those specific UI surfaces
   just have nowhere to render yet.
 - **`src/index.css`, `src/styles/theme.css`** — copied from solidified's

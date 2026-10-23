@@ -86,3 +86,73 @@ context: ["owner", "local"]  // multiple roles
 - **Pinned apps** come from `/spa/nav` (no nick) — they are the viewer's personal pinned shortcuts.
 
 These two lists are never mixed for the same request. The nav switches between them based on the subject nick and viewer role.
+
+## Mobile app drawer & bar
+
+`src/shared/views/layout/MobileMenu.tsx` is the mobile nav shell (below `lg`):
+
+- **Bottom bar**: account button (avatar/`Menu` of action items, first), favorites
+  quick menu (a `Menu` of pinned apps, hidden when there are none), apps button
+  (`MdFillGrid_view`, opens the drawer), the page-actions button (only while
+  the active module has `PageActions`, see below) and the right-panel toggle.
+  Every slot is `flex-1 min-w-0` so labels truncate instead of one button
+  stretching and leaving a gap. It replaces the old four-tab "Most / More"
+  split.
+- **Favorites** are the user's Hubzilla pinned apps (`navData().pinned`) — no
+  second favorites list. They are matched back to `NavItemDef`s by path, so the
+  bar's quick menu and the drawer show the same resolved labels/icons.
+- **`AppDrawer.tsx`**: centred brand (`BrandBlock`) → centred utility icon row
+  (`NavUtilityIcons`) → app groups, with `SearchField` pinned in a footer at the
+  bottom of the sheet, in thumb reach (the nav is a flex column; only the middle
+  region scrolls). Apps render as a four-column launcher grid (48px icon tile,
+  two-line label; the current app's tile is accent-tinted). Account actions
+  live in the bar's account `Menu` only, so the drawer no longer duplicates
+  them. Apps are grouped by `app-categories.ts`: the curated module-id table,
+  then core's own app categories (`categories` on each `/spa/nav` app, from the
+  `.apd`, mapped onto the three groups — how addons group themselves), then the
+  path-root table, then `system`. Favorites are not repeated as their own section —
+  they're one tap away in the bar's quick menu — but stay in their category.
+  Social/Productivity/System are a `@ui/Collapsible` accordion (one open at a
+  time, 48px headers with a count). Each open starts on the category holding
+  the current app, if any. A non-empty search term replaces the groups with one
+  flat results grid over `navItems()`, and clears when the
+  drawer closes.
+
+## Contextual page actions
+
+A module header declares its common actions as data and each place renders
+them its own way: buttons in the header on desktop, rows in the actions sheet
+opened by the bar's bolt button on mobile. Tabs and inline search are
+navigation, not actions — they stay in the header at every width.
+
+```tsx
+<PageActions actions={[
+  { label: t("cards.new_card"), icon: BiRegularEdit, onClick: openCard, primary: true, show: isOwner() },
+  { label: t("calendar.export_ical"), icon: MdOutlineFile_download, href, download, overflow: true },
+]} />
+```
+
+- `PageAction` (`shared/views/layout/PageActions.tsx`): `label`, `icon` (a
+  solid-icons component, rendered once per place), `onClick` or `href`
+  (+`download`), `title`, `disabled`, `show` (false hides), `primary` (filled
+  button on desktop, accent row on mobile) and `overflow` (behind a "More"
+  `Menu` on desktop; an ordinary row on mobile). The array is reactive — a
+  label or `show` can read signals.
+- On `lg` and up it renders inline as a `flex` cluster (`class` for placement,
+  e.g. `ml-auto`). Below `lg` it renders nothing and registers its actions;
+  `pageActions()` flattens every mounted instance for the sheet, which renders
+  them as `menuItemClass` rows and closes before running `onClick`.
+- Anything that must outlive the sheet/menu closing (a hidden file input) or is
+  anchored to its own button (a popover) stays in the header, outside
+  `PageActions` — see calendar's import input and jellyfin's devices popover.
+- `hasPageActions()` picks what the bar's actions button
+  does: with page actions it shows the module name and the sheet lists them;
+  without them, an owner sees **Compose** and the sheet lazy-loads
+  `modules/hq/widgets/QuickComposeWidget` (the same quick-compose action list as
+  HQ). Non-owners have no self-targeted compose actions, so the button stays
+  hidden there. The sheet keeps its content `inert` while closed.
+- `Layout.tsx` calls `setMobileNavAvailable(!hidesNavChrome())`: in chrome modes
+  that hide the nav (`focus`, `compact`) there is no sheet, so `PageActions`
+  stays inline instead of registering into nothing.
+- Adding actions to a new module = one `<PageActions actions={…} />` in its
+  header; no registry entry needed.

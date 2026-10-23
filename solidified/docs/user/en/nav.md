@@ -1,6 +1,6 @@
 # Navigation
 
-Hubzilla's navigation lives in three places: the primary nav list (the left sidebar on desktop, or the bottom tab bar and "More" drawer on mobile), the account/utility row beneath it, and a couple of dedicated buttons on mobile. This page explains what each link or button does — for how to actually use what's behind it, see that app's own help page.
+Hubzilla's navigation lives in three places: the primary nav list (the left sidebar on desktop, or the bottom bar and app drawer on mobile), the account/utility row beneath it, and a couple of dedicated buttons on mobile. This page explains what each link or button does — for how to actually use what's behind it, see that app's own help page.
 
 ## Hq
 
@@ -116,7 +116,7 @@ Log in to your home site from this one, so you can interact here using your own 
 
 ## Account Menu
 
-Click your avatar and name to reveal account actions: settings, channel management, and logout.
+Desktop: click your avatar and name to reveal account actions. Mobile: the account icon on the left of the bottom bar opens the same menu (settings, channel management, logout).
 
 ## Language
 
@@ -130,9 +130,19 @@ Switch between light, dark, and other color themes.
 
 Toggles help mode. While it's on, click anything on the page — a nav link, a widget, a button — to see what it does.
 
-## More Drawer
+## Apps
 
-Mobile only. Opens a drawer with any nav items and account actions that don't fit in the bottom tab bar.
+Mobile only. Opens the app drawer: the site brand at the top, then your pinned apps (always expanded), then every other app grouped into collapsible Social, Productivity and System sections. The utility icons (language, theme, help, site info) sit directly under the brand, and the search box is pinned at the bottom of the drawer — it filters the whole list as you type. Account actions live in the account menu on the bottom bar.
+
+## Favorites
+
+Mobile only. Opens a quick menu of the apps you have pinned, without opening the full app drawer. Pin or unpin apps in Settings → Integrations.
+
+## Actions
+
+Mobile only. The bottom bar button is labelled with the current page's name (for example "Calendar") and opens that page's actions — the controls that appear on the right of the page header on desktop (for example Calendar's "New event" and Month/Week/Day switcher), so the header itself stays clean on a phone.
+
+When the page has no actions of its own, the same button becomes **Compose** (pencil icon) and offers quick compose: new post, message, article, card, wiki/page or calendar event, depending on which apps are installed.
 
 ## Panel
 

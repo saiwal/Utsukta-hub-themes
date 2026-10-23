@@ -212,6 +212,13 @@ class Nav
                 'url'      => $url,
                 'photo'    => $app['photo'] ?? '',
                 'requires' => $app['requires'] ?? '',
+                // Core's app categories (.apd "categories:" / term rows) minus
+                // its nav_pinned_app/nav_featured_app markers; the mobile app
+                // drawer groups apps it has no curated category for by these.
+                'categories' => array_values(array_filter(
+                    array_map('trim', explode(',', (string) ($app['categories'] ?? ''))),
+                    fn($c) => $c !== '' && !str_starts_with($c, 'nav_')
+                )),
             ];
         };
 

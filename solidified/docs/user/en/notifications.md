@@ -28,7 +28,7 @@ The notifications widget lives in the **right sidebar** on most pages. It keeps 
 
 ## Notification Badge
 
-When you have unread notifications, a badge count appears on the notification bell icon in the top bar or bottom tab bar.
+When you have unread notifications, a badge count appears on the panel button in the mobile bottom bar (and on the sidebar toggle on desktop).
 
 [IMAGE: Nav bar with unread notification badge]
 
