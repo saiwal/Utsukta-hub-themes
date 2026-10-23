@@ -214,6 +214,9 @@ with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
 | `<LoadMore hasMore loading onClick label>` (`@ui/LoadMore`) | The tail of a paginated list. Button mode by default; `auto` uses an IntersectionObserver sentinel for feed-style paging. Renders nothing when `hasMore` is false |
 | `<Sheet onClose label side>` (`@ui/Sheet`) | A panel attached to an edge — right/left drawer or bottom sheet. Built on `Modal`, so focus trap/Escape/inert page come for free; the caller mounts it with `<Show when={open}>` and supplies padding via `class` |
 | `<DataTable columns rows rowKey sort onSort>` (`@ui/DataTable`) | A sortable table with controlled sort (`aria-sort` + header buttons) and optional keyboard-operable row clicks. `columns[].class` carries responsive hiding/alignment |
+| `<Stat label value accent hint icon>` (`@ui/Stat`) | A metric card: number (formatted with `toLocaleString`) or custom JSX value, quiet label, optional hint/icon. `accent` marks an alerting value; don't hand-roll the value/label pair |
+| `<ColorSwatch value onChange label>` (`@ui/ColorSwatch`) | One colour with the native picker behind a swatch. `label` is the picker's name and the visible text unless `showLabel={false}`; `size="sm"` in a toolbar |
+| `<FileDropZone onFiles label hint>` (`@ui/FileDropZone`) | Click-to-browse **and** drag-and-drop in one surface. `accept`/`multiple`/`disabled` are passed to the file input; children replace the default icon+label+hint |
 
 Every icon-only button has `title` and `aria-label`. Toggles use `aria-pressed`
 and show "on" with `text-accent-txt`, not a border. Destructive or rare actions

@@ -141,6 +141,9 @@ copy of solidified's full UI. Concretely:
   | `ErrorState` | `ErrorState` | `role="alert"`, retry action |
   | `ListRow` | `ListRow` | link/button/static element choice and the text stack |
   | `DataTable` | `DataTable` | `aria-sort`, header sort buttons, keyboard row activation |
+  | `Stat` | `Stat` | number formatting and the accent state |
+  | `ColorSwatch` | `ColorSwatch` | a native colour input, labelled, with visible swatch |
+  | `FileDropZone` | `FileDropZone` | click and drop parity; the input keeps `label`/`accept`/`multiple` |
   | `Skeleton` | `Skeleton`, `SkeletonText`, `skeletonClass()` | decorative (`aria-hidden`); the lines/last-line-shorter shape |
   | `Banner` | `Banner` | `role="status"` by default / `alert` when asked |
 - **`src/styles/fonts.css`** — genuinely blank. Solidified's font files
