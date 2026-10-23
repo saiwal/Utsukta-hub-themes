@@ -1213,6 +1213,18 @@ class Settings
             Response::send(['status' => 'ok']);
         }
 
+        // A favorite with no app behind it (SPA-only module): just a nav path.
+        if ($action === 'pin' && isset($data['path'])) {
+            $path = trim((string) $data['path']);
+            if (!preg_match('#^/[A-Za-z0-9/_-]*$#', $path)) Response::error(400, 'Invalid path');
+            $paths = json_decode((string) get_pconfig($uid, 'spa', 'pinned_paths', '[]'), true);
+            if (!is_array($paths)) $paths = [];
+            $paths = array_values(array_diff($paths, [$path]));
+            if (!empty($data['enabled'])) $paths[] = $path;
+            set_pconfig($uid, 'spa', 'pinned_paths', json_encode($paths));
+            Response::send(['status' => 'ok']);
+        }
+
         $name = notags(trim($data['name'] ?? ''));
         // The nav (rail/drawer star) only knows an app by url: /spa/nav sends
         // translated names, which don't match app_name. Pin only.

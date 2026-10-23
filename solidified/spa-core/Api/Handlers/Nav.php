@@ -434,6 +434,11 @@ class Nav
             'channels'         => $channels,
             'nav_channel_select' => $nav_channel_select,
             'pinned'           => $pinned,
+            // Favorites that aren't Hubzilla apps (SPA-only modules like
+            // messenger/inbox): nav paths in pconfig spa/pinned_paths.
+            'pinned_paths'     => $is_owner
+                ? (json_decode((string) get_pconfig($uid, 'spa', 'pinned_paths', '[]'), true) ?: [])
+                : [],
             'featured'         => $featured,
             'system_apps'      => $system_apps,
             'channel_tabs'     => $channel_tabs,

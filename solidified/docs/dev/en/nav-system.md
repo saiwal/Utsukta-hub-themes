@@ -117,8 +117,10 @@ canonical app `name`), the desktop rail (hover/focus star) and the mobile drawer
 | `nav` | on | adds featured if neither is set (in the nav, not a favorite) |
 | `nav` | off | removes both — the app leaves the nav |
 
-Only installed apps the nav can show get a star; SPA-only modules have no app
-to pin.
+SPA-only modules (messenger, inbox…) have no app, so their star pins the nav
+*path* instead: `pin` with `path` toggles it in pconfig `spa`/`pinned_paths`,
+returned as `navData().pinned_paths` (owner only). `favoriteTarget()` in
+`app-categories.ts` picks app url vs path; `pinnedNavItems()` merges both.
 
 ## Mobile app drawer & bar
 
@@ -131,8 +133,8 @@ to pin.
   Every slot is `flex-1 min-w-0` so labels truncate instead of one button
   stretching and leaving a gap. It replaces the old four-tab "Most / More"
   split.
-- **Favorites** are the user's Hubzilla pinned apps (`navData().pinned`) — no
-  second favorites list. They are matched back to `NavItemDef`s by path, so the
+- **Favorites** are the user's Hubzilla pinned apps (`navData().pinned`) plus
+  pinned SPA-only paths (`navData().pinned_paths`). They are matched back to `NavItemDef`s by path, so the
   bar's quick menu and the drawer show the same resolved labels/icons.
 - **`AppDrawer.tsx`**: centred brand (`BrandBlock`) → centred utility icon row
   (`NavUtilityIcons`) → app groups, with `SearchField` pinned in a footer at the
