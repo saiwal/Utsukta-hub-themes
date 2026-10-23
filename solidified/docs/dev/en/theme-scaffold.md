@@ -118,16 +118,31 @@ copy of solidified's full UI. Concretely:
   | File | Exports | A replacement must keep |
   |---|---|---|
   | `Button` | `Button`, `IconButton`, `buttonClass()`, `iconButtonClass()` | `IconButton`'s `label` as title + aria-label |
+  | `CopyButton` | `CopyButton` | the copied label/a11y state and the failure hook |
   | `Field` | `Input`, `Select`, `Textarea`, `Field`, `inputClass()` | label `for` → control `id`, hint/error → `aria-describedby`, error → `aria-invalid` |
+  | `SearchField` | `SearchField` | field/clear labels; Enter = `onSearch` only when given |
   | `Toggle` | `Switch`, `Toggle`, `switchClass` | a native checkbox, so forms submit it |
   | `Card` | `Card`, `CardHeader`, `cardClass()` | — |
   | `Modal` | `Modal`, `ModalPanel`, `modalPanelClass()` | focus trap, Escape, inert page, focus restore |
   | `Menu` | `Menu`, `MenuItem`, `MenuSeparator`, `useMenu` | `role="menu"`/`menuitem`, arrow keys, Escape → trigger |
+  | `MenuButton` | `MenuButton` | the trigger's `aria-haspopup="menu"`/`aria-expanded` |
+  | `Tooltip` | `Tooltip` | `role="tooltip"`, hover/focus only |
+  | `Popover` | `Popover` | trigger `aria-expanded`/`aria-controls`, outside-click/Escape, focus in/out |
+  | `Sheet` | `Sheet` | Modal's focus trap/Escape/inert page/focus restore |
+  | `Collapsible` | `Collapsible` | trigger `aria-expanded`/`aria-controls`; panel unmounts when closed |
   | `Tabs` | `Tabs` | `role="tablist"`/`tab`, one Tab stop, arrow keys |
   | `Spinner` | `Spinner` | `aria-hidden` unless labelled |
+  | `ProgressBar` | `ProgressBar` | `role="progressbar"` + aria values when labelled, decorative otherwise |
+  | `LoadMore` | `LoadMore` | the exhausted state renders nothing; button/sentinel modes |
   | `Badge` | `Badge`, `CountBadge`, `badgeClass()` | `CountBadge` hidden at 0 |
+  | `Chip` | `Chip`, `RemovableChip`, `chipClass()` | `Chip` is a button with `aria-pressed`; `RemovableChip`'s × is a labelled button outside a button |
   | `Avatar` | `Avatar` (helpers: `@utsukta/spa-core/lib/avatar`) | initials fallback on a missing *or* broken photo |
   | `EmptyState` | `EmptyState` | — |
+  | `ErrorState` | `ErrorState` | `role="alert"`, retry action |
+  | `ListRow` | `ListRow` | link/button/static element choice and the text stack |
+  | `DataTable` | `DataTable` | `aria-sort`, header sort buttons, keyboard row activation |
+  | `Skeleton` | `Skeleton`, `SkeletonText`, `skeletonClass()` | decorative (`aria-hidden`); the lines/last-line-shorter shape |
+  | `Banner` | `Banner` | `role="status"` by default / `alert` when asked |
 - **`src/styles/fonts.css`** — genuinely blank. Solidified's font files
   aren't copied, so neither is the CSS that references them. Note
   `@utsukta/spa-core/lib/typography.ts`'s `FONT_FAMILIES` map includes a
