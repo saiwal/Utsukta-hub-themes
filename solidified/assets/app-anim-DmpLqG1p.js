@@ -1,1 +1,0 @@
-import{A as e,M as t,j as n,k as r}from"./app-By1bBUtl.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(r),s=a(e),c=a(n),l=a(t);export{l as i,s as n,c as r,o as t};
