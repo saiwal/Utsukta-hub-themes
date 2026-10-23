@@ -289,8 +289,17 @@ Reference: `jellyfin/anim.ts` (the shared presets from
 | Panel expanding in place | `slideDown` |
 | Bar arriving at the bottom | `slideUp` |
 | Switching tab / page content | `fade` (keyed on the view) |
+| Colour-scheme switch | cross-fade — `withThemeTransition()` |
 | Tab / switcher indicator | CSS `transition-all duration-300` on the underline |
 | Image arriving | opacity transition (in `Art`) |
+
+A colour-scheme switch is the one change that recolours the whole page at once,
+so it cross-fades rather than repainting in a single frame
+(`spa-core/lib/theme-transition.ts`, wired into `useTheme().switchTheme`: a view
+transition where available, a transient CSS colour transition otherwise). It is
+also the one transition that must be skipped entirely under
+`prefers-reduced-motion` — a full-page dissolve is the most vestibular thing in
+the app. Don't add a second animation to the same switch from a module.
 
 Not allowed: staggered card entrances, hover lifts, pulsing decoration,
 anything that loops without being the module's single focal moment. Any
