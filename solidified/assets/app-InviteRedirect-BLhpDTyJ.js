@@ -1,0 +1,1 @@
+import{f as e}from"./app-solid-P6NIHsRG.js";import{Gn as t}from"./app-By1bBUtl.js";function n(){return e(t,{href:`/directory/invite`})}export{n as default};
