@@ -60,7 +60,7 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
   sections (jellyfin library); `stretch` splits the width equally. A switcher
   made of links (help) stays links.
 - **Outlined icon buttons** on the right: `<IconButton variant="outline">`
-  (round and bordered, matching the pill buttons beside it), icons at 15px.
+  (bordered, matching the rounded buttons beside it), icons at 15px.
   Search expands inline into a field and a submit button. Use a small accent
   dot on a button (`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent`)
   for "something here" state rather than a count badge.
@@ -73,6 +73,11 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
   for destructive items; `keepOpen` for items that swap to a sub-panel;
   `useMenu().close()` for a form inside the menu. Value pickers (sort, view,
   language) are not menus.
+- **Right-click menu**: `<ContextMenu label menu={<>…MenuItems…</>}>region</ContextMenu>`
+  (`@ui/Menu`) opens the same panel at the pointer, at the focused element for
+  the menu key / Shift+F10, and on a touch long-press. It adds no box around the
+  region. It is a shortcut only: every action in it must also be in a ⋯ menu
+  or on a button, since nothing tells a user it's there.
 - `flex-wrap` on the row, so an open search field drops to its own line at
   phone width instead of overflowing.
 
@@ -84,6 +89,10 @@ Quiet text tabs with an accent underline that slides to the current one. Use
 one row with `overflow-x-auto`, so it scrolls sideways on a phone and never
 wraps. Mark tabs with `role="tab"` and `aria-selected`. Use them for views
 within a section and for seasons; use the segmented switcher only in the header.
+
+`<Tabs>` items take an optional `icon` and `count` (a bubble, hidden at 0).
+Give the Tabs an `id` and wrap the content in `<TabPanel tabs={id}
+value={current}>` (`@ui/Tabs`) so screen readers link each tab to what it shows.
 
 ### Detail pages
 
@@ -167,8 +176,11 @@ label above every heading, and long `A · B · C` detail strings.
 Use `Button` / `IconButton` from `@ui/Button`, not hand-written classes: a theme
 swaps the look there (default in `packages/spa-ui`, per-theme overrides in its
 `src/ui/` — see theme-scaffold.md) (contract in spa-core `types/ui.types.ts`). `Button` takes
-`variant` (`primary` default, `ghost`, `danger`) and `size` (`md` = `h-10` pill,
-`sm` = `h-8` pill for dense rows and headers). `IconButton` requires `label`
+`variant` (`primary` default, `ghost`, `danger`) and `size` (`md` = `h-10`,
+`sm` = `h-8` for dense rows and headers). Button corners use `rounded-lg`, so
+Settings → Display → Corner roundness drives them (0/4/8/12/16px); never
+hard-code `rounded-full` on a button, which would ignore the setting.
+`IconButton` requires `label`
 (becomes `title` + `aria-label`) and takes `variant` (`default`, `danger`,
 `outline` for the header button), `size` and `pressed`. Style a link as a button
 with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
@@ -176,9 +188,9 @@ with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
 
 | Control | When |
 |---|---|
-| `<Button>`: filled accent pill | The single main action of the view |
+| `<Button>`: filled accent button | The single main action of the view |
 | `<Button variant="ghost">`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
-| `<IconButton>`: bare round icon | Everything else (♥, Share, ⋯, transport, close) |
+| `<IconButton>`: bare icon | Everything else (♥, Share, ⋯, transport, close) |
 | `<IconButton variant="outline">` | Header only (see above) |
 | `<Input>` / `<Select>` / `<Textarea>` (`@ui/Field`): bordered box, accent focus ring | Every text field, select and textarea. `size="sm"` in dense rows and widget configs; width comes from the call site (`class="w-full"`) |
 | `<Field label hint error>` (`@ui/Field`) around one of those | Any labelled field. It wires `for`/`id`, `aria-describedby` and `aria-invalid` itself — never pass ids by hand. Check: `node scripts/check-ui.mjs` |
