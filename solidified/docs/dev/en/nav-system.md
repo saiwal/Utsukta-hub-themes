@@ -87,6 +87,39 @@ context: ["owner", "local"]  // multiple roles
 
 These two lists are never mixed for the same request. The nav switches between them based on the subject nick and viewer role.
 
+## Desktop rail groups
+
+`DesktopMenu.tsx`, in your own context (`viewerRole() === "owner"`): favorites
+(pinned apps, `pinnedNavItems()`) always shown on top, then every other nav item
+in `@ui/Collapsible` categories from `groupNavItems()` — the same
+`app-categories.ts` grouping the mobile drawer uses. Groups open independently;
+the open set is a per-browser convenience in localStorage `hz-nav-groups`.
+Navigating into an app opens its group; a closed group shows a dot when one of
+its items has a badge. Visiting a channel the rail stays the flat tab list (a
+channel's sections aren't apps to categorise). In edit-layout mode the groups
+stay and the favorites get drag handles — `nav_order` only sorts pinned apps
+server-side anyway (`commitNavOrder` with the favorites as the subset).
+
+## Favorites (pinning)
+
+A favorite is Hubzilla's `nav_pinned_app`; "in the nav" is pinned *or*
+`nav_featured_app`. `FavoriteStar` (`shared/views/FavoriteStar.tsx`) toggles it
+from three places: Settings → Integrations (before the app icon, keyed by the
+canonical app `name`), the desktop rail (hover/focus star) and the mobile drawer
+(corner star on each tile) — the last two key by the app's raw `url`, because
+`/spa/nav` names are translated. All post `action: "pin"` to
+`/spa/settings/integrations`:
+
+| action | enabled | result |
+|---|---|---|
+| `pin` | on | adds pinned |
+| `pin` | off | removes pinned, adds featured — un-favoriting never hides the app |
+| `nav` | on | adds featured if neither is set (in the nav, not a favorite) |
+| `nav` | off | removes both — the app leaves the nav |
+
+Only installed apps the nav can show get a star; SPA-only modules have no app
+to pin.
+
 ## Mobile app drawer & bar
 
 `src/shared/views/layout/MobileMenu.tsx` is the mobile nav shell (below `lg`):
