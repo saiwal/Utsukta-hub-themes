@@ -62,7 +62,7 @@ copy of solidified's full UI. Concretely:
   branding in these; copied verbatim.
 - **`src/Layout.tsx`, `src/shared/views/{NavItem,Slot}.tsx`** — **minimal
   starters, not solidified's real ones.** `Layout.tsx` calls
-  `useLayoutChrome()` from spa-core (the same hook solidified's ~750-line
+  `useLayoutChrome()` from spa-core (the same hook solidified's
   Layout.tsx uses) for all state — nav data, panel open/close, page-chrome
   mode, drag-to-reorder, scroll tracking — and renders bare-bones markup
   around it. `Slot.tsx` resolves and renders a slot's default widgets only:
@@ -73,11 +73,15 @@ copy of solidified's full UI. Concretely:
   runs without them — they're just not built out yet. Read solidified's own
   versions of these three files as the reference for the full pattern, and
   `slot-system.md` for the complete `WidgetDef`/layout-override reference.
+  Solidified's `Layout.tsx` keeps only the shell; its nav surfaces live in
+  `src/shared/views/layout/` — `DesktopMenu.tsx` (rail, action-items
+  overlay, channel switcher) and `MobileMenu.tsx` ("more" drawer + bottom
+  tab bar), both fed the one `useLayoutChrome()` result as a prop.
 - **Not mounted at all in the starter `Layout.tsx`**: `HelpOverlay`,
   `ToastContainer`, `ConnectionRequestModalHost`, `FeedModalHost`,
   `RemoteAuthBanner`, the mobile "more" overflow drawer, the desktop
   action-items overlay, the channel switcher. Add them back (copying from
-  solidified's `Layout.tsx`/`shared/views/`) once you need those features —
+  solidified's `Layout.tsx`/`shared/views/`, menus in `shared/views/layout/`) once you need those features —
   their absence doesn't break anything else, those specific UI surfaces
   just have nowhere to render yet.
 - **`src/index.css`, `src/styles/theme.css`** — copied from solidified's
@@ -91,6 +95,61 @@ copy of solidified's full UI. Concretely:
   `THEMES` array (shared infra, iterated by the color-scheme picker
   regardless of theme) — an id with no block here just silently falls back
   to `:root`'s colors. Recolor freely; keep the selectors.
+- **`src/ui/`** — **empty, on purpose** (plus a README). Modules import the
+  UI primitives as `@ui/<Name>`, and `uiShadow` (from
+  `@utsukta/spa-ui/vite-plugin`, wired in `vite.config.ts`) resolves each one
+  to `src/ui/<Name>.tsx` **if this theme has that file**, and to the default
+  implementation in `packages/spa-ui/src/` otherwise. `tsconfig.app.json`'s
+  `paths` fallback array mirrors that for the editor, and `index.css`'s
+  `@source "../../spa-ui/src"` makes Tailwind generate the defaults' classes.
+  So a theme overrides one primitive without forking the rest; see the table
+  below for what exists.
+
+  - `@ui-base/<Name>` is always the default — import it to wrap rather than
+    replace (`export * from "@ui-base/Button"` + your own `Button`).
+  - The defaults import each other through `@ui/…`, so an overridden `Button`
+    is also Modal's close button and Menu's trigger.
+  - The props contract every override must satisfy is
+    `@utsukta/spa-core/types/ui.types.ts`: accept every prop, pass the rest to
+    the native element, keep the stated behaviour. `node scripts/check-ui.mjs`
+    asserts the defaults' accessibility wiring; keep the same roles and aria.
+  - Adding or deleting an override restarts the dev server, since it changes
+    what an import resolves to.
+  - Every default carries `hz-*` hook classes (`hz-btn hz-btn-primary`,
+    `hz-card`, `hz-input`, …), so a plain-CSS theme can restyle without
+    overriding any file at all.
+
+  | File | Exports | A replacement must keep |
+  |---|---|---|
+  | `Button` | `Button`, `IconButton`, `buttonClass()`, `iconButtonClass()` | `IconButton`'s `label` as title + aria-label |
+  | `CopyButton` | `CopyButton` | the copied label/a11y state and the failure hook |
+  | `Field` | `Input`, `Select`, `Textarea`, `Field`, `inputClass()` | label `for` → control `id`, hint/error → `aria-describedby`, error → `aria-invalid` |
+  | `SearchField` | `SearchField` | field/clear labels; Enter = `onSearch` only when given |
+  | `Toggle` | `Switch`, `Toggle`, `switchClass` | a native checkbox, so forms submit it |
+  | `Card` | `Card`, `CardHeader`, `cardClass()` | — |
+  | `Modal` | `Modal`, `ModalPanel`, `modalPanelClass()` | focus trap, Escape, inert page, focus restore |
+  | `Menu` | `Menu`, `MenuItem`, `MenuSeparator`, `useMenu` | `role="menu"`/`menuitem`, arrow keys, Escape → trigger |
+  | `MenuButton` | `MenuButton` | the trigger's `aria-haspopup="menu"`/`aria-expanded` |
+  | `Tooltip` | `Tooltip` | `role="tooltip"`, hover/focus only |
+  | `Popover` | `Popover` | trigger `aria-expanded`/`aria-controls`, outside-click/Escape, focus in/out |
+  | `Sheet` | `Sheet` | Modal's focus trap/Escape/inert page/focus restore |
+  | `Collapsible` | `Collapsible` | trigger `aria-expanded`/`aria-controls`; panel unmounts when closed |
+  | `Tabs` | `Tabs` | `role="tablist"`/`tab`, one Tab stop, arrow keys |
+  | `Spinner` | `Spinner` | `aria-hidden` unless labelled |
+  | `ProgressBar` | `ProgressBar` | `role="progressbar"` + aria values when labelled, decorative otherwise |
+  | `LoadMore` | `LoadMore` | the exhausted state renders nothing; button/sentinel modes |
+  | `Badge` | `Badge`, `CountBadge`, `badgeClass()` | `CountBadge` hidden at 0 |
+  | `Chip` | `Chip`, `RemovableChip`, `chipClass()` | `Chip` is a button with `aria-pressed`; `RemovableChip`'s × is a labelled button outside a button |
+  | `Avatar` | `Avatar` (helpers: `@utsukta/spa-core/lib/avatar`) | initials fallback on a missing *or* broken photo |
+  | `EmptyState` | `EmptyState` | — |
+  | `ErrorState` | `ErrorState` | `role="alert"`, retry action |
+  | `ListRow` | `ListRow` | link/button/static element choice and the text stack |
+  | `DataTable` | `DataTable` | `aria-sort`, header sort buttons, keyboard row activation |
+  | `Stat` | `Stat` | number formatting and the accent state |
+  | `ColorSwatch` | `ColorSwatch` | a native colour input, labelled, with visible swatch |
+  | `FileDropZone` | `FileDropZone` | click and drop parity; the input keeps `label`/`accept`/`multiple` |
+  | `Skeleton` | `Skeleton`, `SkeletonText`, `skeletonClass()` | decorative (`aria-hidden`); the lines/last-line-shorter shape |
+  | `Banner` | `Banner` | `role="status"` by default / `alert` when asked |
 - **`src/styles/fonts.css`** — genuinely blank. Solidified's font files
   aren't copied, so neither is the CSS that references them. Note
   `@utsukta/spa-core/lib/typography.ts`'s `FONT_FAMILIES` map includes a

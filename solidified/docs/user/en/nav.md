@@ -1,6 +1,6 @@
 # Navigation
 
-Hubzilla's navigation lives in three places: the primary nav list (the left sidebar on desktop, or the bottom tab bar and "More" drawer on mobile), the account/utility row beneath it, and a couple of dedicated buttons on mobile. This page explains what each link or button does — for how to actually use what's behind it, see that app's own help page.
+Hubzilla's navigation lives in three places: the primary nav list (the left sidebar on desktop, or the bottom bar and app drawer on mobile), the account/utility row beneath it, and a couple of dedicated buttons on mobile. This page explains what each link or button does — for how to actually use what's behind it, see that app's own help page.
 
 ## Hq
 
@@ -116,7 +116,7 @@ Log in to your home site from this one, so you can interact here using your own 
 
 ## Account Menu
 
-Click your avatar and name to reveal account actions: settings, channel management, and logout.
+Desktop: click your avatar and name to reveal account actions. On someone else's channel, the identity row at the bottom of the rail links your name to your own channel, and the chevron next to it opens the account menu. Mobile: the account icon on the left of the bottom bar opens the same menu (settings, channel management, logout).
 
 ## Language
 
@@ -130,10 +130,24 @@ Switch between light, dark, and other color themes.
 
 Toggles help mode. While it's on, click anything on the page — a nav link, a widget, a button — to see what it does.
 
-## More Drawer
+## Apps
 
-Mobile only. Opens a drawer with any nav items and account actions that don't fit in the bottom tab bar.
+Mobile only. Opens the app drawer: the site brand at the top, then your pinned apps (always expanded), then every other app grouped into collapsible Social, Productivity and System sections. The utility icons (language, theme, help, site info) sit directly under the brand, and the search box is pinned at the bottom of the drawer — it filters the whole list as you type. Account actions live in the account menu on the bottom bar.
+
+## Favorites
+
+Mobile only. Opens a quick menu of the apps you have pinned, without opening the full app drawer. Pin or unpin apps with the star in the app drawer or in Settings → Integrations. With nothing pinned yet it tells you how.
+
+## Actions
+
+Mobile only. The bottom bar always has the same four buttons — account, favorites, apps and panel — so it never shifts as you move between pages. A page's own actions sit elsewhere:
+
+- **The round button** at the bottom right is the page's main action: Upload in Files, New event in Calendar, Save on a settings form. On social pages without one (your channel, network, HQ) it is **Compose**, which offers quick compose: new post, message, article, card, wiki/page or calendar event, depending on which apps are installed.
+- **⋮** at the end of the page title holds everything else (for example Calendar's import/export, or Rename and Delete on a wiki page). On pages without a title row it floats above the round button instead.
+- **🔍** above them searches the page, where the page has a search (articles, cards, notes, posts on a channel, the network stream, the public stream, Jellyfin).
+
+These buttons hide while you're typing, so they never sit on top of the keyboard. On desktop the same actions are buttons in the page header.
 
 ## Panel
 
-Opens the right-hand sidebar panel — the widgets you'd otherwise see beside the page on desktop.
+Opens the right-hand sidebar panel — the widgets you'd otherwise see beside the page on desktop. On pages without a sidebar the button stays in place but is dimmed.

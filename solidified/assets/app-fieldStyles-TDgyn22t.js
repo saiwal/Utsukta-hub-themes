@@ -1,1 +1,0 @@
-var e=`bg-transparent border-0 border-b border-rim outline-none focus:border-accent transition-colors`;export{e as t};

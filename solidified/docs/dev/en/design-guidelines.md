@@ -54,17 +54,30 @@ Reference: `jellyfin/widgets/JellyfinHeaderWidget.tsx`, `cards/widgets/CardsHead
 - **Title** on the left: `text-xl font-bold text-txt`. Name what the user is
   looking at (Jellyfin uses the server's name, falling back to "Jellyfin").
 - **Segmented switcher** in the middle, for a module's top-level halves (Music /
-  Video, Board / Kanban): `flex gap-1 p-1 bg-elevated rounded-lg w-fit mx-auto`.
-  The active segment is `bg-accent text-accent-fg font-semibold`, the others
-  `text-muted hover:text-txt`, all `px-3 py-1 text-xs rounded-md font-medium`.
-  Mark it with `aria-pressed`.
-- **Square icon buttons** on the right:
-  `p-1.5 rounded-lg border border-rim bg-surface text-muted hover:bg-elevated hover:text-txt`, icons at 15px.
+  Video, Board / Kanban): `<Tabs label value onChange items class="mx-auto">`
+  (`@ui/Tabs`). It renders `role="tablist"`/`tab`, arrow keys switch, and only
+  the selected tab is a Tab stop. `variant="underline"` is for in-page
+  sections (jellyfin library); `stretch` splits the width equally. A switcher
+  made of links (help) stays links.
+- **Outlined icon buttons** on the right: `<IconButton variant="outline">`
+  (bordered, matching the rounded buttons beside it), icons at 15px.
   Search expands inline into a field and a submit button. Use a small accent
   dot on a button (`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent`)
   for "something here" state rather than a count badge.
 - **⋯ menu** for everything secondary (account switching, settings, sign
   out). Don't add another visible button for it.
+  Build it with `<Menu label>` + `<MenuItem icon onClick>` / `<MenuSeparator>`
+  (`@ui/Menu`): it renders `role="menu"`, arrow/Home/End focus, Escape back to
+  the trigger, and closes after an item. `trigger` swaps the default ⋯ button
+  (spread its props onto yours); `href`/`download` make a link item; `danger`
+  for destructive items; `keepOpen` for items that swap to a sub-panel;
+  `useMenu().close()` for a form inside the menu. Value pickers (sort, view,
+  language) are not menus.
+- **Right-click menu**: `<ContextMenu label menu={<>…MenuItems…</>}>region</ContextMenu>`
+  (`@ui/Menu`) opens the same panel at the pointer, at the focused element for
+  the menu key / Shift+F10, and on a touch long-press. It adds no box around the
+  region. It is a shortcut only: every action in it must also be in a ⋯ menu
+  or on a button, since nothing tells a user it's there.
 - `flex-wrap` on the row, so an open search field drops to its own line at
   phone width instead of overflowing.
 
@@ -76,6 +89,10 @@ Quiet text tabs with an accent underline that slides to the current one. Use
 one row with `overflow-x-auto`, so it scrolls sideways on a phone and never
 wraps. Mark tabs with `role="tab"` and `aria-selected`. Use them for views
 within a section and for seasons; use the segmented switcher only in the header.
+
+`<Tabs>` items take an optional `icon` and `count` (a bubble, hidden at 0).
+Give the Tabs an `id` and wrap the content in `<TabPanel tabs={id}
+value={current}>` (`@ui/Tabs`) so screen readers link each tab to what it shows.
 
 ### Detail pages
 
@@ -122,13 +139,20 @@ custom scheme.
 | `accent-fg` | Text and icons on an accent fill |
 | `accent-txt` | **Accent as text**: current item, highlighted lyric, active icon |
 | `accent-muted` | Soft accent backgrounds |
+| `danger` / `success` / `warning` | Status, with the same four roles as accent: the bare name for fills, borders and dots, `-fg` on that fill, `-txt` as text, `-muted` for soft backgrounds |
+
+Statuses never use raw `red-*` / `green-*` / `amber-*`: those skip both the theme
+and the custom-scheme editor. `dark:` pairs are unnecessary, because each preset
+sets its own contrast-checked values. Raw palette colours remain for
+*categories* only (platform badges, file-type icons, the scrapbook palette).
 
 Use opacity modifiers for softness instead of new colours: `bg-elevated/40`
 (grouping), `bg-elevated/60` (selected row), `bg-surface/85` with
 `backdrop-blur-xl` (floating), `text-muted/60` (de-emphasised), `ring-rim/40`.
 
 Text in the accent colour uses `text-accent-txt`, never `text-accent`: the plain
-accent is tuned for fills and can be unreadable as text in some schemes.
+accent is tuned for fills and can be unreadable as text in some schemes. The
+same applies to statuses: an error message is `text-danger-txt`.
 
 ## Type
 
@@ -149,16 +173,50 @@ label above every heading, and long `A · B · C` detail strings.
 
 ## Controls
 
-Reference: `jellyfin/ui.tsx` (`iconBtn`, `primaryPill`, `ghostPill`).
+Use `Button` / `IconButton` from `@ui/Button`, not hand-written classes: a theme
+swaps the look there (default in `packages/spa-ui`, per-theme overrides in its
+`src/ui/` — see theme-scaffold.md) (contract in spa-core `types/ui.types.ts`). `Button` takes
+`variant` (`primary` default, `ghost`, `danger`) and `size` (`md` = `h-10`,
+`sm` = `h-8` for dense rows and headers). Button corners use `rounded-lg`, so
+Settings → Display → Corner roundness drives them (0/4/8/12/16px); never
+hard-code `rounded-full` on a button, which would ignore the setting.
+`IconButton` requires `label`
+(becomes `title` + `aria-label`) and takes `variant` (`default`, `danger`,
+`outline` for the header button), `size` and `pressed`. Style a link as a button
+with `buttonClass()` / `iconButtonClass()`. The `iconBtn` / `primaryPill` /
+`ghostPill` strings remain for code not yet migrated.
 
 | Control | When |
 |---|---|
-| `primaryPill`: filled accent, `h-10 rounded-full` | The single main action of the view |
-| `ghostPill`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
-| `iconBtn`: bare round icon | Everything else (♥, Share, ⋯, transport, close) |
-| Header square button | Header only (see above) |
-| Underlined field: `bg-transparent border-0 border-b border-rim focus:border-accent` | Inputs and selects in content and dialogs |
-| Bordered field (Cards style) | Header search only |
+| `<Button>`: filled accent button | The single main action of the view |
+| `<Button variant="ghost">`: no fill until hover | Secondary actions with a label (Shuffle, Start over, Invite) |
+| `<IconButton>`: bare icon | Everything else (♥, Share, ⋯, transport, close) |
+| `<IconButton variant="outline">` | Header only (see above) |
+| `<CopyButton value label copiedLabel>` (`@ui/CopyButton`) | Any "copy to clipboard" icon button. `value` is a string or getter; it swaps to a check for `timeout` ms, changes its accessible name to `copiedLabel`, announces through a polite live region, and reports failure via `onError`. Don't re-implement the copied signal/timer |
+| `<Input>` / `<Select>` / `<Textarea>` (`@ui/Field`): **underline field** — only the bottom rule, accent 2px underline on focus | Every text field, select and textarea. No box, fill or corner radius: a field is a line, not a surface. `size="sm"` in dense rows and widget configs; width comes from the call site (`class="w-full"`) |
+| `<SearchField value onInput label clearLabel>` (`@ui/SearchField`) | Search boxes: field + magnifier + a clear button while non-empty. `label` names the field, `clearLabel` the clear button; `onSearch` makes Enter search (omit it inside a `<form>` and let the form submit). Width from `class`, `size="sm"` in dense panels |
+| `<Field label hint error>` (`@ui/Field`) around one of those | Any labelled field. It wires `for`/`id`, `aria-describedby` and `aria-invalid` itself — never pass ids by hand. Check: `node scripts/check-ui.mjs` |
+| `<Toggle label hint>` / `<Switch>` (`@ui/Toggle`) | Any on/off setting: `Toggle` is the labelled row (label + hint left, switch right), `Switch` the bare control (give it `label` for an accessible name). Native checkbox: `name` submits `"1"`. Return a promise from `onChange` for async toggles that can fail |
+| `<Spinner size tone>` (`@ui/Spinner`) | Busy states. Ring in `currentColor` (so inside a button it takes the button's colour); `tone="accent"` for a standalone loader, which should also get `label` to become a `role="status"`. A refresh icon spinning while it reloads stays an icon |
+| `<Badge tone size>` / `<CountBadge n>` (`@ui/Badge`) | `Badge` is a tag (`rounded-md`): `tone` neutral/accent/danger/success/warning, `size="sm"` beside metadata. `CountBadge` is the solid unread bubble — hidden at 0, `99+` above `max`, `label` for accessible text. Categorical colours (post type, platform) stay raw |
+| `<Chip>` / `<RemovableChip>` (`@ui/Chip`) | Filter/tag chips. `Chip` is a real button: `selected` renders `aria-pressed` and a solid accent fill; `tone` neutral/accent/success/warning/danger, `size="sm"` for dense rows or `md` in filter bars (32px, matches `Button size="sm"`), `icon`, `count` (hidden at 0). `rainbow` is the tag-cloud treatment from `index.css` and needs `--rainbow-h` (spread `rainbowStyle(name, true)` into `style`). `RemovableChip` is a non-interactive `<span>` with a labelled remove `IconButton` — a chip with an × cannot itself be a button. `chipClass()` styles a link chip. Corners are token-based, so they follow the corner-roundness setting |
+| `<Avatar src name size>` (`@ui/Avatar`) | Any person/channel picture. `size` in spacing units (`8` = `w-8`). Falls back to initials on a name-derived hue when there is no photo **or it fails to load**; no name → a person icon. Decorative by default; `alt` only when no name is printed beside it. `shape="rounded"` for square-ish slots. Not for product photos or app icons. Responsive sizes (`sm:w-22`) need a plain `<img>` |
+| `<EmptyState icon action size>` (`@ui/EmptyState`) | "Nothing here" for an empty list, folder or view. `size="sm"` inside a panel or list, default for a whole view; `action` takes a `Button` or a link styled with `buttonClass()` |
+| `<Skeleton>` / `<SkeletonText>` (`@ui/Skeleton`) | Loading placeholders, instead of hand-written `animate-pulse` divs. Both are decorative (`aria-hidden`); `rounded` and `tone` (elevated/overlay/surface) pick the shape and contrast, `pulse={false}` where an ancestor already animates. `SkeletonText lines` renders a paragraph, last line shorter. Wrap a group in a labelled `role="status"` when the wait itself must be announced — never label every block. `skeletonClass()` for a one-off block |
+| `<Banner tone icon title actions>` (`@ui/Banner`) | Inline status messages (offline/feature-off/permission/results). `tone` info/success/warning/danger, optional `icon`, `title` and `actions`; `role="status"` by default, pass `role="alert"` for an error the user must not miss. Don't hand-roll a `bg-*-muted` strip |
+| `<Popover trigger placement role label>` (`@ui/Popover`) | A click-to-open panel: settings, pickers, listboxes. Spread the trigger props onto your button; the panel gets `aria-controls`/`aria-expanded`, outside-click/Escape dismissal, and focus moves in on open and back on Escape. Use `Menu` for role="menu" arrow-key behaviour; pass `role="listbox"` + `label` for a picker |
+| `<Collapsible open onOpenChange header>` (`@ui/Collapsible`) | A disclosure/accordion section. `header` is a render prop: spread the trigger props onto every toggle target, so a header with links/buttons beside the toggle still works without hand-written ids. The panel unmounts when closed |
+| `<ProgressBar value max tone size label>` (`@ui/ProgressBar`) | Import/upload/sync progress. `label` makes it `role="progressbar"` with the aria values; omit it for decoration. `indeterminate` drops the value attributes and pulses; `size="xs"` is the thin strip |
+| `<ErrorState message detail retry>` (`@ui/ErrorState`) | A failed load: `role="alert"` message, muted detail and a ghost Retry button. `EmptyState` is for "nothing here"; this is for "it didn't load" |
+| `<Tooltip content placement>` (`@ui/Tooltip`) | A short hover/focus hint on a small trigger (a dot, a "?", a glyph). Portalled, `role="tooltip"`; don't put actions in it or rely on it for essential text |
+| `<MenuButton label>` (`@ui/MenuButton`) | The labelled "More actions" button + chevron that opens a `Menu`; use `Menu` directly for an icon-only trigger. `menuClass` sizes the panel |
+| `<ListRow leading title subtitle meta trailing>` (`@ui/ListRow`) | A single row: avatar/icon, title, quiet meta line, right slot. `href` makes a link, `onClick` a button, neither a static row. For multi-column data use `DataTable` |
+| `<LoadMore hasMore loading onClick label>` (`@ui/LoadMore`) | The tail of a paginated list. Button mode by default; `auto` uses an IntersectionObserver sentinel for feed-style paging. Renders nothing when `hasMore` is false |
+| `<Sheet onClose label side>` (`@ui/Sheet`) | A panel attached to an edge — right/left drawer or bottom sheet. Built on `Modal`, so focus trap/Escape/inert page come for free; the caller mounts it with `<Show when={open}>` and supplies padding via `class` |
+| `<DataTable columns rows rowKey sort onSort>` (`@ui/DataTable`) | A sortable table with controlled sort (`aria-sort` + header buttons) and optional keyboard-operable row clicks. `columns[].class` carries responsive hiding/alignment |
+| `<Stat label value accent hint icon>` (`@ui/Stat`) | A metric card: number (formatted with `toLocaleString`) or custom JSX value, quiet label, optional hint/icon. `accent` marks an alerting value; don't hand-roll the value/label pair |
+| `<ColorSwatch value onChange label>` (`@ui/ColorSwatch`) | One colour with the native picker behind a swatch. `label` is the picker's name and the visible text unless `showLabel={false}`; `size="sm"` in a toolbar |
+| `<FileDropZone onFiles label hint>` (`@ui/FileDropZone`) | Click-to-browse **and** drag-and-drop in one surface. `accept`/`multiple`/`disabled` are passed to the file input; children replace the default icon+label+hint |
 
 Every icon-only button has `title` and `aria-label`. Toggles use `aria-pressed`
 and show "on" with `text-accent-txt`, not a border. Destructive or rare actions
@@ -166,8 +224,23 @@ go in a ⋯ menu.
 
 ## Surfaces
 
-- **No bordered cards.** Use `rounded-2xl bg-elevated/40 p-4` when a group
-  genuinely needs a surface (the party panel), otherwise just spacing.
+- **Panels are `<Card>`** (`@ui/Card`): bordered `bg-surface`, `rounded-xl`;
+  `raised` adds a small shadow. It has no padding of its own — pass
+  `class="p-4"` (or a layout) at the call site. A header bar inside is
+  `<CardHeader>` (bottom rule, `px-4 py-3`). Use `cardClass()` when the surface
+  must stay an `<li>`/`<form>`/`<section>`. Only group with a card when a group
+  genuinely needs a surface; otherwise just spacing. Dialog panels are not
+  cards (they keep their large shadow).
+- **Dialogs are `<Modal>` + `<ModalPanel>`** (`@ui/Modal`). `Modal` is the
+  native `<dialog>` layer (focus trap, Escape, inert page, focus restore);
+  `ModalPanel` is the box — a card with `shadow-2xl`, `size` `sm`/`md`/`lg`/`xl`
+  for its max width. Give it `title` (+ `onClose` for a close button,
+  `description` for a muted line under it) and the dialog is named and
+  described for you — no `labelledBy`, no hand-built header bar; `footer`
+  renders the action bar. Only a header with more than a title (an icon badge,
+  an avatar, extra buttons) stays hand-built.
+  Animated panels (`Motion.div`) use `modalPanelClass(size)`. Bottom sheets
+  and full-screen viewers stay bespoke.
 - **Lists:** `space-y-0.5`, rows `rounded-xl px-3 py-1`,
   `hover:bg-elevated/40`, current row `bg-elevated/60` with `text-accent-txt`.
   No dividers, no outer border. Row actions can fade in on hover, but must
@@ -216,8 +289,17 @@ Reference: `jellyfin/anim.ts` (the shared presets from
 | Panel expanding in place | `slideDown` |
 | Bar arriving at the bottom | `slideUp` |
 | Switching tab / page content | `fade` (keyed on the view) |
+| Colour-scheme switch | cross-fade — `withThemeTransition()` |
 | Tab / switcher indicator | CSS `transition-all duration-300` on the underline |
 | Image arriving | opacity transition (in `Art`) |
+
+A colour-scheme switch is the one change that recolours the whole page at once,
+so it cross-fades rather than repainting in a single frame
+(`spa-core/lib/theme-transition.ts`, wired into `useTheme().switchTheme`: a view
+transition where available, a transient CSS colour transition otherwise). It is
+also the one transition that must be skipped entirely under
+`prefers-reduced-motion` — a full-page dissolve is the most vestibular thing in
+the app. Don't add a second animation to the same switch from a module.
 
 Not allowed: staggered card entrances, hover lifts, pulsing decoration,
 anything that loops without being the module's single focal moment. Any
@@ -249,7 +331,7 @@ rule).
 ## Redesign checklist
 
 1. Split the routed view into a locked header and content widget.
-2. Header: title, switcher if the module has halves, square icon buttons, ⋯ menu.
+2. Header: title, switcher if the module has halves, outlined icon buttons, ⋯ menu.
 3. Remove bordered cards; regroup with space and `bg-elevated/40`.
 4. Find the one primary action per view and make it the only `primaryPill`.
 5. Turn labelled secondary buttons into `iconBtn` (with `title`/`aria-label`)

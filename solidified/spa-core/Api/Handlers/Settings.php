@@ -1174,7 +1174,7 @@ class Settings
     {
         $action = $data['action'] ?? '';
 
-        if (!in_array($action, ['install', 'uninstall', 'nav', 'reorder', 'toggle-frontend', 'kanban'], true))
+        if (!in_array($action, ['install', 'uninstall', 'nav', 'pin', 'reorder', 'toggle-frontend', 'kanban'], true))
             Response::error(400, 'Invalid request');
 
         // The cards module's kanban board — a plain per-user flag rather than an
@@ -1213,15 +1213,34 @@ class Settings
             Response::send(['status' => 'ok']);
         }
 
+        // A favorite with no app behind it (SPA-only module): just a nav path.
+        if ($action === 'pin' && isset($data['path'])) {
+            $path = trim((string) $data['path']);
+            if (!preg_match('#^/[A-Za-z0-9/_-]*$#', $path)) Response::error(400, 'Invalid path');
+            $paths = json_decode((string) get_pconfig($uid, 'spa', 'pinned_paths', '[]'), true);
+            if (!is_array($paths)) $paths = [];
+            $paths = array_values(array_diff($paths, [$path]));
+            if (!empty($data['enabled'])) $paths[] = $path;
+            set_pconfig($uid, 'spa', 'pinned_paths', json_encode($paths));
+            Response::send(['status' => 'ok']);
+        }
+
         $name = notags(trim($data['name'] ?? ''));
-        if (!$name) Response::error(400, 'Invalid request');
+        // The nav (rail/drawer star) only knows an app by url: /spa/nav sends
+        // translated names, which don't match app_name. Pin only.
+        $url = ($action === 'pin') ? trim((string) ($data['url'] ?? '')) : '';
+        if (!$name && !$url) Response::error(400, 'Invalid request');
 
         // Key on the installed row's own guid: getIntegrationsSettings() matches
         // rows by app_name, and a row can carry a guid that isn't the hash of that
         // name (e.g. one installed under an older/translated name). Fall back to
         // the whirlpool hash core uses for system apps when nothing is installed.
-        $row  = q("SELECT app_id FROM app WHERE app_channel = %d AND app_name = '%s' AND app_deleted = 0 LIMIT 1",
-            intval($uid), dbesc($name));
+        $row  = $name
+            ? q("SELECT app_id FROM app WHERE app_channel = %d AND app_name = '%s' AND app_deleted = 0 LIMIT 1",
+                intval($uid), dbesc($name))
+            : q("SELECT app_id FROM app WHERE app_channel = %d AND app_url = '%s' AND app_deleted = 0 LIMIT 1",
+                intval($uid), dbesc($url));
+        if (!$name && !$row) Response::error(404, 'App not found');
         $guid = $row ? $row[0]['app_id'] : hash('whirlpool', $name);
 
         if ($action === 'install') {
@@ -1252,7 +1271,7 @@ class Settings
                     [(intval($sync[0]['app_system']) ? 'sysapp' : 'app') => $sync]);
             }
 
-        } elseif ($action === 'nav') {
+        } elseif ($action === 'nav' || $action === 'pin') {
             // app must be installed first
             $installed = q(
                 "SELECT id FROM app WHERE app_id = '%s' AND app_channel = %d AND app_deleted = 0 LIMIT 1",
@@ -1262,9 +1281,13 @@ class Settings
 
             // app_feature() is a pure toggle (add/remove), not a set — only
             // flip a term when its current presence disagrees with the
-            // desired end state. "enabled" folds pin+feature into one
-            // switch: on sets pinned (sufficient alone for nav visibility),
-            // off clears both so a legacy featured-only app also disappears.
+            // desired end state. Pinned = a favorite, featured = in the nav;
+            // either alone makes the app visible.
+            //  nav on:   feature it (in the nav, not a favorite)
+            //  nav off:  clear both, so it leaves the nav entirely
+            //  pin on:   pin it
+            //  pin off:  unpin, but feature it so un-favoriting doesn't
+            //            also hide the app
             $terms = q(
                 "SELECT term FROM term WHERE otype = %d AND oid = %d",
                 intval(TERM_OBJ_APP), intval($installed[0]['id'])
@@ -1274,8 +1297,11 @@ class Settings
             $isFeatured = in_array('nav_featured_app', $termNames, true);
             $enabled    = !empty($data['enabled']);
 
-            if ($enabled) {
-                if (!$isPinned) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_pinned_app');
+            if ($action === 'pin') {
+                if ($enabled !== $isPinned) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_pinned_app');
+                if (!$enabled && !$isFeatured) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_featured_app');
+            } elseif ($enabled) {
+                if (!$isPinned && !$isFeatured) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_featured_app');
             } else {
                 if ($isPinned)   \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_pinned_app');
                 if ($isFeatured) \Zotlabs\Lib\Apps::app_feature($uid, ['guid' => $guid], 'nav_featured_app');

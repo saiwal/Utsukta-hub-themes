@@ -1,6 +1,6 @@
 # नेविगेशन
 
-Hubzilla का नेविगेशन तीन जगह मिलता है: मुख्य nav सूची (डेस्कटॉप पर लेफ्ट साइडबार, या मोबाइल पर bottom tab bar और "More" drawer), उसके नीचे की account/utility रो, और मोबाइल पर कुछ अलग बटन। यह पेज बताता है कि हर लिंक या बटन क्या करता है — उसके पीछे की चीज़ को असल में इस्तेमाल कैसे करें, इसके लिए उस ऐप का अपना help पेज देखें।
+Hubzilla का नेविगेशन तीन जगह मिलता है: मुख्य nav सूची (डेस्कटॉप पर लेफ्ट साइडबार, या मोबाइल पर bottom bar और app drawer), उसके नीचे की account/utility रो, और मोबाइल पर कुछ अलग बटन। यह पेज बताता है कि हर लिंक या बटन क्या करता है — उसके पीछे की चीज़ को असल में इस्तेमाल कैसे करें, इसके लिए उस ऐप का अपना help पेज देखें।
 
 ## Hq
 
@@ -116,7 +116,7 @@ Help guide की विषय-सूची खोलता है।
 
 ## Account Menu
 
-अपने avatar और नाम पर क्लिक करें — settings, चैनल management, और logout जैसे account actions दिखेंगे।
+अपने avatar और नाम पर क्लिक करें — settings, चैनल management, और logout जैसे account actions दिखेंगे। किसी और के चैनल पर, rail के नीचे वाली पंक्ति में आपका नाम आपके अपने चैनल से जुड़ता है, और उसके बगल का chevron account menu खोलता है।
 
 ## Language
 
@@ -130,10 +130,24 @@ Light, dark और अन्य color themes के बीच स्विच �
 
 Help mode को on/off करता है। जब यह on हो, पेज पर किसी भी चीज़ पर क्लिक करें — nav लिंक, widget, बटन — यह देखने के लिए कि वह क्या करता है।
 
-## More Drawer
+## Apps
 
-सिर्फ़ मोबाइल पर। एक drawer खोलता है जिसमें वे nav items और account actions होते हैं जो bottom tab bar में नहीं समा पाते।
+सिर्फ़ मोबाइल पर। app drawer खोलता है: सबसे ऊपर साइट का brand, फिर आपकी pinned apps (हमेशा खुली), फिर बाकी सभी ऐप्स Social, Productivity और System के खुलने-बंद होने वाले हिस्सों में बँटी हुई। utility icons (भाषा, theme, help, site info) सीधे brand के नीचे होते हैं, और search box drawer के नीचे pinned रहता है — टाइप करते ही पूरी सूची छन जाती है। account actions bottom bar के account menu में हैं।
+
+## Favorites
+
+सिर्फ़ मोबाइल पर। पूरी app drawer खोले बिना आपकी pinned ऐप्स का quick menu खोलता है। ऐप्स को app drawer के स्टार से या Settings → Integrations में pin या unpin करें। अभी कुछ pin न हो तो यह बताता है कि कैसे करें।
+
+## Actions
+
+सिर्फ़ मोबाइल पर। bottom bar में हमेशा वही चार बटन रहते हैं — account, favorites, apps और panel — ताकि पेज बदलने पर bar न खिसके। पेज की अपनी क्रियाएँ कहीं और होती हैं:
+
+- नीचे दाईं ओर **गोल बटन** पेज की मुख्य क्रिया है: Files में Upload, Calendar में New event, settings फ़ॉर्म पर Save। जिन social पेजों (आपका channel, network, HQ) पर ऐसी क्रिया न हो, वहाँ यह **Compose** है, जो quick compose दिखाता है: नई पोस्ट, संदेश, लेख, कार्ड, wiki/पेज या calendar इवेंट — जो ऐप्स इंस्टॉल हों उनके अनुसार।
+- पेज के शीर्षक के अंत में **⋮** बाकी सब रखता है (जैसे Calendar का import/export, या wiki पेज पर Rename और Delete)। जिन पेजों पर शीर्षक की पंक्ति न हो, वहाँ यह गोल बटन के ऊपर तैरता है।
+- उनके ऊपर **🔍** पेज में खोजता है, जहाँ पेज में खोज हो (लेख, कार्ड, नोट्स, channel की पोस्ट, network stream, public stream, Jellyfin)।
+
+टाइप करते समय ये बटन छिप जाते हैं, ताकि keyboard के ऊपर न आएँ। डेस्कटॉप पर यही क्रियाएँ पेज हेडर में बटन होती हैं।
 
 ## Panel
 
-राइट-हैंड sidebar पैनल खोलता है — वही widgets जो डेस्कटॉप पर पेज के बगल में दिखते हैं।
+राइट-हैंड sidebar पैनल खोलता है — वही widgets जो डेस्कटॉप पर पेज के बगल में दिखते हैं। जिन पेजों पर sidebar न हो, वहाँ बटन अपनी जगह रहता है पर धुंधला दिखता है।

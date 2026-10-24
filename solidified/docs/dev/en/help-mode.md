@@ -45,7 +45,7 @@ void helpable;
 The directive accessor is any string in `"<module>.<section>"` form (section
 optional). It's applied throughout the app — nav items, widget headers, and
 composer buttons (`NavUtilities.tsx`, `WidgetArrangementEditor.tsx`,
-`UserMenu.tsx`, `Slot.tsx`, `PostComposer.tsx`, `DMComposer.tsx`, and others).
+`layout/CoverCard.tsx`, `Slot.tsx`, `PostComposer.tsx`, `DMComposer.tsx`, and others).
 
 ## Resolving a Target to a Doc Section
 

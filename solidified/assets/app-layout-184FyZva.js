@@ -1,1 +1,0 @@
-var e={title:`Hubzilla`,skip_to_content:`Zum Inhalt springen`,close:`Schließen`,offline:`Offline — zeige zwischengespeicherte Inhalte`,panel:`Bereich`,navigation:`Navigation`,more:`Mehr`,back:`Zurück`,section_navigation:`Abschnittsnavigation`,account:`Konto`};export{e as layout};

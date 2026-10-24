@@ -27,7 +27,7 @@
 ```
 src/
 ├── App.tsx             # Root: loads modules via import.meta.glob, builds routes
-├── Layout.tsx          # Shell: top nav, left nav, right sidebar, mobile tab bar
+├── Layout.tsx          # Shell: alerts, main content, right sidebar (nav in shared/views/layout/)
 ├── index.tsx           # Entry point: PWA init, theme, font setup
 ├── router.tsx          # Re-exports getRoutes() signal
 ├── index.css           # Global CSS (Tailwind imports, custom properties)
@@ -39,6 +39,7 @@ src/
 │   ├── store/          # Global reactive stores: auth, nav, site-config
 │   ├── types/          # Shared TypeScript interfaces
 │   ├── views/          # Shared UI components (NotFound, HelpOverlay, Slot, …)
+│   │   └── layout/     # DesktopMenu, MobileMenu, BrandBlock
 │   ├── widgets/        # Shared widgets (notifications aside, stream widgets)
 │   ├── editor/         # Rich text editor (used in post composer)
 │   └── stream/         # Stream / feed display components
