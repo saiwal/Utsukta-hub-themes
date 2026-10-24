@@ -116,7 +116,7 @@ Help guide की विषय-सूची खोलता है।
 
 ## Account Menu
 
-अपने avatar और नाम पर क्लिक करें — settings, चैनल management, और logout जैसे account actions दिखेंगे।
+अपने avatar और नाम पर क्लिक करें — settings, चैनल management, और logout जैसे account actions दिखेंगे। किसी और के चैनल पर, rail के नीचे वाली पंक्ति में आपका नाम आपके अपने चैनल से जुड़ता है, और उसके बगल का chevron account menu खोलता है।
 
 ## Language
 

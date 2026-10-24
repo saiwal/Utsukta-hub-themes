@@ -116,7 +116,7 @@ Log in to your home site from this one, so you can interact here using your own 
 
 ## Account Menu
 
-Desktop: click your avatar and name to reveal account actions. Mobile: the account icon on the left of the bottom bar opens the same menu (settings, channel management, logout).
+Desktop: click your avatar and name to reveal account actions. On someone else's channel, the identity row at the bottom of the rail links your name to your own channel, and the chevron next to it opens the account menu. Mobile: the account icon on the left of the bottom bar opens the same menu (settings, channel management, logout).
 
 ## Language
 

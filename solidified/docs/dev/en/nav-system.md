@@ -100,6 +100,44 @@ channel's sections aren't apps to categorise). In edit-layout mode the groups
 stay and the favorites get drag handles — `nav_order` only sorts pinned apps
 server-side anyway (`commitNavOrder` with the favorites as the subset).
 
+## Desktop rail header & footer
+
+The rail opens with the site brand block — logo, a short vertical rule and the
+site name (`BrandBlock`) — centred in its own band with a rule beneath it.
+Keeping the wordmark at the top leaves the bottom free for the utilities, and
+the mobile drawer uses the same lockup.
+
+The cover header is 3.4:1 with a 48px avatar. The avatar's left edge, the name
+and every nav-item icon sit on one 18px edge — the aside's `px-2` plus a nav
+item's `px-2.5`. A short `from-surface` scrim at the bottom of the cover fades
+a busy image into the rail instead of ending in a hard seam, and the avatar's
+ring follows the identity row's tone (`surface`, or `elevated` while hovered or
+open). The visited channel's card — the static one for anyone but its owner —
+carries a "Visiting" pill; without it the two covers differed only by the
+chevron. That card's name links to `/channel/<nick>`, so the identity doubles
+as the way back to the channel's own page from a subpage.
+
+Below the nav (and the `leftBottom` slot) there is exactly one footer block
+with one rule. On someone else's channel a logged-in viewer gets one identity
+row showing their own avatar and name — the cover above is the channel
+owner's, so this is the only place the rail names the viewer. The name links to
+their own channel; the chevron beside it opens the account menu upward with the
+same `ActionList` the owner's cover opens downward.
+Anonymous and remote-auth visitors keep their short inline Sign In / Register
+list.
+
+The rest of the footer is just the utility strip: inset 4px so its first and
+last glyphs land on the same 18px edge as the masthead, cover identity and nav
+icons, with tightened controls (`[&_button]:p-1.5`) so all five fit without
+spilling over the rail.
+
+The nav's scroll region uses `nav-rail-scroll` (`src/index.css`) for the
+scrollbar, which only appears on `:hover` / `:focus-within`. Its edge fade is
+an inline mask set by `DesktopMenu`: a 12px fade appears on the top and/or
+bottom edge only when that edge has hidden rows (measured on scroll, resize and
+after the nav's contents change), so an overflow no longer slices a row in half
+and a short list isn't dimmed for no reason.
+
 ## Favorites (pinning)
 
 A favorite is Hubzilla's `nav_pinned_app`; "in the nav" is pinned *or*

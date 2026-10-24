@@ -29,6 +29,10 @@ class Nav
             (($channel['channel_address'] ?? '') === $subject_nick)
         );
 
+        // Small cover for the desktop rail's user card; the hub default when the
+        // channel never set one, empty for remote/anonymous viewers.
+        $cover = $is_local ? self::coverUrl($uid) : '';
+
         $viewer = [
             'is_local'    => $is_local,
             'is_remote'   => $is_remote,
@@ -45,6 +49,7 @@ class Nav
             'avatar_s'    => $observer['xchan_photo_s'] ?? '',
             'avatar_l'    => $observer['xchan_photo_l'] ?? '',
             'avatar_mime' => $observer['xchan_photo_mimetype'] ?? '',
+            'cover'       => $cover,
             'forum'       => (bool)($observer['xchan_pubforum'] ?? false),
             'url'         => $observer['xchan_url'] ?? '',
             'uid'         => $uid,
@@ -227,6 +232,7 @@ class Nav
         $system_apps  = array_map($app_shape, $sys_raw);
 
         $channel_tabs = [];
+        $subject_card = null;
 
         if ($subject_nick !== '') {
             $subject = channelx_by_nick($subject_nick);
@@ -234,6 +240,18 @@ class Nav
             if ($subject && !($subject['channel_removed'] ?? false)) {
                 $puid = intval($subject['channel_id']);
                 $p = get_all_perms($puid, $ob_hash);
+
+                // Identity card for anyone but the owner (a local user on
+                // someone else's channel too) — gated like the profile page.
+                if (!$is_owner && !empty($p['view_profile'])) {
+                    $subject_card = [
+                        'nick'   => $subject_nick,
+                        'name'   => Response::decodeEntities($subject['xchan_name'] ?? ''),
+                        'addr'   => $subject['xchan_addr'] ?? '',
+                        'avatar' => $subject['xchan_photo_m'] ?? '',
+                        'cover'  => self::coverUrl($puid),
+                    ];
+                }
 
                 // First url segment of every app the owner shows in their own
                 // nav (pinned or featured) — an app tab appears for visitors
@@ -442,6 +460,7 @@ class Nav
             'featured'         => $featured,
             'system_apps'      => $system_apps,
             'channel_tabs'     => $channel_tabs,
+            'subject'          => $subject_card,
             'has_public_stream' => (bool) can_view_public_stream(),
             // Admin landing pages (admin/site): 'frontpage' for visitors,
             // 'startpage' for logged-in members — the SPA's "/" honours both,
@@ -456,5 +475,13 @@ class Nav
             // own locale from whatever classic Hubzilla is already using.
             'language'         => (string) App::$language,
         ]);
+    }
+
+    /** 425px cover of a channel, or the hub's default cover when it has none. */
+    private static function coverUrl(int $uid): string
+    {
+        $c = get_cover_photo($uid, 'array', PHOTO_RES_COVER_425);
+        return $c ? $c['url'] : z_root() . '/images/default_cover_photos/'
+            . \Zotlabs\Lib\Config::Get('system', 'default_cover_photo', 'hubzilla') . '/425.png';
     }
 }
