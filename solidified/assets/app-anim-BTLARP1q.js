@@ -1,0 +1,1 @@
+import{M as e,N as t,P as n,j as r}from"./app-BVoosUSh.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(r),s=a(e),c=a(t),l=a(n);export{l as i,s as n,c as r,o as t};
