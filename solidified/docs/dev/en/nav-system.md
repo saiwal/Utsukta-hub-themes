@@ -126,13 +126,13 @@ returned as `navData().pinned_paths` (owner only). `favoriteTarget()` in
 
 `src/shared/views/layout/MobileMenu.tsx` is the mobile nav shell (below `lg`):
 
-- **Bottom bar**: account button (avatar/`Menu` of action items, first), favorites
-  quick menu (a `Menu` of pinned apps, hidden when there are none), apps button
-  (`MdFillGrid_view`, opens the drawer), the page-actions button (only while
-  the active module has `PageActions`, see below) and the right-panel toggle.
-  Every slot is `flex-1 min-w-0` so labels truncate instead of one button
-  stretching and leaving a gap. It replaces the old four-tab "Most / More"
-  split.
+- **Bottom bar**: always exactly four slots — account (avatar/`Menu` of action
+  items), favorites (opens the favorites sheet; an empty-state hint when
+  nothing is pinned), apps (`MdFillGrid_view`, opens the drawer) and the
+  right-panel toggle (disabled, not removed, where `hidesRightSidebar()`).
+  The count never changes, so the bar doesn't reflow on navigation. Page
+  actions are not in the bar — see "Contextual page actions". Every slot is
+  `flex-1 min-w-0` so labels truncate instead of one button stretching.
 - **Favorites** are the user's Hubzilla pinned apps (`navData().pinned`) plus
   pinned SPA-only paths (`navData().pinned_paths`). They are matched back to `NavItemDef`s by path, so the
   bar's quick menu and the drawer show the same resolved labels/icons.
@@ -155,10 +155,8 @@ returned as `navData().pinned_paths` (owner only). `favoriteTarget()` in
 
 ## Contextual page actions
 
-A module header declares its common actions as data and each place renders
-them its own way: buttons in the header on desktop, rows in the actions sheet
-opened by the bar's bolt button on mobile. Tabs and inline search are
-navigation, not actions — they stay in the header at every width.
+A view declares its common actions as data and each place renders them its
+own way. Tabs are navigation, not actions — they stay in the header.
 
 ```tsx
 <PageActions actions={[
@@ -169,25 +167,54 @@ navigation, not actions — they stay in the header at every width.
 
 - `PageAction` (`shared/views/layout/PageActions.tsx`): `label`, `icon` (a
   solid-icons component, rendered once per place), `onClick` or `href`
-  (+`download`), `title`, `disabled`, `show` (false hides), `primary` (filled
-  button on desktop, accent row on mobile) and `overflow` (behind a "More"
-  `Menu` on desktop; an ordinary row on mobile). The array is reactive — a
+  (+`download`), `title`, `disabled`, `show` (false hides), `primary` and
+  `overflow` (behind a "More" `Menu` on desktop). The array is reactive — a
   label or `show` can read signals.
-- On `lg` and up it renders inline as a `flex` cluster (`class` for placement,
-  e.g. `ml-auto`). Below `lg` it renders nothing and registers its actions;
-  `pageActions()` flattens every mounted instance for the sheet, which renders
-  them as `menuItemClass` rows and closes before running `onClick`.
-- Anything that must outlive the sheet/menu closing (a hidden file input) or is
-  anchored to its own button (a popover) stays in the header, outside
-  `PageActions` — see calendar's import input and jellyfin's devices popover.
-- `hasPageActions()` picks what the bar's actions button
-  does: with page actions it shows the module name and the sheet lists them;
-  without them, an owner sees **Compose** and the sheet lazy-loads
-  `modules/hq/widgets/QuickComposeWidget` (the same quick-compose action list as
-  HQ). Non-owners have no self-targeted compose actions, so the button stays
-  hidden there. The sheet keeps its content `inert` while closed.
-- `Layout.tsx` calls `setMobileNavAvailable(!hidesNavChrome())`: in chrome modes
-  that hide the nav (`focus`, `compact`) there is no sheet, so `PageActions`
-  stays inline instead of registering into nothing.
+- **Desktop** (`lg`+, or any width while the nav chrome is hidden): renders
+  inline where it sits as a `flex` cluster (`class` for placement), primary
+  filled.
+- **Mobile** (`useMobileActions()`: below `lg` with the nav bar): every mounted
+  instance registers its actions and renders nothing inline, except that a
+  non-`mobileOnly` instance — it sits in a title row — renders the page's
+  **⋮** (`PageMenu`) in its place.
+  - **Floating column** (`FloatingActions.tsx`, mounted in `Layout.tsx`), bottom
+    to top: the main action, 🔍 search, a floating ⋮, scroll-to-top — one
+    flex column, same round button style. The main action is
+    `mobilePrimary()`: the innermost (last mounted) visible `primary`, so a
+    section's beats its module header's. With none, the owner in a **social**
+    module (`moduleCategory()`, `app-categories.ts`) gets **Compose**, which
+    opens `QuickComposeWidget` in a bottom `Sheet`. The column hides while a
+    text field has focus (the keyboard is up).
+  - **⋮** (`pageMenuGroups()`): every other action from every mounted instance,
+    grouped in mount order (module header, then section/item view); instances
+    sharing a label merge, and with several groups each gets a heading.
+    `label` names a group; inside `SubPageContent` it defaults to the section
+    title (`PageActionsLabel` context). Only the first mounted `PageMenu`
+    renders. Title rows hold one: a non-`mobileOnly` `PageActions`, the
+    `SubPageLayout` back bar (below `md` only — a hidden holder would swallow
+    it), and explicit `<PageMenu />`s in the files/photos headers, article/card
+    views and the messenger room header. With no holder mounted the ⋮ floats
+    in the column instead.
+- **`mobileOnly`**: registers, never renders inline or a ⋮. For a view that
+  keeps its own inline controls on desktop (icon toolbars in files/photos,
+  the inbox sidebar's compose buttons): it hides them while
+  `useMobileActions()` and hands the same actions over. A file input the
+  action clicks must stay mounted outside the hidden markup. A two-step
+  inline delete confirm becomes a native `confirm()`.
+- **Search**: `usePageSearch(() => ({ value, placeholder, onSearch, onClear }))`
+  offers a view's search as the floating 🔍 (mobile only; innermost wins),
+  which opens a field docked above the bar. The view hides its inline search
+  toggle while `useMobileActions()`. Registered by articles, cards, notepad,
+  jellyfin, the channel feed, pubstream (tag) and network (its filters panel
+  is a drawer on mobile; a pasted post URL imports, as in the panel).
+- **Form Save** (`SaveBar`, `settings/store/FormHelpers.tsx`, rendered inside
+  the form) renders nothing visible: on mobile it is a `primary` action (the
+  floating button), elsewhere `useFloatingAction()` puts it in the same
+  floating slot. Either way it calls `form.requestSubmit()`.
+- `Layout.tsx` calls `setMobileNavAvailable(!hidesNavChrome())`: chrome modes
+  that hide the nav (`focus`, `compact`) keep the desktop rendering.
+- All registries write in `onMount` (`useRegistration`): the router renders
+  the next page inside a transition, and a write there could resurrect the
+  outgoing page's entries.
 - Adding actions to a new module = one `<PageActions actions={…} />` in its
   header; no registry entry needed.

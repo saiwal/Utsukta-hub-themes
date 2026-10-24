@@ -136,14 +136,18 @@ Mobile only. Opens the app drawer: the site brand at the top, then your pinned a
 
 ## Favorites
 
-Mobile only. Opens a quick menu of the apps you have pinned, without opening the full app drawer. Pin or unpin apps in Settings → Integrations.
+Mobile only. Opens a quick menu of the apps you have pinned, without opening the full app drawer. Pin or unpin apps with the star in the app drawer or in Settings → Integrations. With nothing pinned yet it tells you how.
 
 ## Actions
 
-Mobile only. The bottom bar button is labelled with the current page's name (for example "Calendar") and opens that page's actions — the controls that appear on the right of the page header on desktop (for example Calendar's "New event" and Month/Week/Day switcher), so the header itself stays clean on a phone.
+Mobile only. The bottom bar always has the same four buttons — account, favorites, apps and panel — so it never shifts as you move between pages. A page's own actions sit elsewhere:
 
-When the page has no actions of its own, the same button becomes **Compose** (pencil icon) and offers quick compose: new post, message, article, card, wiki/page or calendar event, depending on which apps are installed.
+- **The round button** at the bottom right is the page's main action: Upload in Files, New event in Calendar, Save on a settings form. On social pages without one (your channel, network, HQ) it is **Compose**, which offers quick compose: new post, message, article, card, wiki/page or calendar event, depending on which apps are installed.
+- **⋮** at the end of the page title holds everything else (for example Calendar's import/export, or Rename and Delete on a wiki page). On pages without a title row it floats above the round button instead.
+- **🔍** above them searches the page, where the page has a search (articles, cards, notes, posts on a channel, the network stream, the public stream, Jellyfin).
+
+These buttons hide while you're typing, so they never sit on top of the keyboard. On desktop the same actions are buttons in the page header.
 
 ## Panel
 
-Opens the right-hand sidebar panel — the widgets you'd otherwise see beside the page on desktop.
+Opens the right-hand sidebar panel — the widgets you'd otherwise see beside the page on desktop. On pages without a sidebar the button stays in place but is dimmed.
