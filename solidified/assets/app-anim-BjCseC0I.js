@@ -1,0 +1,1 @@
+import{B as e,L as t,R as n,z as r}from"./app-DcJmCpob.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(t),s=a(n),c=a(r),l=a(e);export{l as i,s as n,c as r,o as t};
