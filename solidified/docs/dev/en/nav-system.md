@@ -212,28 +212,24 @@ own way. Tabs are navigation, not actions — they stay in the header.
   inline where it sits as a `flex` cluster (`class` for placement), primary
   filled.
 - **Mobile** (`useMobileActions()`: below `lg` with the nav bar): every mounted
-  instance registers its actions and renders nothing inline, except that a
-  non-`mobileOnly` instance — it sits in a title row — renders the page's
-  **⋮** (`PageMenu`) in its place.
-  - **Floating column** (`FloatingActions.tsx`, mounted in `Layout.tsx`), bottom
-    to top: the main action, 🔍 search, a floating ⋮, scroll-to-top — one
-    flex column, same round button style. The main action is
-    `mobilePrimary()`: the innermost (last mounted) visible `primary`, so a
-    section's beats its module header's. With none, the owner in a **social**
-    module (`moduleCategory()`, `app-categories.ts`) gets **Compose**, which
-    opens `QuickComposeWidget` in a bottom `Sheet`. The column hides while a
-    text field has focus (the keyboard is up).
-  - **⋮** (`pageMenuGroups()`): every other action from every mounted instance,
-    grouped in mount order (module header, then section/item view); instances
-    sharing a label merge, and with several groups each gets a heading.
-    `label` names a group; inside `SubPageContent` it defaults to the section
-    title (`PageActionsLabel` context). Only the first mounted `PageMenu`
-    renders. Title rows hold one: a non-`mobileOnly` `PageActions`, the
-    `SubPageLayout` back bar (below `md` only — a hidden holder would swallow
-    it), and explicit `<PageMenu />`s in the files/photos headers, article/card
-    views and the messenger room header. With no holder mounted the ⋮ floats
-    in the column instead.
-- **`mobileOnly`**: registers, never renders inline or a ⋮. For a view that
+  instance registers its actions and renders nothing inline.
+  - **Floating column** (`FloatingActions.tsx`, mounted in `Layout.tsx`): a
+    "more" button (`MdFillMore_vert`), always, plus
+    scroll-to-top once the page is scrolled. "More" fans out a column of labelled
+    round buttons above it, over a scrim (tap outside / Escape / picking one
+    closes it): the main action first, then 🔍 search, then every other
+    action — a column even for a single entry (e.g. just Compose). The
+    main action is `mobilePrimary()`: the innermost (last mounted) visible
+    `primary`, so a section's beats its module header's. With none, the owner
+    in a **social** module (`moduleCategory()`, `app-categories.ts`) gets
+    **Compose**, which swaps the column for the create actions (`useQuickActions()`, HQ's
+    quick-compose list; `ComposeDialItems.tsx`, lazy-loaded). The
+    column hides while a text field has focus (the keyboard is up).
+  - The other actions come from `pageMenuGroups()`: every mounted instance's,
+    in mount order (module header, then section/item view), flattened. `label`
+    names a group (inside `SubPageContent` it defaults to the section title,
+    `PageActionsLabel` context) — the column doesn't show group headings.
+- **`mobileOnly`**: registers, never renders inline. For a view that
   keeps its own inline controls on desktop (icon toolbars in files/photos,
   the inbox sidebar's compose buttons): it hides them while
   `useMobileActions()` and hands the same actions over. A file input the

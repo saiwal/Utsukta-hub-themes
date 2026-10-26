@@ -702,6 +702,11 @@ class Photos
                     dbesc($_POST['folder']), intval($uid));
                 if ($f) $album = $f[0]['filename'];
             }
+            // No album chosen: the channel's default photo folder, as core's
+            // uploaders do. attach_store() expands its %Y/%m macros.
+            if (!$album && empty($_POST['folder'])) {
+                $album = (string) get_pconfig($uid, 'system', 'photo_path');
+            }
             $newHash = photo_new_resource();
 
             $this->checkPhotoUploadLimit($owner, intval($_FILES['file']['size'] ?? 0));
@@ -747,7 +752,7 @@ class Photos
                 'resource_id'  => $newHash,
                 'filename'     => basename($_FILES['file']['name'] ?? 'photo.jpg'),
                 'description'  => '',
-                'album'        => $album,
+                'album'        => $base['album'],
                 'os_path'      => $base['os_path'] ?? '',
                 'display_path' => $base['display_path'] ?? '',
                 'photo_usage'  => PHOTO_NORMAL,
