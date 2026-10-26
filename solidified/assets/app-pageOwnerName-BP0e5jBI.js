@@ -1,1 +1,0 @@
-import{t as e}from"./app-fetch-3QFnbqY2.js";import{i as t,n}from"./app-site-config-CwCvoYr1.js";import{qt as r}from"./app-BPdX0L9F.js";async function i(t){let n=await e(`/spa/profile/${t}`);return n.ok?(await n.json()).data:null}function a(){let e=n(),a=t(),o=()=>a()===`owner`||!e(),[s]=r(`contact-card`,()=>!o()&&e(),i);return()=>o()?null:s()?.channel_name||e()}export{a as t};
