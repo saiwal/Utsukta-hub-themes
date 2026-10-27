@@ -1,0 +1,1 @@
+import{a as e}from"./app-query-w7x_0Q0w.js";var t=new e({defaultOptions:{queries:{staleTime:6e4,gcTime:18e5,retry:2,refetchOnWindowFocus:!0,refetchOnReconnect:!0,networkMode:`offlineFirst`}}});export{t};
