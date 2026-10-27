@@ -6,6 +6,7 @@ use Zotlabs\Lib\Cache;
 
 /**
  * GET /spa/geocode?place=<place name>
+ * GET /spa/geocode?lat=<lat>&lon=<lon>   (reverse: → { name }, e.g. "Plaka, Athens")
  *
  * Forward geocode for the SPA's map feature ([map]Place[/map] bodies and the
  * composer's map picker). Proxied server-side through the openstreetmap
@@ -36,6 +37,10 @@ class Geocode
             Response::error(404, 'Map support not enabled');
         }
 
+        if (isset($_GET['lat'], $_GET['lon'])) {
+            $this->reverse();
+        }
+
         $place = trim($_GET['place'] ?? '');
         if (!$place || mb_strlen($place) > 200) {
             Response::error(400, 'Invalid location');
@@ -62,15 +67,7 @@ class Geocode
             'limit' => 1,
         ]);
 
-        // ponytail: per-process check-then-sleep, two concurrent misses can still
-        // both go out in the same second; a mutex if Nominatim ever complains
-        $last = floatval(Cache::get('spa_geocode_last', '1 MINUTE'));
-        $wait = $last + 1.0 - microtime(true);
-        if ($wait > 0) {
-            usleep(intval(min($wait, 1.0) * 1e6));
-        }
-        Cache::set('spa_geocode_last', (string) microtime(true));
-
+        $this->throttle();
         $res = z_fetch_url($url, false, 0, ['timeout' => 10]);
         if (!$res['success'] || !$res['body']) {
             Response::error(502, 'Geocoding lookup failed');
@@ -90,5 +87,63 @@ class Geocode
 
         Cache::set($cache_key, json_encode($data));
         Response::send($data);
+    }
+
+    /**
+     * Coordinates → a short place name for the photo view's location chip.
+     * Rounded to 4 decimals (~11 m) for the cache key, so neighbouring photos
+     * share a lookup; keyed on the viewer's language, since Nominatim names
+     * places in the Accept-Language it's given. zoom=14 asks for
+     * neighbourhood/town level, not a street address.
+     */
+    private function reverse(): never
+    {
+        $lat = (float) $_GET['lat'];
+        $lon = (float) $_GET['lon'];
+        if (!is_numeric($_GET['lat']) || !is_numeric($_GET['lon']) || abs($lat) > 90 || abs($lon) > 180) {
+            Response::error(400, 'Invalid coordinates');
+        }
+        $lang = preg_replace('/[^a-z-]/i', '', (string) (\App::$language ?: 'en'));
+        $key  = sprintf('spa_rgeocode:%.4f,%.4f:%s', $lat, $lon, $lang);
+
+        $cached = Cache::get($key, self::CACHE_AGE);
+        if ($cached !== null) {
+            $cached === '' ? Response::error(404, 'Location not found') : Response::send(['name' => $cached]);
+        }
+
+        $nomserver = get_config('openstreetmap', 'nomserver', 'https://nominatim.openstreetmap.org/search')
+            ?: 'https://nominatim.openstreetmap.org/search';
+        // The addon stores the /search endpoint; /reverse sits beside it.
+        $url = preg_replace('#/search/?$#', '', $nomserver) . '/reverse?' . http_build_query([
+            'lat' => $lat, 'lon' => $lon, 'format' => 'json', 'zoom' => 14, 'accept-language' => $lang,
+        ]);
+
+        $this->throttle();
+        $res = z_fetch_url($url, false, 0, ['timeout' => 10]);
+        if (!$res['success'] || !$res['body']) {
+            Response::error(502, 'Geocoding lookup failed');
+        }
+
+        $a = (json_decode($res['body'], true) ?: [])['address'] ?? [];
+        // Most specific named area + its town, e.g. "Plaka, Athens".
+        $area = $a['neighbourhood'] ?? $a['suburb'] ?? $a['quarter'] ?? $a['village'] ?? $a['hamlet'] ?? '';
+        $town = $a['city'] ?? $a['town'] ?? $a['municipality'] ?? $a['county'] ?? $a['state'] ?? '';
+        $name = implode(', ', array_unique(array_filter([$area, $town]))) ?: ($a['country'] ?? '');
+
+        Cache::set($key, $name);
+        $name === '' ? Response::error(404, 'Location not found') : Response::send(['name' => $name]);
+    }
+
+    // Nominatim allows 1 request/second per server.
+    // ponytail: per-process check-then-sleep, two concurrent misses can still
+    // both go out in the same second; a mutex if Nominatim ever complains
+    private function throttle(): void
+    {
+        $last = floatval(Cache::get('spa_geocode_last', '1 MINUTE'));
+        $wait = $last + 1.0 - microtime(true);
+        if ($wait > 0) {
+            usleep(intval(min($wait, 1.0) * 1e6));
+        }
+        Cache::set('spa_geocode_last', (string) microtime(true));
     }
 }

@@ -506,6 +506,7 @@ class Photos
         $item_id = null;
         $item_mid = null;
         $item_uuid = null;
+        $coord = '';
         $comments = [];
 
         $linked = dbq("SELECT * FROM item
@@ -521,6 +522,9 @@ class Photos
             $item_id = intval($link_item['id']);
             $item_mid = $link_item['mid'];
             $item_uuid = $link_item['uuid'];
+            // GPS position: photo_upload() writes the EXIF lat/lon here (only
+            // with the photo_location feature on), or the location editor below.
+            $coord = (string) ($link_item['coord'] ?? '');
 
             $reactions = dbq("SELECT verb, author_xchan FROM item
                               WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
@@ -636,6 +640,7 @@ class Photos
             'item_id' => $item_id,
             'item_mid' => $item_mid,
             'item_uuid' => $item_uuid,
+            'coord' => $coord,
             'comments' => $comments,
             'can_write' => $can_write,
         ]);
@@ -701,6 +706,14 @@ class Photos
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
             $this->updateDescription($uid, \App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /spa/photos/:nick/image/:id/location — set/clear coord (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'location') {
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->updateLocation($uid, \App::$argv[4] ?? '');
             return;
         }
 
@@ -1269,6 +1282,41 @@ class Photos
             dbesc($desc), intval($uid), dbesc($resourceId));
 
         Response::send(['description' => $desc]);
+    }
+
+    // ── POST /spa/photos/:nick/image/:id/location ────────────────────────────
+    //
+    // Body { coord: "lat lon" } sets it, { coord: "" } removes it. The position
+    // lives on the photo's linked item, as photo_upload() stores it. Local only,
+    // like the title/description edits above: copies already delivered to
+    // other hubs keep the old position.
+
+    private function updateLocation(int $uid, string $resourceId): void
+    {
+        $raw = trim((string) (Auth::$parsedBody['coord'] ?? ''));
+        $coord = '';
+        if ($raw !== '') {
+            $parts = preg_split('/[\s,]+/', $raw);
+            [$lat, $lon] = array_map('floatval', $parts + [0, 0]);
+            if (count($parts) !== 2 || !is_numeric($parts[0]) || !is_numeric($parts[1])
+                || abs($lat) > 90 || abs($lon) > 180) {
+                Response::error(400, 'Invalid coordinates');
+            }
+            $coord = round($lat, 6) . ' ' . round($lon, 6);
+        }
+
+        $items = q("SELECT mid FROM item WHERE uid = %d AND resource_type = 'photo' AND resource_id = '%s'",
+            intval($uid), dbesc($resourceId));
+        if (!$items)
+            Response::error(404, 'Photo not found or not yours');
+
+        q("UPDATE item SET coord = '%s', edited = '%s', changed = '%s'
+           WHERE uid = %d AND resource_type = 'photo' AND resource_id = '%s'",
+            dbesc($coord), dbesc(datetime_convert()), dbesc(datetime_convert()), intval($uid), dbesc($resourceId));
+        // The cached ActivityStreams object would otherwise keep serving the old Place.
+        foreach ($items as $i) \Zotlabs\Lib\ObjCache::Delete($i['mid']);
+
+        Response::send(['coord' => $coord]);
     }
 
     // ── POST /spa/photos/:nick/image/:id/nsfw ────────────────────────────────
