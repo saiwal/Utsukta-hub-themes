@@ -49,6 +49,22 @@ namespace {
 			return;
 		}
 
+		// One push per notify row. When one activity is delivered twice at once,
+		// both Enotify::submit() racers finalise the *same* row (see
+		// notifyrace.php), so claim it: core fills msg right after this hook,
+		// and only the first racer finds it still blank. Core writes the same
+		// msg again afterwards, so the early write is harmless. Chat notices
+		// (spa_webpush) have no notify row and no id.
+		if (!empty($datarray['id'])) {
+			$claim = q("update notify set msg = '%s' where id = %d and msg = ''",
+				dbesc($datarray['msg'] ?? ''),
+				intval($datarray['id'])
+			);
+			if (!$claim || !$claim->rowCount()) {
+				return;
+			}
+		}
+
 		require_once __DIR__ . '/../vendor/autoload.php';
 		require_once('include/bbcode.php');
 
