@@ -41,6 +41,7 @@ class Photos
     // GET /spa/photos/:nick           → album list
     // GET /spa/photos/:nick/album/:hash → photos in album
     // GET /spa/photos/:nick/image/:id   → single photo detail
+    // GET /spa/photos/:nick/map         → geotagged photos (map pins)
 
     public function get(): void
     {
@@ -81,6 +82,9 @@ class Photos
                 break;
             case 'image':
                 $this->getImage($channel, $ob_hash, $datum, $can_write);
+                break;
+            case 'map':
+                $this->getMap($channel, $ob_hash);
                 break;
             default:
                 $this->getSummary($channel, $ob_hash, $can_write);
@@ -170,6 +174,52 @@ class Photos
             'limit'     => $limit,
             'has_more'  => $raw === $limit,
         ]);
+    }
+
+    // Every geotagged photo, for the map tab. The GPS position isn't on the
+    // photo row: photo_upload() writes the EXIF lat/lon to the photo's linked
+    // item as `coord` — and only while the channel has the core
+    // "photo_location" feature on, so older uploads have none. The item
+    // carries the photo's own ACL, so permissions_sql on photo covers both.
+    private function getMap(array $channel, string $ob_hash): void
+    {
+        $sql_extra  = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
+        $phototypes = photo_factory('')->supportedTypes();
+        $uid        = intval($channel['channel_id']);
+
+        // ponytail: capped at 1000 pins, no paging; add bbox paging if albums outgrow it
+        $r = dbq("SELECT photo.resource_id, photo.mimetype, photo.imgscale, photo.title,
+                         photo.filename, photo.is_nsfw, photo.album, photo.created, item.coord,
+                         COALESCE(a.folder, '') AS fhash
+              FROM photo
+              JOIN item ON item.uid = $uid AND item.resource_type = 'photo'
+                       AND item.resource_id = photo.resource_id
+                       AND item.mid = item.parent_mid AND item.item_deleted = 0
+                       AND item.coord != ''
+              LEFT JOIN attach a ON a.hash = photo.resource_id AND a.uid = $uid
+              WHERE photo.uid = $uid
+                AND photo.photo_usage = " . PHOTO_NORMAL . "
+                AND photo.imgscale = 2
+                $sql_extra
+              ORDER BY photo.created DESC
+              LIMIT 1000");
+
+        $out = [];
+        foreach (($r ?: []) as $row) {
+            $fhash = (string) $row['fhash'];
+            if ($fhash !== '' && !$this->canViewFolder($uid, $ob_hash, $fhash)) continue;
+            $ext = $phototypes[$row['mimetype']] ?? 'jpg';
+            $out[] = [
+                'resource_id' => $row['resource_id'],
+                'title'       => Response::decodeEntities($row['title'] ?: $row['filename']),
+                'is_nsfw'     => (bool) intval($row['is_nsfw']),
+                'album'       => $row['album'],
+                'created'     => $row['created'],
+                'coord'       => $row['coord'],
+                'src'         => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
+            ];
+        }
+        Response::send($out);
     }
 
     // Like/comment counts for a page of grid tiles, in two queries for the whole

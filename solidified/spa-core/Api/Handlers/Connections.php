@@ -32,6 +32,10 @@ class Connections
             $this->getPermcats($uid);
         }
 
+        if ($sub === 'birthdays') {
+            $this->getBirthdays($uid);
+        }
+
         if (is_numeric($sub) && intval($sub) > 0) {
             $sub_action = \App::$argv[3] ?? '';
             if ($sub_action === 'perms') {
@@ -103,7 +107,7 @@ class Connections
         $limit      = max(1, min(200, intval($_GET['limit']  ?? 50)));
         $offset     = max(0, intval($_GET['start'] ?? 0));
 
-        $sql_filter = $this->filterClause($filter);
+        $sql_filter = $this->filterClause($filter, $uid);
         $sql_filter .= match ($type) {
             'forum'  => ' AND xchan.xchan_pubforum = 1 ',
             'person' => ' AND xchan.xchan_pubforum = 0 ',
@@ -181,9 +185,11 @@ class Connections
             $offset
         );
 
-        $theirPerms = $this->bulkTheirPerms($uid, array_column($rows ?: [], 'xchan_hash'));
+        $hashes     = array_column($rows ?: [], 'xchan_hash');
+        $theirPerms = $this->bulkTheirPerms($uid, $hashes);
+        $health     = $this->bulkHealth($uid, $hashes);
         $connections = array_map(
-            fn($row) => $this->formatRow($row, $theirPerms[$row['xchan_hash']] ?? []),
+            fn($row) => $this->formatRow($row, $theirPerms[$row['xchan_hash']] ?? []) + ($health[$row['xchan_hash']] ?? []),
             $rows ?: []
         );
 
@@ -774,16 +780,32 @@ class Connections
         Response::send(['profile_id' => $profile_id > 0 ? $profile_id : null]);
     }
 
-    private function filterClause(string $filter): string
+    // A contact none of whose live hublocs we can reach: every one is flagged
+    // hubloc_error or sits on a site core marked site_dead (Queue/Checksites
+    // set that after deliveries keep failing). No hubloc at all = a feed or
+    // an unresolved contact, not "unreachable".
+    private const UNREACHABLE_SQL = "EXISTS (SELECT 1 FROM hubloc hx WHERE hx.hubloc_hash = abook.abook_xchan AND hx.hubloc_deleted = 0)
+        AND NOT EXISTS (SELECT 1 FROM hubloc hl LEFT JOIN site ON site.site_url = hl.hubloc_url
+            WHERE hl.hubloc_hash = abook.abook_xchan AND hl.hubloc_deleted = 0
+              AND hl.hubloc_error = 0 AND COALESCE(site.site_dead, 0) = 0)";
+
+    private function filterClause(string $filter, int $uid = 0): string
     {
+        $active = 'AND abook.abook_blocked = 0 AND abook.abook_ignored = 0
+                   AND abook.abook_hidden = 0 AND abook.abook_archived = 0
+                   AND abook.abook_not_here = 0';
+        $half_year = db_utcnow() . ' - INTERVAL ' . db_quoteinterval('180 DAY');
         return match ($filter) {
-            'active'  => 'AND abook.abook_blocked = 0 AND abook.abook_ignored = 0
-                          AND abook.abook_hidden = 0 AND abook.abook_archived = 0
-                          AND abook.abook_not_here = 0',
-            'recent'  => 'AND abook.abook_blocked = 0 AND abook.abook_ignored = 0
-                          AND abook.abook_hidden = 0 AND abook.abook_archived = 0
-                          AND abook.abook_not_here = 0
-                          AND xchan.xchan_updated > UTC_TIMESTAMP() - INTERVAL 7 DAY',
+            'unreachable' => "$active AND abook.abook_pending = 0 AND " . self::UNREACHABLE_SQL,
+            // Connected over half a year ago and nothing from them since —
+            // neither authored nor (for a forum) owned. Both NOT INs are
+            // uncorrelated, so each materialises once off uid_created.
+            // ponytail: scans the channel's last 180 days of items per request; cache the active set if big hubs feel it
+            'inactive' => "$active AND abook.abook_pending = 0 AND abook.abook_created < $half_year
+                AND abook.abook_xchan NOT IN (SELECT author_xchan FROM item WHERE uid = " . intval($uid) . " AND created > $half_year)
+                AND abook.abook_xchan NOT IN (SELECT owner_xchan FROM item WHERE uid = " . intval($uid) . " AND created > $half_year)",
+            'active'  => $active,
+            'recent'  => "$active AND xchan.xchan_updated > UTC_TIMESTAMP() - INTERVAL 7 DAY",
             'pending' => 'AND abook.abook_pending = 1 AND abook.abook_ignored = 0',
             'blocked' => 'AND abook.abook_blocked = 1',
             'ignored' => 'AND abook.abook_ignored = 1',
@@ -796,6 +818,28 @@ class Connections
     }
 
     private const PERM_KEYS = ['post_comments', 'send_stream', 'post_wall'];
+
+    // Per-row health for one page: `unreachable` (same rule as the filter)
+    // and `last_post` — the newest item they authored in this channel.
+    private function bulkHealth(int $uid, array $hashes): array
+    {
+        if (!$hashes) return [];
+        $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
+
+        $out = [];
+        $hubs = dbq("SELECT hl.hubloc_hash,
+                            SUM(CASE WHEN hl.hubloc_error = 0 AND COALESCE(site.site_dead, 0) = 0 THEN 1 ELSE 0 END) AS alive
+                     FROM hubloc hl LEFT JOIN site ON site.site_url = hl.hubloc_url
+                     WHERE hl.hubloc_hash IN ($in) AND hl.hubloc_deleted = 0
+                     GROUP BY hl.hubloc_hash") ?: [];
+        foreach ($hubs as $h) $out[$h['hubloc_hash']]['unreachable'] = intval($h['alive']) === 0;
+
+        $posts = dbq("SELECT author_xchan, MAX(created) AS last_post FROM item
+                      WHERE uid = $uid AND author_xchan IN ($in) GROUP BY author_xchan") ?: [];
+        foreach ($posts as $p) $out[$p['author_xchan']]['last_post'] = $p['last_post'];
+
+        return $out;
+    }
 
     private function permsClause(int $uid, string $param): string
     {
@@ -867,5 +911,44 @@ class Connections
             'incl'           => $row['abook_incl'] ?? '',
             'excl'           => $row['abook_excl'] ?? '',
         ];
+    }
+
+    // GET /spa/connections/birthdays — connections with a birthday in the next
+    // 30 days. abook_dob is only filled when the contact's profile shares a
+    // dob with us (Libzot import), holds the *next* birthday in UTC, and core
+    // bumps its year once update_birthdays() has made the calendar event — so
+    // only the month-day means anything; the year (and so an age) never leaves.
+    private function getBirthdays(int $uid): never
+    {
+        $r = q("SELECT abook_id, abook_dob, xchan_hash, xchan_name, xchan_photo_s, xchan_addr
+                FROM abook JOIN xchan ON xchan_hash = abook_xchan
+                WHERE abook_channel = %d AND abook_self = 0 AND abook_blocked = 0
+                  AND abook_archived = 0 AND abook_pending = 0 AND xchan_deleted = 0
+                  AND abook_dob > '0001-01-02 00:00:00'",
+            intval($uid)) ?: [];
+
+        $tz    = date_default_timezone_get();
+        $today = new \DateTimeImmutable('today', new \DateTimeZone($tz));
+        $out   = [];
+        foreach ($r as $row) {
+            [$m, $d] = array_map('intval', explode('-', datetime_convert('UTC', $tz, $row['abook_dob'], 'm-d')));
+            $y = intval($today->format('Y'));
+            // Feb 29 falls on Feb 28 in a common year.
+            $next = fn($y) => $today->setDate($y, $m, checkdate($m, $d, $y) ? $d : 28);
+            $when = $next($y) < $today ? $next($y + 1) : $next($y);
+            $days = intval($today->diff($when)->days);
+            if ($days > 30) continue;
+            $out[] = [
+                'id'    => intval($row['abook_id']),
+                'name'  => $row['xchan_name'],
+                'photo' => $row['xchan_photo_s'],
+                'hash'  => $row['xchan_hash'],
+                'addr'  => $row['xchan_addr'],
+                'date'  => $when->format('m-d'),
+                'days'  => $days,
+            ];
+        }
+        usort($out, fn($a, $b) => $a['days'] <=> $b['days']);
+        Response::send($out);
     }
 }

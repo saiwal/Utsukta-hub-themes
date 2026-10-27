@@ -23,6 +23,11 @@ class Channel
         $channel     = $this->resolveChannel($uid);
         $channel_uid = intval($channel['channel_id']);
 
+        if ((\App::$argv[3] ?? '') === 'places') {
+            $this->getPlaces($channel_uid, $uid);
+            return;
+        }
+
         $observer_xchan = get_observer_hash();
         $itemspage      = max(1, min(30, intval(get_pconfig($uid ?: $channel_uid, 'system', 'itemspage') ?: 10)));
 
@@ -290,6 +295,41 @@ class Channel
         }
 
         Response::send($out, $meta);
+    }
+
+    // GET /spa/channel/:nick/places — wall posts that carry coordinates, for
+    // the Places map widget. Same fences as the wall query above (wall,
+    // thread tops, no DMs, blocked authors, item_permissions_sql). Posts with
+    // only a free-text `location` are left out on purpose: geocoding "at home"
+    // puts a confident pin in the wrong place.
+    private function getPlaces(int $channel_uid, int $uid): void
+    {
+        $item_normal = item_normal($channel_uid);
+        $sql_extra   = $this->blockedItemSql($uid, $this->blockedXchans($uid))
+            . item_permissions_sql($channel_uid, get_observer_hash());
+
+        // ponytail: newest 500 only, no paging; add a date range if a channel outgrows it
+        $r = dbq("SELECT item.uuid, item.title, item.body, item.coord, item.location, item.created
+            FROM item
+            WHERE item.uid = $channel_uid AND item.item_wall = 1
+              AND item.item_thread_top = 1 AND item.mid = item.parent_mid
+              AND item.item_private IN (0, 1) AND item.coord != ''
+              $item_normal $sql_extra
+            ORDER BY item.created DESC
+            LIMIT 500") ?: [];
+
+        $out = [];
+        foreach ($r as $row) {
+            $label = $row['title'] ?: $row['location']
+                ?: trim(preg_replace('/\[[^\]]*\]|\s+/', ' ', $row['body']));
+            $out[] = [
+                'uuid'    => $row['uuid'],
+                'label'   => mb_substr(Response::decodeEntities($label), 0, 80),
+                'coord'   => $row['coord'],
+                'created' => $row['created'],
+            ];
+        }
+        Response::send($out);
     }
 
     private function resolveChannel(int $uid): array

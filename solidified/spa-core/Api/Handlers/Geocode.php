@@ -12,8 +12,11 @@ use Zotlabs\Lib\Cache;
  * addon's configured Nominatim server so the app needs no third-party
  * connect-src CSP exception, and so Nominatim sees one identified server
  * instead of every viewer's browser (their usage policy asks for exactly
- * that, plus aggressive caching — hence the 24h Cache below; a place name's
- * coordinates don't move).
+ * that, plus aggressive caching — hence the 30-day Cache below; a place
+ * name's coordinates don't move). Misses are cached too, and uncached
+ * lookups are spaced to the policy's 1 request/second: the hub and directory
+ * maps geocode dozens of free-text locations ("Deutschland", "Berlin,
+ * Germany") one after another.
  *
  * NOTE: the param is named "place", not "q" — Hubzilla's own front-controller
  * rewrite reads $_GET['q'] for clean-URL routing, and a second `q` here would
@@ -25,7 +28,7 @@ use Zotlabs\Lib\Cache;
  */
 class Geocode
 {
-    private const CACHE_AGE = '24 HOUR';
+    private const CACHE_AGE = '30 DAY';
 
     public function get(): void
     {
@@ -42,6 +45,9 @@ class Geocode
         $cached = Cache::get($cache_key, self::CACHE_AGE);
         if ($cached) {
             $data = json_decode($cached, true);
+            if ($data === []) {
+                Response::error(404, 'Location not found');
+            }
             if (is_array($data)) {
                 Response::send($data);
             }
@@ -56,6 +62,15 @@ class Geocode
             'limit' => 1,
         ]);
 
+        // ponytail: per-process check-then-sleep, two concurrent misses can still
+        // both go out in the same second; a mutex if Nominatim ever complains
+        $last = floatval(Cache::get('spa_geocode_last', '1 MINUTE'));
+        $wait = $last + 1.0 - microtime(true);
+        if ($wait > 0) {
+            usleep(intval(min($wait, 1.0) * 1e6));
+        }
+        Cache::set('spa_geocode_last', (string) microtime(true));
+
         $res = z_fetch_url($url, false, 0, ['timeout' => 10]);
         if (!$res['success'] || !$res['body']) {
             Response::error(502, 'Geocoding lookup failed');
@@ -63,6 +78,7 @@ class Geocode
 
         $hit = (json_decode($res['body'], true) ?: [])[0] ?? null;
         if (!$hit || !isset($hit['lat'], $hit['lon'])) {
+            Cache::set($cache_key, '[]');
             Response::error(404, 'Location not found');
         }
 

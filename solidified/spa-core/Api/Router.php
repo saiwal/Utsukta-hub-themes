@@ -71,6 +71,8 @@ class Router
         'sources'        => Handlers\Sources::class,
         'invite'         => Handlers\Invite::class,
         'directory'      => Handlers\Directory::class,
+        'delivery'       => Handlers\Delivery::class,
+        'tasks'          => Handlers\Tasks::class,
         'cart'           => Handlers\Cart::class,
         'rss-feed'       => Handlers\Rss::class,
         'feed'           => Handlers\Feed::class,

@@ -27,6 +27,10 @@ class Network
         Auth::RequireLocalGet();
 
         $uid = local_channel();
+        if (argv(2) === 'langs') {
+            $this->langs($uid);
+            return;
+        }
         $channel = \App::get_channel();
         $item_normal = item_normal($uid);
         $observer_xchan = get_observer_hash();
@@ -193,5 +197,19 @@ class Network
             $nouveau,
             ['ordering' => $get_order, 'cached' => $cached],
         );
+    }
+
+    // GET /spa/network/langs — languages of the last 90 days' thread tops in
+    // this stream, most common first, for the filter widget's Language list.
+    // The floor of 3 drops detect_language()'s one-off misfires on short posts.
+    private function langs(int $uid): void
+    {
+        $r = dbq("SELECT lang, COUNT(*) AS total FROM item
+                WHERE uid = $uid AND item_thread_top = 1 AND lang != ''
+                  AND created > " . db_utcnow() . " - INTERVAL " . db_quoteinterval('90 DAY')
+                  . item_normal($uid) . "
+                GROUP BY lang HAVING COUNT(*) >= 3
+                ORDER BY total DESC LIMIT 12");
+        Response::send(array_map(fn($x) => ['lang' => $x['lang'], 'total' => intval($x['total'])], $r ?: []));
     }
 }

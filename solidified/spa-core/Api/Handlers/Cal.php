@@ -136,6 +136,8 @@ class Cal
                 intval($_GET['id'])
             );
         } elseif ($chcal_enabled) {
+            // etype 'task' rows have no end and dtstart = creation time, so they
+            // would litter the grid; they have their own list (Handlers/Tasks).
             $r = q(
                 "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
                         item.owner_xchan, item.id as item_id
@@ -150,6 +152,7 @@ class Cal
                        OR (event.adjust = 1
                            AND ( event.dtend >= '%s' OR event.nofinish = 1 )
                            AND event.dtstart <= '%s' ))
+                   AND event.etype != 'task'
                  $sql_extra $cat_extra",
                 intval($channel_id),
                 dbesc($start),
