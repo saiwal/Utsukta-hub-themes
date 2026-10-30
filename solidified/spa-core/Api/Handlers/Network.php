@@ -115,6 +115,7 @@ class Network
                 WHERE true $uids $item_normal
                 AND (abook.abook_blocked = 0 OR abook.abook_flags IS NULL)
                 AND item.verb NOT IN ('Add', 'Remove')
+                AND item.obj_type != 'Answer'
                 $sql_extra $sql_options $sql_nets $sql_date
                 $net_query2
                 ORDER BY $ordering DESC $pager_sql");

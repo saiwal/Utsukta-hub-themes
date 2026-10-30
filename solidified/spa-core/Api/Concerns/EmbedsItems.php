@@ -55,6 +55,12 @@ trait EmbedsItems
             return '';
         }
 
+        // Core disables sharing polls (ThreadItem: shareable = false): a copy
+        // can't collect votes, so it would only ever show frozen results.
+        if (($item['obj_type'] ?? '') === 'Question' && !$forDisplay) {
+            return '';
+        }
+
         $isCard = intval($item['item_type'] ?? 0) === ITEM_TYPE_CARD;
 
         // ownPrivateOk belongs to the [card] tag, so it may only ever relax a

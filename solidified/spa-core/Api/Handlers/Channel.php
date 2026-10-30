@@ -142,6 +142,7 @@ class Channel
                 FROM item
                 $rank_join
                 WHERE true $uids $item_normal
+                AND item.obj_type != 'Answer'
                 $sql_extra $sql_date
                 ORDER BY $ordering DESC" . StreamOrdering::tiebreak() . " $pager_sql");
 

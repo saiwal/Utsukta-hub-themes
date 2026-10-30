@@ -95,6 +95,25 @@ calendar (from add-to-calendar, an RSVP or a birthday) gets a plain local
   cron) and hydrates `author` from `xchan_query()`'s `$rr['author']`.
 Check: `Handlers/Cal.test.php`.
 
+## Polls (2026-10-30)
+
+Polls are created through `coreItemPost()`, so the stored `Question` is core's
+own. The composer now sends `poll_multiple_answers` (`anyOf`). Voting
+(`Item::voteOnPoll`) follows core's `format_poll()` gate, which
+`FormatsItems::canVoteOn()` holds in one place and exposes to the client as
+`poll.can_vote`. You can vote only when all of these hold:
+
+- the poll row is the voter's own copy (`resolveItem()` falls back to other
+  channels' copies, and the `Answer` is stored under the row's uid),
+- the voter isn't the poll's owner,
+- `can_comment_on_post()` passes, which also covers a poll that has ended,
+  since `comments_closed` is its `endTime`.
+
+An empty answer is refused. Polls can't be reshared, as with core's
+`shareable = false`: `createReshare` and `buildEmbedBlock` both refuse them.
+The flat stream queries drop `obj_type = 'Answer'`. Results always show, as in
+core. Check: `Handlers/Poll.test.php`.
+
 ## Hooks
 
 `call_hooks('post_local')` / `post_local_end')` run on the SPA's post and
