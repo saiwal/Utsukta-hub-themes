@@ -75,16 +75,12 @@ class Cal
 
         $sql_extra = permissions_sql($channel_id, get_observer_hash(), 'event');
 
-        if (!perm_is_allowed($channel_id, get_observer_hash(), 'view_contacts')) {
-            $sql_extra .= " and event.etype != 'birthday' ";
-        } else {
-            $prow = q(
-                "SELECT hide_friends FROM profile WHERE uid = %d AND is_default = 1 LIMIT 1",
-                intval($channel_id)
-            );
-            if ($prow && !empty($prow[0]['hide_friends'])) {
-                $sql_extra .= " and event.etype != 'birthday' ";
-            }
+        // Core's calendar is owner-only. Events that merely landed here — added
+        // from a post, RSVP'd, auto-imported, or a connection's birthday — get the
+        // channel's default ACL (often public) or none at all, so visitors only
+        // ever see the events this channel authored itself.
+        if (!$is_owner) {
+            $sql_extra .= " and event.event_xchan = '" . dbesc($channelx['channel_hash']) . "' ";
         }
 
         // iCal export — use the validated channel address (not the raw URL
@@ -128,6 +124,7 @@ class Cal
                  FROM event
                  LEFT JOIN item ON item.resource_id = event.event_hash
                                AND item.resource_type = 'event'
+                               AND event.uid = item.uid
                  WHERE event.uid = %d
                    AND event.id = %d
                  $sql_extra
@@ -136,6 +133,11 @@ class Cal
                 intval($_GET['id'])
             );
         } elseif ($chcal_enabled) {
+            // Core matches a nofinish event on every range after its start,
+            // piling years of them into "upcoming". It's a point in time, so the
+            // last clause only matches it when it starts inside the window.
+            // etype 'task' rows have no end and dtstart = creation time, so they
+            // would litter the grid; they have their own list (Handlers/Tasks).
             $r = q(
                 "SELECT event.*, item.plink, item.item_flags, item.author_xchan,
                         item.owner_xchan, item.id as item_id
@@ -150,12 +152,17 @@ class Cal
                        OR (event.adjust = 1
                            AND ( event.dtend >= '%s' OR event.nofinish = 1 )
                            AND event.dtstart <= '%s' ))
+                   AND ( event.nofinish = 0
+                         OR event.dtstart >= (CASE WHEN event.adjust = 1 THEN '%s' ELSE '%s' END) )
+                   AND event.etype != 'task'
                  $sql_extra $cat_extra",
                 intval($channel_id),
                 dbesc($start),
                 dbesc($finish),
                 dbesc($adjust_start),
-                dbesc($adjust_finish)
+                dbesc($adjust_finish),
+                dbesc($adjust_start),
+                dbesc($start)
             );
         }
 
@@ -198,6 +205,8 @@ class Cal
                 'allDay'      => !$rr['adjust'],
                 'nofinish'    => (bool) $rr['nofinish'],
                 'timezone'    => $tz,
+                // 'birthday' rows come from core's update_birthdays() cron.
+                'etype'       => $rr['etype'],
                 // rw gates delete (the owner may drop anything in their calendar);
                 // editable mirrors core Channel_calendar: only the event's own author.
                 'rw'          => $is_owner,
@@ -212,10 +221,12 @@ class Cal
                 // categories on it either (see caps.category in editor.types.ts).
                 'categories'  => array_values(array_column(
                     get_terms_oftype($rr['term'] ?? [], TERM_CATEGORY), 'term')),
+                // xchan_query() hydrates $rr['author'] from item.author_xchan;
+                // an event with no companion item has none.
                 'author'      => [
-                    'name'   => Response::decodeEntities($rr['xchan_name'] ?? ''),
-                    'avatar' => $rr['xchan_photo_s'] ?? '',
-                    'url'    => $rr['xchan_url']     ?? '',
+                    'name'   => Response::decodeEntities($rr['author']['xchan_name'] ?? ''),
+                    'avatar' => $rr['author']['xchan_photo_s'] ?? '',
+                    'url'    => $rr['author']['xchan_url']     ?? '',
                 ],
             ];
 
@@ -317,9 +328,11 @@ class Cal
             return;
         }
 
-        $title       = trim($body['title'] ?? '');
-        $description = trim($body['description'] ?? '');
-        $location    = trim($body['location'] ?? '');
+        // escape_tags() like core: the event row stores escaped text and
+        // every reader (here and core) decodes it on the way out.
+        $title       = escape_tags(trim($body['title'] ?? ''));
+        $description = escape_tags(trim($body['description'] ?? ''));
+        $location    = escape_tags(trim($body['location'] ?? ''));
         $startIso    = $body['start'] ?? '';
         $endIso      = $body['end'] ?? null;
         $allDay      = (bool)($body['allDay'] ?? false);
@@ -336,10 +349,11 @@ class Cal
             Response::error(400, 'End time must not be before start time');
         }
 
-        $adjust  = $allDay ? 0 : 1;
-        $dtstart = datetime_convert('UTC', 'UTC', $startIso);
-        $dtend   = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
-        $acl     = $this->resolveEventAcl($uid, (string)($body['scope'] ?? 'public'), $body);
+        $adjust   = $allDay ? 0 : 1;
+        $dtstart  = datetime_convert('UTC', 'UTC', $startIso);
+        $dtend    = ($nofinish || !$endIso) ? '' : datetime_convert('UTC', 'UTC', $endIso);
+        $acl      = $this->resolveEventAcl($uid, (string)($body['scope'] ?? 'public'), $body);
+        $tagTerms = $this->linkifyTerms($uid, $description, $acl);
 
         $datarray = [
             'uid'         => intval($uid),
@@ -369,7 +383,10 @@ class Cal
         // Categories live as term rows on the companion item, never on the event
         // row. Attached after event_store_event() and before event_store_item(),
         // the same ordering core uses (Channel_calendar.php ~175-181).
-        $datarray['term'] = $this->categoryTerms($uid, $channel, (string) ($body['categories'] ?? ''));
+        $datarray['term'] = array_merge(
+            $tagTerms,
+            $this->categoryTerms($uid, $channel, (string) ($body['categories'] ?? ''))
+        );
 
         $post = event_store_item($datarray, $event);
 
@@ -412,9 +429,9 @@ class Cal
             Response::error(403, 'Permission denied');
         }
 
-        $title       = trim($body['title'] ?? '');
-        $description = trim($body['description'] ?? '');
-        $location    = trim($body['location'] ?? '');
+        $title       = escape_tags(trim($body['title'] ?? ''));
+        $description = escape_tags(trim($body['description'] ?? ''));
+        $location    = escape_tags(trim($body['location'] ?? ''));
         $startIso    = $body['start'] ?? '';
         $endIso      = $body['end'] ?? null;
         $allDay      = (bool)($body['allDay'] ?? false);
@@ -446,6 +463,7 @@ class Cal
                 'deny_cid'  => $existing['deny_cid'],
                 'deny_gid'  => $existing['deny_gid'],
             ];
+        $tagTerms = $this->linkifyTerms($uid, $description, $acl);
 
         // Terms (categories, hashtags, mentions) live on the companion item, and
         // item_store_update() rebuilds them from $datarray['term'] — running an
@@ -483,6 +501,18 @@ class Cal
                 $terms,
                 $this->categoryTerms($uid, $channel, (string) $body['categories'])
             );
+        }
+
+        // ponytail: a tag deleted from the description keeps its term row; prune
+        // linkify-type terms that no longer appear in the body if it ever matters.
+        $have = [];
+        foreach ($terms as $t) {
+            $have[intval($t['ttype']) . "\0" . $t['term']] = true;
+        }
+        foreach ($tagTerms as $t) {
+            if (!isset($have[intval($t['ttype']) . "\0" . $t['term']])) {
+                $terms[] = $t;
+            }
         }
 
         $datarray = [
@@ -569,6 +599,36 @@ class Cal
                 'term'  => $cat,
                 'url'   => $base . '?f=&cat=' . urlencode($cat),
             ];
+        }
+
+        return $out;
+    }
+
+    // Core's event path (Channel_calendar.php ~118-133): turn @mentions and
+    // #hashtags in the description into links, let a private @!mention narrow
+    // the ACL, and return the matching term rows for the companion item.
+    private function linkifyTerms(int $uid, string &$desc, array &$acl): array
+    {
+        $results = linkify_tags($desc, $uid);
+        if (!$results) {
+            return [];
+        }
+
+        $private = intval($acl['allow_cid'] || $acl['allow_gid'] || $acl['deny_cid'] || $acl['deny_gid']);
+        set_linkified_perms($results, $acl['allow_cid'], $acl['allow_gid'], $uid, $private);
+
+        $out = [];
+        foreach ($results as $result) {
+            $success = $result['success'];
+            if ($success['replaced']) {
+                $out[] = [
+                    'uid'   => $uid,
+                    'ttype' => $success['termtype'],
+                    'otype' => TERM_OBJ_POST,
+                    'term'  => $success['term'],
+                    'url'   => $success['url'],
+                ];
+            }
         }
 
         return $out;
@@ -740,25 +800,32 @@ class Cal
         );
 
         if ($item) {
-            // Same phased shape core uses (Zotlabs\Module\Channel_calendar and
-            // Item::deleteItem here): DROPITEM_PHASE1 marks the row, then the
-            // clone packet, tag_deliver and the Notifier carry the deletion
-            // outward. drop_item() alone federates nothing, so without this an
-            // event deleted in the SPA stayed on every other hub — and on the
-            // channel's own clones — forever.
-            drop_item($item[0]['id'], DROPITEM_PHASE1);
+            // Same split core's Channel_calendar drop makes. Our own event:
+            // DROPITEM_PHASE1 marks the row, then the clone packet, tag_deliver
+            // and the Notifier carry the deletion outward — drop_item() alone
+            // federates nothing, so an event deleted in the SPA would stay on
+            // every other hub and clone. Someone else's event that only landed
+            // in this calendar (added from a post, RSVP, birthday): a plain
+            // local drop, since that deletion isn't ours to propagate.
+            $ob      = $channel['channel_hash'];
+            $i0      = $item[0];
+            $complex = !intval($i0['item_type'])
+                && in_array($ob, [$i0['author_xchan'], $i0['owner_xchan'], $i0['source_xchan']], true);
 
-            $r2 = q('SELECT * FROM item WHERE id = %d', intval($item[0]['id']));
+            drop_item($i0['id'], $complex ? DROPITEM_PHASE1 : DROPITEM_NORMAL);
+
+            $r2 = q('SELECT * FROM item WHERE id = %d', intval($i0['id']));
             if ($r2) {
                 xchan_query($r2);
                 $sync = fetch_post_tags($r2);
                 Libsync::build_sync_packet($uid, ['item' => [encode_item($sync[0], true)]]);
             }
 
-            tag_deliver($uid, $item[0]['id']);
-
-            if (intval($item[0]['item_wall'])) {
-                Master::Summon(['Notifier', 'drop', $item[0]['id']]);
+            if ($complex) {
+                tag_deliver($uid, $i0['id']);
+                if (intval($i0['item_wall'])) {
+                    Master::Summon(['Notifier', 'drop', $i0['id']]);
+                }
             }
         }
 
@@ -964,6 +1031,7 @@ class Cal
                         'allDay'        => $allDay,
                         'nofinish'      => empty($dtend),
                         'timezone'      => $timezone,
+                        'etype'         => 'event',
                         // Individual occurrences of a recurring event aren't
                         // safely single-editable — keep them read-only, same
                         // as redbasic's own calendar (core Cdav.php).

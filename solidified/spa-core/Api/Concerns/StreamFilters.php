@@ -58,6 +58,10 @@ class StreamFilters
         $search = $q['search'] ?? '';
         $hashtags = $q['tag'] ?? '';
         $category = $q['cat'] ?? '';
+        // item.lang is core's detect_language() guess (ISO 639-1, sometimes
+        // with a script or region: "pt-PT"), set on every stored item; the
+        // shape check keeps it a literal, not SQL.
+        $lang = preg_match('/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/', $q['lang'] ?? '') ? $q['lang'] : '';
         $verb = $q['verb'] ?? '';
         $file = $q['file'] ?? '';
         $has = $q['has'] ?? '';
@@ -172,6 +176,11 @@ class StreamFilters
         }
         if ($file) {
             $sql_extra .= term_query($a, $file, TERM_FILE);
+        }
+        // Thread-level in threaded mode (it lands in the parent query), so a
+        // German post keeps its English replies.
+        if ($lang) {
+            $sql_extra .= " AND $a.lang = '$lang' ";
         }
 
         // has:attachment — `attach` is a JSON column that is empty rather than

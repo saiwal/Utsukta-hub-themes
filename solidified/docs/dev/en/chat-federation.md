@@ -121,8 +121,9 @@ zot channel could light up dots for rooms it doesn't own.
 ## Setup
 
 The hooks (`chat_post`, `daemon_addon` → `hooks/chatfed.php`; `spa_webpush` →
-`hooks/webpush.php`) are registered in
-`solidified_theme_admin_enable()`, like the webpush hook. **An existing hub must
+`hooks/webpush.php`) are registered on theme enable by `SpaTheme::enable()`
+(spa-core), which gives the route and every shared hook to one enabled
+spa-core theme at a time. **An existing hub must
 disable and re-enable the theme once** to pick them up.
 
 ## Check

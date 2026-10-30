@@ -41,6 +41,7 @@ class Photos
     // GET /spa/photos/:nick           → album list
     // GET /spa/photos/:nick/album/:hash → photos in album
     // GET /spa/photos/:nick/image/:id   → single photo detail
+    // GET /spa/photos/:nick/map         → geotagged photos (map pins)
 
     public function get(): void
     {
@@ -81,6 +82,9 @@ class Photos
                 break;
             case 'image':
                 $this->getImage($channel, $ob_hash, $datum, $can_write);
+                break;
+            case 'map':
+                $this->getMap($channel, $ob_hash);
                 break;
             default:
                 $this->getSummary($channel, $ob_hash, $can_write);
@@ -170,6 +174,52 @@ class Photos
             'limit'     => $limit,
             'has_more'  => $raw === $limit,
         ]);
+    }
+
+    // Every geotagged photo, for the map tab. The GPS position isn't on the
+    // photo row: photo_upload() writes the EXIF lat/lon to the photo's linked
+    // item as `coord` — and only while the channel has the core
+    // "photo_location" feature on, so older uploads have none. The item
+    // carries the photo's own ACL, so permissions_sql on photo covers both.
+    private function getMap(array $channel, string $ob_hash): void
+    {
+        $sql_extra  = permissions_sql($channel['channel_id'], $ob_hash, 'photo');
+        $phototypes = photo_factory('')->supportedTypes();
+        $uid        = intval($channel['channel_id']);
+
+        // ponytail: capped at 1000 pins, no paging; add bbox paging if albums outgrow it
+        $r = dbq("SELECT photo.resource_id, photo.mimetype, photo.imgscale, photo.title,
+                         photo.filename, photo.is_nsfw, photo.album, photo.created, item.coord,
+                         COALESCE(a.folder, '') AS fhash
+              FROM photo
+              JOIN item ON item.uid = $uid AND item.resource_type = 'photo'
+                       AND item.resource_id = photo.resource_id
+                       AND item.mid = item.parent_mid AND item.item_deleted = 0
+                       AND item.coord != ''
+              LEFT JOIN attach a ON a.hash = photo.resource_id AND a.uid = $uid
+              WHERE photo.uid = $uid
+                AND photo.photo_usage = " . PHOTO_NORMAL . "
+                AND photo.imgscale = 2
+                $sql_extra
+              ORDER BY photo.created DESC
+              LIMIT 1000");
+
+        $out = [];
+        foreach (($r ?: []) as $row) {
+            $fhash = (string) $row['fhash'];
+            if ($fhash !== '' && !$this->canViewFolder($uid, $ob_hash, $fhash)) continue;
+            $ext = $phototypes[$row['mimetype']] ?? 'jpg';
+            $out[] = [
+                'resource_id' => $row['resource_id'],
+                'title'       => Response::decodeEntities($row['title'] ?: $row['filename']),
+                'is_nsfw'     => (bool) intval($row['is_nsfw']),
+                'album'       => $row['album'],
+                'created'     => $row['created'],
+                'coord'       => $row['coord'],
+                'src'         => z_root() . '/photo/' . $row['resource_id'] . '-' . $row['imgscale'] . '.' . $ext,
+            ];
+        }
+        Response::send($out);
     }
 
     // Like/comment counts for a page of grid tiles, in two queries for the whole
@@ -456,6 +506,7 @@ class Photos
         $item_id = null;
         $item_mid = null;
         $item_uuid = null;
+        $coord = '';
         $comments = [];
 
         $linked = dbq("SELECT * FROM item
@@ -471,6 +522,9 @@ class Photos
             $item_id = intval($link_item['id']);
             $item_mid = $link_item['mid'];
             $item_uuid = $link_item['uuid'];
+            // GPS position: photo_upload() writes the EXIF lat/lon here (only
+            // with the photo_location feature on), or the location editor below.
+            $coord = (string) ($link_item['coord'] ?? '');
 
             $reactions = dbq("SELECT verb, author_xchan FROM item
                               WHERE parent_mid = '" . dbesc($link_item['mid']) . "'
@@ -586,6 +640,7 @@ class Photos
             'item_id' => $item_id,
             'item_mid' => $item_mid,
             'item_uuid' => $item_uuid,
+            'coord' => $coord,
             'comments' => $comments,
             'can_write' => $can_write,
         ]);
@@ -622,6 +677,16 @@ class Photos
             return;
         }
 
+        // POST /spa/photos/:nick/images/location — batch set/clear coord (JSON)
+        if ($datatype === 'images' && (\App::$argv[4] ?? '') === 'location') {
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $ids = Auth::$parsedBody['resource_ids'] ?? [];
+            if (!is_array($ids) || !$ids) Response::error(400, 'resource_ids required');
+            $coord = $this->coordInput();
+            Response::send(['coord' => $coord, 'updated' => $this->setCoord($uid, array_map('strval', $ids), $coord)]);
+        }
+
         // POST /spa/photos/:nick/images/move — batch move photos into an album (JSON)
         if ($datatype === 'images' && (\App::$argv[4] ?? '') === 'move') {
             $obs_hash = Auth::requireLoggedInJson();
@@ -651,6 +716,14 @@ class Photos
             $obs_hash = Auth::requireLoggedInJson();
             $this->requireWrite($uid, $obs_hash);
             $this->updateDescription($uid, \App::$argv[4] ?? '');
+            return;
+        }
+
+        // POST /spa/photos/:nick/image/:id/location — set/clear coord (JSON)
+        if ($datatype === 'image' && (\App::$argv[5] ?? '') === 'location') {
+            $obs_hash = Auth::requireLoggedInJson();
+            $this->requireWrite($uid, $obs_hash);
+            $this->updateLocation($uid, \App::$argv[4] ?? '');
             return;
         }
 
@@ -1219,6 +1292,51 @@ class Photos
             dbesc($desc), intval($uid), dbesc($resourceId));
 
         Response::send(['description' => $desc]);
+    }
+
+    // ── POST /spa/photos/:nick/image/:id/location ────────────────────────────
+    //
+    // Body { coord: "lat lon" } sets it, { coord: "" } removes it. The position
+    // lives on the photo's linked item, as photo_upload() stores it. Local only,
+    // like the title/description edits above: copies already delivered to
+    // other hubs keep the old position.
+
+    private function updateLocation(int $uid, string $resourceId): void
+    {
+        $coord = $this->coordInput();
+        if (!$this->setCoord($uid, [$resourceId], $coord))
+            Response::error(404, 'Photo not found or not yours');
+        Response::send(['coord' => $coord]);
+    }
+
+    /** Body `coord`: "lat lon" → normalised, "" → clear; anything else is a 400. */
+    private function coordInput(): string
+    {
+        $raw = trim((string) (Auth::$parsedBody['coord'] ?? ''));
+        if ($raw === '') return '';
+        $parts = preg_split('/[\s,]+/', $raw);
+        if (count($parts) !== 2 || !is_numeric($parts[0]) || !is_numeric($parts[1])
+            || abs((float) $parts[0]) > 90 || abs((float) $parts[1]) > 180) {
+            Response::error(400, 'Invalid coordinates');
+        }
+        return round((float) $parts[0], 6) . ' ' . round((float) $parts[1], 6);
+    }
+
+    /** Write coord onto the photos' linked items; returns the resource ids that had one. */
+    private function setCoord(int $uid, array $resourceIds, string $coord): array
+    {
+        $in = "'" . implode("','", array_map('dbesc', $resourceIds)) . "'";
+        $items = dbq("SELECT mid, resource_id FROM item
+                      WHERE uid = $uid AND resource_type = 'photo' AND resource_id IN ($in)") ?: [];
+        if (!$items) return [];
+
+        $now = dbesc(datetime_convert());
+        dbq("UPDATE item SET coord = '" . dbesc($coord) . "', edited = '$now', changed = '$now'
+             WHERE uid = $uid AND resource_type = 'photo' AND resource_id IN ($in)");
+        // The cached ActivityStreams object would otherwise keep serving the old Place.
+        foreach ($items as $i) \Zotlabs\Lib\ObjCache::Delete($i['mid']);
+
+        return array_values(array_unique(array_column($items, 'resource_id')));
     }
 
     // ── POST /spa/photos/:nick/image/:id/nsfw ────────────────────────────────

@@ -294,7 +294,38 @@ class Settings
         Response::send([
             '$email' => $email,
             'quotas' => $quotas,
+            'storage' => $account_id ? $this->buildStorage($account_id) : null,
         ]);
+    }
+
+    // What the attach_upload_limit total is made of: bytes per broad type and
+    // the largest files, across every channel on the account (the quota is
+    // per account, so a breakdown of one channel wouldn't add up to it).
+    private function buildStorage(int $account_id): array
+    {
+        $cat = "CASE WHEN filetype LIKE 'image/%' THEN 'images'
+                     WHEN filetype LIKE 'video/%' THEN 'video'
+                     WHEN filetype LIKE 'audio/%' THEN 'audio'
+                     WHEN filetype LIKE 'text/%' OR filetype = 'application/pdf'
+                       OR filetype LIKE 'application/vnd.%' OR filetype LIKE 'application/msword%' THEN 'documents'
+                     ELSE 'other' END";
+        $types = dbq("SELECT $cat AS kind, SUM(filesize) AS bytes, COUNT(*) AS files
+                      FROM attach WHERE aid = $account_id AND is_dir = 0
+                      GROUP BY $cat ORDER BY bytes DESC") ?: [];
+        $largest = dbq("SELECT a.filename, a.filesize, a.display_path, c.channel_address
+                        FROM attach a JOIN channel c ON c.channel_id = a.uid
+                        WHERE a.aid = $account_id AND a.is_dir = 0
+                        ORDER BY a.filesize DESC LIMIT 5") ?: [];
+        return [
+            'types' => array_map(fn($r) => ['kind' => $r['kind'], 'bytes' => intval($r['bytes']), 'files' => intval($r['files'])], $types),
+            'largest' => array_map(fn($r) => [
+                'name'  => $r['filename'],
+                'bytes' => intval($r['filesize']),
+                // The folder holding it: /cloud/<nick>/<path> resolves folders, not files.
+                'href'  => '/cloud/' . $r['channel_address'] . (($d = dirname($r['display_path'])) === '.' ? ''
+                    : '/' . implode('/', array_map('rawurlencode', explode('/', $d)))),
+            ], $largest),
+        ];
     }
 
     private function buildQuotas(int $channel_id, int $account_id): array

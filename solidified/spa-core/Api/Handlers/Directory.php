@@ -91,6 +91,10 @@ class Directory
         if ($keywords) {
             $params['keywords'] = $keywords;
         }
+        // First page only: dirsearch's keyword cloud (xtag, via core's
+        // dir_tagadelic) — the same scope as the results, hub-only when
+        // `hub` is set. Empty when the directory disables keywords.
+        if ($start === 0) $params['kw'] = 30;
 
         $token = \Zotlabs\Lib\Config::Get('system', 'realm_token');
         if ($token) $params['t'] = $token;
@@ -119,6 +123,12 @@ class Directory
         $results = $j['results'] ?? [];
         $total   = count($results);
 
+        $cloud = [];
+        foreach (array_slice(is_array($j['keywords'] ?? null) ? $j['keywords'] : [], 0, 30) as $k) {
+            $term = is_array($k) && is_scalar($k['term'] ?? null) ? trim(strip_tags((string) $k['term'])) : '';
+            if ($term !== '') $cloud[] = ['term' => mb_substr($term, 0, 64), 'weight' => intval($k['weight'] ?? 0)];
+        }
+
         Response::send(
             $this->formatResults($results, $local_channel, $safe),
             [
@@ -131,6 +141,7 @@ class Directory
                 'suggest'   => false,
                 'order'     => $order,
                 'is_directory_admin' => $is_directory_admin,
+                'keywords'  => $cloud,
             ]
         );
     }

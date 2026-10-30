@@ -311,6 +311,20 @@ trait FormatsItems
         }, $items);
     }
 
+    // Core's format_poll() offers the vote form only when the viewer is the
+    // local channel holding this copy, isn't the poll's owner, and may comment
+    // (which also covers the poll having ended: comments_closed = endTime).
+    // Item::voteOnPoll() enforces the same rule.
+    protected static function canVoteOn(array $item, string $observer_xchan): bool
+    {
+        $uid = intval(local_channel());
+        return $uid
+            && $uid === intval($item['uid'] ?? 0)
+            && $observer_xchan !== ''
+            && $observer_xchan !== ($item['owner_xchan'] ?? '')
+            && can_comment_on_post($observer_xchan, $item);
+    }
+
     private static function extractPoll(array $item, string $observer_xchan): ?array
     {
         if (($item['obj_type'] ?? '') !== 'Question') return null;
@@ -351,6 +365,7 @@ trait FormatsItems
 
         return [
             'multiple'     => $multiple,
+            'can_vote'     => self::canVoteOn($item, $observer_xchan),
             'end_time'     => $obj['endTime'] ?? null,
             'closed'       => $obj['closed']  ?? null,
             'options'      => $options,

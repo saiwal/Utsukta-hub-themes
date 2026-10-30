@@ -2177,13 +2177,20 @@ class Item
 
         $answer = Auth::$parsedBody['answer'] ?? null;
 
-        if ($answer === null) {
+        if ($answer === null || $answer === '' || $answer === []) {
             json_return_and_die(['error' => 'answer is required']);
         }
 
         $poll = $this->resolveItem($mid, $ob_hash);
         if (!$poll || ($poll['obj_type'] ?? '') !== 'Question') {
             json_return_and_die(['error' => 'Poll not found']);
+        }
+        // Core's rule (format_poll's $activated + $commentable): only on the
+        // voter's own copy — resolveItem() falls back to other channels' copies,
+        // and the Answer is stored under the poll row's uid — never by the poll's
+        // owner, and not once commenting has closed (comments_closed = endTime).
+        if (!self::canVoteOn($poll, $ob_hash)) {
+            json_return_and_die(['error' => 'You cannot vote on this poll']);
         }
 
         $iid   = intval($poll['id']);
@@ -2283,6 +2290,10 @@ class Item
         $item = $this->resolveItem($mid, $ob_hash);
         if (!$item) {
             json_return_and_die(['error' => 'Item not found or permission denied']);
+        }
+        // Core disables sharing polls; see buildEmbedBlock().
+        if (($item['obj_type'] ?? '') === 'Question') {
+            json_return_and_die(['error' => 'Polls cannot be reshared']);
         }
 
         // Note this is NOT core's Share module. Core's Share is a boost — an
