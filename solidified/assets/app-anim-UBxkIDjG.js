@@ -1,1 +1,0 @@
-import{F as e,M as t,N as n,P as r}from"./app-DmK_ex03.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(t),s=a(n),c=a(r),l=a(e);export{l as i,s as n,c as r,o as t};
