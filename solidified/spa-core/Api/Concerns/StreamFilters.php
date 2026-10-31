@@ -245,8 +245,10 @@ class StreamFilters
         // authoring an item in a thread as opting into its notifications.
         if ($pf && $observer_xchan) {
             $obs = dbesc($observer_xchan);
-            $sql_extra .= " AND $a.parent IN (
-                SELECT f.parent
+            // Resolved to an id list up front: inline, the UNION made MySQL run
+            // it as a DEPENDENT SUBQUERY once per candidate thread, so a
+            // narrow combination (pf + a forum) walked the whole stream.
+            $followed = dbq("SELECT f.parent
                 FROM item f
                 WHERE f.uid = $uid
                   AND f.author_xchan = '$obs'
@@ -273,8 +275,9 @@ class StreamFilters
                       AND i.author_xchan = '$obs'
                       AND i.verb IN ('Follow', 'Ignore')
                       AND i.item_deleted = 0
-                  )
-            ) ";
+                  )");
+            $ids = $followed ? implode(',', array_map('intval', array_column($followed, 'parent'))) : '0';
+            $sql_extra .= " AND $a.parent IN ($ids) ";
         }
 
         // Date range
