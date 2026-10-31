@@ -29,6 +29,7 @@ class StreamWidgets
             'archive'      => $this->getArchive(),
             'archive-days' => $this->getArchiveDays(),
             'series'       => $this->getSeries(),
+            'related'      => $this->getRelated(),
             default        => Response::error(404, "Unknown sub-resource: {$sub}"),
         };
     }
@@ -111,7 +112,7 @@ class StreamWidgets
         $limit         = min(20, max(1, (int) ($_GET['limit'] ?? 5)));
         $observer_hash = get_observer_hash();
 
-        $item_type_val = $type === 'articles' ? ITEM_TYPE_ARTICLE : ITEM_TYPE_POST;
+        $item_type_val = $this->itemTypeValue($type);
         $item_normal   = item_normal($uid, 'item', $item_type_val);
 
         $permission_sql = item_permissions_sql($uid, $observer_hash);
@@ -154,6 +155,114 @@ class StreamWidgets
         ], $items);
 
         Response::send(['popular' => $popular]);
+    }
+
+    // ── /spa/stream-widgets/related ──────────────────────────────────────────
+    // ?item=<uuid|slug>&type=<posts|articles|cards>[&channel_nick=]
+    // Other thread-top items of the same channel and type sharing hashtags or
+    // categories with the given one. Each shared term scores 1/ln(1+df) — df
+    // being how many visible items carry it — so a rare tag outweighs a common
+    // one; categories count double. Posts resolve by the owner's wall copy
+    // (item_wall = 1), so /display/<uuid> of a remote post has no related list.
+
+    private function getRelated(): void
+    {
+        require_once 'include/conversation.php';
+
+        $type          = $this->itemType();
+        $item_type_val = $this->itemTypeValue($type);
+        $ident         = dbesc((string) ($_GET['item'] ?? ''));
+        $limit         = min(20, max(1, (int) ($_GET['limit'] ?? 5)));
+
+        if ($ident === '') {
+            Response::error(400, 'No item specified');
+        }
+
+        if ($type === 'posts') {
+            $src = dbq("SELECT id, uid FROM item
+                WHERE uuid = '$ident' AND item_wall = 1 AND item_thread_top = 1
+                  AND item_type = " . ITEM_TYPE_POST . " AND item_deleted = 0 LIMIT 1");
+        } else {
+            $uid = $this->resolveUid();
+            $src = dbq("SELECT id, uid FROM item
+                WHERE uid = $uid AND uuid = '$ident'
+                  AND item_type = $item_type_val AND item_deleted = 0 LIMIT 1")
+                ?: dbq("SELECT item.id, item.uid FROM item
+                INNER JOIN iconfig ON iconfig.iid = item.id
+                WHERE item.uid = $uid AND iconfig.cat = 'system'
+                  AND iconfig.k = '" . item_type_to_namespace($item_type_val) . "'
+                  AND iconfig.v = '$ident'
+                  AND item.item_type = $item_type_val AND item.item_deleted = 0 LIMIT 1");
+        }
+
+        if (!$src) {
+            Response::send(['related' => []]);
+        }
+
+        $src_id   = (int) $src[0]['id'];
+        $uid      = (int) $src[0]['uid'];
+        $perm_sql = item_permissions_sql($uid, get_observer_hash());
+        $normal   = item_normal($uid, 'item', $item_type_val);
+        $types    = intval(TERM_HASHTAG) . ',' . intval(TERM_CATEGORY);
+
+        // The source item's own terms — behind the same permission check, so
+        // a private post's tags can't be probed through what it relates to.
+        $terms = dbq("SELECT DISTINCT term.term FROM term
+            INNER JOIN item ON item.id = term.oid
+            WHERE term.oid = $src_id AND term.otype = " . intval(TERM_OBJ_POST) . "
+              AND term.ttype IN ($types) $perm_sql");
+
+        if (!$terms) {
+            Response::send(['related' => []]);
+        }
+
+        $in = implode(',', array_map(fn($t) => "'" . dbesc($t['term']) . "'", $terms));
+
+        // ponytail: one row per (candidate, shared term), scored in PHP; capped
+        // at 2000 rows — a SQL-side GROUP BY if channels outgrow that.
+        $rows = dbq("SELECT term.oid, term.ttype, term.term FROM term
+            INNER JOIN item ON item.id = term.oid
+            WHERE term.uid = $uid AND term.otype = " . intval(TERM_OBJ_POST) . "
+              AND term.ttype IN ($types) AND term.term IN ($in)
+              AND item.item_thread_top = 1 AND item.item_type = $item_type_val
+              " . $this->wallSql() . "
+              $normal $perm_sql
+            LIMIT 2000");
+
+        $df = [];
+        foreach ($rows ?: [] as $r) {
+            $df[$r['term']][$r['oid']] = true;
+        }
+
+        $scores = [];
+        foreach ($rows ?: [] as $r) {
+            if ((int) $r['oid'] === $src_id) continue;
+            $w = ((int) $r['ttype'] === TERM_CATEGORY ? 2 : 1) / log(1 + count($df[$r['term']]));
+            $scores[$r['oid']] = ($scores[$r['oid']] ?? 0) + $w;
+        }
+
+        if (!$scores) {
+            Response::send(['related' => []]);
+        }
+
+        $items = dbq("SELECT item.id, item.uuid, item.title, item.body, item.created,
+                item.author_xchan, " . ReactionCounts::commentCountSubquery() . " AS comment_count
+            FROM item WHERE item.id IN (" . implode(',', array_map('intval', array_keys($scores))) . ")");
+
+        // Highest score first, newest on a tie.
+        usort($items, fn($a, $b) => [$scores[$b['id']], $b['created']] <=> [$scores[$a['id']], $a['created']]);
+        $items = array_slice($items, 0, $limit);
+        xchan_query($items, true);
+
+        Response::send(['related' => array_map(fn($item) => [
+            'uuid'         => $item['uuid'],
+            'title'        => Response::decodeEntities($item['title'] ?? ''),
+            'body'         => $item['body'] ?? '',
+            'authorName'   => Response::decodeEntities($item['author']['xchan_name'] ?? ''),
+            'authorAvatar' => $item['author']['xchan_photo_m'] ?? '',
+            'created'      => $item['created'],
+            'commentCount' => (int) $item['comment_count'],
+        ], $items)]);
     }
 
     // ── /spa/stream-widgets/series ───────────────────────────────────────────
