@@ -118,6 +118,12 @@ class Connections
         // listed their_perms key; ?perms=none: contacts that granted none of them.
         $sql_filter .= $this->permsClause($uid, $_GET['perms'] ?? '');
 
+        // ?role=<permcat>: one role's members (Contact roles). An empty value
+        // is meaningful — the contacts with no role — so test presence.
+        if (array_key_exists('role', $_GET)) {
+            $sql_filter .= " AND abook.abook_role = '" . protect_sprintf(dbesc((string) $_GET['role'])) . "' ";
+        }
+
         $sql_search = '';
         if ($search !== '') {
             $sql_search = " AND (xchan.xchan_name LIKE '%%"
@@ -502,13 +508,23 @@ class Connections
         $pcat         = new \Zotlabs\Lib\Permcat($uid);
         $list         = $pcat->listing();
         $default_name = get_pconfig($uid, 'system', 'default_permcat', 'default');
+        // Members per role in one grouped pass, same row set as the list's
+        // filter=all, so the roles page needn't load every connection.
+        $counts = q("SELECT abook.abook_role, COUNT(*) AS n FROM abook
+                     LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                     WHERE abook.abook_channel = %d AND abook.abook_self = 0
+                       AND xchan.xchan_deleted = 0 AND xchan.xchan_orphan = 0
+                     GROUP BY abook.abook_role",
+            intval($uid));
+        $counts = array_map('intval', array_column($counts ?: [], 'n', 'abook_role'));
         $result = array_map(fn($pc) => [
             'name'       => $pc['name'],
             'label'      => $pc['localname'],
             'system'     => (bool) intval($pc['system']),
             'is_default' => $pc['name'] === $default_name,
+            'count'      => $counts[$pc['name']] ?? 0,
         ], $list);
-        Response::send($result);
+        Response::send($result, ['unassigned' => $counts[''] ?? 0]);
     }
 
     private function createPermcat(int $uid): never
