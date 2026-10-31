@@ -1527,8 +1527,11 @@ class Item
         // ContentTypes::toBbcode(). This handler also serves webpages,
         // articles, cards and wiki pages (that is why the lookup above cannot
         // use item_normal()), and those keep their real mimetype, so the
-        // conversion has to be gated on the item's own type.
-        if (intval($item[0]['item_type']) === ITEM_TYPE_POST) {
+        // conversion has to be gated on the item's own type. Notepad notes
+        // (Notes.php: ITEM_TYPE_CUSTOM + obj_type Note) convert too.
+        $itemType = intval($item[0]['item_type']);
+        if ($itemType === ITEM_TYPE_POST
+            || ($itemType === ITEM_TYPE_CUSTOM && $item[0]['obj_type'] === 'Note')) {
             [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
         }
 

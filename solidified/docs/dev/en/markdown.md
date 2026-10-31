@@ -99,20 +99,27 @@ and quoting, implied tags, entity forms, self-closing tags. For `text/html`
 that *is* the entire rewrite, since `htmlToSource` hands HTML straight back, so
 a string-to-string check would call every HTML body safe and then mangle it.
 
-`createWysiwygAvailable()` evaluates this at mount and on a format change,
+`createWysiwygGate()` evaluates this at mount and on a format change,
 never per keystroke: the check runs marked, DOMPurify and Turndown over the
 whole document, and a tab that appeared and vanished while typing would be
-worse than either answer. The same accessor feeds `<RichEditor
-wysiwygAvailable>` and the source toggle's `canWysiwyg`, so the button and the
+worse than either answer. `<RichEditor wysiwygGate>` reads both the surface's
+availability and the source toggle's state from it, so the button and the
 surface cannot disagree.
+
+A body that fails the check is not locked out. The gate's `mode` is
+`"confirm"`: the toggle stays visible and asks before switching, and accepting
+(`force()`) opens the surface for the rest of that edit, normalisation and
+all. A body holding something the sanitizer *deletes* rather than re-spells —
+`<script>`, `<style>`, `<iframe>`, forms, embeds — is `"blocked"`: the toggle
+explains and stays in source. A format change resets the choice.
 
 Who gets what:
 
 | Composer | Write tab for non-bbcode |
 |---|---|
 | Post, comment, DM | always — the body is converted to bbcode on save, so normalisation never reaches storage |
-| Article, card, webpage, block, note | when the body round-trips unchanged |
-| Wiki | never — core git-versions pages, so a normalising edit reads as a whole-file rewrite in the history |
+| Article, card, webpage, block, note | when the body round-trips unchanged; otherwise after a confirm |
+| Wiki | same, but bbcode pages are checked too (`strict`) — core git-versions pages, so a normalising edit reads as a whole-file rewrite in the history. Clean pages open in the visual editor |
 | `text/plain` | never, anywhere — `htmlToSource` has no branch for it and a plain body would come back as bbcode |
 
 `markdown-roundtrip.test.ts` pins both halves: 33 shapes that must come back

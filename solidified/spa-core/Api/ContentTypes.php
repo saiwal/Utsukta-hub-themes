@@ -88,7 +88,7 @@ final class ContentTypes
     // it is the toggle: composing in Markdown is gated on mdpost's own
     // 'markdown' feature rather than a second SPA-specific one.
     //
-    // Only for posts and comments. Webpages, blocks, articles, cards and wiki
+    // Only for posts, comments and notepad notes. Webpages, blocks, articles, cards and wiki
     // pages are local content that never federates, so they keep their real
     // mimetype and round-trip losslessly.
     public static function toBbcode(string $body, string $mimetype): array

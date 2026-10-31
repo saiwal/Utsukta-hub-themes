@@ -26,6 +26,9 @@ class Notes
         $mimetype = ContentTypes::validate($b['mimetype'] ?? null);
         $category = trim($b['category'] ?? '');
 
+        // Markdown is an input format here, as on posts: stored as bbcode.
+        [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
+
         if (!trim($content)) {
             Response::error(400, 'Body is required');
         }
