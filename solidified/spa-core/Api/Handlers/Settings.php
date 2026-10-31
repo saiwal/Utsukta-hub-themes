@@ -139,6 +139,7 @@ class Settings
             'post_mode'     => $post_mode,
             'thread_mode' => $thread_mode,
             'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
+            'reply_mention' => intval(get_pconfig($uid, 'spa', 'reply_mention', 1)),
         ]);
     }
 
@@ -1099,6 +1100,9 @@ class Settings
 
         if (isset($data['show_emoji_images']))
             set_pconfig($uid, 'system', 'no_smilies', 1 - intval($data['show_emoji_images']));
+
+        if (isset($data['reply_mention']))
+            set_pconfig($uid, 'spa', 'reply_mention', intval($data['reply_mention']) ? 1 : 0);
 
         Response::send(['status' => 'ok']);
     }
