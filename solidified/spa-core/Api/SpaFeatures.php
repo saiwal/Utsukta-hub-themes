@@ -23,6 +23,8 @@ final class SpaFeatures
             'editor' => [
                 'spa_latex'    => [t('LaTeX equations'), t('Editor toolbar button for inserting LaTeX math.'), true],
                 'spa_diagrams' => [t('Diagrams'), t('Editor toolbar button for inserting Mermaid diagrams (flowcharts, sequence, gantt, pie…).'), false],
+                'spa_autoformat' => [t('Auto-format while typing'), t('Turn Markdown-style shortcuts into formatting as you type: "- " starts a list, "# " a heading, **text** becomes bold.'), true],
+                'spa_slash'    => [t('Slash commands'), t('Type "/" in the editor to insert a heading, list, table, image and more from a menu.'), true],
             ],
             'network' => [
                 'spa_advanced_sort' => [t('Advanced Sorting'), t('Ranked sort orders in the stream: Top, Hot, Most discussed and Controversial.'), false],

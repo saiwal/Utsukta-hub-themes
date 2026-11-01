@@ -1,55 +1,87 @@
 # Hubzilla *Solidified* - User Guide
 
-Welcome to Hubzilla *Solidified* - a fast, modern interface for your Hubzilla hub. Same channel, same connections, same federated network underneath. A completely reimagined way to use it on top.
+**Solidified is the app you use to get around your Hubzilla hub.** Hubzilla is a social network, a cloud drive, a calendar and a publishing platform rolled into one, and it isn't owned by any one company. Solidified is the fast, modern interface on top of it.
 
 ![screenshot](./index/ss.png)
 
-## What is Solidified?
+## New to Hubzilla? The key ideas
 
-Solidified replaces the classic page-reload interface with a single-page app: pages switch instantly, your feed updates in the background, and the whole thing works offline-capable as an installable app on your phone or desktop.
+You don't need to learn all of this up front, but these words come up everywhere in this guide:
 
-A few things you'll notice right away:
+| Word | What it means |
+|------|---------------|
+| **Hub** | The website you signed up on. Thousands of hubs run Hubzilla, run by different people, and they all talk to each other. |
+| **Channel** | Your identity on the hub: your profile, your wall of posts, your photos and files. One account can hold several channels (say, a personal one and one for a club). |
+| **Connections** | The people and channels you follow and who follow you. Your **Network** stream shows what they post. They can be on any hub, or on other networks such as Mastodon if your hub allows it. |
+| **Federation** | The hubs share posts and comments with each other. Someone on another hub can follow you, reply to you and see your photos, just as if you were on the same site. |
+| **Privacy** | You choose who sees each post, photo, file or event: everyone, only your connections, a group of people, or just one person. |
+| **Apps** | Features you switch on as you need them, such as Wiki, Articles or Calendar. If something in this guide is missing from your menu, it's probably an app you haven't installed yet (see **Settings → Integrations**). |
 
-- **It's fast.** Navigating between HQ, Network, and your channel doesn't reload the page - recently viewed content appears instantly from cache while fresh data loads behind it.
-- **It's yours to arrange.** Widgets can be added, removed, reordered, or placed in the sidebar, header or footer - your layout follows you across devices.
-- **It looks the way you want.** 24 built-in themes (Nord, Dracula, Catppuccin, Tokyo Night, and more) plus a fully custom mode, switchable in one tap with no page flash.
-- **It's still Hubzilla.** Every post, comment, photo, and message federates exactly as it always has. Solidified is a new front door, not a new back end.
+## Why Solidified?
 
-## Where to start
+- **It's fast.** Moving between pages doesn't reload anything. Pages you've just visited appear instantly while fresh content loads in the background.
+- **It's yours to arrange.** You can add, remove and reorder the small panels (widgets) around each page, and your layout follows you across devices.
+- **It looks the way you want.** Choose from 24 colour themes or make your own.
+- **It works like an app.** Install it on your phone or desktop, get notifications, and keep reading even when you're offline.
+- **It's still Hubzilla.** Everything you post reaches everyone, exactly as before. Solidified changes how the hub looks, not how it works.
 
-New here? Read [Getting-started](getting-started) first — it covers logging in, the overall layout, and how navigation works, and every other page in this guide builds on it.
+## Start here
 
-## Contents
+1. **[Find your way around](getting-started).** Logging in, the layout of the screen, and how to move between pages.
+2. **[Write your first post](composing-posts).** Formatting, adding pictures, and choosing who can see it.
+3. **[Connect with people](connections).** Find channels to follow and organise them into groups.
 
-- [Getting-started](getting-started): Logging in, layout overview, navigation
-- [Nav](nav) — What each nav link, account-menu item, and mobile button does
-- [Hq](hq) — Your HQ dashboard: composer, events, messages, drafts
-- [Network](network) — Network stream: filters, view modes, searching
-- [Inbox](inbox) — Mail-style message reader, and reading offline
-- [Channel](channel) — Channel and profile pages
-- [Composing-posts](composing-posts) — Writing posts, formatting, privacy controls, reactions
-- [Photos](photos) — Photo albums and image viewer
-- [Files](files) — Cloud file storage
-- [Articles](articles) — Articles app: writing and reading long-form content
-- [Cards](cards) — Cards app: short notes, decks, and kanban boards
-- [Wiki](wiki) — Wiki: collaborative pages
-- [Calendar](calendar) — Calendar and events
-- [Chat](chat) — Chatrooms
-- [Webpages](webpages) — Webpages app: static pages on your channel
-- [Cart](cart) — Shopping cart: browsing, checkout, and order history
-- [Notepad](notepad) — Notes: private personal scratchpad
-- [Jellyfin](jellyfin) — Music and video from your Jellyfin server: player, sharing, parties, clips
-- [Connections](connections) — Connections, directory, privacy groups
-- [Notifications](notifications) — Notification bell and notification list
-- [Widgets](widgets) — Customizing sidebar widgets: adding, removing, reordering, pinned widgets
-- [Settings](settings) — All settings: display, profile, privacy, notifications, account
-- [Games](games) — Puzzle games: overview, controls, and per-game descriptions
-- [Excalidraw](excalidraw) — Hand-drawn-style whiteboard for sketches and diagrams
-- [Diagrams](diagrams) — Flowcharts, sequence diagrams, charts and more, written as text (Mermaid)
+After that, your **[HQ](hq)** is your home page, and the **[Network](network)** stream is where you'll spend most of your time.
 
-## Quick Tips
+## The guide
 
-- Your **HQ** is your personal home base — start here after logging in.
-- The **Network** shows everything happening across your connections.
-- Use the **filter bar** on the Network page to find exactly what you need.
-- All settings are at settings` — accessible from the account menu (top right or bottom of the left sidebar).
+### Getting around
+
+- [Getting started](getting-started): logging in, the screen layout, mobile vs desktop
+- [Navigation](nav): what every menu link and button does
+- [Notifications](notifications): the bell, and staying on top of replies and mentions
+- [Widgets](widgets): arranging the panels around each page
+- [Settings](settings): display, profile, privacy, notifications and account
+
+### Social
+
+- [HQ](hq): your dashboard, with the composer, events, messages and drafts
+- [Network](network): posts from your connections, with filters, views and search
+- [Inbox](inbox): a mail-style reader for messages, which also works offline
+- [Channel](channel): your wall and profile, which is what visitors see
+- [Composing posts](composing-posts): writing, formatting, privacy and reactions
+- [Connections](connections): connections, the directory and privacy groups
+- [Chat](chat): chatrooms
+
+### Your content
+
+- [Photos](photos): albums and the image viewer
+- [Files](files): your cloud storage
+- [Articles](articles): long-form writing
+- [Cards](cards): short notes, decks and kanban boards
+- [Wiki](wiki): pages you write alone or together
+- [Webpages](webpages): static pages on your channel
+- [Notepad](notepad): a private scratchpad
+- [Calendar](calendar): events and invitations
+
+### Creative tools
+
+- [Diagrams](diagrams): flowcharts, sequence diagrams and charts written as text
+- [Excalidraw](excalidraw): a hand-drawn-style whiteboard
+
+### Media and extras
+
+- [Jellyfin](jellyfin): music and video from a Jellyfin server, with sharing and watch parties
+- [Games](games): puzzle games
+- [Cart](cart): shopping, checkout and orders
+
+### Coming from classic Hubzilla?
+
+- [Switching from Redbasic and other themes](cross-compat): what carries over, and what works differently
+
+## Quick tips
+
+- **Lost?** Turn on contextual help (the **?** icon under the menu), then tap any part of the screen to see what it does.
+- **Missing a feature?** Install its app in **Settings → Integrations**.
+- **All your settings** are in the account menu, at the bottom of the left sidebar on desktop or in the bottom bar on mobile.
+- **On your phone?** Use your browser's "Install" or "Add to Home Screen" option to get Solidified as an app.

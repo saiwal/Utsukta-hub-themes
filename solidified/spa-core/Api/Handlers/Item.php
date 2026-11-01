@@ -766,7 +766,7 @@ class Item
      *
      * The SPA used to rebuild core's datarray field by field, and every
      * invariant core applies had to be independently rediscovered — usually
-     * from a user report. See src/docs/dev/en/core-parity.md.
+     * from a user report. See src/docs/dev/en/3-data/core-parity.md.
      *
      * Contract (verified against all 30 exits in Zotlabs\Module\Item::post):
      * api_source makes it return instead of killme(); `dropitems`, `preview`
@@ -1527,8 +1527,11 @@ class Item
         // ContentTypes::toBbcode(). This handler also serves webpages,
         // articles, cards and wiki pages (that is why the lookup above cannot
         // use item_normal()), and those keep their real mimetype, so the
-        // conversion has to be gated on the item's own type.
-        if (intval($item[0]['item_type']) === ITEM_TYPE_POST) {
+        // conversion has to be gated on the item's own type. Notepad notes
+        // (Notes.php: ITEM_TYPE_CUSTOM + obj_type Note) convert too.
+        $itemType = intval($item[0]['item_type']);
+        if ($itemType === ITEM_TYPE_POST
+            || ($itemType === ITEM_TYPE_CUSTOM && $item[0]['obj_type'] === 'Note')) {
             [$content, $mimetype] = ContentTypes::toBbcode($content, $mimetype);
         }
 
