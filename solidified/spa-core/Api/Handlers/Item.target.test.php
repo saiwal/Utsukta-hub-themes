@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; neve
  *
  * Posts, comments and reshares no longer come through here at all — they go
  * through core's Zotlabs\Module\Item, which sets the target itself; see
- * src/docs/dev/en/core-parity.md. conversationTarget() remains for the
+ * src/docs/dev/en/3-data/core-parity.md. conversationTarget() remains for the
  * poll-vote path, and these cases pin its contract.
  *
  * Why it matters: Activity::store() and Libzot::process_delivery() both *drop* a

@@ -131,6 +131,7 @@ class StreamWidgets
                AND item.item_type       = " . intval($item_type_val) . "
                AND item.item_private   IN (0, 1)
                AND item.obj_type       NOT IN ('Event', '" . dbesc(ACTIVITY_OBJ_EVENT) . "')
+               AND item.verb           != 'Add'
                $item_normal
                $permission_sql
              ORDER BY comment_count DESC, item.created DESC

@@ -4,19 +4,30 @@ This guide covers the Admin panel at `/admin`. It is visible only to accounts wi
 
 ## Contents
 
-- [Summary](summary) — Site overview: user counts, queue, version, plugins
-- [Site](site) — Site name, registration policy, access policy
-- [Security](security) — Block lists, allowlists, HTTP security headers
-- [Accounts](accounts) — Registered accounts: block, delete, paginate
-- [Channels](channels) — All channels on this hub
-- [Features](features) — Enable / disable optional site features
-- [Addons](addons) — Install and manage plugins/addons
-- [Logs](logs) — System log viewer with level filtering
-- [Queue](queue) — Outbound message queue inspection
-- [Themes](themes) — Installed themes management
-- [Profile-fields](profile-fields) — Custom profile field definitions
-- [Db-updates](db-updates) — Pending database schema updates
-- [Jellyfin](jellyfin) — The per-user Jellyfin player: what reaches the hub, what it stores, CSP and SyncPlay notes
+### Monitoring
+
+- [Summary](summary): Site overview: user counts, queue, version, plugins
+- [Logs](logs): System log viewer with level filtering
+- [Queue](queue): Outbound message queue inspection
+- [Database updates](db-updates): Pending database schema updates
+
+### Configuration
+
+- [Site](site): Site name, registration policy, access policy
+- [Security](security): Block lists, allowlists, HTTP security headers
+- [Features](features): Enable / disable optional site features
+- [Themes](themes): Installed themes management
+- [Addons](addons): Install and manage plugins/addons
+- [Profile fields](profile-fields): Custom profile field definitions
+
+### People
+
+- [Accounts](accounts): Registered accounts: block, delete, paginate
+- [Channels](channels): All channels on this hub
+
+### Integrations
+
+- [Jellyfin](jellyfin): The per-user Jellyfin player: what reaches the hub, what it stores, CSP and SyncPlay notes
 
 ## Accessing the Admin Panel
 
@@ -24,7 +35,7 @@ The Admin section is accessible only if your account has the administrator flag 
 
 The admin panel uses the same sub-page layout as Settings — a left list of sections and content on the right.
 
-[IMAGE: Admin panel overview with section list]
+![Admin panel overview with section list](index/admin.png)
 
 ## Quick Health Check
 

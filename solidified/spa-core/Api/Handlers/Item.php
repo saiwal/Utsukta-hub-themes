@@ -766,7 +766,7 @@ class Item
      *
      * The SPA used to rebuild core's datarray field by field, and every
      * invariant core applies had to be independently rediscovered — usually
-     * from a user report. See src/docs/dev/en/core-parity.md.
+     * from a user report. See src/docs/dev/en/3-data/core-parity.md.
      *
      * Contract (verified against all 30 exits in Zotlabs\Module\Item::post):
      * api_source makes it return instead of killme(); `dropitems`, `preview`

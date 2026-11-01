@@ -77,16 +77,9 @@ class Help {
             $base = $fallbackBase;
         }
 
-        // Resolve file: prefer {topic}/index.md, then {topic}.md
-        $file = null;
-        $candidates = [
-            $base . '/' . $topic . '/index.md',
-            $base . '/' . $topic . '.md',
-            $base . '/index.md',   // root of section
-        ];
-        foreach ($candidates as $c) {
-            if (file_exists($c)) { $file = $c; break; }
-        }
+        // Unknown topic falls back to the section root.
+        $file = $this->resolveFile($base, $topic)
+            ?? (file_exists($base . '/index.md') ? $base . '/index.md' : null);
 
         if (!$file) {
             Response::error(404, "Topic not found: {$topic}");
@@ -94,7 +87,23 @@ class Help {
 
         $raw = file_get_contents($file);
 
+        // Asset base for relative image srcs: the directory holding the resolved file.
+        // e.g. file = view/theme/solidified/docs/user/en/2-social/hq.md
+        //   → topicDir = 2-social → assetBase = /view/theme/solidified/docs/user/en/2-social/
+        $fileDir    = dirname($file);                     // absolute-ish (relative to CWD)
+        $docsRoot   = $this->docsBase() . '/' . $section . '/' . $lang;
+        $topicDir   = ltrim(substr($fileDir, strlen($docsRoot)), '/');
+        $assetBase  = '/view/theme/solidified/docs/' . $section . '/' . $lang
+                      . ($topicDir ? '/' . $topicDir : '') . '/';
+
         if ($wantRaw) {
+            // Help mode asks by bare page name ("hq"), so it can't know the
+            // file's folder — make markdown image paths absolute here.
+            $raw = preg_replace(
+                '/(!\[[^\]]*\]\()(?!https?:\/\/|data:|\/)([^)\s]+)/',
+                '$1' . $assetBase . '$2',
+                $raw
+            );
             Response::send([
                 'content' => $raw,
                 'title'   => $this->extractTitle($raw),
@@ -106,17 +115,6 @@ class Help {
         }
 
         $html = MarkdownExtra::defaultTransform($raw);
-
-        // Rewrite relative image srcs to absolute docs asset URLs.
-        // The topic dir is the directory containing the resolved file.
-        // e.g. file = view/theme/solidified/docs/user/en/hq/widgets/post-composer/index.md
-        //   → topicDir = hq/widgets/post-composer
-        //   → assetBase = /view/theme/solidified/docs/user/en/hq/widgets/post-composer/
-        $fileDir    = dirname($file);                     // absolute-ish (relative to CWD)
-        $docsRoot   = $this->docsBase() . '/' . $section . '/' . $lang;
-        $topicDir   = ltrim(substr($fileDir, strlen($docsRoot)), '/');
-        $assetBase  = '/view/theme/solidified/docs/' . $section . '/' . $lang
-                      . ($topicDir ? '/' . $topicDir : '') . '/';
 
         // Replace src="relative/path" that don't start with http/https/data/or /
         $html = preg_replace_callback(
@@ -131,7 +129,7 @@ class Help {
         // location. Leaves absolute/external/anchor/mailto/tel links alone.
         $html = preg_replace_callback(
             '/(<a\s[^>]*href=")(?!https?:\/\/|mailto:|tel:|#|\/)(.*?)(")/i',
-            function ($m) use ($section, $topicDir) {
+            function ($m) use ($section, $topicDir, $base) {
                 $target = $m[2];
 
                 $fragment = '';
@@ -145,6 +143,9 @@ class Help {
                 $target = preg_replace('/\.md$/', '', $target);
 
                 $path = $topicDir !== '' ? $topicDir . '/' . $target : $target;
+                // Pages link each other by bare name; point at the real folder.
+                $found = $target === '' ? null : $this->resolveFile($base, $path);
+                if ($found) $path = $this->fileToTopic($base, $found);
                 $href = '/help/' . $section . ($path !== '' ? '/' . $path : '') . $fragment;
 
                 return $m[1] . $href . $m[3];
@@ -331,8 +332,28 @@ class Help {
         return $this->docsBase() . '/' . $section . '/' . $lang;
     }
 
+    // "2-social" → "Social": the number only orders the sidebar groups.
     private function slugToLabel(string $slug): string {
-        return ucwords(str_replace(['-', '_'], ' ', $slug));
+        return ucwords(str_replace(['-', '_'], ' ', preg_replace('/^\d+-/', '', $slug)));
+    }
+
+    /**
+     * {topic}/index.md, then {topic}.md, then {name}.md in any group folder —
+     * so help mode ("hq"), old flat URLs and bare-name cross-links still find
+     * a page after it moved into e.g. 2-social/.
+     */
+    private function resolveFile(string $base, string $topic): ?string {
+        foreach ([$base . '/' . $topic . '/index.md', $base . '/' . $topic . '.md'] as $c) {
+            if (file_exists($c)) return $c;
+        }
+        $name = basename($topic);
+        if ($name === '' || $name === 'index') return null;
+        return glob($base . '/*/' . $name . '.md')[0] ?? null;
+    }
+
+    private function fileToTopic(string $base, string $file): string {
+        $rel = ltrim(substr($file, strlen($base)), '/');
+        return preg_replace('#(/?index)?\.md$#', '', $rel);
     }
 
     private function extractTitle(string $markdown): string {

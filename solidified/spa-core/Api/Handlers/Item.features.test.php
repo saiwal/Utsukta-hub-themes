@@ -4,7 +4,7 @@ if (PHP_SAPI !== 'cli') exit;   // deployed into the web root by the build; neve
  * The SPA-only behaviours of /spa/item — the things core's Zotlabs\Module\Item
  * knows nothing about, and which therefore have to keep working *around* it.
  *
- * Posting now goes through core (src/docs/dev/en/core-parity.md), so
+ * Posting now goes through core (src/docs/dev/en/3-data/core-parity.md), so
  * parity.test.php's post cases compare core against core and prove nothing.
  * These are what replaced them: Markdown source stashing, the embed index,
  * local-only posts, delayed publishing, poll fields, and the response shape the
