@@ -25,6 +25,7 @@ class Pconfig
             'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme : HubDefaults::value('color_scheme'),
             'corner_radius' => HubDefaults::pref($cuid, 'corner_radius'),
             'widget_shell'  => HubDefaults::pref($cuid, 'widget_shell'),
+            'glass_ui'      => HubDefaults::pref($cuid, 'glass_ui'),
         ];
 
         if ($result['color_scheme'] === 'custom') {

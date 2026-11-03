@@ -34,6 +34,7 @@ namespace {
 			'post_mode'     => t('Open posts as'),
 			'thread_mode'   => t('Thread display'),
 			'widget_shell'  => t('Widget style'),
+			'glass_ui'      => t('Translucent surfaces (0 = off, 1 = on)'),
 		];
 		$o = '<input type="hidden" name="form_security_token" value="' . get_form_security_token('admin_themes') . '" />'
 			. '<p>' . t('Hub-wide defaults for every SPA theme. They apply to visitors and to members who have not chosen their own; leave blank for the built-in default.') . '</p>';

@@ -116,6 +116,7 @@ class Settings
         $post_mode     = HubDefaults::pref($uid, 'post_mode');
         $thread_mode   = HubDefaults::pref($uid, 'thread_mode');
         $widget_shell  = HubDefaults::pref($uid, 'widget_shell');
+        $glass_ui      = intval(HubDefaults::pref($uid, 'glass_ui'));
 
         Response::send([
             'thread_allow' => intval(get_pconfig($uid, 'system', 'thread_allow', 1)),
@@ -140,6 +141,7 @@ class Settings
             'post_mode'     => $post_mode,
             'thread_mode' => $thread_mode,
             'widget_shell' => $widget_shell,
+            'glass_ui' => $glass_ui,
             'show_emoji_images' => 1 - intval(get_pconfig($uid, 'system', 'no_smilies', 0)),
             'reply_mention' => intval(get_pconfig($uid, 'spa', 'reply_mention', 1)),
         ]);
@@ -1091,6 +1093,9 @@ class Settings
 
         if (isset($data['widget_shell']) && HubDefaults::clean('widget_shell', $data['widget_shell']) !== null)
             set_pconfig($uid, 'spa', 'widget_shell', $data['widget_shell']);
+
+        if (isset($data['glass_ui']))
+            set_pconfig($uid, 'spa', 'glass_ui', intval($data['glass_ui']) ? '1' : '0');
 
         if (isset($data['comment_order']) && in_array($data['comment_order'], ['oldest_first', 'newest_first'], true))
             set_pconfig($uid, 'spa', 'comment_order', $data['comment_order']);

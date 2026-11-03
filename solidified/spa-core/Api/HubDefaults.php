@@ -34,6 +34,7 @@ final class HubDefaults
         'post_mode'     => ['modal', 'dock', 'page'],
         'thread_mode'   => ['threaded', 'flat'],
         'widget_shell'  => ['card', 'section', 'banded', 'rail', 'glass', 'legend', 'tab', 'compact', 'fold'],
+        'glass_ui'      => ['0', '1'],
     ];
 
     public const BUILTIN = [
@@ -41,7 +42,7 @@ final class HubDefaults
         'corner_radius' => 'default', 'bg_url' => '', 'bg_fit' => 'cover',
         'scroll_style' => 'endless', 'post_height' => '310', 'comment_order' => 'oldest_first',
         'composer_mode' => 'modal', 'post_mode' => 'modal', 'thread_mode' => 'threaded',
-        'widget_shell' => 'card',
+        'widget_shell' => 'card', 'glass_ui' => '0',
     ];
 
     /** Validated value, or null when $v isn't acceptable for $k ('' = unset). */
