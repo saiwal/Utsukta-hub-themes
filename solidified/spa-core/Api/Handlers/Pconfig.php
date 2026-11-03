@@ -24,6 +24,7 @@ class Pconfig
             'font_family'   => HubDefaults::pref($cuid, 'font_family'),
             'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme : HubDefaults::value('color_scheme'),
             'corner_radius' => HubDefaults::pref($cuid, 'corner_radius'),
+            'widget_shell'  => HubDefaults::pref($cuid, 'widget_shell'),
         ];
 
         if ($result['color_scheme'] === 'custom') {

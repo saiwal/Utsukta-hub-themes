@@ -33,6 +33,7 @@ final class HubDefaults
         'composer_mode' => ['modal', 'dock', 'page'],
         'post_mode'     => ['modal', 'dock', 'page'],
         'thread_mode'   => ['threaded', 'flat'],
+        'widget_shell'  => ['card', 'section', 'banded', 'rail', 'glass', 'legend', 'tab', 'compact', 'fold'],
     ];
 
     public const BUILTIN = [
@@ -40,6 +41,7 @@ final class HubDefaults
         'corner_radius' => 'default', 'bg_url' => '', 'bg_fit' => 'cover',
         'scroll_style' => 'endless', 'post_height' => '310', 'comment_order' => 'oldest_first',
         'composer_mode' => 'modal', 'post_mode' => 'modal', 'thread_mode' => 'threaded',
+        'widget_shell' => 'card',
     ];
 
     /** Validated value, or null when $v isn't acceptable for $k ('' = unset). */
@@ -58,6 +60,9 @@ final class HubDefaults
                 if (!is_numeric($v)) return null;
                 $n = intval($v);
                 return (string) ($n > 0 ? min(max($n, 100), 5000) : 0);
+            case 'widget_shell':
+                if ($v === 'flat') $v = 'section'; // renamed; stored prefs carry over
+                return in_array($v, self::CHOICES[$k], true) ? $v : null;
             default:
                 return in_array($v, self::CHOICES[$k], true) ? $v : null;
         }
