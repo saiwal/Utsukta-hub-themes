@@ -1,0 +1,1 @@
+import{c as e,f as t}from"./app-solid-HdCE-Du-.js";var n=n=>r=>t(e,{get children(){return t(n,r)}});export{n as t};

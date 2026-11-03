@@ -1,0 +1,1 @@
+import{f as e}from"./app-solid-HdCE-Du-.js";import{n as t}from"./app-components-qMmuGqvk.js";function n(){return e(t,{href:`/login`})}export{n as default};
