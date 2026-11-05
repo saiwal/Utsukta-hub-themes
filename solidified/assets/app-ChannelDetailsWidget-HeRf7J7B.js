@@ -1,1 +1,0 @@
-import{f as e}from"./app-solid-HdCE-Du-.js";import{t}from"./app-ProfileView-WK-CUUqk.js";function n(){return e(t,{})}export{n as default};
