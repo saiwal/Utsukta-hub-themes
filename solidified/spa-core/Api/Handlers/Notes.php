@@ -169,6 +169,12 @@ class Notes
             $sql_extra .= protect_sprintf(term_query('item', $cat, TERM_CATEGORY));
         }
 
+        // A single note, linked from search and the content graph.
+        $note = trim($_GET['note'] ?? '');
+        if ($note !== '') {
+            $sql_extra .= " AND item.uuid = '" . dbesc($note) . "' ";
+        }
+
         $search = trim($_GET['search'] ?? '');
         if ($search) {
             $sql_extra .= sprintf(

@@ -349,6 +349,15 @@ class Nav
                         'icon' => 'wiki',
                     ];
 
+                // Graph is an SPA frontend feature, not a Hubzilla app: the tab
+                // follows the owner's Settings → Integrations switch.
+                if (Links::enabledFor($puid))
+                    $channel_tabs[] = [
+                        'id'   => 'graph',
+                        'url'  => z_root() . '/graph/' . $subject_nick,
+                        'icon' => 'graph',
+                    ];
+
                 $skulist = get_pconfig($puid, 'cart-manualcat', 'skulist') ?: [];
                 if (!empty($skulist))
                     $channel_tabs[] = [
@@ -468,6 +477,12 @@ class Nav
             'frontpage'        => (string) get_config('system', 'frontpage'),
             'startpage'        => (string) get_config('system', 'startpage'),
             'installed_apps'   => $installed_apps,
+            // The visited owner's frontend-feature overrides, for channelScoped
+            // SPA modules (the graph). null on your own pages: the SPA already
+            // holds yours, fresher than this cached response.
+            'subject_frontend_overrides' => (!empty($subject) && !$is_owner)
+                ? Links::frontendOverrides(intval($subject['channel_id']))
+                : null,
             'osm'              => $osm,
             // Effective language for this request/session — browser-detected
             // (get_best_language()) or explicitly set via classic redbasic's

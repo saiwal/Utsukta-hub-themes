@@ -117,8 +117,12 @@ class Wiki
     /**
      * Render raw wiki page content → HTML string.
      */
-    private function renderContent(string $content, string $mimeType, string $wikiPath): string
+    private function renderContent(string $content, string $mimeType, string $wikiPath, array $owner, string $wikiName): string
     {
+        // Core's convert_links points every [[X]] into this wiki. Link the ones
+        // that mean another wiki's page, an article or a card first (Links.php).
+        $content = Links::rewriteWikilinks($content, $mimeType, $owner, $wikiName, false);
+
         if ($mimeType === 'text/bbcode') {
             [$content, $diagrams] = self::extractMermaid($content);
             $html = zidify_links(smilies(bbcode($content, ['tryoembed' => false])));
@@ -390,7 +394,7 @@ class Wiki
             $raw = MarkdownSoap::unescape($raw);
         }
 
-        $rendered = $this->renderContent($raw, $mimeType, $wikiPath);
+        $rendered = $this->renderContent($raw, $mimeType, $wikiPath, $owner, $wikiName);
 
         Response::send([
             'wiki'         => $this->formatWiki($w),

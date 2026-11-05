@@ -904,6 +904,9 @@ class Item
         if ($mimetype === 'text/bbcode') {
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
         }
 
         $fields = self::coreAclFields($body, $profileUid) + [
@@ -1011,6 +1014,9 @@ class Item
         if ($mimetype === 'text/bbcode') {
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
         }
 
         // parent (the id), never parent_mid: core's parent_mid branch is gated
@@ -1519,6 +1525,14 @@ class Item
             Response::error(404, 'Item not found or permission denied');
         }
 
+        // uid only says the row is in this channel's stream, which includes
+        // everything delivered to it. Mirror core's /editpost
+        // (Module/Editpost.php): only the author or owner may edit.
+        $ob_hash = get_observer_hash();
+        if (!$ob_hash || !in_array($ob_hash, [$item[0]['author_xchan'], $item[0]['owner_xchan']], true)) {
+            Response::error(403, 'Permission denied');
+        }
+
         $postTags = [];
 
         require_once('include/text.php');
@@ -1557,6 +1571,9 @@ class Item
 
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($uid, $content));
         } else {
@@ -1583,7 +1600,6 @@ class Item
         if ($mimetype === 'text/bbcode'
             && preg_match_all('/(\[attachment\](.*?)\[\/attachment\])/', $content, $match)) {
             require_once('include/attach.php');
-            $ob_hash = get_observer_hash();
             $seen    = array_column($attachments, 'href');
             foreach ($match[2] as $i => $mtch) {
                 $hash = substr($mtch, 0, strpos($mtch, ','));

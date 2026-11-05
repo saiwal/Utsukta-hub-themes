@@ -1,0 +1,1 @@
+import{f as e,p as t}from"./app-routing-CbT0krVg.js";import{O as n}from"./app-solid-HdCE-Du-.js";function r(){let r=t(),i=e();return n(()=>{i(`/wiki/${r.nick}/${r.wikiName}/Home`,{replace:!0})}),null}export{r as default};

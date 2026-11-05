@@ -42,6 +42,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Chat federation](chat-federation): Unread dots for bookmarked rooms on other SPA hubs: signed subscribe/notice between hubs, storage, throttle
 - [Post import](post-import): Importing a federated post by URL: Zot vs ActivityPub, ancestor and reply discovery, the Lemmy fallback
 - [Cloud module](cloud-module): Cloud/Files: folder paths as URLs, the folder-hash resolver, and the SabreDAV CSP workaround
+- [Links and search](links-and-search): Backlinks, the content graph, `[[Title]]` resolution and the Ctrl+K unified search (`/spa/links`, `/spa/find`)
 
 ### Extending
 

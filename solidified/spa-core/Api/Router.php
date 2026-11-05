@@ -87,6 +87,8 @@ class Router
         'notify'         => Handlers\Notify::class,
         'notifications'  => Handlers\Notifications::class,
         'moderate'       => Handlers\Moderate::class,
+        'links'          => Handlers\Links::class,
+        'find'           => Handlers\Find::class,
     ];
 
     public static function dispatch(string $method): void
@@ -124,6 +126,11 @@ class Router
             if ($uid && !empty(\App::$config[$uid]['transient']))
                 \Zotlabs\Lib\Libsync::build_sync_packet($uid);
         });
+
+        // Any SPA write by a channel may change what its content links to.
+        if ($method !== 'get' && local_channel()) {
+            \Zotlabs\Lib\Cache::set(Handlers\Links::cacheKey(local_channel()), '');
+        }
 
         $handler->$method();
     }
