@@ -76,8 +76,10 @@ class Find
     private function items(int $uid, int $type, string $sql, int $limit, bool $topOnly): array
     {
         $top = $topOnly ? ' AND item.item_thread_top = 1' : '';
+        // Not `Add`: every article/card create or edit also stores an empty
+        // collection-sync activity flagged thread-top (conversation target).
         return dbq("SELECT id, uuid, title, body, created FROM item
-            WHERE item.uid = $uid $top " . item_normal($uid, 'item', $type) . " $sql
+            WHERE item.uid = $uid $top AND item.verb != 'Add' " . item_normal($uid, 'item', $type) . " $sql
             ORDER BY item.created DESC LIMIT $limit") ?: [];
     }
 

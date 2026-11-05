@@ -42,7 +42,9 @@ The Graph is an optional feature. Switch it on in **Settings → Integrations**;
 
 - Each **dot** is a wiki page, article, card, note or post, coloured by kind. The bigger the dot, the more links it has.
 - Each **line** is a link between two of them.
-- Wiki pages, articles, cards and notes always appear, even with no links yet. Posts appear only when they link to something or something links to them, and disappear when every link they have goes to a kind you've hidden.
+- Wiki pages, articles, cards, notes and your 500 most recent posts always appear, even with no links yet. Older posts appear when they link to something or something links to them.
+- **Drafts** (yours only, never shown to anyone else) appear as a hollow dot with a dashed ring and "(Draft)" after the name, but only when they link or are linked. They have no Open button, since a draft has no page yet; edit them from the Drafts widget.
+- Switch off the **Unlinked posts** chip to hide posts that have no links (counting only links to kinds you're showing). Switch off **Drafts** to hide drafts.
 - When only a few dots are showing, every one is named. In a bigger graph only the most-linked are, so the names don't pile up. Zoom in or hover to see the rest.
 
 | To… | Do this |

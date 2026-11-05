@@ -11,8 +11,8 @@ use Zotlabs\Lib\Cache;
  *   GET /spa/links/backlinks?path=      → { node, from[] }  (path = an SPA url; empty when off)
  *   GET /spa/links/resolve?nick=&title= → { url|null }      ([[Title]] outside wikis)
  *
- * Nodes are the owner's articles, cards, notes and wiki pages (always), plus
- * own top-level posts that link or are linked. Edges come from [[wikilinks]]
+ * Nodes are the owner's articles, cards, notes and wiki pages, their most
+ * recent top-level posts, and any older post that links or is linked. Edges come from [[wikilinks]]
  * and internal permalinks (/display, /item, /articles, /cards, /wiki) in the
  * body. An unresolved [[Title]] becomes a `missing` node, as in Obsidian.
  *
@@ -25,10 +25,19 @@ class Links
 {
     private const CACHE_AGE = '15 MINUTE';
 
+    // ponytail: posts are shown whether linked or not, but only this many of the
+    // most recent (older ones still appear when they link or are linked) —
+    // past a few thousand dots the canvas layout crawls. Raise with a faster
+    // renderer (WebGL) or server-side layout.
+    private const RECENT_POSTS = 500;
+
     /** Router drops this on every SPA write by the channel, so own edits show at once. */
     public static function cacheKey(int $uid): string
     {
-        return 'spa:links:' . $uid;
+        // Bumped whenever the node set changes shape (v2: `draft` flag; v3:
+        // collection `Add` activities excluded; v4: unlinked recent posts), so
+        // stale graphs drop at once.
+        return 'spa:links:v4:' . $uid;
     }
 
     /**
@@ -160,7 +169,7 @@ class Links
             ];
             $iids = [];
             foreach ($g['nodes'] as $n) {
-                if (!empty($typeOk[$n['type']])) $iids[] = intval($n['iid']);
+                if (!empty($typeOk[$n['type']]) && empty($n['draft'])) $iids[] = intval($n['iid']);
             }
             $ok = [];
             if ($iids) {
@@ -217,7 +226,7 @@ class Links
         $nodes = [];   // id => node (+ transient 'body', 'wiki')
         $index = [];   // ref key => node id
 
-        $add = function (array $row, string $type, string $url) use (&$nodes, &$index) {
+        $add = function (array $row, string $type, ?string $url) use (&$nodes, &$index) {
             $id = $row['uuid'];
             $nodes[$id] = [
                 'id'    => $id,
@@ -227,9 +236,13 @@ class Links
                 'url'   => $url,
                 'body'  => (string) $row['body'],
                 'wiki'  => $row['wiki'] ?? null,
+                // Unpublished drafts (resource_type 'draft', any kind) are the
+                // owner's only: marked for them, dropped for everyone else.
+                'draft' => !empty($row['draft']),
             ];
             $index['u:' . $id] = $id;
-            if (trim((string) $row['title']) !== '') {
+            // A draft never answers a [[Title]] — it has nowhere to open.
+            if (empty($row['draft']) && trim((string) $row['title']) !== '') {
                 $index['t:' . mb_strtolower(trim($row['title']))] ??= $id;
             }
         };
@@ -260,7 +273,8 @@ class Links
         $types = [ITEM_TYPE_ARTICLE => 'article', ITEM_TYPE_CARD => 'card', ITEM_TYPE_CUSTOM => 'note'];
         $rows = dbq("SELECT id, uuid, title, body, item_type FROM item
             WHERE uid = $uid AND item_type IN (" . implode(',', array_keys($types)) . ")
-              AND item_thread_top = 1 AND item_deleted = 0 AND author_xchan = '$hash'") ?: [];
+              AND item_thread_top = 1 AND item_deleted = 0 AND author_xchan = '$hash'
+              AND verb != 'Add'") ?: [];
         $slugs = [];
         if ($rows) {
             $ns = [item_type_to_namespace(ITEM_TYPE_ARTICLE), item_type_to_namespace(ITEM_TYPE_CARD)];
@@ -287,12 +301,23 @@ class Links
             }
         }
 
-        // Own top-level posts: only those whose body could hold a link are read
-        // as sources; posts that are only link *targets* are fetched below.
-        $post = function (array $p) use ($add) { $add($p, 'post', '/display/' . $p['uuid']); };
+        // Own top-level posts: the most recent RECENT_POSTS always; beyond that,
+        // only those whose body could hold a link are read as sources, and
+        // posts that are only link *targets* are fetched below.
+        $post = function (array $p) use ($add) {
+            $p['draft'] = intval($p['item_unpublished']) === 1;
+            // A draft has no permalink yet; it's reopened from the Drafts widgets.
+            $add($p, 'post', $p['draft'] ? null : '/display/' . $p['uuid']);
+        };
         $postSql = "uid = $uid AND item_type = " . ITEM_TYPE_POST . " AND item_thread_top = 1
-            AND item_wall = 1 AND item_deleted = 0 AND author_xchan = '$hash'";
-        foreach (dbq("SELECT id, uuid, title, body FROM item WHERE $postSql AND (body LIKE '%[[%'
+            AND item_wall = 1 AND item_deleted = 0 AND author_xchan = '$hash' AND verb != 'Add'";
+        // Drafts aren't part of the recent set — 40 unlinked drafts would just be
+        // clutter; a draft that links or is linked still shows (marked).
+        foreach (dbq("SELECT id, uuid, title, body, item_unpublished FROM item WHERE $postSql
+                AND item_unpublished = 0 ORDER BY created DESC LIMIT " . self::RECENT_POSTS) ?: [] as $p) {
+            $post($p);
+        }
+        foreach (dbq("SELECT id, uuid, title, body, item_unpublished FROM item WHERE $postSql AND (body LIKE '%[[%'
                 OR body LIKE '%/display/%' OR body LIKE '%/item/%' OR body LIKE '%/articles/%'
                 OR body LIKE '%/cards/%' OR body LIKE '%/wiki/%')") ?: [] as $p) {
             $post($p);
@@ -311,7 +336,7 @@ class Links
             }
         }
         if ($want) {
-            foreach (dbq("SELECT id, uuid, title, body FROM item WHERE $postSql
+            foreach (dbq("SELECT id, uuid, title, body, item_unpublished FROM item WHERE $postSql
                     AND uuid IN (" . implode(',', array_unique($want)) . ")") ?: [] as $p) {
                 $post($p);
             }
@@ -329,7 +354,7 @@ class Links
                     if ($tgt === null) {
                         $tgt = 'missing:' . substr($titleKey, 2);
                         $nodes[$tgt] ??= ['id' => $tgt, 'iid' => 0, 'type' => 'missing',
-                            'title' => $r[2], 'url' => null, 'body' => '', 'wiki' => null];
+                            'title' => $r[2], 'url' => null, 'body' => '', 'wiki' => null, 'draft' => false];
                     }
                 } else {
                     $tgt = $index[$r] ?? null;
@@ -340,10 +365,11 @@ class Links
             }
         }
 
-        // Posts are only interesting when connected; everything else always shows.
+        // Everything shows, linked or not — except a draft, which is only
+        // interesting once it links or is linked.
         $out = [];
         foreach ($nodes as $id => $n) {
-            if ($n['type'] === 'post' && !isset($linked[$id])) continue;
+            if ($n['draft'] && !isset($linked[$id])) continue;
             unset($n['body'], $n['wiki']);
             $out[] = $n;
         }

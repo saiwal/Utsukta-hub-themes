@@ -4,8 +4,14 @@
 
 One build pass over a channel's **own** writing produces the whole graph:
 
-- **Nodes**: articles, cards, notes (`ITEM_TYPE_CUSTOM`) and wiki pages always;
-  own top-level wall posts only when they link or are linked. Wiki pages store
+- **Nodes**: articles, cards, notes (`ITEM_TYPE_CUSTOM`), wiki pages and the
+  `RECENT_POSTS` (500) newest own top-level wall posts always; older posts only
+  when they link or are linked. Drafts (`resource_type 'draft'`, unpublished,
+  any kind) carry `draft: true`, show only when linked, have no `url`, and
+  never reach visitors or the `[[Title]]` index. Every query excludes
+  `verb = 'Add'`: each article/card create or edit stores an empty
+  collection-sync `Add` row flagged thread-top, which otherwise shows up as a
+  blank item. Wiki pages store
   one row per revision, so only `MAX(id)` per `(resource_id, title)` counts.
 - **Edges**: `[[Title]]` / `[[Title|label]]`, plus permalinks to this hub —
   `/display/<uuid>`, `/item/<uuid>`, `/articles/<nick>/<slug|uuid>`,
@@ -39,7 +45,7 @@ GET /spa/links/resolve?nick=&title= → { url | null }
   (links to / linked from, Open); it never navigates on its own. Labels are
   placed greedily by priority with an overlap test, all of them below
   `SMALL_GRAPH` (40) visible nodes; the focused node's label goes above its dot,
-  clear of the cursor. A post whose links all go to hidden types is dropped. The
+  clear of the cursor. Pseudo-filter chips: **Drafts**, and **Unlinked posts** (off = drop posts with no *visible* link). The
   canvas is `aria-hidden`; the same nodes are also an `sr-only` link list.
 - **Toggle**: a `frontendFeature` (off by default, Settings → Integrations)
   with `channelScoped: true`. On someone else's channel the *owner's* switch
