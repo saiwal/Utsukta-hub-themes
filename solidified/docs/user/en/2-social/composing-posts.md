@@ -127,6 +127,10 @@ Click 💬 to expand the comment thread under a post. Type your reply in the com
 
 ![Comment thread expanded with reply input](composing-posts/thread.png)
 
+## Linking and related posts
+
+Write `[[Some title]]` in a post to link it to your wiki page, article or card of that title. When you open a post, a short **Related posts** list (posts sharing its hashtags or categories) may appear at the bottom. See [Links and graph](links-and-graph).
+
 ## Editing a Post
 
 On your own posts, a **⋯ menu** or **edit button** lets you modify the body or title. The edit is federated — connections will see the updated version.

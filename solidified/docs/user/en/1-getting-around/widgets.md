@@ -78,6 +78,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | filters               | network                                        | right                                      | -      | -        |
 | guided tours          | help                                           | right                                      | -      | -        |
 | html block            | any                                            | right, footer, contentTop, header | -      | ✅       |
+| linked from           | wiki, articles, cards, post                    | right, footer                              | -      | -        |
 | links list            | any                                            | right, footer                              | -      | ✅       |
 | menu_bar              | any                                            | header                                     | -      | ✅       |
 | menu_tree             | any                                            | right, footer                              | -      | ✅       |
@@ -258,6 +259,11 @@ Lists the interactive, step-by-step tours available in the app. Click **Start** 
 ### HTML Block Widget
 
 Shows a block of raw HTML you write yourself. Useful for embedding a badge, custom links, or anything else the built-in widgets don't cover.
+<!-- backlinks -->
+
+### Linked From
+
+Lists the wiki pages, articles, cards, notes and posts that link to the one you're reading, through a `[[Title]]` or a pasted link. It's hidden on pages nothing links to, and visitors only see entries they're allowed to see. The **Graph** link at the bottom opens the map of the whole channel. See [Links and graph](links-and-graph).
 <!-- link_list -->
 
 ### Link List Widget

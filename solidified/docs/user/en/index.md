@@ -39,6 +39,7 @@ After that, your **[HQ](hq)** is your home page, and the **[Network](network)** 
 
 - [Getting started](getting-started): logging in, the screen layout, mobile vs desktop
 - [Navigation](nav): what every menu link and button does
+- [Search and jump](search): Ctrl+K to find anything you've written or saved, or jump to any app
 - [Notifications](notifications): the bell, and staying on top of replies and mentions
 - [Widgets](widgets): arranging the panels around each page
 - [Settings](settings): display, profile, privacy, notifications and account
@@ -63,6 +64,7 @@ After that, your **[HQ](hq)** is your home page, and the **[Network](network)** 
 - [Webpages](webpages): static pages on your channel
 - [Notepad](notepad): a private scratchpad
 - [Calendar](calendar): events and invitations
+- [Links and graph](links-and-graph): `[[links]]` between your pages, "Linked from", and a map of how it all connects
 
 ### Creative tools
 
@@ -81,6 +83,7 @@ After that, your **[HQ](hq)** is your home page, and the **[Network](network)** 
 
 ## Quick tips
 
+- **Looking for something?** Press **Ctrl+K** (or use the search in the mobile app drawer) to search everything at once.
 - **Lost?** Turn on contextual help (the **?** icon under the menu), then tap any part of the screen to see what it does.
 - **Missing a feature?** Install its app in **Settings → Integrations**.
 - **All your settings** are in the account menu, at the bottom of the left sidebar on desktop or in the bottom bar on mobile.
