@@ -1,6 +1,6 @@
 # Search and jump
 
-One search box finds everything you've written or saved: wiki pages, articles, cards, notes, posts, files and bookmarks. The same box also gets you to any app, so you can move around without touching the menu.
+One search box finds everything you've written or saved: wiki pages, articles, cards, webpages, notes, posts, files and bookmarks. The same box also gets you to any app, so you can move around without touching the menu.
 
 ## Opening it
 
@@ -14,7 +14,7 @@ One search box finds everything you've written or saved: wiki pages, articles, c
 As you type, results come back in groups:
 
 1. **Go to**: apps whose name matches, such as *Calendar* or *Wiki*. With nothing typed yet, this lists your first few apps, so the box doubles as a quick launcher. (On mobile, matching apps appear as tiles, the same as in the drawer.)
-2. **Your content**: matches grouped by kind (wiki pages, articles, cards, notes, posts, files, bookmarks), newest first, with a short excerpt around the word you searched for.
+2. **Your content**: matches grouped by kind (wiki pages, articles, cards, webpages, notes, posts, files, bookmarks), newest first, with a short excerpt around the word you searched for.
 
 Search starts once you've typed two letters. It looks in titles and text, and for files, in the file name.
 
@@ -39,7 +39,7 @@ Click the **Filters** button (the sliders icon) next to the search box:
 
 ## Where results open
 
-- Wiki pages, articles, cards and posts open on their own page.
+- Wiki pages, articles, cards, webpages and posts open on their own page.
 - A **note** opens the Notepad showing just that note. Click **Notepad** in the menu to see all your notes again.
 - A **file** opens its folder in Files.
 - A **bookmark** opens the bookmarked page. Bookmarks to other websites open in a new tab.

@@ -4,29 +4,43 @@
 
 One build pass over a channel's **own** writing produces the whole graph:
 
-- **Nodes**: articles, cards, notes (`ITEM_TYPE_CUSTOM`), wiki pages and the
+- **Nodes**: articles, cards, webpages (`ITEM_TYPE_WEBPAGE`, not blocks or
+  layouts; url from the `system`/`WEBPAGE` page link), notes (`ITEM_TYPE_CUSTOM`), wiki pages and the
   `RECENT_POSTS` (500) newest own top-level wall posts always; older posts only
-  when they link or are linked. Drafts (`resource_type 'draft'`, unpublished,
-  any kind) carry `draft: true`, show only when linked, have no `url`, and
-  never reach visitors or the `[[Title]]` index. Every query excludes
+  when they link or are linked. Drafts and anything else unpublished
+  (`item_unpublished = 1`, except wiki pages, which are always stored that
+  way) are left out entirely. Every query excludes
   `verb = 'Add'`: each article/card create or edit stores an empty
   collection-sync `Add` row flagged thread-top, which otherwise shows up as a
   blank item. Wiki pages store
   one row per revision, so only `MAX(id)` per `(resource_id, title)` counts.
 - **Edges**: `[[Title]]` / `[[Title|label]]`, plus permalinks to this hub —
   `/display/<uuid>`, `/item/<uuid>`, `/articles/<nick>/<slug|uuid>`,
-  `/cards/<nick>/<slug|uuid>`, `/wiki/<nick>/<wiki>/<page>` (absolute, or
+  `/cards/<nick>/<slug|uuid>`, `/page/<nick>/<page link>`, `/wiki/<nick>/<wiki>/<page>` (absolute, or
   relative after `=`, `(`, a quote or a space). Links into another channel's
   content are ignored. Reshares count, since a share block carries a link.
-- `[[Title]]` inside a wiki page tries the same wiki first, then any node with
-  that title, case-insensitively (wiki pages before articles/cards). Nothing
-  matches → a `missing` node.
+- `[[target]]` forms, parsed once by `Links::parseTarget()` into index keys
+  tried in order (case-insensitive except slugs):
+  `[[article:X]]` / `[[card:X]]` / `[[page:X]]` → `a:`/`c:`/`p:` slug, then
+  `at:`/`ct:`/`pt:` title;
+  `[[Wiki/Page]]` → `wn:wiki/page`, then as a plain title; `[[Title]]` →
+  `wn:<current wiki>/title` (wiki sources only), then `t:` (wiki pages first,
+  then articles/cards/webpages). Nothing matches → a `missing` node. Debris (one
+  character, or starting with `/`) is never a target.
+- `Links::rewriteWikilinks()` turns resolvable targets into real links in the
+  body's format (bbcode/markdown/html), resolved for the *observer* so nobody
+  is linked to what they can't see. `Wiki.php` runs it (relative) before
+  core's `convert_links`, leaving same-wiki and unresolved targets to core;
+  `Item.php` runs it (absolute, `z_root()`) at save on posts, comments and
+  edits, beside the `[share]`/`[card]` expansion, since posts federate. Notes
+  are never linked from a post. `resolve` and the `/link/*title` route (a splat,
+  for `Wiki/Page`) use the same parser.
 - Every endpoint slices the same cached graph (`Zotlabs\Lib\Cache`, 15 min, key
   `spa:links:<uid>`). `Router::dispatch` drops the key on any non-GET by a local
   channel, so SPA edits show up right away; edits made in the classic UI can lag
   by up to 15 minutes.
 - **Visitors**: notes are dropped; other types need `view_stream` /
-  `view_pages` / `view_wiki` and must pass `item_permissions_sql`. An edge
+  `view_pages` (articles, cards, webpages) / `view_wiki` and must pass `item_permissions_sql`. An edge
   survives only when both ends survive.
 - The wiki addon's classes load only when one of its hooks runs —
   `Links::wikiLoaded()` requires them on demand.
@@ -45,7 +59,7 @@ GET /spa/links/resolve?nick=&title= → { url | null }
   (links to / linked from, Open); it never navigates on its own. Labels are
   placed greedily by priority with an overlap test, all of them below
   `SMALL_GRAPH` (40) visible nodes; the focused node's label goes above its dot,
-  clear of the cursor. Pseudo-filter chips: **Drafts**, and **Unlinked posts** (off = drop posts with no *visible* link). The
+  clear of the cursor. Pseudo-filter chip: **Unlinked posts** (off = drop posts with no *visible* link). The
   canvas is `aria-hidden`; the same nodes are also an `sr-only` link list.
 - **Toggle**: a `frontendFeature` (off by default, Settings → Integrations)
   with `channelScoped: true`. On someone else's channel the *owner's* switch
@@ -69,7 +83,7 @@ GET /spa/links/resolve?nick=&title= → { url | null }
 ## Unified search: `Handlers/Find.php`
 
 `GET /spa/find?term=&types=&tag=&dbegin=&dend=&limit=` (local channel only)
-searches posts (everything in your item table), articles, cards, notes, the
+searches posts (everything in your item table), articles, cards, webpages, notes, the
 latest wiki revisions, files (`attach.filename`) and bookmarks (`menu_item`).
 A tag matches hashtags *and* categories, and skips files/bookmarks; a date range
 skips bookmarks. Bookmarks pointing into this hub come back as SPA paths.

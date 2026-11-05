@@ -904,6 +904,9 @@ class Item
         if ($mimetype === 'text/bbcode') {
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
         }
 
         $fields = self::coreAclFields($body, $profileUid) + [
@@ -1011,6 +1014,9 @@ class Item
         if ($mimetype === 'text/bbcode') {
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
         }
 
         // parent (the id), never parent_mid: core's parent_mid branch is gated
@@ -1565,6 +1571,9 @@ class Item
 
             $content = $this->expandShareTags($content);
             $content = $this->expandCardTags($content);
+            // [[target]] → absolute [url]: a post federates, and a [[ ]] or a
+            // relative link would resolve against whoever displays it.
+            $content = Links::rewriteWikilinks($content, 'text/bbcode', \App::get_channel(), null, true);
 
             $postTags = array_merge($postTags, self::buildEmojiTerms($uid, $content));
         } else {

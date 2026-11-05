@@ -8,7 +8,7 @@ use Utsukta\SpaCore\Api\Response;
  * Unified search for the command palette (local channel only — it searches
  * your own item table, files and bookmarks).
  *
- *   GET /spa/find?term=&types=post,article,card,wiki,note,file,bookmark
+ *   GET /spa/find?term=&types=post,article,card,webpage,wiki,note,file,bookmark
  *                &tag=&dbegin=YYYY-MM-DD&dend=YYYY-MM-DD&limit=
  *   → { results: [{ type, id, title, snippet, url, created, external? }] }
  *
@@ -18,7 +18,7 @@ use Utsukta\SpaCore\Api\Response;
  */
 class Find
 {
-    private const TYPES = ['post', 'article', 'card', 'wiki', 'note', 'file', 'bookmark'];
+    private const TYPES = ['post', 'article', 'card', 'webpage', 'wiki', 'note', 'file', 'bookmark'];
 
     public function get(): void
     {
@@ -54,6 +54,7 @@ class Find
                 'post'    => $this->items($uid, ITEM_TYPE_POST, $itemSql, $limit, false),
                 'article' => $this->items($uid, ITEM_TYPE_ARTICLE, $itemSql, $limit, true),
                 'card'    => $this->items($uid, ITEM_TYPE_CARD, $itemSql, $limit, true),
+                'webpage' => $this->items($uid, ITEM_TYPE_WEBPAGE, $itemSql, $limit, true),
                 'note'    => $this->items($uid, ITEM_TYPE_CUSTOM, $itemSql, $limit, true),
                 'wiki'    => $this->wikiPages($uid, $itemSql, $limit),
                 'file'    => $tag === '' && $like !== null ? $this->files($uid, $like, $dbegin, $dend, $limit) : [],
@@ -78,7 +79,9 @@ class Find
         $top = $topOnly ? ' AND item.item_thread_top = 1' : '';
         // Not `Add`: every article/card create or edit also stores an empty
         // collection-sync activity flagged thread-top (conversation target).
-        return dbq("SELECT id, uuid, title, body, created FROM item
+        // A webpage opens only by its page link (iconfig system/WEBPAGE).
+        return dbq("SELECT item.id, item.uuid, item.title, item.body, item.created, slug.v AS slug FROM item
+            LEFT JOIN iconfig slug ON slug.iid = item.id AND slug.cat = 'system' AND slug.k = 'WEBPAGE'
             WHERE item.uid = $uid $top AND item.verb != 'Add' " . item_normal($uid, 'item', $type) . " $sql
             ORDER BY item.created DESC LIMIT $limit") ?: [];
     }
@@ -141,6 +144,8 @@ class Find
             'post'    => '/display/' . $r['uuid'],
             'article' => "/articles/$nick/" . $r['uuid'],
             'card'    => "/cards/$nick/" . $r['uuid'],
+            'webpage' => "/page/$nick/" . implode('/', array_map('rawurlencode',
+                explode('/', urldecode(str_replace('%2f', '/', (string) $r['slug']))))),
             'note'    => '/notepad?note=' . $r['uuid'],
             'wiki'    => "/wiki/$nick/" . \NativeWiki::name_encode($r['wiki']) . '/' . \NativeWiki::name_encode($r['title']),
         };
