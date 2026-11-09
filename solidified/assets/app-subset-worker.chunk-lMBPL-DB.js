@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./app-chunk-EIO257PC-_-aqoLPM.js";import"./app-ExcalidrawCanvas-Cj-QPH0v.js";var n=import.meta.url?new URL(import.meta.url):void 0;typeof window>`u`&&typeof self<`u`&&(self.onmessage=async n=>{switch(n.data.command){case e.Subset:let r=await t(n.data.arrayBuffer,n.data.codePoints);self.postMessage(r,{transfer:[r]})}});export{n as WorkerUrl};

@@ -111,6 +111,29 @@ check('reshare refused', call(['spa', 'item', $uuid, 'reshare'], ['body' => ''])
     'Polls cannot be reshared');
 check('no Answer stored', (bool) q("SELECT id FROM item WHERE parent = %d AND obj_type = 'Answer'", $iid), false);
 
+// ── tallies: a recipient's copy never gets core's updated counts, so local
+//    Answer rows count too (higher of the two wins) ──────────────────────────
+
+$extract = new ReflectionMethod(Item::class, 'extractPoll');
+$extract->setAccessible(true);
+$pollRow = q("SELECT * FROM item WHERE id = %d", $iid)[0] ?? [];
+$voter   = 'polltest-voter';
+foreach (['Blue', 'Blue'] as $n => $title) {     // same author twice: one voter
+    q("INSERT INTO item (uid, parent, mid, parent_mid, thr_parent, obj_type, verb, title, author_xchan, owner_xchan, item_private,
+                         summary, body, html, obj, target, postopts, route, llink, plink, attach, sig,
+                         allow_cid, allow_gid, deny_cid, deny_gid)
+       VALUES (%d, %d, '%s', '%s', '%s', 'Answer', 'Create', '%s', '%s', '%s', 1,
+               '', '', '', '', '', '', '', '', '', '', '', '', '', '', '')",
+        intval($pollRow['uid']), $iid, dbesc("polltest-answer-$n"), dbesc($pollRow['mid']),
+        dbesc($pollRow['mid']), dbesc($title), dbesc($voter), dbesc($pollRow['owner_xchan']));
+}
+$p = $extract->invoke(null, $pollRow, $voter);
+check('obj still says 0 votes', array_map(fn($o) => intval($o['replies']['totalItems'] ?? 0),
+    json_decode($pollRow['obj'], true)['anyOf'] ?? []), [0, 0]);
+check('local Answer rows counted once per voter', array_column($p['options'] ?? [], 'votes'), [0, 1]);
+check('viewer_votes from the same rows', $p['viewer_votes'] ?? null, ['Blue', 'Blue']);
+q("DELETE FROM item WHERE parent = %d AND mid LIKE 'polltest-answer-%%'", $iid);
+
 if ($iid) {
     drop_item($iid);
 }
