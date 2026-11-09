@@ -341,26 +341,40 @@ trait FormatsItems
             $multiple = true;
         }
 
-        $options = [];
-        foreach ($choices as $opt) {
-            $options[] = [
-                'name'  => htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5),
-                'votes' => intval($opt['replies']['totalItems'] ?? 0),
-            ];
+        // The Answer rows this copy holds. On the poll owner's copy they are
+        // every vote; on a recipient's copy usually just the viewer's own,
+        // since votes go privately to the owner.
+        $answers = [];
+        if (!empty($item['id'])) {
+            $iid     = intval($item['id']);
+            $answers = dbq("SELECT title, author_xchan FROM item
+                            WHERE parent = $iid
+                              AND obj_type = 'Answer'
+                              AND item_deleted = 0") ?: [];
+        }
+        $localVoters = [];
+        $viewer_votes = [];
+        foreach ($answers as $a) {
+            $key = trim(htmlspecialchars_decode($a['title'], ENT_QUOTES | ENT_HTML5));
+            $localVoters[$key][$a['author_xchan']] = true;
+            if ($observer_xchan && $a['author_xchan'] === $observer_xchan) {
+                $viewer_votes[] = $a['title'];
+            }
         }
 
-        $viewer_votes = [];
-        if ($observer_xchan && !empty($item['id'])) {
-            $iid   = intval($item['id']);
-            $obEsc = dbesc($observer_xchan);
-            $rows  = dbq("SELECT title FROM item
-                          WHERE parent = $iid
-                            AND author_xchan = '$obEsc'
-                            AND obj_type = 'Answer'
-                            AND item_deleted = 0");
-            if ($rows) {
-                $viewer_votes = array_column($rows, 'title');
-            }
+        // The tallies in `obj` only change when the owner's hub delivers an
+        // updated Question, and core's update_poll() doesn't reach other hubs
+        // (it resends the cached original Create, as a bare Update zot
+        // receivers refuse). So a recipient's copy stays at its first tallies.
+        // Use the higher of those and the votes counted here, so at least the
+        // viewer's own vote shows. See src/docs/dev/en/3-data/core-parity.md.
+        $options = [];
+        foreach ($choices as $opt) {
+            $name      = htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5);
+            $options[] = [
+                'name'  => $name,
+                'votes' => max(intval($opt['replies']['totalItems'] ?? 0), count($localVoters[trim($name)] ?? [])),
+            ];
         }
 
         return [

@@ -114,6 +114,21 @@ An empty answer is refused. Polls can't be reshared, as with core's
 The flat stream queries drop `obj_type = 'Answer'`. Results always show, as in
 core. Check: `Handlers/Poll.test.php`.
 
+**Tallies on a recipient's copy (2026-11-09).** The counts live in the
+`Question`'s `obj` (`oneOf[].replies.totalItems`), and only the owner's hub
+updates them (`Activity::update_poll()`). Core then fails to send the update
+out, for two reasons. `Notifier` resends `ObjCache::Get(mid)`, which still
+holds the original Create with the old counts. And the bare Update it would
+send without the cache is refused by zot receivers as "not a collection
+activity", which DReport hides. This is the same pair of traps the SPA's own
+edit path hit. So every copy but the owner's stays at the counts it arrived
+with, usually 0. `extractPoll()` shows, per option, the higher of `totalItems`
+and the distinct voters among the `Answer` rows this copy holds. On a
+recipient's copy that is usually just the viewer's own vote, since votes go
+privately to the owner. The real fix is in core: `ObjCache::Delete()` plus
+`addToCollectionAndSync()` in `update_poll()`, both needed. Tested on ddev,
+not yet upstream.
+
 ## Hooks
 
 `call_hooks('post_local')` / `post_local_end')` run on the SPA's post and
