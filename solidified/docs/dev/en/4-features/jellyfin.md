@@ -73,12 +73,23 @@ integrations (PeerTube, Matrix…):
   `lockVault()`, `resetVault(integrations)` (a forgotten passphrase can't be
   recovered), `vaultList<T>()`, `vaultPut()`, `vaultDelete()`.
 - **`Handlers/Vault.php`** — `GET/POST /spa/vault/<integration>`, owner only
-  (CSRF on writes); stores the opaque map in pconfig `spa_vault/<integration>`,
-  additionally sealed with the channel key pair (keeps even the ciphertext out
-  of logs — core logs whole sync packets at `LOGGER_DATA` — and dumps), synced
-  to clones by the router's shutdown hook. ≤ 8 KB per entry, ≤ 32 per
-  integration. Refuses to seal without a public key (core's `aes_encapsulate`
-  would log the plaintext). Check: `npm run test:php -- Vault`.
+  (CSRF on writes); stores **one pconfig row per entry** (cat `spa_vault`, key
+  `<integration>:<entry key>`), each additionally sealed with the channel key
+  pair (keeps even the ciphertext out of logs — core logs whole sync packets
+  at `LOGGER_DATA` — and dumps), synced to clones by the router's shutdown
+  hook. Per-entry rows are load-bearing: clone sync is last-writer-wins per
+  row, and the old one-map-per-integration row lost an entry when two clones
+  each saved one (a legacy map row is split on first read). A stored value
+  that can't be opened is a 409, never "empty"; `{ clear: 1 }` is the way out
+  and what `resetVault()` sends. Responses are `no-store` and excluded from
+  both offline caches. ≤ 8 KB per entry, ≤ 32 per integration. Refuses to
+  seal without a public key (core's `aes_encapsulate` would log the
+  plaintext). Check: `npm run test:php -- Vault`.
+
+Hub logout drops every cached vault key (`forgetVault()`) and revokes this
+browser's Jellyfin tokens (`forgetJellyfin()`, `LogoutView.tsx`). A new
+passphrase must be ≥ `VAULT_MIN_PASSPHRASE` — offline guessing is the only
+attack on a stored vault, and every clone hub's admin holds the ciphertext.
 
 The limit every web app has: the hub serves this JavaScript, so a malicious
 admin could ship code that captures the passphrase as it's typed. The vault
@@ -95,6 +106,15 @@ that); the browser does it, so the hub still never contacts Jellyfin. Locked
 vault → `vaultLocked()` and `VaultUnlock.tsx` offers the passphrase. A
 device-only sign-out lands in `hubSkip` so the next sync doesn't undo it;
 "Forget on my hub" revokes the anchor and deletes the entry.
+
+The anchor is a full-power token (Jellyfin has no scopes), so its lifetime is
+what gets limited: entries carry `created`, and `syncFromHub()` in a browser
+signed in to that server replaces an anchor older than `ANCHOR_MAX_AGE`
+(30 days) — new one stored first, old one revoked after. An anchor that
+*can't* be revoked — reset or forget with the vault locked, server unreachable
+— stays valid on Jellyfin, so `resetHubVault()`/`forgetOnHub()` return false
+and the UI tells the user to remove the "Hubzilla (stored)" devices there.
+Storing an administrator account shows a warning.
 
 ## Music player (`store.ts`)
 

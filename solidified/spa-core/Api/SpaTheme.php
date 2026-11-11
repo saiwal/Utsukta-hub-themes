@@ -24,6 +24,7 @@ final class SpaTheme
         ['post_remote', 'quotes', 'quote_post_remote'],
         ['post_remote_update', 'quotes', 'quote_post_remote'],
         ['item_stored', 'forumnotify', 'forum_item_stored'],
+        ['encode_person', 'chatids', 'chatids_encode_person'],
     ];
 
     public static function owner(): ?string

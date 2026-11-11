@@ -8,7 +8,7 @@ trait FetchesRemoteActor
      * WebFinger → AP actor → normalised profile fields.
      * Returns null if the actor could not be fetched.
      */
-    protected function fetchActorEnrichment(string $addr, string $domain): ?array
+    protected function fetchActorEnrichment(string $addr, string $domain, bool $withPosts = true): ?array
     {
         // WebFinger to discover the actor URL
         $wf_body = $this->fetchRemoteUrl(
@@ -61,7 +61,7 @@ trait FetchesRemoteActor
             'photo'        => $actor['icon']['url']   ?? '',
             'cover'        => $actor['image']['url']  ?? '',
             'actor_fields' => $fields,
-            'remote_posts' => $outbox_url ? $this->fetchRemotePosts($outbox_url) : [],
+            'remote_posts' => ($withPosts && $outbox_url) ? $this->fetchRemotePosts($outbox_url) : [],
         ];
     }
 
