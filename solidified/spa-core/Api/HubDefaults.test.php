@@ -12,6 +12,8 @@ for ($dir = __DIR__; $dir !== '/'; $dir = dirname($dir)) {
 }
 require_once 'include/cli_startup.php';
 cli_startup();
+session_id('hubdefaults-test'); // before any output, or local_channel() stays false
+$_SESSION = [];
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Utsukta\SpaCore\Api\HubDefaults;
@@ -63,6 +65,32 @@ try {
     $form = theme_admin($a);
     check('admin form renders every key', count(array_filter(array_keys(HubDefaults::CHOICES), fn($k) => str_contains($form, "name=\"$k\""))) === count(HubDefaults::CHOICES));
     check('admin form shows stored value', str_contains($form, 'value="flat" selected'));
+
+    // Admin post: "use my scheme" copies every override; untouched pickers keep
+    // them; a changed picker replaces them with a derived set.
+    $savedHubColors = Config::Get('spa', 'custom_theme_colors', null);
+    $savedScheme    = Config::Get('spa', 'color_scheme', null);
+    $savedMine      = get_pconfig($uid, 'spa', 'custom_theme_colors', null);
+    try {
+        $_SESSION['authenticated'] = 1; $_SESSION['uid'] = $uid;
+        \App::set_channel($ch);
+        $mine = '{"base":"#1E1E2E","txt":"#cdd6f4","accent":"#cba6f7","isDark":true,"surface":"#222233"}';
+        set_pconfig($uid, 'spa', 'custom_theme_colors', $mine);
+        check('admin form offers copy', str_contains(theme_admin($a), 'name="custom_copy_mine" value="1" class="btn btn-sm btn-outline-secondary">'));
+        $post = fn(array $p) => ($_POST = $_REQUEST = $p + ['form_security_token' => get_form_security_token('admin_themes')]) && theme_admin_post();
+        $post(['custom_copy_mine' => '1', 'color_scheme' => '', 'custom_base' => '#000000']);
+        check('copy stores full set', Config::Get('spa', 'custom_theme_colors') === $mine);
+        check('copy selects custom', Config::Get('spa', 'color_scheme') === 'custom');
+        check('hub default carries colours', (HubDefaults::get()['custom_theme_colors'] ?? null) === $mine);
+        $post(['color_scheme' => 'custom', 'custom_base' => '#1e1e2e', 'custom_txt' => '#cdd6f4', 'custom_accent' => '#cba6f7', 'custom_isDark' => '1']);
+        check('untouched pickers keep overrides', Config::Get('spa', 'custom_theme_colors') === $mine);
+        $post(['color_scheme' => 'custom', 'custom_base' => '#ffffff', 'custom_txt' => '#000000', 'custom_accent' => '#cba6f7']);
+        check('changed picker drops overrides', !str_contains(Config::Get('spa', 'custom_theme_colors'), 'surface'));
+    } finally {
+        $savedHubColors === null ? Config::Delete('spa', 'custom_theme_colors') : Config::Set('spa', 'custom_theme_colors', $savedHubColors);
+        $savedScheme === null ? Config::Delete('spa', 'color_scheme') : Config::Set('spa', 'color_scheme', $savedScheme);
+        $savedMine === null ? del_pconfig($uid, 'spa', 'custom_theme_colors') : set_pconfig($uid, 'spa', 'custom_theme_colors', $savedMine);
+    }
 } finally {
     $savedHub === null ? Config::Delete('spa', 'thread_mode') : Config::Set('spa', 'thread_mode', $savedHub);
     $savedUser === null ? del_pconfig($uid, 'spa', 'thread_mode') : set_pconfig($uid, 'spa', 'thread_mode', $savedUser);

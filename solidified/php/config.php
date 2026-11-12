@@ -54,27 +54,52 @@ namespace {
   }
 
   // Colour set for the 'custom' scheme — same JSON shape as a user's own
-  // pconfig spa/custom_theme_colors (base/txt/accent/isDark).
+  // pconfig spa/custom_theme_colors. The pickers cover the three base colours;
+  // the full set (every token override) comes from copying the admin's own
+  // scheme, designed in the SPA's editor.
   function solidified_custom_colors_fields() {
 		$c = json_decode((string) Config::Get('spa', 'custom_theme_colors', ''), true) ?: [];
 		$c += ['base' => '#1e1e2e', 'txt' => '#cdd6f4', 'accent' => '#cba6f7', 'isDark' => true];
-		$o = '<fieldset class="mb-3"><legend class="fs-6">' . t('Custom color scheme (used when the color scheme is "custom")') . '</legend><div class="d-flex flex-wrap gap-3">';
+		$overrides = count(array_diff_key($c, array_flip(['base', 'txt', 'accent', 'isDark'])));
+		$o = '<fieldset class="spa-custom-colors mb-3"><legend class="fs-6 mb-0">' . t('Custom color scheme') . '</legend>'
+			. '<small class="form-text">' . t('Used when the color scheme is "custom".') . '</small>'
+			. '<div class="spa-swatches d-flex flex-wrap align-items-center gap-3 mt-2">';
 		foreach (['base' => t('Background'), 'txt' => t('Text'), 'accent' => t('Accent')] as $k => $label) {
-			$o .= '<label class="d-flex align-items-center gap-2"><input type="color" name="custom_' . $k . '" value="' . htmlspecialchars($c[$k]) . '" /> ' . $label . '</label>';
+			$o .= '<label class="spa-swatch d-flex align-items-center gap-2"><input type="color" class="form-control form-control-color" name="custom_' . $k . '" value="' . htmlspecialchars($c[$k]) . '" /> ' . $label . '</label>';
 		}
-		return $o . '<label class="d-flex align-items-center gap-2"><input type="checkbox" name="custom_isDark" value="1"' . ($c['isDark'] ? ' checked' : '') . ' /> ' . t('Dark') . '</label></div></fieldset>';
+		$o .= '<label class="spa-swatch d-flex align-items-center gap-2"><input type="checkbox" name="custom_isDark" value="1"' . ($c['isDark'] ? ' checked' : '') . ' /> ' . t('Dark') . '</label></div>';
+		if ($overrides)
+			$o .= '<small class="form-text">' . sprintf(t('Plus %d fine-tuned colors. Changing a color above replaces them with derived ones.'), $overrides) . '</small>';
+		$mine = Utsukta\SpaCore\Api\HubDefaults::cleanCustomColors(get_pconfig(local_channel(), 'spa', 'custom_theme_colors', ''));
+		$o .= '<div class="spa-copy mt-3"><button type="submit" name="custom_copy_mine" value="1" class="btn btn-sm btn-outline-secondary"' . ($mine ? '' : ' disabled') . '>'
+			. t('Use my custom color scheme') . '</button><small class="form-text d-block">'
+			. ($mine ? t('Copies every color from your own scheme (Settings → Display) and makes it the hub default.')
+				: t('Set up a custom scheme in Settings → Display first.')) . '</small></div>';
+		return $o . '</fieldset>';
   }
 
   function theme_admin_post() {
 		check_form_security_token_redirectOnErr('/admin/themes', 'admin_themes');
 		require_once __DIR__ . '/../vendor/autoload.php';
-		// Before the loop: clean('color_scheme', 'custom') needs a saved colour set.
-		if (isset($_POST['custom_base'])) {
-			$json = json_encode([
+		$H = Utsukta\SpaCore\Api\HubDefaults::class;
+		// Colours first: clean('color_scheme', 'custom') needs a saved colour set.
+		if (!empty($_POST['custom_copy_mine'])) {
+			$mine = $H::cleanCustomColors(get_pconfig(local_channel(), 'spa', 'custom_theme_colors', ''));
+			if ($mine !== null) {
+				Config::Set('spa', 'custom_theme_colors', $mine);
+				$_POST['color_scheme'] = 'custom';
+			}
+		} elseif (isset($_POST['custom_base'])) {
+			$picked = [
 				'base' => $_POST['custom_base'], 'txt' => $_POST['custom_txt'] ?? '',
 				'accent' => $_POST['custom_accent'] ?? '', 'isDark' => !empty($_POST['custom_isDark']),
-			]);
-			if (($json = Utsukta\SpaCore\Api\HubDefaults::cleanCustomColors($json)) !== null)
+			];
+			$old = json_decode((string) Config::Get('spa', 'custom_theme_colors', ''), true) ?: [];
+			// Untouched pickers keep the stored set, copied overrides included;
+			// a changed base colour drops overrides derived from the old one.
+			$lc = fn($a) => array_map(fn($v) => is_string($v) ? strtolower($v) : $v, $a);
+			$same = $lc(array_intersect_key($old, $picked)) === $lc($picked);
+			if (!$same && ($json = $H::cleanCustomColors(json_encode($picked))) !== null)
 				Config::Set('spa', 'custom_theme_colors', $json);
 		}
 		foreach (array_keys(Utsukta\SpaCore\Api\HubDefaults::CHOICES) as $k) {
