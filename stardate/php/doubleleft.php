@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * * Name: doubleleft
+ *   * Description: Stardate doubleleft, same as default
+ *   * Version: 0.7.2-beta
+ *   * Author: Saiwal
+ *   * Maintainer: Saiwal
+ *   * ContentRegion: aside, right_aside_wrapper
+ *   * ContentRegion: right_aside, left_aside_wrapper
+ *   * ContentRegion: content, region_2
+ */
+
+require_once __DIR__ . '/manifest.php';
+$stardate_assets = stardate_assets();
+$stardate_favicon = get_config('system', 'sitelogo_favicon') ?: '/view/theme/stardate/assets/favicon.ico';
+$stardate_touch_icon = get_config('system', 'sitelogo_192') ?: '/view/theme/stardate/assets/apple-touch-icon-180x180.png';
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title><?php if (x($page, 'title')) echo $page['title'] ?></title>
+	<script>
+    var baseurl = "<?php echo z_root() ?>";
+    // core's head.tpl emits this too; this theme writes its own <head>, so it
+    // has to repeat it. lib/zid.ts reads it synchronously at boot — a body
+    // rendered before /spa/pconfig lands would otherwise lose the zid that
+    // gets the viewer past another hub's ACL on an image.
+    var zid = <?php echo json_encode(get_my_address() ?: null) ?>;
+  </script>
+  <?php foreach ($stardate_assets['css'] as $stardate_css): ?>
+  <link rel="stylesheet" href="<?php echo $stardate_css ?>">
+  <?php endforeach; ?>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="format-detection" content="date=no">
+	<link rel="icon" href="<?php echo $stardate_favicon ?>">
+	<link rel="manifest" href="/spa/manifest" />
+	<meta name="theme-color" content="#1e293b" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<meta name="apple-mobile-web-app-title" content="Stardate" />
+	<link rel="apple-touch-icon" href="<?php echo $stardate_touch_icon ?>" />
+</head>
+
+<body>
+
+<div id="root"></div>
+
+<script type="module" src="<?php echo $stardate_assets['js'] ?>"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/spa/sw', { scope: '/', updateViaCache: 'none' })
+        .then(function (reg) {
+          console.log('[PWA] SW registered, scope:', reg.scope);
+          reg.addEventListener('updatefound', function () {
+            var nw = reg.installing;
+            nw.addEventListener('statechange', function () {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                window.dispatchEvent(new CustomEvent('pwa-update-available'));
+              }
+            });
+          });
+          // SPAs rarely hard-navigate, so poll for a new SW hourly and
+          // whenever the (installed) app returns to the foreground.
+          var checkForUpdate = function () { reg.update().catch(function () {}); };
+          setInterval(checkForUpdate, 60 * 60 * 1000);
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkForUpdate();
+          });
+        })
+        .catch(function (err) {
+          console.warn('[PWA] SW registration failed:', err);
+        });
+    });
+  }
+</script>
+</body>
+</html>

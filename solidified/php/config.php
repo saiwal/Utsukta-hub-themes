@@ -38,7 +38,12 @@ namespace {
 		];
 		$o = '<input type="hidden" name="form_security_token" value="' . get_form_security_token('admin_themes') . '" />'
 			. '<p>' . t('Hub-wide defaults for every SPA theme. They apply to visitors and to members who have not chosen their own; leave blank for the built-in default.') . '</p>';
+		// An overlay theme that fixes some of these (its own palette, font or
+		// widget frame) ships php/fixed_settings.php returning their keys; they
+		// are left off its page. Unposted, their stored hub defaults stay put.
+		$fixed = is_file(__DIR__ . '/fixed_settings.php') ? (include __DIR__ . '/fixed_settings.php') : [];
 		foreach (Utsukta\SpaCore\Api\HubDefaults::CHOICES as $k => $choices) {
+			if (in_array($k, $fixed, true)) continue;
 			if ($k === 'color_scheme')
 				$choices = Utsukta\SpaCore\Api\ColorSchemes::ALL;
 			$field = [$k, $labels[$k], Config::Get('spa', $k, ''), t('Built-in: ') . Utsukta\SpaCore\Api\HubDefaults::BUILTIN[$k]];
