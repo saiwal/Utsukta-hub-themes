@@ -51,9 +51,9 @@ final class HubDefaults
         $v = trim((string) $v);
         if ($v === '' || !array_key_exists($k, self::CHOICES)) return null;
         switch ($k) {
-            // 'custom' needs a colour set the admin form doesn't collect
+            // 'custom' only once the admin has saved a colour set for it
             case 'color_scheme':
-                return ($v !== 'custom' && ColorSchemes::valid($v)) ? $v : null;
+                return (ColorSchemes::valid($v) && ($v !== 'custom' || self::customColors())) ? $v : null;
             case 'bg_url':
                 return ((filter_var($v, FILTER_VALIDATE_URL) && preg_match('#^https?://#i', $v)) || preg_match('#^/[^/]#', $v))
                     ? notags($v) : null;
@@ -69,6 +69,22 @@ final class HubDefaults
         }
     }
 
+    /** Custom-scheme JSON ({base, txt, accent: #rrggbb, isDark: bool}) if valid, else null. */
+    public static function cleanCustomColors($raw): ?string
+    {
+        $d = json_decode((string) $raw, true);
+        if (!is_array($d) || !is_bool($d['isDark'] ?? null)) return null;
+        foreach (['base', 'txt', 'accent'] as $k)
+            if (!is_string($d[$k] ?? null) || !preg_match('/^#[0-9a-fA-F]{6}$/', $d[$k])) return null;
+        return (string) $raw;
+    }
+
+    /** The hub's custom colour set (site Config spa/custom_theme_colors), or null. */
+    public static function customColors(): ?string
+    {
+        return self::cleanCustomColors(Config::Get('spa', 'custom_theme_colors', ''));
+    }
+
     /** Only the keys the admin actually set. */
     public static function get(): array
     {
@@ -77,6 +93,8 @@ final class HubDefaults
             $v = self::clean($k, Config::Get('spa', $k, ''));
             if ($v !== null) $out[$k] = $v;
         }
+        // Rides along with a 'custom' hub scheme; a user's own colours win in the + merge.
+        if (($out['color_scheme'] ?? '') === 'custom') $out['custom_theme_colors'] = self::customColors();
         return $out;
     }
 
