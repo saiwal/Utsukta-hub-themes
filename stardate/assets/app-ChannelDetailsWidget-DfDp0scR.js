@@ -1,0 +1,1 @@
+import{f as e}from"./app-solid-HdCE-Du-.js";import{t}from"./app-ProfileView-Cv0vpn7p.js";function n(){return e(t,{})}export{n as default};
