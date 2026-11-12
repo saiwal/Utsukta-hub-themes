@@ -16,19 +16,19 @@ class Pubstream {
         // --- Gate 1: pubstream must be globally enabled -----------------------
         $net_firehose = ((Config::Get('system', 'disable_discover_tab', 1)) ? false : true);
         if (!$net_firehose) {
-            Response::error('Public stream is disabled on this site.', 403);
+            Response::error(403, 'Public stream is disabled on this site.');
             return;
         }
 
         // --- Gate 2: observer restrictions (mirrors Pubstream module logic) ---
         if (observer_prohibited(true)) {
-            Response::error('Authentication required.', 401);
+            Response::error(401, 'Authentication required.');
             return;
         }
 
         if (!intval(Config::Get('system', 'open_pubstream', 1))) {
             if (!get_observer_hash()) {
-                Response::error('Authentication required.', 401);
+                Response::error(401, 'Authentication required.');
                 return;
             }
         }
