@@ -175,7 +175,7 @@ solidified's own `src/` under another slug, with a folder of replacement
 files:
 
 ```bash
-THEME=<slug> vite build && THEME=<slug> node build-sw.mjs   # e.g. npm run build:lcars
+THEME=<slug> vite build && THEME=<slug> node build-sw.mjs   # e.g. npm run build:stardate
 ```
 
 - `theme.config.mjs` reads `THEME` (default `solidified`), so asset paths, the
@@ -192,13 +192,17 @@ THEME=<slug> vite build && THEME=<slug> node build-sw.mjs   # e.g. npm run build
   (which includes `themes/*/src`) resolves them the same way.
 - An overlay `index.css` `@import`s `../../../src/index.css` as its first
   statement and adds rules after it.
+- `themes/<slug>/php/` is copied next to `src/php`'s files in the deployed
+  theme. `php/fixed_settings.php` (returning an array of keys) drops those
+  hub defaults from the theme's `/admin/themes` page. To hide one in
+  Settings → Display, hide its `hz-setting-*` hook class in the overlay CSS.
 - Deploying for the first time needs the `core/view/theme/<slug>` symlink
   (like the other Utsukta themes) and `composer install` in the deployed
   theme folder.
 
-`lcars_solidified` is the reference. It overrides `Layout.tsx` (an elbow
+`stardate` is the reference. It overrides `Layout.tsx` (an elbow
 frame around solidified's `DesktopMenu`) and `index.css`, which carries the
-theme's whole palette and its font (bundled from `themes/lcars_solidified/src/fonts`).
+theme's whole palette and its font (bundled from `themes/stardate/src/fonts`).
 Nothing about it lives in solidified's `src/`, `public/` or spa-core: keep an
 overlay's look inside its own folder.
 
