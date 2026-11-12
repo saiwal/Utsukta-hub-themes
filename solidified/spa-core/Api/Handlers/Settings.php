@@ -1545,6 +1545,10 @@ class Settings
                     'description' => $item[2] ?? '',
                     'group'       => $group_label,
                     'enabled'     => SpaFeatures::enabled($uid, $name),
+                    // An admin lock (Config feature_lock, item[4]) overrides the
+                    // member's own setting in feature_enabled(); core hides these,
+                    // the SPA shows them disabled so the state is still visible.
+                    'locked'      => ($item[4] ?? false) !== false,
                 ];
             }
         }
@@ -1567,18 +1571,22 @@ class Settings
 
         $features_raw = SpaFeatures::merge(get_features(false));
         $valid = false;
+        $locked = false;
         foreach ($features_raw as $group_key => $group) {
             if (!is_array($group) || in_array($group_key, self::EXCLUDED_FEATURE_GROUPS, true)) continue;
             foreach ($group as $idx => $item) {
                 if ($idx === 0 || !is_array($item)) continue;
                 if (($item[0] ?? '') === $feature) {
                     $valid = true;
+                    $locked = ($item[4] ?? false) !== false;
                     break 2;
                 }
             }
         }
 
         if (!$valid) Response::error(400, 'Unknown feature');
+        // feature_enabled() would ignore the pconfig anyway; don't pretend it saved.
+        if ($locked) Response::error(403, 'Feature is locked by the hub admin');
 
         set_pconfig($uid, 'feature', $feature, $enabled);
         Response::send(['status' => 'ok', 'enabled' => (bool) $enabled]);

@@ -1,1 +1,0 @@
-export{H as decodePngMetadata,V as encodePngMetadata}from"./app-ExcalidrawCanvas-Cu2YW9vv.js";
