@@ -13,7 +13,7 @@ final class ColorSchemes
         'dark', 'nord', 'dracula', 'monokai', 'one-dark', 'cyberpunk',
         'rose-pine', 'gruvbox-dark', 'gruvbox-light', 'catppuccin-latte',
         'catppuccin-mocha', 'solarized-light', 'solarized-dark', 'tokyo-night', 'matrix',
-        'high-contrast', 'high-contrast-light', 'custom',
+        'high-contrast', 'high-contrast-light', 'sketchy', 'sketchy-dark', 'custom',
     ];
 
     public static function valid($scheme): bool
