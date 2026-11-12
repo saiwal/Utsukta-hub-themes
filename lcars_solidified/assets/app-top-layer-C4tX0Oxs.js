@@ -1,0 +1,1 @@
+function e(){let e=document.querySelectorAll(`dialog[open]`);for(let t=e.length-1;t>=0;t--)if(e[t].matches(`:modal`))return e[t];return document.body}export{e as t};

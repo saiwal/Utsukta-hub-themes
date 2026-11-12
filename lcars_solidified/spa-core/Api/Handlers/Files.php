@@ -1,0 +1,840 @@
+<?php
+namespace Utsukta\SpaCore\Api\Handlers;
+
+use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Response;
+use Zotlabs\Lib\Libsync;
+
+/**
+ * Files (cloud storage) handler
+ *
+ * GET  /spa/files/:nick                  → list root folder
+ * GET  /spa/files/:nick/folder/:hash     → list folder by hash ('' = root)
+ * GET  /spa/files/:nick/meta/:hash       → single file metadata + ACL
+ * GET  /spa/files/:nick/quota            → storage used/limit in bytes
+ * GET  /spa/files/:nick/download/:hash   → download a file, or a folder as a zip
+ * GET  /spa/files/:nick/categories       → every category in use, with visible-item counts
+ * GET  /spa/files/:nick/categories/:hash → list category terms for a file/folder
+ * GET  /spa/files/:nick/search?term=&folder= → name search within a folder's subtree
+ * GET  /spa/files/:nick/search?cat=&folder=  → items carrying a category, same subtree rules
+ *      (not `q`: Hubzilla routes on $_GET['q'] — nginx rewrites to index.php?q=<path>)
+ * POST /spa/files/:nick/download         → several files as one zip (form field hashes=a,b)
+ * POST /spa/files/:nick/permissions      → update file ACL
+ * POST /spa/files/:nick/rename           → rename a file/folder in place
+ * POST /spa/files/:nick/move             → move a file/folder to another folder
+ * POST /spa/files/:nick/copy             → copy a file/folder to another folder
+ * POST /spa/files/:nick/categories       → replace category terms for a file/folder
+ *
+ * Register in Router.php $map:
+ *   'files' => Handlers\Files::class,
+ */
+class Files
+{
+    private const ROW_COLUMNS = "id, hash, filename, filetype, filesize, folder,
+                    display_path, is_dir, is_photo, created, edited, revision,
+                    allow_cid, allow_gid, deny_cid, deny_gid";
+
+    public function get(): void
+    {
+        require_once 'include/attach.php';
+        require_once 'include/security.php';
+        require_once 'include/channel.php';
+
+        $channel  = $this->resolveChannel();
+        $owner_uid = intval($channel['channel_id']);
+        $ob_hash  = get_observer_hash();
+
+        if (!perm_is_allowed($owner_uid, $ob_hash, 'view_storage')) {
+            Response::error(403, 'Permission denied');
+        }
+
+        // write_storage is a channel-wide grant — any observer (local or
+        // remote) holding it may edit this channel's storage, not just the owner.
+        $can_write = (bool) perm_is_allowed($owner_uid, $ob_hash, 'write_storage');
+
+        $action = \App::$argv[3] ?? '';
+        $datum  = \App::$argv[4] ?? '';
+
+        switch ($action) {
+            case 'folder':
+                $this->listFolder($owner_uid, $ob_hash, $datum, $can_write);
+                break;
+            case 'meta':
+                $this->fileMeta($owner_uid, $ob_hash, $datum);
+                break;
+            case 'quota':
+                $this->quota($channel);
+                break;
+            case 'download':
+                $this->download($owner_uid, $ob_hash, $datum, $channel);
+                break;
+            case 'categories':
+                if ($datum === '') $this->listCategories($owner_uid, $ob_hash);
+                $this->getCategories($owner_uid, $ob_hash, $datum);
+                break;
+            case 'search':
+                $this->search($owner_uid, $ob_hash, (string) ($_GET['term'] ?? ''), (string) ($_GET['folder'] ?? ''), (string) ($_GET['cat'] ?? ''));
+                break;
+            default:
+                // Root folder (folder hash = '')
+                $this->listFolder($owner_uid, $ob_hash, '', $can_write);
+                break;
+        }
+    }
+
+    // ── Storage quota ────────────────────────────────────────────────────────
+    //
+    // Mirrors Zotlabs\Storage\Browser::CloudDirectory()'s quota calculation:
+    // limit is the account's attach_upload_limit service-class setting (falls
+    // back to the site's free disk space if configured to report it), used is
+    // the sum of all attach rows for the channel's account (all its channels).
+
+    private function quota(array $channel): void
+    {
+        require_once 'include/text.php';
+
+        $limit = engr_units_to_bytes(service_class_fetch($channel['channel_id'], 'attach_upload_limit'));
+
+        if (!$limit && \Zotlabs\Lib\Config::Get('system', 'cloud_report_disksize')) {
+            $limit = intval(disk_free_space('store'));
+        }
+
+        $r = q("SELECT SUM(filesize) AS total FROM attach WHERE aid = %d",
+            intval($channel['channel_account_id'])
+        );
+
+        Response::send([
+            'used' => intval($r[0]['total'] ?? 0),
+            'limit' => intval($limit) ?: null,
+        ]);
+    }
+
+    public function post(): void
+    {
+        require_once 'include/attach.php';
+
+        $owner    = $this->resolveChannel();
+        $uid      = intval($owner['channel_id']);
+
+        // A read, not a write: a plain form POST (so the browser streams the zip
+        // to disk) open to any observer, visitors included, who may view storage.
+        // POST only because the hash list outgrows a URL; no CSRF token needed.
+        if ((\App::$argv[3] ?? '') === 'download') {
+            $ob_hash = get_observer_hash();
+            if (!perm_is_allowed($uid, $ob_hash, 'view_storage')) {
+                Response::error(403, 'Permission denied');
+            }
+            $this->downloadSelection($uid, $ob_hash, explode(',', (string) ($_POST['hashes'] ?? '')), $owner);
+        }
+
+        $obs_hash = Auth::requireLoggedInJson();
+
+        // write_storage is a channel-wide grant — any observer (local or
+        // remote) holding it may edit this channel's cloud storage, not just
+        // the owner (matches WebDAV's own perm_is_allowed(..., 'write_storage')).
+        if (!perm_is_allowed($uid, $obs_hash, 'write_storage')) {
+            Response::error(403, 'Permission denied');
+        }
+
+        $data   = Auth::$parsedBody;
+        $action = \App::$argv[3] ?? '';
+
+        switch ($action) {
+            case 'permissions':
+                // ACL changes stay owner-only — write_storage access
+                // shouldn't let a visitor grant themselves broader access.
+                if (!local_channel() || local_channel() !== $uid) {
+                    Response::error(403, 'Owner access required');
+                }
+                $this->updatePermissions($uid, $data);
+                break;
+            case 'rename':
+                $this->renameItem($uid, $owner, $data);
+                break;
+            case 'move':
+                $this->moveOrCopyItem($uid, $owner, $data, false);
+                break;
+            case 'copy':
+                $this->moveOrCopyItem($uid, $owner, $data, true);
+                break;
+            case 'categories':
+                $this->updateCategories($uid, $owner, $data);
+                break;
+            default:
+                Response::error(404, 'Unknown action');
+        }
+    }
+
+    // ── Folder listing ────────────────────────────────────────────────────────
+
+    private function listFolder(int $uid, string $ob_hash, string $folder_hash, bool $can_write): void
+    {
+        $sql_extra   = permissions_sql($uid, $ob_hash, 'attach');
+        $folder_cond = "folder = '" . dbesc($folder_hash) . "'";
+
+        $r = q(
+            "SELECT " . self::ROW_COLUMNS . "
+               FROM attach
+              WHERE uid = %d
+                AND $folder_cond
+                $sql_extra
+              ORDER BY is_dir DESC, filename ASC",
+            intval($uid)
+        );
+
+        $thumbs = $this->photoThumbs($uid, $r ?: []);
+        $items = [];
+        foreach (($r ?: []) as $row) {
+            $items[] = $this->formatRow($row) + ['thumb' => $thumbs[$row['hash']] ?? null];
+        }
+
+        Response::send($items, [
+            'folder'      => $folder_hash,
+            'can_write'   => $can_write,
+            // The channel's default ACL, i.e. what scope "contacts" writes.
+            // attach has no public_policy column, so "Connections" is stored as
+            // this exact ACL and is indistinguishable from picking the same
+            // group by hand — the client compares against this to label it.
+            'default_acl' => $this->defaultAcl($uid),
+            // Collabora/WOPI editing, served by the `wopi` addon's own /wopi routes.
+            'wopi'        => $this->wopiConfig(),
+        ]);
+    }
+
+    // ── Search ────────────────────────────────────────────────────────────────
+    //
+    // Case-insensitive filename match anywhere under $folder_hash ('' = whole
+    // cloud). permissions_sql() is per-row, but a listing never reveals what
+    // sits inside a folder the observer can't see — so a hit only counts if
+    // every ancestor folder is visible too, and the scope check rides the same
+    // walk up the chain.
+
+    private const SEARCH_LIMIT = 200;
+
+    private function search(int $uid, string $ob_hash, string $q, string $folder_hash, string $cat = ''): void
+    {
+        $q   = trim($q);
+        $cat = trim($cat);
+        if ($cat === '' && mb_strlen($q) < 2) {
+            Response::send([]);
+        }
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+
+        // q() vsprintf()s the query, so values ride as args — the LIKE pattern's
+        // own % would otherwise be read as a format spec.
+        if ($cat !== '') {
+            $match = "id IN (SELECT oid FROM term WHERE uid = %d AND otype = %d AND ttype = %d AND term = '%s')";
+            $args  = [intval($uid), TERM_OBJ_FILE, TERM_CATEGORY, dbesc($cat)];
+        } else {
+            $like  = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($q)) . '%';
+            $match = "LOWER(filename) LIKE '%s'";
+            $args  = [dbesc($like)];
+        }
+
+        $hits = q(
+            "SELECT " . self::ROW_COLUMNS . "
+               FROM attach
+              WHERE uid = %d
+                AND $match
+                $sql_extra
+              ORDER BY is_dir DESC, filename ASC
+              LIMIT %d",
+            intval($uid),
+            ...$args,
+            ...[intval(self::SEARCH_LIMIT)]
+        ) ?: [];
+
+        // hash => parent hash, for every folder the observer may see.
+        $dirs = [];
+        foreach ((q(
+            "SELECT hash, folder FROM attach WHERE uid = %d AND is_dir = 1 $sql_extra",
+            intval($uid)
+        ) ?: []) as $d) {
+            $dirs[$d['hash']] = $d['folder'];
+        }
+
+        $items = [];
+        foreach ($hits as $row) {
+            $parent  = $row['folder'];
+            $inScope = $folder_hash === '';
+            // Bounded by count($dirs) so a corrupt folder cycle can't spin.
+            for ($i = 0; $parent !== '' && $i <= count($dirs); $i++) {
+                if (!isset($dirs[$parent])) {
+                    continue 2; // hidden (or missing) ancestor
+                }
+                $inScope = $inScope || $parent === $folder_hash;
+                $parent  = $dirs[$parent];
+            }
+            if ($parent === '' && $inScope && $row['hash'] !== $folder_hash) {
+                $items[] = $this->formatRow($row);
+            }
+        }
+
+        Response::send($items, ['limit' => self::SEARCH_LIMIT]);
+    }
+
+    /**
+     * Small-scale /photo URLs for the photo rows in a listing, keyed by hash, so
+     * the grid needn't pull every original. Scale 3 (320px) when it exists,
+     * else 2 (640px): core makes 3 only for sources wider than 320px, and /photo
+     * answers a missing scale with a placeholder rather than falling back. A
+     * photo with neither (tiny source) gets no entry — its original is small.
+     * /photo applies the photo's own ACL, so this only names the URL.
+     */
+    private function photoThumbs(int $uid, array $rows): array
+    {
+        $hashes = array_map(fn($r) => "'" . dbesc($r['hash']) . "'",
+            array_filter($rows, fn($r) => intval($r['is_photo'])));
+        if (!$hashes) return [];
+
+        $thumbs = [];
+        foreach ((q(
+            "SELECT resource_id, MAX(imgscale) AS scale
+               FROM photo
+              WHERE uid = %d AND imgscale IN (2, 3)
+                AND resource_id IN (" . implode(',', $hashes) . ")
+              GROUP BY resource_id",
+            intval($uid)
+        ) ?: []) as $p) {
+            $thumbs[$p['resource_id']] = '/photo/' . $p['resource_id'] . '-' . intval($p['scale']);
+        }
+        return $thumbs;
+    }
+
+    /**
+     * Site config for the `wopi` addon, or null when it is absent/unconfigured.
+     * The SPA needs the client URL to origin-check Collabora's UI_Close
+     * postMessage, and the mime list to decide which files offer the action.
+     */
+    private function wopiConfig(): ?array
+    {
+        if (!plugin_is_installed('wopi')) return null;
+
+        $url = \Zotlabs\Lib\Config::Get('system', 'wopi_client_url', '');
+        if (!$url) return null;
+
+        // Only the addon's launch path warms this cache (Mod_Wopi::cache_supported_types),
+        // so it stays cold until someone opens a document. null = "unknown, let the client try".
+        // ponytail: action shows on every file while cold; fetch /hosting/discovery here if that grates.
+        $types = \Zotlabs\Lib\Cache::get('wopi_supported_mime_types', '1 Day');
+
+        return [
+            'url'   => rtrim($url, '/'),
+            'types' => $types ? json_decode($types, true) : null,
+        ];
+    }
+
+    // ── Single file metadata ──────────────────────────────────────────────────
+
+    private function fileMeta(int $uid, string $ob_hash, string $hash): void
+    {
+        if (!$hash) Response::error(400, 'Hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+
+        $r = q(
+            "SELECT " . self::ROW_COLUMNS . "
+               FROM attach
+              WHERE uid = %d
+                AND hash = '%s'
+                $sql_extra
+              LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+
+        if (!$r) Response::error(404, 'File not found');
+
+        Response::send($this->formatRow($r[0]));
+    }
+
+    // ── Permissions update ────────────────────────────────────────────────────
+
+    private function updatePermissions(int $uid, array $data): void
+    {
+        $hash    = $data['hash']    ?? '';
+        $recurse = !empty($data['recurse']);
+
+        if (!$hash) Response::error(400, 'hash required');
+
+        // Verify the file belongs to this channel
+        $r = q(
+            "SELECT id, hash, is_dir FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        // An explicit scope wins over the arrays. 'contacts' has to be its own
+        // branch: it and 'public' both arrive with empty arrays, so inferring the
+        // audience from emptiness alone silently turns "connections" into "public"
+        // and unshares the file.
+        switch ($data['scope'] ?? null) {
+            case 'private':
+                $channel   = \App::get_channel();
+                $allow_cid = '<' . $channel['channel_hash'] . '>';
+                $allow_gid = $deny_cid = $deny_gid = '';
+                break;
+
+            case 'contacts':
+                $acl = (new \Zotlabs\Access\AccessList(\App::get_channel()))->get();
+                $allow_cid = $acl['allow_cid'];
+                $allow_gid = $acl['allow_gid'];
+                $deny_cid  = $acl['deny_cid'];
+                $deny_gid  = $acl['deny_gid'];
+                // A channel with no default ACL (a fully public channel) cannot
+                // express "connections" on an attach row — there is no
+                // public_policy column to fall back on the way item has. Say so
+                // rather than writing an empty ACL, which reads as public.
+                if (!$allow_cid && !$allow_gid) {
+                    Response::error(400, 'This channel has no default privacy group, so "Connections" cannot be applied to a file. Pick specific connections instead.');
+                }
+                break;
+
+            case 'public':
+                $allow_cid = $allow_gid = $deny_cid = $deny_gid = '';
+                break;
+
+            default:
+                // No scope: an older client, or 'custom'. Take the arrays as given.
+                $allow_gid = $this->packAcl($data['group_allow']   ?? []);
+                $allow_cid = $this->packAcl($data['contact_allow'] ?? []);
+                $deny_gid  = $this->packAcl($data['group_deny']    ?? []);
+                $deny_cid  = $this->packAcl($data['contact_deny']  ?? []);
+        }
+
+        attach_change_permissions($uid, $hash, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $recurse, true);
+
+        // Return fresh metadata
+        $updated = $this->fetchRow($uid, $hash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    // ── Rename / Move / Copy ─────────────────────────────────────────────────
+
+    private function renameItem(int $uid, array $channel, array $data): void
+    {
+        $hash    = $data['hash'] ?? '';
+        $newname = trim((string) ($data['filename'] ?? ''));
+        if (!$hash || $newname === '') Response::error(400, 'hash and filename required');
+
+        $r = q(
+            "SELECT id, hash, folder FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        $res = attach_move($uid, $hash, $r[0]['folder'], $newname);
+        if (empty($res['success'])) Response::error(500, $res['message'] ?? 'Rename failed');
+
+        $this->syncAttach($uid, $channel, $hash);
+
+        $updated = $this->fetchRow($uid, $hash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    private function moveOrCopyItem(int $uid, array $channel, array $data, bool $copy): void
+    {
+        $hash      = $data['hash'] ?? '';
+        $newFolder = (string) ($data['folder'] ?? '');
+        if (!$hash) Response::error(400, 'hash required');
+
+        $r = q(
+            "SELECT id, hash, filename, is_dir FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        if ($newFolder) {
+            $f = q(
+                "SELECT id FROM attach WHERE uid = %d AND hash = '%s' AND is_dir = 1 LIMIT 1",
+                intval($uid),
+                dbesc($newFolder)
+            );
+            if (!$f) Response::error(404, 'Destination folder not found');
+        }
+
+        if (intval($r[0]['is_dir']) && $newFolder !== '' && $this->isSelfOrDescendant($uid, $newFolder, $hash)) {
+            Response::error(400, $copy
+                ? 'Cannot copy a folder into itself or one of its own sub-folders'
+                : 'Cannot move a folder into itself or one of its own sub-folders');
+        }
+
+        $res = $copy
+            ? attach_copy($uid, $hash, $newFolder)
+            : attach_move($uid, $hash, $newFolder);
+
+        if (empty($res['success'])) {
+            Response::error(500, $res['message'] ?? ($copy ? 'Copy failed' : 'Move failed'));
+        }
+
+        $resultHash = $copy ? $res['resource_id'] : $hash;
+        $this->syncAttach($uid, $channel, $resultHash);
+
+        $updated = $this->fetchRow($uid, $resultHash);
+        Response::send($updated ? $this->formatRow($updated) : null);
+    }
+
+    /** Walk $candidateFolderHash's ancestor chain up to root, checking whether $sourceHash appears in it. */
+    private function isSelfOrDescendant(int $uid, string $candidateFolderHash, string $sourceHash): bool
+    {
+        $hash = $candidateFolderHash;
+        $seen = [];
+        while ($hash !== '') {
+            if ($hash === $sourceHash) return true;
+            if (isset($seen[$hash])) break; // guard against a pre-existing cycle
+            $seen[$hash] = true;
+            $r = q("SELECT folder FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1", intval($uid), dbesc($hash));
+            if (!$r) break;
+            $hash = $r[0]['folder'];
+        }
+        return false;
+    }
+
+    /** Mirrors classic core's attach_edit sync: export the changed attach row and build a sync packet for clones. */
+    private function syncAttach(int $uid, array $channel, string $resource): void
+    {
+        $sync = attach_export_data($channel, $resource, false);
+        if ($sync) Libsync::build_sync_packet($uid, ['file' => [$sync]]);
+    }
+
+    // ── Download (file passthrough, folder → zip) ───────────────────────────
+
+    private function download(int $uid, string $ob_hash, string $hash, array $channel): void
+    {
+        if (!$hash) Response::error(400, 'Hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT hash, filename, filetype, is_dir, content, os_storage
+               FROM attach
+              WHERE uid = %d AND hash = '%s' $sql_extra
+              LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        if (intval($r[0]['is_dir'])) {
+            $this->downloadZip($uid, $ob_hash, $r[0], $channel);
+        } else {
+            $this->downloadFile($r[0], $channel);
+        }
+    }
+
+    private function downloadFile(array $row, array $channel): void
+    {
+        $unsafe_types = ['text/html', 'text/css', 'application/javascript'];
+        if (in_array($row['filetype'], $unsafe_types, true) && !channel_codeallowed($channel['channel_id'])) {
+            header('Content-Type: text/plain');
+        } else {
+            header('Content-Type: ' . $row['filetype']);
+        }
+        header('Content-Disposition: attachment; filename="' . addslashes($row['filename']) . '"');
+
+        if (!intval($row['os_storage'])) {
+            $content = dbunescbin($row['content']);
+            header('Content-Length: ' . strlen($content));
+            echo $content;
+            exit;
+        }
+
+        $fname = $this->resolveStorePath($row['content'], $channel['channel_address']);
+        if (!is_file($fname)) Response::error(404, 'File data not found on disk');
+
+        header('Content-Length: ' . filesize($fname));
+        readfile($fname);
+        exit;
+    }
+
+    private function downloadZip(int $uid, string $ob_hash, array $root, array $channel): void
+    {
+        $tmp_dir = 'store/[data]/' . $channel['channel_address'] . '/tmp';
+        if (!is_dir($tmp_dir)) mkdir($tmp_dir, STORAGE_DEFAULT_PERMISSIONS, true);
+
+        $zip_path = $tmp_dir . '/zip_' . random_string(32) . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zip_path, \ZipArchive::CREATE) !== true) {
+            Response::error(500, 'Could not create zip archive');
+        }
+
+        $this->addFolderToZip($zip, $uid, $ob_hash, $root['hash'], '', $channel['channel_address']);
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . addslashes($root['filename']) . '.zip"');
+        header('Content-Length: ' . filesize($zip_path));
+        readfile($zip_path);
+        unlink($zip_path);
+        exit;
+    }
+
+    /** Zip an explicit list of files (e.g. a photo multi-select). Folders and
+     *  rows the observer can't see are skipped; clashing names get a suffix,
+     *  since photos from different albums often share a filename. */
+    private function downloadSelection(int $uid, string $ob_hash, array $hashes, array $channel): void
+    {
+        $hashes = array_slice(array_filter(array_map('trim', $hashes)), 0, 500);
+        if (!$hashes) Response::error(400, 'Hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT filename, content, os_storage
+               FROM attach
+              WHERE uid = %d AND is_dir = 0 AND os_storage = 1
+                AND hash IN (" . implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes)) . ")
+                $sql_extra",
+            intval($uid)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        $tmp_dir = 'store/[data]/' . $channel['channel_address'] . '/tmp';
+        if (!is_dir($tmp_dir)) mkdir($tmp_dir, STORAGE_DEFAULT_PERMISSIONS, true);
+        $zip_path = $tmp_dir . '/zip_' . random_string(32) . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zip_path, \ZipArchive::CREATE) !== true) {
+            Response::error(500, 'Could not create zip archive');
+        }
+
+        $used = [];
+        foreach ($r as $row) {
+            $fname = $this->resolveStorePath($row['content'], $channel['channel_address']);
+            if (!is_file($fname)) continue;
+            $name = $row['filename'];
+            for ($n = 1; isset($used[$name]); $n++) {
+                $name = pathinfo($row['filename'], PATHINFO_FILENAME) . " ($n)"
+                      . (pathinfo($row['filename'], PATHINFO_EXTENSION) !== '' ? '.' . pathinfo($row['filename'], PATHINFO_EXTENSION) : '');
+            }
+            $used[$name] = true;
+            $zip->addFile($fname, $name);
+            $zip->setCompressionName($name, \ZipArchive::CM_STORE);
+        }
+        $zip->close();
+
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . addslashes($channel['channel_address']) . '-photos.zip"');
+        header('Content-Length: ' . filesize($zip_path));
+        readfile($zip_path);
+        unlink($zip_path);
+        exit;
+    }
+
+    private function addFolderToZip(\ZipArchive $zip, int $uid, string $ob_hash, string $folderHash, string $zipPrefix, string $channelAddress): void
+    {
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT hash, filename, is_dir, content, os_storage
+               FROM attach
+              WHERE uid = %d AND folder = '%s' $sql_extra",
+            intval($uid),
+            dbesc($folderHash)
+        );
+
+        foreach (($r ?: []) as $row) {
+            $entryPath = $zipPrefix !== '' ? $zipPrefix . '/' . $row['filename'] : $row['filename'];
+
+            if (intval($row['is_dir'])) {
+                $zip->addEmptyDir($entryPath);
+                $this->addFolderToZip($zip, $uid, $ob_hash, $row['hash'], $entryPath, $channelAddress);
+                continue;
+            }
+
+            // Legacy DB-blob storage (os_storage = 0) has no on-disk path to zip; skip it.
+            if (!intval($row['os_storage'])) continue;
+
+            $fname = $this->resolveStorePath($row['content'], $channelAddress);
+            if (is_file($fname)) {
+                $zip->addFile($fname, $entryPath);
+                // Compressing is CPU-intensive for potentially large archives — just store the data.
+                $zip->setCompressionName($entryPath, \ZipArchive::CM_STORE);
+            }
+        }
+    }
+
+    /** attach.content is usually a full "store/<addr>/<hash>" path, but some rows only store the bare hash. */
+    private function resolveStorePath(string $content, string $channelAddress): string
+    {
+        $fname = dbunescbin($content);
+        if (strpos($fname, 'store') === false) {
+            $fname = 'store/' . $channelAddress . '/' . $fname;
+        }
+        return $fname;
+    }
+
+    // ── Categories (term table, otype = TERM_OBJ_FILE) ──────────────────────
+
+    // Counts are per-row ACL only (no ancestor walk like search()), so an item in
+    // a hidden folder still counts; its name never leaks — search() drops it.
+    private function listCategories(int $uid, string $ob_hash): void
+    {
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT term.term AS name, COUNT(*) AS total
+               FROM term JOIN attach ON attach.id = term.oid AND attach.uid = term.uid
+              WHERE term.uid = %d AND term.otype = %d AND term.ttype = %d
+                $sql_extra
+              GROUP BY term.term
+              ORDER BY total DESC, term.term ASC",
+            intval($uid), TERM_OBJ_FILE, TERM_CATEGORY
+        );
+        Response::send(array_map(
+            fn($t) => ['name' => $t['name'], 'count' => intval($t['total'])],
+            $r ?: []
+        ));
+    }
+
+    private function getCategories(int $uid, string $ob_hash, string $hash): void
+    {
+        if (!$hash) Response::error(400, 'hash required');
+
+        $sql_extra = permissions_sql($uid, $ob_hash, 'attach');
+        $r = q(
+            "SELECT id FROM attach WHERE uid = %d AND hash = '%s' $sql_extra LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+
+        $terms = q(
+            "SELECT term FROM term WHERE uid = %d AND oid = %d AND otype = %d",
+            intval($uid),
+            intval($r[0]['id']),
+            TERM_OBJ_FILE
+        );
+
+        Response::send([
+            'categories' => array_map(fn($t) => $t['term'], $terms ?: []),
+        ]);
+    }
+
+    private function updateCategories(int $uid, array $channel, array $data): void
+    {
+        require_once 'include/taxonomy.php';
+
+        $hash       = $data['hash'] ?? '';
+        $categories = is_array($data['categories'] ?? null) ? $data['categories'] : [];
+        if (!$hash) Response::error(400, 'hash required');
+
+        $r = q(
+            "SELECT id FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        if (!$r) Response::error(404, 'File not found');
+        $attach_id = intval($r[0]['id']);
+
+        q(
+            "DELETE FROM term WHERE uid = %d AND oid = %d AND otype = %d",
+            intval($uid),
+            $attach_id,
+            TERM_OBJ_FILE
+        );
+
+        $nick  = $channel['channel_address'];
+        $saved = [];
+
+        foreach ($categories as $term) {
+            $term = trim((string) $term);
+            if ($term === '') continue;
+            $term_link = z_root() . '/cloud/' . $nick . '/?cat=' . urlencode($term);
+            store_item_tag($uid, $attach_id, TERM_OBJ_FILE, TERM_CATEGORY, $term, $term_link);
+            $saved[] = $term;
+        }
+
+        Response::send(['categories' => $saved]);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Wrap each value in angle brackets: ["a","b"] → "<a><b>" */
+    private function packAcl(array $items): string
+    {
+        $out = '';
+        foreach ($items as $v) {
+            $v = trim((string) $v);
+            if ($v) $out .= '<' . $v . '>';
+        }
+        return $out;
+    }
+
+    /** The channel's own default ACL, as arrays — what scope "contacts" writes. */
+    private function defaultAcl(int $uid): array
+    {
+        $r = q('SELECT * FROM channel WHERE channel_id = %d LIMIT 1', intval($uid));
+        if (!$r) return ['allow_cid' => [], 'allow_gid' => [], 'deny_cid' => [], 'deny_gid' => []];
+
+        $acl = (new \Zotlabs\Access\AccessList($r[0]))->get();
+        return [
+            'allow_cid' => $this->expandAcl($acl['allow_cid']),
+            'allow_gid' => $this->expandAcl($acl['allow_gid']),
+            'deny_cid'  => $this->expandAcl($acl['deny_cid']),
+            'deny_gid'  => $this->expandAcl($acl['deny_gid']),
+        ];
+    }
+
+    /** Expand stored ACL "<a><b>" → ["a","b"] */
+    private function expandAcl(string $s): array
+    {
+        if (!$s) return [];
+        $parts = explode('>', str_replace('<', '', $s));
+        return array_values(array_filter(array_map('trim', $parts)));
+    }
+
+    private function formatRow(array $row): array
+    {
+        return [
+            'id'           => intval($row['id']),
+            'hash'         => $row['hash'],
+            'filename'     => $row['filename'],
+            'filetype'     => $row['filetype'],
+            'filesize'     => intval($row['filesize']),
+            'folder'       => $row['folder'],
+            'display_path' => $row['display_path'],
+            'is_dir'       => (bool) intval($row['is_dir']),
+            'is_photo'     => (bool) intval($row['is_photo']),
+            'created'      => $row['created'],
+            'edited'       => $row['edited'],
+            'revision'     => intval($row['revision']),
+            'acl' => [
+                'allow_gid' => $this->expandAcl($row['allow_gid']),
+                'allow_cid' => $this->expandAcl($row['allow_cid']),
+                'deny_gid'  => $this->expandAcl($row['deny_gid']),
+                'deny_cid'  => $this->expandAcl($row['deny_cid']),
+            ],
+        ];
+    }
+
+    /** Fetch a single attach row (owner-scoped, no observer permission filter) by hash. */
+    private function fetchRow(int $uid, string $hash): ?array
+    {
+        $r = q(
+            "SELECT " . self::ROW_COLUMNS . " FROM attach WHERE uid = %d AND hash = '%s' LIMIT 1",
+            intval($uid),
+            dbesc($hash)
+        );
+        return $r ? $r[0] : null;
+    }
+
+    private function resolveChannel(): array
+    {
+        $nick = \App::$argv[2] ?? null;
+
+        if ($nick) {
+            $channel = channelx_by_nick($nick);
+            if (!$channel || $channel['channel_removed'])
+                Response::error(404, 'Channel not found');
+            return $channel;
+        }
+
+        if (!local_channel())
+            Response::error(401, 'Authentication required');
+
+        $channel = \App::get_channel();
+        if (!$channel)
+            Response::error(500, 'Could not resolve channel');
+        return $channel;
+    }
+}

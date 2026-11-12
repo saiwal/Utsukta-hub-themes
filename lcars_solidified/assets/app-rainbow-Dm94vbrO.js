@@ -1,0 +1,1 @@
+function e(e){let t=0;for(let n=0;n<e.length;n++)t=t*31+e.charCodeAt(n)|0;return Math.abs(t)%360}function t(t,n){return n?{"--rainbow-h":String(e(t))}:{}}export{t};

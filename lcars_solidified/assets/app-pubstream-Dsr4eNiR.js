@@ -1,0 +1,1 @@
+var e={title:`Öffentlicher Stream`,unavailable:`Öffentlicher Stream nicht verfügbar`,unavailable_desc:`Der öffentliche Stream ist auf dieser Seite nicht aktiviert.`,firehose:`Firehose der Seite`,filter_by_tag:`nach Tag filtern…`,clear:`Löschen`,filter:`Filter`,load_more:`Mehr laden`,end_of_stream:`Du hast das Ende des öffentlichen Streams erreicht.`};export{e as pubstream};

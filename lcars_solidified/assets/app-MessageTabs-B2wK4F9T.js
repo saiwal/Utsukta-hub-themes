@@ -1,0 +1,1 @@
+var e=[{id:``,key:`hq.msg_tab_all`},{id:`direct`,key:`hq.msg_tab_direct`},{id:`notification`,key:`hq.msg_tab_notices`},{id:`folder`,key:`hq.msg_tab_folders`}];export{e as t};

@@ -1,0 +1,15 @@
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./spa-core"
+        }
+    ],
+    "require": {
+        "minishlink/web-push": "^10.0",
+        "utsukta/spa-core": "*",
+        "brick/math": "^0.8.16 || ^0.9 || ^0.10 || ^0.11 || ^0.12 || ^0.13 || ^0.14"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
