@@ -29,7 +29,8 @@ class Pconfig
         ];
 
         if ($result['color_scheme'] === 'custom') {
-            $stored = get_pconfig($cuid, 'spa', 'custom_theme_colors', '');
+            // Falls back to the hub's set when the scheme itself is the hub default
+            $stored = get_pconfig($cuid, 'spa', 'custom_theme_colors', '') ?: HubDefaults::customColors();
             if ($stored) $result['custom_theme_colors'] = $stored;
         }
 

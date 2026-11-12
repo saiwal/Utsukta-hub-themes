@@ -6,9 +6,7 @@
  *   * Version: 0.0-beta
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: aside, right_aside_wrapper
- *   * ContentRegion: right_aside, left_aside_wrapper
- *   * ContentRegion: content, region_2
+ *   * ContentRegion: content, region_1
  */
 ?>
 <!DOCTYPE html>
@@ -52,7 +50,7 @@
       <section id="content" class="s-content">
         <main id="bricks" class="bricks">
           <div class="masonry">
-							<div id="region_2" class="bricks-wrapper ss-animated" data-animate-block>
+							<div id="region_1" class="bricks-wrapper ss-animated" data-animate-block>
 								<?php if (x($page, 'content')) echo $page['content']; ?>
               </div>
           </div>
@@ -64,10 +62,10 @@
           <div class="row s-footer__main">
               <?php if (x($page, 'footer')) echo $page['footer']; ?>
               <div id="region_3">
-                <div id="left_aside_wrapper">
+                <div id="right_aside_wrapper">
                   <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
-                <div id="right_aside_wrapper" class="d-flex">
+                <div id="left_aside_wrapper" class="d-flex">
                   <?php if (x($page, 'aside')) echo $page['aside']; ?>
                 </div>
               </div>

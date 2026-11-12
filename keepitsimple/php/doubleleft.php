@@ -6,8 +6,8 @@
  *   * Version: 1.0
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: aside, right_aside_wrapper
- *   * ContentRegion: right_aside, left_aside_wrapper
+ *   * ContentRegion: aside, left_aside_wrapper
+ *   * ContentRegion: right_aside, right_aside_wrapper
  *   * ContentRegion: content, region_2
  */
 ?>
@@ -77,7 +77,7 @@
 
 			<main id="main" class="s-content__main large-8 column">
 
-				<section class="page-content">
+				<section id="region_2" class="page-content">
 
 					<?php if (x($page, 'content')) echo $page['content']; ?>
 
@@ -96,7 +96,7 @@
 					<div class="offcanvas-body">
 						<div class="container">
 							<div id="region_1" class="pe-0 w-100">
-								<div id="left_aside_wrapper">
+								<div id="right_aside_wrapper">
 									<!-- Search needs to be implemented as a widget to support language translations -->
 									<div class="widget widget--search" id="search-autocomplete-results">
 										<form action="search" method="get" role="search">
@@ -109,7 +109,7 @@
 								</div>
 							</div>
 							<div id="region_3" class="pe-0 w-100">
-								<div id="right_aside_wrapper">
+								<div id="left_aside_wrapper">
 									<?php if (x($page, 'aside')) echo $page['aside']; ?>
 								</div>
 							</div>

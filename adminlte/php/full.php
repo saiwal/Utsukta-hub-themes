@@ -6,7 +6,7 @@
  *   * Version: 1.9
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: content, region_2
+ *   * ContentRegion: content, region_1
  */
 ?>
 <!DOCTYPE html>
@@ -33,7 +33,7 @@
     <main class="app-main px-1 py-3" style="min-height: calc(100vh - 56px);">
       <div class="container-xl">
         <div class="row">
-        <div id="region_2" class="col-12">
+        <div id="region_1" class="col-12">
           <?php if (x($page, 'content')) echo $page['content']; ?>
         </div>
         </div>

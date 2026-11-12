@@ -30,7 +30,16 @@ if (!$ch) { echo "no channel\n"; exit(1); }
 $uid = (int) $ch['channel_id'];
 
 check('scheme valid', HubDefaults::clean('color_scheme', 'nord') === 'nord');
-check('custom scheme refused', HubDefaults::clean('color_scheme', 'custom') === null);
+check('bad custom colours refused', HubDefaults::cleanCustomColors('{"base":"red","txt":"#000000","accent":"#000000","isDark":true}') === null);
+$savedColors = Config::Get('spa', 'custom_theme_colors', null);
+try {
+    Config::Delete('spa', 'custom_theme_colors');
+    check('custom scheme refused without colours', HubDefaults::clean('color_scheme', 'custom') === null);
+    Config::Set('spa', 'custom_theme_colors', '{"base":"#101010","txt":"#eeeeee","accent":"#ff8800","isDark":true}');
+    check('custom scheme ok with colours', HubDefaults::clean('color_scheme', 'custom') === 'custom');
+} finally {
+    $savedColors === null ? Config::Delete('spa', 'custom_theme_colors') : Config::Set('spa', 'custom_theme_colors', $savedColors);
+}
 check('bad choice refused', HubDefaults::clean('font_size', 'huge') === null);
 check('post_height clamped', HubDefaults::clean('post_height', '20') === '100');
 check('post_height 0 kept', HubDefaults::clean('post_height', '0') === '0');
