@@ -5,8 +5,8 @@
  *   * Version: 1.9
  *   * Author: Saiwal
  *   * Maintainer: Saiwal
- *   * ContentRegion: aside, right_aside_wrapper
- *   * ContentRegion: right_aside, left_aside_wrapper
+ *   * ContentRegion: aside, left_aside_wrapper
+ *   * ContentRegion: right_aside, right_aside_wrapper
  *   * ContentRegion: content, region_2
  */
 ?>
@@ -46,12 +46,12 @@
             <div class="offcanvas-body px-0">
               <div class="container row pe-0">
                 <div id="region_1" class="pe-0">
-                <div id="left_aside_wrapper">
+                <div id="right_aside_wrapper">
                 <?php if (x($page, 'right_aside')) echo $page['right_aside']; ?>
                 </div>
                 </div>
                 <div id="region_3" class="pe-0">
-                <div id="right_aside_wrapper">
+                <div id="left_aside_wrapper">
                 <?php if (x($page, 'aside')) echo $page['aside']; ?>
               </div>
               </div>
