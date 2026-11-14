@@ -1,0 +1,551 @@
+<?php
+// Api/Concerns/FormatsItems.php
+namespace Utsukta\SpaCore\Api\Concerns;
+
+use Utsukta\SpaCore\Api\ContentTypes;
+use Utsukta\SpaCore\Api\Response;
+use Zotlabs\Lib\IConfig;
+
+trait FormatsItems
+{
+    use EmbedsItems;
+
+    // A Hubzilla quote-post arrives over zot as a bare "RE: <url>" line plus
+    // quoteUrl. Core pastes the [share] block only on ActivityPub ingest
+    // (Activity::decode_note -> pasteQuote); redbasic hides the gap with a
+    // render-time oembed. Paste it here from the local copy of the quoted
+    // item. ponytail: local copies only, so a quote of a post this hub never
+    // received still shows the link. Activity::get_quote() would fetch it,
+    // but that's one remote round-trip per stream row.
+    private function pasteLocalQuote(string $body, array $item): string
+    {
+        if (str_contains($body, '[/share]')
+            || !preg_match('/\bRE:\s*(?:\[url=[^\]]*\])?(https?:\/\/[^\s\[]+)/i', $body, $m)) {
+            return $body;
+        }
+
+        // mid only: item.plink has no index, and an OR on it turned this into
+        // a full item-table scan on every render. A Hubzilla quote url is the
+        // quoted item's mid anyway.
+        $r = q("SELECT id, uid FROM item WHERE mid = '%s' AND item_deleted = 0
+                ORDER BY (uid = %d) DESC LIMIT 1",
+            dbesc($m[1]), intval($item['uid'] ?? 0));
+        $v  = $r ? q("SELECT * FROM item WHERE id = %d " . item_permissions_sql(intval($r[0]['uid'])), intval($r[0]['id'])) : [];
+        $bb = $v ? $this->buildEmbedBlock($v[0]) : '';
+
+        // No readable local copy: rows stored before QuoteIngest existed can
+        // still be rebuilt from the sender's rendering in item.obj.
+        $quote = $bb
+            ? ['url' => $v[0]['plink'], 'mid' => $v[0]['mid'], 'bbcode' => $bb]
+            : \Utsukta\SpaCore\Api\QuoteIngest::quoteFromObj($item['obj'] ?? null, $m[1]);
+
+        return $quote ? \Zotlabs\Lib\Activity::pasteQuote($body, $quote) : $body;
+    }
+
+    // Core's clone sync (import_items -> item_url_replace, include/text.php
+    // "FIXME: ignore anything in a share tag") rewrites the origin hub's url
+    // to the clone's everywhere in a top-level body, share blocks included —
+    // so a quoted author's https://origin/photo/profile/s/<id> becomes the
+    // clone's /photo/profile/s/<id>: some other local channel's face. Re-derive
+    // avatar/profile from the xchan the block names by portable_id instead.
+    // ponytail: link= is rewritten too and left alone; it's a plink, often
+    // still resolvable on the clone.
+    private function repairShareAuthors(string $body): string
+    {
+        if (!preg_match_all("/\\[share\\b[^\\]]*\\bportable_id='([^']+)'/", $body, $m)) {
+            return $body;
+        }
+        $in = implode("','", array_map('dbesc', array_unique($m[1])));
+        $x = [];
+        foreach ((q("SELECT xchan_hash, xchan_url, xchan_photo_s FROM xchan WHERE xchan_hash IN ('$in')") ?: []) as $r) {
+            $x[$r['xchan_hash']] = $r;
+        }
+        return preg_replace_callback("/\\[share\\b[^\\]]*\\]/", function ($tag) use ($x) {
+            if (!preg_match("/\\bportable_id='([^']+)'/", $tag[0], $p) || !isset($x[$p[1]])) {
+                return $tag[0];
+            }
+            $r = $x[$p[1]];
+            return preg_replace(
+                ["/\\bavatar='[^']*'/", "/\\bprofile='[^']*'/"],
+                ["avatar='" . str_replace('$', '\\$', $r['xchan_photo_s']) . "'", "profile='" . str_replace('$', '\\$', $r['xchan_url']) . "'"],
+                $tag[0]
+            );
+        }, $body);
+    }
+
+    // Comma-joined display names of everyone on a direct message's ACL —
+    // author_name/owner only tell you who *sent* a given row, not the other
+    // participants, which matters for group DMs. Mirrors
+    // Handlers/HqMessages.php::getDmRecipients(), which predates this trait
+    // and covers the same case for the HQ message-card list.
+    protected function dmRecipients(array $item): string
+    {
+        if (intval($item['item_private'] ?? 0) !== 2) {
+            return '';
+        }
+
+        $channel = \App::get_channel();
+        if (!$channel) {
+            return '';
+        }
+
+        $column = '';
+
+        if ($channel['channel_hash'] === ($item['owner']['xchan_hash'] ?? null)) {
+            $recips = expand_acl($item['allow_cid'] ?? '');
+            if (is_array($recips)) {
+                array_unshift($recips, $item['owner']['xchan_hash']);
+                $column = 'xchan_hash';
+            }
+        } else {
+            $recips = IConfig::Get($item, 'activitypub', 'recips');
+            if (isset($recips['to']) && is_array($recips['to'])) {
+                $recips = $recips['to'];
+                array_unshift($recips, $item['owner']['xchan_url'] ?? '');
+                $column = 'xchan_url';
+            } else {
+                $hookinfo = ['item' => $item, 'recips' => null, 'column' => ''];
+                call_hooks('direct_message_recipients', $hookinfo);
+                $recips = $hookinfo['recips'];
+                $column = $hookinfo['column'];
+            }
+        }
+
+        $recipients = '';
+
+        if (is_array($recips) && $column) {
+            // Whichever branch above ran, the message's own author ends up
+            // in $recips too (e.g. you're the sender, so you're both the
+            // item owner unshifted in and a recipient) — exclude them since
+            // they're already shown separately as the post author.
+            $authorKey = $column === 'xchan_url'
+                ? ($item['author']['xchan_url'] ?? '')
+                : ($item['author_xchan'] ?? '');
+
+            stringify_array_elms($recips, true);
+            $query_str = implode(',', $recips);
+            $xchans = dbq("SELECT DISTINCT xchan_name, $column FROM xchan WHERE $column IN ($query_str) AND xchan_deleted = 0");
+            foreach ($xchans as $xchan) {
+                if ($authorKey !== '' && $xchan[$column] === $authorKey) {
+                    continue;
+                }
+                $recipients .= htmlspecialchars_decode($xchan['xchan_name'], ENT_QUOTES | ENT_HTML5) . ', ';
+            }
+        }
+
+        return trim($recipients, ', ');
+    }
+
+    // Is this item on its channel's pinned list? Only top-level items can be
+    // pinned, so a comment short-circuits without touching pconfig. Fine for a
+    // single item or a thread's worth; a stream should batch the pconfig read
+    // once and pass the result in (see Channel.php's $pinnedMidSet) rather than
+    // calling this per row.
+    protected function isPinnedItem(array $item): bool
+    {
+        if (!intval($item['item_thread_top'] ?? 0) || empty($item['uid']) || empty($item['uuid'])) {
+            return false;
+        }
+
+        $raw    = get_pconfig(intval($item['uid']), 'pinned', ITEM_TYPE_POST, []);
+        $pinned = array_map('unpack_link_id', is_array($raw) ? $raw : []);
+
+        return in_array($item['uuid'], $pinned, true);
+    }
+
+    // Find deleted items that are parents of the given comments but absent from
+    // the result set. Returns pre-formatted stubs (same shape as formatItem output)
+    // so the frontend can build a complete thread tree without gaps.
+    protected function deletedParentStubs(array $comments, string $rootMid): array
+    {
+        if (empty($comments)) return [];
+
+        $presentMids = array_column($comments, 'mid');
+        $missing = [];
+        foreach ($comments as $c) {
+            $tp = $c['thr_parent'] ?? '';
+            if ($tp && $tp !== $rootMid && !in_array($tp, $presentMids) && !in_array($tp, $missing)) {
+                $missing[] = $tp;
+            }
+        }
+        if (empty($missing)) return [];
+
+        $inList  = implode("','", array_map('dbesc', $missing));
+        $deleted = dbq("SELECT uuid, mid, parent_mid, thr_parent, created
+                        FROM item
+                        WHERE mid IN ('$inList') AND item_deleted = 1
+                        ORDER BY created ASC");
+
+        return array_map(fn($d) => [
+            'uuid'             => $d['uuid'],
+            'mid'              => $d['mid'],
+            'parent_mid'       => $d['parent_mid'],
+            'thr_parent'       => $d['thr_parent'],
+            'message_top'      => $d['parent_mid'],
+            'created'          => $d['created'],
+            'edited'           => $d['created'],
+            'commented'        => $d['created'],
+            'title'            => '',
+            'body'             => '',
+            'verb'             => 'Create',
+            'obj_type'         => 'Note',
+            'like_count'       => 0,
+            'dislike_count'    => 0,
+            'announce_count'   => 0,
+            'comment_count'    => 0,
+            'item_private'     => 0,
+            'item_thread_top'  => 0,
+            'item_unseen'      => 0,
+            'iid'              => 0,
+            'profile_uid'      => 0,
+            'flags'            => ['deleted'],
+            'author'           => ['name' => '', 'address' => '', 'url' => '', 'hash' => '', 'network' => '', 'photo' => ['src' => '', 'mimetype' => '']],
+            'owner'            => null,
+            'permalink'        => '',
+            'location'         => '',
+            'coord'            => '',
+            'expires'          => null,
+            'viewer_liked'     => false,
+            'viewer_disliked'  => false,
+            'viewer_repeated'  => false,
+            'viewer_attending' => false,
+            'viewer_declining' => false,
+            'viewer_maybe'     => false,
+            'viewer_following' => false,
+            'can_comment'      => false,
+            'attach'           => [],
+        ], $deleted ?: []);
+    }
+
+    // Stamp viewer_following on each item. Follow/Ignore activities are stored
+    // local-only in the *viewer's* channel (core Mod_Subthread semantics), so
+    // they must be matched by parent_mid within the viewer's uid — the parent
+    // item *id* differs between the viewer's copy and the copy being displayed
+    // (channel pages, pubstream, display). Latest activity wins.
+    protected function applyViewerFollowing(array &$items, string $observer_xchan): void
+    {
+        $uid = intval(local_channel());
+        if (!$uid || !$observer_xchan || empty($items)) {
+            return;
+        }
+
+        $mids = array_unique(array_filter(array_column($items, 'parent_mid')));
+        if (empty($mids)) {
+            return;
+        }
+
+        $inList = implode("','", array_map('dbesc', $mids));
+        $obs    = dbesc($observer_xchan);
+        $frows  = dbq(
+            "SELECT parent_mid, verb FROM item
+             WHERE uid = $uid
+               AND parent_mid IN ('$inList')
+               AND author_xchan = '$obs'
+               AND verb IN ('Follow', 'Ignore')
+               AND item_deleted = 0
+             ORDER BY created DESC, id DESC"
+        );
+
+        $map = [];
+        foreach (($frows ?: []) as $fr) {
+            if (!isset($map[$fr['parent_mid']])) {
+                $map[$fr['parent_mid']] = ($fr['verb'] === 'Follow');
+            }
+        }
+
+        // Without an explicit Follow/Ignore, core's notification() in
+        // include/items.php still notifies anyone who has authored an item
+        // (e.g. a comment) in the thread — so treat that the same way here,
+        // otherwise the UI shows "Follow" on threads the user is already
+        // being notified about, and Unfollow has nothing explicit to flip.
+        $participated = dbq(
+            "SELECT DISTINCT parent_mid FROM item
+             WHERE uid = $uid
+               AND parent_mid IN ('$inList')
+               AND author_xchan = '$obs'
+               AND verb NOT IN ('Follow', 'Ignore')
+               AND item_deleted = 0"
+        );
+        foreach (($participated ?: []) as $pr) {
+            if (!isset($map[$pr['parent_mid']])) {
+                $map[$pr['parent_mid']] = true;
+            }
+        }
+
+        // A forum's repost of the viewer's own post: authored by the forum, so
+        // the participation check above misses it, but ForumNotify notifies the
+        // viewer about it — show it as followed for the same reason.
+        $forumRoots = dbq(
+            "SELECT item.mid, item.body FROM item
+             LEFT JOIN xchan ON xchan_hash = item.author_xchan
+             WHERE item.uid = $uid
+               AND item.mid IN ('$inList')
+               AND item.item_thread_top = 1
+               AND xchan_pubforum = 1
+               AND item.body LIKE '%portable_id=''$obs''%'"
+        );
+        foreach (($forumRoots ?: []) as $fr) {
+            if (!isset($map[$fr['mid']]) && \Utsukta\SpaCore\Api\ForumNotify::isRepostOfMine($fr, $observer_xchan)) {
+                $map[$fr['mid']] = true;
+            }
+        }
+
+        foreach ($items as &$item) {
+            $item['viewer_following'] = $map[$item['parent_mid']] ?? false;
+        }
+        unset($item);
+    }
+
+    private static function normalizeAttach(array $items): array
+    {
+        $root = z_root();
+        return array_map(function (array $a) use ($root): array {
+            // Pre-fix rows may have been stored with 'url' instead of 'href'.
+            if (!isset($a['href']) && isset($a['url'])) {
+                $a['href'] = $a['url'];
+            }
+            if (isset($a['href']) && str_starts_with($a['href'], '/')) {
+                $a['href'] = $root . $a['href'];
+            }
+            return $a;
+        }, $items);
+    }
+
+    // Core's format_poll() offers the vote form only when the viewer is the
+    // local channel holding this copy, isn't the poll's owner, and may comment
+    // (which also covers the poll having ended: comments_closed = endTime).
+    // Item::voteOnPoll() enforces the same rule.
+    protected static function canVoteOn(array $item, string $observer_xchan): bool
+    {
+        $uid = intval(local_channel());
+        return $uid
+            && $uid === intval($item['uid'] ?? 0)
+            && $observer_xchan !== ''
+            && $observer_xchan !== ($item['owner_xchan'] ?? '')
+            && can_comment_on_post($observer_xchan, $item);
+    }
+
+    private static function extractPoll(array $item, string $observer_xchan): ?array
+    {
+        if (($item['obj_type'] ?? '') !== 'Question') return null;
+        $raw = $item['obj'] ?? '';
+        if (!$raw) return null;
+
+        $obj = is_array($raw) ? $raw : json_decode($raw, true);
+        if (!$obj || ($obj['type'] ?? '') !== 'Question') return null;
+
+        $multiple = false;
+        $choices  = $obj['oneOf'] ?? null;
+        if (empty($choices)) {
+            $choices  = $obj['anyOf'] ?? [];
+            $multiple = true;
+        }
+
+        // The Answer rows this copy holds. On the poll owner's copy they are
+        // every vote; on a recipient's copy usually just the viewer's own,
+        // since votes go privately to the owner.
+        $answers = [];
+        if (!empty($item['id'])) {
+            $iid     = intval($item['id']);
+            $answers = dbq("SELECT title, author_xchan FROM item
+                            WHERE parent = $iid
+                              AND obj_type = 'Answer'
+                              AND item_deleted = 0") ?: [];
+        }
+        $localVoters = [];
+        $viewer_votes = [];
+        foreach ($answers as $a) {
+            $key = trim(htmlspecialchars_decode($a['title'], ENT_QUOTES | ENT_HTML5));
+            $localVoters[$key][$a['author_xchan']] = true;
+            if ($observer_xchan && $a['author_xchan'] === $observer_xchan) {
+                $viewer_votes[] = $a['title'];
+            }
+        }
+
+        // The tallies in `obj` only change when the owner's hub delivers an
+        // updated Question, and core's update_poll() doesn't reach other hubs
+        // (it resends the cached original Create, as a bare Update zot
+        // receivers refuse). So a recipient's copy stays at its first tallies.
+        // Use the higher of those and the votes counted here, so at least the
+        // viewer's own vote shows. See src/docs/dev/en/3-data/core-parity.md.
+        $options = [];
+        foreach ($choices as $opt) {
+            $name      = htmlspecialchars_decode($opt['name'] ?? '', ENT_QUOTES | ENT_HTML5);
+            $options[] = [
+                'name'  => $name,
+                'votes' => max(intval($opt['replies']['totalItems'] ?? 0), count($localVoters[trim($name)] ?? [])),
+            ];
+        }
+
+        return [
+            'multiple'     => $multiple,
+            'can_vote'     => self::canVoteOn($item, $observer_xchan),
+            'end_time'     => $obj['endTime'] ?? null,
+            'closed'       => $obj['closed']  ?? null,
+            'options'      => $options,
+            'viewer_votes' => $viewer_votes,
+        ];
+    }
+
+    // The observer's own reactions, read from the reaction_verbs blob that
+    // ReactionCounts::subqueries() selects. Shared with Item::getCounts().
+    protected function viewerReactionFlags(array $item, string $observer_xchan): array
+    {
+        $liked = $disliked = $repeated = $attending = $declining = $maybe = false;
+
+        if ($observer_xchan && !empty($item['reaction_verbs'])) {
+            foreach (explode('|', $item['reaction_verbs']) as $rv) {
+                if (!str_contains($rv, ':'))
+                    continue;
+                [$verb, $xchan] = explode(':', $rv, 2);
+                if ($xchan !== $observer_xchan)
+                    continue;
+                if ($verb === 'Like')       $liked      = true;
+                if ($verb === 'Dislike')    $disliked   = true;
+                if ($verb === 'Announce')   $repeated   = true;
+                if ($verb === 'Accept')     $attending  = true;
+                if ($verb === 'Reject')     $declining  = true;
+                if ($verb === 'TentativeAccept') $maybe = true;
+            }
+        }
+
+        return [$liked, $disliked, $repeated, $attending, $declining, $maybe];
+    }
+
+    private function formatItem(array $item, string $observer_xchan, bool $isPinned = false): array
+    {
+        [$liked, $disliked, $repeated, $attending, $declining, $maybe] = $this->viewerReactionFlags($item, $observer_xchan);
+
+        return [
+            'uuid' => $item['uuid'],
+            'mid' => $item['mid'],
+            'parent_mid' => $item['parent_mid'],
+            'thr_parent' => $item['thr_parent'],
+            'message_top' => intval($item['item_thread_top'])
+                ? $item['mid']
+                : $item['thr_parent'],
+            'created' => $item['created'],
+            'edited' => $item['edited'],
+            'commented' => $item['commented'],
+            'title' => Response::decodeEntities($item['title']),
+            // Raw body in its own authoring format, paired with the mimetype
+            // that says how to render it — the client mirrors core's
+            // prepare_text() switch in spa-core/src/lib/renderBody.ts.
+            // ContentTypes::decode() reverses the htmlspecialchars escaping
+            // that z_input_filter() applies to markdown at save time.
+            // item.mimetype defaults to '' in the schema and core treats that
+            // as bbcode, so pass it through rather than normalising here.
+            'body' => in_array($item['mimetype'] ?? '', ['', 'text/bbcode'])
+                ? $this->repairShareAuthors($this->pasteLocalQuote($item['body'], $item))
+                : ContentTypes::decode($item['body'], $item['mimetype'] ?? ''),
+            'mimetype' => $item['mimetype'] ?? '',
+            'verb' => $item['verb'],
+            'obj_type' => $item['obj_type'],
+            'like_count' => intval($item['like_count'] ?? 0),
+            'dislike_count' => intval($item['dislike_count'] ?? 0),
+            'announce_count' => intval($item['announce_count'] ?? 0),
+            'comment_count' => intval($item['comment_count'] ?? 0),
+            'item_private' => intval($item['item_private']),
+            'item_thread_top' => intval($item['item_thread_top']),
+            'item_unseen' => intval($item['item_unseen'] ?? 0),
+            'iid' => intval($item['id']),
+            'profile_uid' => intval($item['uid']),
+            'flags' => array_values(array_filter([
+                intval($item['item_thread_top']) ? 'thread_parent' : null,
+                // On its channel's own wall (owner_xchan is the channel) — gates Pin.
+                intval($item['item_wall'] ?? 0) ? 'wall' : null,
+                intval($item['item_private']) ? 'private' : null,
+                intval($item['item_private']) === 2 ? 'direct_message' : null,
+                intval($item['item_starred']) ? 'starred' : null,
+                $isPinned ? 'pinned' : null,
+                intval($item['item_notshown'])
+                    ? ($observer_xchan && $observer_xchan === ($item['author_xchan'] ?? '') ? 'expired' : 'notshown')
+                    : null,
+                intval($item['item_unseen']) ? 'unseen' : null,
+                intval($item['item_delayed'] ?? 0) ? 'scheduled' : null,
+                intval($item['item_blocked'] ?? 0) === ITEM_MODERATED ? 'pending_moderation' : null,
+            ])),
+            'author' => [
+                'name'    => htmlspecialchars_decode(urldecode($item['author']['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
+                'address' => $item['author']['xchan_addr']         ?? '',
+                'url'     => $item['author']['xchan_url']          ?? '',
+                'hash'    => $item['author']['xchan_hash']         ?? '',
+                'network' => $item['author']['xchan_network']      ?? '',
+                'photo'   => [
+                    'src'      => $item['author']['xchan_photo_m']        ?? '',
+                    'mimetype' => $item['author']['xchan_photo_mimetype'] ?? '',
+                ],
+            ],
+            'owner' => (function () use ($item): ?array {
+                // Hubzilla Announce: original content is fetched, booster stored in source_xchan.
+                // Announce only, like core's ThreadItem::check_wall_to_wall(): on
+                // anything else source_xchan is a relay detail, and clone sync
+                // (encode_item) drops it — so a "via" would show on one hub only.
+                if (($item['verb'] ?? '') === 'Announce' && !empty($item['source_xchan']) && !empty($item['source'])) {
+                    $x = $item['source'];
+                    return [
+                        'name'    => htmlspecialchars_decode(urldecode($x['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
+                        'address' => $x['xchan_addr']            ?? '',
+                        'url'     => $x['xchan_url']             ?? '',
+                        'hash'    => $x['xchan_hash']            ?? '',
+                        'photo'   => [
+                            'src'      => $x['xchan_photo_m']        ?? '',
+                            'mimetype' => $x['xchan_photo_mimetype'] ?? '',
+                        ],
+                    ];
+                }
+                // ActivityPub (Lemmy communities, Mastodon boosts etc.): the delivering
+                // connection is owner_xchan when it differs from the content's author_xchan
+                if ($item['owner_xchan'] !== $item['author_xchan'] && !empty($item['owner'])) {
+                    $x = $item['owner'];
+                    return [
+                        'name'    => htmlspecialchars_decode(urldecode($x['xchan_name'] ?? ''), ENT_QUOTES | ENT_HTML5),
+                        'address' => $x['xchan_addr']            ?? '',
+                        'url'     => $x['xchan_url']             ?? '',
+                        'hash'    => $x['xchan_hash']            ?? '',
+                        'photo'   => [
+                            'src'      => $x['xchan_photo_m']        ?? '',
+                            'mimetype' => $x['xchan_photo_mimetype'] ?? '',
+                        ],
+                    ];
+                }
+                return null;
+            })(),
+            'recipients' => $this->dmRecipients($item),
+            'permalink' => $item['plink'] ?? '',
+            'location' => htmlspecialchars_decode($item['location'] ?? '', ENT_QUOTES | ENT_HTML5),
+            'coord' => $item['coord'] ?? '',
+            'expires' => (isset($item['expires']) && $item['expires'] > NULL_DATE)
+                ? $item['expires']
+                : null,
+            'viewer_liked' => $liked,
+            'viewer_disliked' => $disliked,
+            'viewer_repeated' => $repeated,
+            'viewer_attending' => $attending,
+            'viewer_declining' => $declining,
+            'viewer_maybe' => $maybe,
+            'viewer_following' => (bool)($item['viewer_following'] ?? false),
+            // Same check core uses to decide whether to render a comment box
+            // (comment_policy, comments_closed, nocomment, owner perms).
+            'can_comment' => (bool) can_comment_on_post($observer_xchan, $item),
+            'attach' => self::normalizeAttach($item['attach'] ? (json_decode($item['attach'], true) ?: []) : []),
+            'poll'   => self::extractPoll($item, $observer_xchan),
+            // Categories live on the term table, so this needs $item['term'] —
+            // every caller already batch-hydrates it via fetch_post_tags(), which
+            // is why this costs no extra query. Deliberately NOT gated on
+            // feature_enabled(uid,'categories'): that flag is core's own display
+            // switch (jot.tpl / Editpost.php), defaults off, and gating on it would
+            // make categories invisible in the SPA for most channels.
+            'categories' => array_values(array_column(
+                get_terms_oftype($item['term'] ?? [], TERM_CATEGORY), 'term')),
+            // Links the author marked bookmarkable with #^[url]…[/url]. Core turns
+            // those into TERM_BOOKMARK terms at compose time (include/text.php
+            // handle_tag()) and they federate as AS2 zot:Bookmark tags, so remote
+            // Hubzilla posts and every RSS item arrive already carrying them.
+            // Same free ride as categories: $item['term'] is already hydrated.
+            'bookmark_links' => array_map(
+                fn($t) => ['url' => $t['url'], 'title' => $t['term']],
+                array_values(get_terms_oftype($item['term'] ?? [], TERM_BOOKMARK))),
+        ];
+    }
+}

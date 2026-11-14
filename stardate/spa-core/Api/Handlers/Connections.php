@@ -1,0 +1,970 @@
+<?php
+
+namespace Utsukta\SpaCore\Api\Handlers;
+
+use Utsukta\SpaCore\Api\Auth;
+use Utsukta\SpaCore\Api\Response;
+use Zotlabs\Lib\Connect;
+use Zotlabs\Lib\Libsync;
+use Zotlabs\Daemon\Master;
+
+class Connections
+{
+    // GET /spa/connections
+    // GET /spa/connections?address=<xchan_addr>       — exact single-connection lookup
+    // GET /spa/connections?id=<abook_id>               — exact single-connection lookup by id
+    // GET /spa/connections/permcats                   — list available permission roles
+    // GET /spa/connections/permcats?name=<role>        — a single role's permission grid
+    // GET /spa/connections/:id/perms                  — bidirectional perms + incl/excl filters
+    // GET /spa/connections/:id/groups                 — privacy group IDs for a connection
+    // GET /spa/connections/:id/profile                — assigned profile id for a connection
+    public function get(): void
+    {
+        $uid = Auth::requireLocalGet();
+
+        $sub = \App::$argv[2] ?? '';
+
+        if ($sub === 'permcats') {
+            $name = trim($_GET['name'] ?? '');
+            if ($name !== '') {
+                $this->getPermcatDetail($uid, $name);
+            }
+            $this->getPermcats($uid);
+        }
+
+        if ($sub === 'birthdays') {
+            $this->getBirthdays($uid);
+        }
+
+        if (is_numeric($sub) && intval($sub) > 0) {
+            $sub_action = \App::$argv[3] ?? '';
+            if ($sub_action === 'perms') {
+                $this->getPerms($uid, intval($sub));
+            } elseif ($sub_action === 'groups') {
+                $this->getConnectionGroups($uid, intval($sub));
+            } elseif ($sub_action === 'profile') {
+                $this->getConnectionProfile($uid, intval($sub));
+            }
+        }
+
+        // Exact address lookup — used by AuthorPopover connection check
+        $address = trim($_GET['address'] ?? '');
+        if ($address !== '') {
+            $rows = q(
+                "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
+                        abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
+                        abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
+                        abook.abook_role, abook.abook_profile,
+                        xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
+                        xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
+                        xchan.xchan_pubforum
+                 FROM abook
+                 LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                 WHERE abook.abook_channel = %d
+                   AND abook.abook_self   = 0
+                   AND xchan.xchan_deleted = 0
+                   AND xchan.xchan_orphan  = 0
+                   AND xchan.xchan_addr    = '%s'
+                 LIMIT 1",
+                intval($uid),
+                dbesc($address)
+            );
+            Response::send($rows ? $this->formatRow($rows[0]) : null);
+        }
+
+        // Exact id lookup — used by notification deep-links (classic Hubzilla's
+        // "intro" notify links point to connections#<abook_id>, which has no SPA
+        // route; the SPA resolves it to this lookup to open the accept/reject modal)
+        $id_param = $_GET['id'] ?? '';
+        if ($id_param !== '' && ctype_digit((string) $id_param)) {
+            $rows = q(
+                "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
+                        abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
+                        abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
+                        abook.abook_role, abook.abook_profile,
+                        xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
+                        xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
+                        xchan.xchan_pubforum
+                 FROM abook
+                 LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                 WHERE abook.abook_channel = %d
+                   AND abook.abook_self   = 0
+                   AND xchan.xchan_deleted = 0
+                   AND xchan.xchan_orphan  = 0
+                   AND abook.abook_id     = %d
+                 LIMIT 1",
+                intval($uid),
+                intval($id_param)
+            );
+            Response::send($rows ? $this->formatRow($rows[0]) : null);
+        }
+
+        // List with optional filter / search / order / pagination
+        $filter     = $_GET['filter']  ?? 'active';
+        $type       = $_GET['type']    ?? '';
+        $search     = trim($_GET['search'] ?? '');
+        $order_key  = $_GET['order']   ?? 'name';
+        $limit      = max(1, min(200, intval($_GET['limit']  ?? 50)));
+        $offset     = max(0, intval($_GET['start'] ?? 0));
+
+        $sql_filter = $this->filterClause($filter, $uid);
+        $sql_filter .= match ($type) {
+            'forum'  => ' AND xchan.xchan_pubforum = 1 ',
+            'person' => ' AND xchan.xchan_pubforum = 0 ',
+            default  => '',
+        };
+
+        // ?perms=post_comments,send_stream: only contacts that granted us every
+        // listed their_perms key; ?perms=none: contacts that granted none of them.
+        $sql_filter .= $this->permsClause($uid, $_GET['perms'] ?? '');
+
+        // ?role=<permcat>: one role's members (Contact roles). An empty value
+        // is meaningful — the contacts with no role — so test presence.
+        if (array_key_exists('role', $_GET)) {
+            $sql_filter .= " AND abook.abook_role = '" . protect_sprintf(dbesc((string) $_GET['role'])) . "' ";
+        }
+
+        $sql_search = '';
+        if ($search !== '') {
+            $sql_search = " AND (xchan.xchan_name LIKE '%%"
+                . protect_sprintf(dbesc($search)) . "%%'"
+                . " OR xchan.xchan_addr LIKE '%%"
+                . protect_sprintf(dbesc($search)) . "%%') ";
+        }
+
+        $sql_order = match ($order_key) {
+            'name_desc'      => 'xchan.xchan_name DESC',
+            'connected'      => 'abook.abook_created ASC',
+            'connected_desc' => 'abook.abook_created DESC',
+            'recent'         => 'xchan.xchan_updated DESC',
+            default          => 'xchan.xchan_name ASC',
+        };
+
+        // ?unseen=1: unread top-level posts per connection, counted by
+        // owner_xchan like core's Forums widget. Its own query on purpose:
+        // alone it rides the (uid, item_unseen) index and touches only unread
+        // rows; as a derived-table join MySQL planned it badly enough to time
+        // out on a large hub. Not a sort key: counts change between page
+        // fetches, so offset paging over them repeats/skips rows — the client
+        // sorts the (small) forum list itself.
+        $with_unseen = !empty($_GET['unseen']);
+        $unseen = [];
+        if ($with_unseen) {
+            $counts = q("SELECT owner_xchan, COUNT(*) AS n FROM item
+                         WHERE uid = %d AND item_unseen = 1 AND item_thread_top = 1 "
+                         . item_normal($uid) . " GROUP BY owner_xchan",
+                intval($uid));
+            $unseen = array_map('intval', array_column($counts ?: [], 'n', 'owner_xchan'));
+        }
+
+        $base_where = "WHERE abook.abook_channel = %d
+                         AND abook.abook_self    = 0
+                         AND xchan.xchan_deleted = 0
+                         AND xchan.xchan_orphan  = 0
+                         $sql_filter $sql_search";
+
+        $count = q(
+            "SELECT COUNT(abook.abook_id) AS total
+             FROM abook
+             LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             $base_where",
+            intval($uid)
+        );
+        $total = intval($count[0]['total'] ?? 0);
+
+        $rows = q(
+            "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
+                    abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
+                    abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
+                    abook.abook_role, abook.abook_profile,
+                    abook.abook_incl, abook.abook_excl,
+                    xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
+                    xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
+                    xchan.xchan_pubforum, xchan.xchan_updated
+             FROM abook
+             LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             $base_where
+             ORDER BY $sql_order, abook.abook_id
+             LIMIT %d OFFSET %d",
+            intval($uid),
+            $limit,
+            $offset
+        );
+
+        $hashes     = array_column($rows ?: [], 'xchan_hash');
+        $theirPerms = $this->bulkTheirPerms($uid, $hashes);
+        $health     = $this->bulkHealth($uid, $hashes);
+        $connections = array_map(
+            fn($row) => $this->formatRow($row, $theirPerms[$row['xchan_hash']] ?? []) + ($health[$row['xchan_hash']] ?? []),
+            $rows ?: []
+        );
+
+        if ($with_unseen) {
+            foreach ($connections as &$c) $c['unseen'] = $unseen[$c['xchan_hash']] ?? 0;
+            unset($c);
+        }
+
+        Response::send($connections, [
+            'total'  => $total,
+            'limit'  => $limit,
+            'offset' => $offset,
+            'filter' => $filter,
+            'type'   => $type,
+            'order'  => $order_key,
+        ]);
+    }
+
+    // POST /spa/connections/permcats      — create a custom permission role, or
+    //                                        update an existing custom role's permission grid
+    //                                        (body: { name, perms?: string[] }), or toggle
+    //                                        the default-for-new-contacts role (body: { name, set_default: bool })
+    // POST /spa/connections/permcats/assign-group — bulk-assign a role to every member of a
+    //                                        privacy group (body: { name, gid })
+    // POST /spa/connections/connect       — add a new connection (body: { url })
+    // POST /spa/connections/:id/approve  — approve a pending connection
+    // POST /spa/connections/:id/refresh  — re-pull permissions/profile from the remote contact
+    // POST /spa/connections/:id          — update role / closeness
+    public function post(): void
+    {
+        $uid = Auth::requireLocalJson();
+        $sub = \App::$argv[2] ?? '';
+
+        if ($sub === 'permcats') {
+            if ((\App::$argv[3] ?? '') === 'assign-group') {
+                $this->assignPermcatToGroup($uid);
+            }
+            $this->createPermcat($uid);
+        }
+
+        if ($sub === 'connect') {
+            $this->createConnection($uid);
+        }
+
+        $abook_id = intval($sub);
+        $action   = \App::$argv[3] ?? '';
+
+        if (!$abook_id) Response::error(400, 'abook_id required');
+
+        // Verify the abook belongs to this channel
+        $abook = q(
+            "SELECT * FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$abook) Response::error(404, 'Connection not found');
+        $abook = $abook[0];
+
+        if ($action === 'approve') {
+            $this->approve($uid, $abook_id, $abook);
+        } elseif ($action === 'refresh') {
+            $this->refresh($uid, $abook_id, $abook);
+        } else {
+            $this->update($uid, $abook_id, $abook);
+        }
+    }
+
+    // DELETE /spa/connections/permcats?name=<role>  — delete a custom permission role
+    // DELETE /spa/connections/:id                   — remove a connection
+    public function delete(): void
+    {
+        $sub = \App::$argv[2] ?? '';
+
+        if ($sub === 'permcats') {
+            $uid  = Auth::requireLocalJson();
+            // Use query string, not argv[3]: escape_tags() mangles & → &amp; in path segments
+            $name = trim($_GET['name'] ?? '');
+            $this->deletePermcat($uid, $name);
+        }
+
+        $uid      = Auth::requireLocal();
+        $abook_id = intval($sub);
+        if (!$abook_id) Response::error(400, 'abook_id required');
+
+        require_once 'include/connections.php';
+        $ok = contact_remove($uid, $abook_id);
+        if (!$ok) Response::error(404, 'Connection not found or could not be removed');
+
+        Response::send(['deleted' => true]);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    // Ports core's Zotlabs\Module\Follow::init() (the classic /follow module) so
+    // adding a connection stays inside the SPA instead of navigating away to
+    // the classic theme. service-class limits (total_channels) are enforced
+    // inside Connect::connect() itself and surfaced via its 'message'.
+    /**
+     * Clone-sync one abook row. Core's Connedit does this after *every* edit
+     * (Zotlabs\Module\Connedit), and so do Defperms, Follow, Tokens and
+     * Permcat — an abook change that skips it leaves the channel's other hubs
+     * holding the old permissions forever, which is invisible from the hub you
+     * made the change on.
+     *
+     * The local ids are stripped because they are per-hub; abconfig carries the
+     * actual permission grants and has to ride along.
+     */
+    private function syncAbook(int $uid, int $abook_id): void
+    {
+        $r = q("SELECT * FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id), intval($uid));
+        if (!$r) {
+            return;
+        }
+
+        $clone = $r[0];
+        unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+
+        $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+        if ($abconfig) {
+            $clone['abconfig'] = $abconfig;
+        }
+
+        Libsync::build_sync_packet($uid, ['abook' => [$clone]], true);
+    }
+
+    private function createConnection(int $uid): never
+    {
+        require_once 'include/network.php';
+
+        $data = Auth::$parsedBody;
+        $url  = notags(trim($data['url'] ?? ''));
+        if (!$url) {
+            Response::error(400, 'url is required');
+        }
+
+        $parsed = parse_url($url);
+        if (isset($parsed['host'])) {
+            $parsed['host'] = punify($parsed['host']);
+            $url = unparse_url($parsed);
+        }
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        $result = Connect::connect($channel, $url);
+
+        if (!$result['success']) {
+            Response::error(400, $result['message'] ?: 'Unable to connect');
+        }
+
+        $clone = [];
+        foreach ($result['abook'] as $k => $v) {
+            if (strpos($k, 'abook_') === 0) {
+                $clone[$k] = $v;
+            }
+        }
+        unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+
+        $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+        if ($abconfig) {
+            $clone['abconfig'] = $abconfig;
+        }
+        Libsync::build_sync_packet(0, ['abook' => [$clone]], true);
+
+        $can_view_stream = intval(get_abconfig($uid, $clone['abook_xchan'], 'their_perms', 'view_stream'));
+        if ($can_view_stream || ($result['abook']['xchan_network'] ?? '') === 'rss') {
+            Master::Summon(['Onepoll', $result['abook']['abook_id']]);
+        }
+
+        Response::send([
+            'abook_id' => intval($result['abook']['abook_id']),
+            'xchan'    => $result['abook']['abook_xchan'],
+        ]);
+    }
+
+    private function approve(int $uid, int $abook_id, array $abook): never
+    {
+        if (!intval($abook['abook_pending'])) {
+            Response::error(409, 'Connection is not pending');
+        }
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        // Assign default permissions role
+        $role = $abook['abook_role'] ?? '';
+        if ($role) {
+            require_once 'include/channel.php';
+            \Zotlabs\Lib\Permcat::assign($channel, $role, [$abook['abook_xchan']]);
+        }
+
+        q(
+            "UPDATE abook SET abook_pending = 0 WHERE abook_id = %d AND abook_channel = %d",
+            intval($abook_id),
+            intval($uid)
+        );
+
+        // Summon notifiers for the accept + permission handshake
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_accept', $abook_id]);
+        \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_create', $abook_id]);
+
+        $this->syncAbook($uid, $abook_id);
+
+        Response::send(['approved' => true]);
+    }
+
+    private function refresh(int $uid, int $abook_id, array $abook): never
+    {
+        $xchan = q(
+            "SELECT * FROM xchan WHERE xchan_hash = '%s' LIMIT 1",
+            dbesc($abook['abook_xchan'])
+        );
+        if (!$xchan) Response::error(404, 'Contact not found');
+        $xchan = $xchan[0];
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        if ($xchan['xchan_network'] === 'zot6') {
+            $ok = \Zotlabs\Lib\Libzot::refresh($xchan, $channel);
+            if (!$ok) Response::error(502, 'Refresh failed - contact is currently unavailable.');
+        } else {
+            // For other networks we can't pull remotely; re-push our local
+            // permission info outward instead.
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_update', $abook_id]);
+        }
+
+        Response::send(['refreshed' => true]);
+    }
+
+    private function update(int $uid, int $abook_id, array $abook): never
+    {
+        $body       = Auth::$parsedBody;
+        $role       = array_key_exists('role',       $body) ? trim((string) $body['role'])   : null;
+        $closeness  = array_key_exists('closeness',  $body) ? intval($body['closeness'])     : null;
+        $blocked    = array_key_exists('blocked',    $body) ? (bool) $body['blocked']        : null;
+        $ignored    = array_key_exists('ignored',    $body) ? (bool) $body['ignored']        : null;
+        $archived   = array_key_exists('archived',   $body) ? (bool) $body['archived']       : null;
+        $hidden     = array_key_exists('hidden',     $body) ? (bool) $body['hidden']         : null;
+        $incl       = array_key_exists('incl',       $body) ? trim((string) $body['incl'])   : null;
+        $excl       = array_key_exists('excl',       $body) ? trim((string) $body['excl'])   : null;
+        // null means "leave unchanged"; 0 means "clear to default profile"
+        $profile_id = array_key_exists('profile_id', $body) ? ($body['profile_id'] !== null ? intval($body['profile_id']) : 0) : null;
+
+        $channel = channelx_by_n($uid);
+        if (!$channel) Response::error(500, 'Channel not found');
+
+        if ($role !== null) {
+            require_once 'include/channel.php';
+            \Zotlabs\Lib\Permcat::assign($channel, $role, [$abook['abook_xchan']]);
+            q(
+                "UPDATE abook SET abook_role = '%s' WHERE abook_id = %d AND abook_channel = %d",
+                dbesc($role),
+                intval($abook_id),
+                intval($uid)
+            );
+        }
+
+        if ($closeness !== null) {
+            $closeness = max(0, min(99, $closeness));
+            q(
+                "UPDATE abook SET abook_closeness = %d WHERE abook_id = %d AND abook_channel = %d",
+                intval($closeness),
+                intval($abook_id),
+                intval($uid)
+            );
+        }
+
+        // Direct flag updates (blocked, ignored, archived, hidden, filters)
+        $flag_sets = [];
+        if ($blocked    !== null) $flag_sets[] = sprintf("abook_blocked = %d",  intval($blocked));
+        if ($ignored    !== null) $flag_sets[] = sprintf("abook_ignored = %d",  intval($ignored));
+        if ($archived   !== null) $flag_sets[] = sprintf("abook_archived = %d", intval($archived));
+        if ($hidden     !== null) $flag_sets[] = sprintf("abook_hidden = %d",   intval($hidden));
+        if ($incl       !== null) $flag_sets[] = sprintf("abook_incl = '%s'",   dbesc($incl));
+        if ($excl       !== null) $flag_sets[] = sprintf("abook_excl = '%s'",   dbesc($excl));
+        if ($profile_id !== null) $flag_sets[] = sprintf("abook_profile = %d",  intval($profile_id));
+        if ($flag_sets) {
+            q(
+                "UPDATE abook SET " . implode(', ', $flag_sets) . " WHERE abook_id = %d AND abook_channel = %d",
+                intval($abook_id),
+                intval($uid)
+            );
+        }
+
+        $was_pending = intval($abook['abook_pending']);
+        if ($was_pending) {
+            q(
+                "UPDATE abook SET abook_pending = 0 WHERE abook_id = %d AND abook_channel = %d",
+                intval($abook_id),
+                intval($uid)
+            );
+            \Zotlabs\Daemon\Master::Summon(['Notifier', 'permission_accept', $abook_id]);
+        }
+        \Zotlabs\Daemon\Master::Summon([
+            'Notifier',
+            $was_pending ? 'permission_create' : 'permission_update',
+            $abook_id,
+        ]);
+
+        $this->syncAbook($uid, $abook_id);
+
+        Response::send(['updated' => true]);
+    }
+
+    private function getPermcats(int $uid): never
+    {
+        require_once 'include/channel.php';
+        $pcat         = new \Zotlabs\Lib\Permcat($uid);
+        $list         = $pcat->listing();
+        $default_name = get_pconfig($uid, 'system', 'default_permcat', 'default');
+        // Members per role in one grouped pass, same row set as the list's
+        // filter=all, so the roles page needn't load every connection.
+        $counts = q("SELECT abook.abook_role, COUNT(*) AS n FROM abook
+                     LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                     WHERE abook.abook_channel = %d AND abook.abook_self = 0
+                       AND xchan.xchan_deleted = 0 AND xchan.xchan_orphan = 0
+                     GROUP BY abook.abook_role",
+            intval($uid));
+        $counts = array_map('intval', array_column($counts ?: [], 'n', 'abook_role'));
+        $result = array_map(fn($pc) => [
+            'name'       => $pc['name'],
+            'label'      => $pc['localname'],
+            'system'     => (bool) intval($pc['system']),
+            'is_default' => $pc['name'] === $default_name,
+            'count'      => $counts[$pc['name']] ?? 0,
+        ], $list);
+        Response::send($result, ['unassigned' => $counts[''] ?? 0]);
+    }
+
+    private function createPermcat(int $uid): never
+    {
+        $body = Auth::$parsedBody;
+        $name = notags(trim($body['name'] ?? ''));
+
+        if (!$name) Response::error(400, 'Role name is required');
+
+        require_once 'include/channel.php';
+        $pcat     = new \Zotlabs\Lib\Permcat($uid);
+        $existing = $pcat->fetch($name);
+        $is_update = !isset($existing['error']);
+
+        // Toggling the default-for-new-contacts flag is independent of perms
+        // editing and allowed on built-in roles too (core's Permcats module
+        // lets any permcat, including 'default' itself, be the fallback).
+        if (array_key_exists('set_default', $body) && !array_key_exists('perms', $body)) {
+            if (!$is_update) Response::error(404, 'Role not found');
+            set_pconfig($uid, 'system', 'default_permcat', $body['set_default'] ? $existing['name'] : 'default');
+            Response::send([
+                'name'       => $existing['name'],
+                'label'      => $existing['localname'],
+                'system'     => (bool) intval($existing['system'] ?? 0),
+                'is_default' => (bool) $body['set_default'],
+            ]);
+        }
+
+        if (strtolower($name) === 'default') Response::error(400, 'That name is reserved');
+
+        if ($is_update && intval($existing['system'] ?? 0)) {
+            Response::error(403, 'Cannot modify a built-in role');
+        }
+
+        if (array_key_exists('perms', $body) && is_array($body['perms'])) {
+            // Explicit permission grid — either seeding a new custom role
+            // or overwriting an existing one's permissions.
+            $all_perms = \Zotlabs\Access\Permissions::Perms();
+            $permarr   = array_values(array_intersect(array_keys($all_perms), $body['perms']));
+        } elseif ($is_update) {
+            Response::error(400, 'Permissions are required to update a role');
+        } else {
+            $default = $pcat->fetch('default');
+            $filled  = $default['raw_perms'] ?? \Zotlabs\Access\Permissions::FilledPerms([]);
+            $permarr = array_keys(array_filter($filled));
+        }
+
+        \Zotlabs\Lib\Permcat::update($uid, $name, $permarr);
+
+        // If we just changed an existing role's permissions, push the change
+        // out to every contact currently holding that role.
+        if ($is_update) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                $affected = q(
+                    "SELECT abook_xchan FROM abook
+                     WHERE abook_channel = %d AND abook_role = '%s' AND abook_self = 0 AND abook_pending = 0",
+                    intval($uid),
+                    dbesc($name)
+                );
+                if ($affected) {
+                    \Zotlabs\Lib\Permcat::assign($channel, $name, array_column($affected, 'abook_xchan'));
+                }
+            }
+        }
+
+        $saved = (new \Zotlabs\Lib\Permcat($uid))->fetch($name);
+
+        Response::send([
+            'name'       => $saved['name']      ?? $name,
+            'label'      => $saved['localname'] ?? $name,
+            'system'     => (bool) intval($saved['system'] ?? 0),
+            'is_default' => ($saved['name'] ?? $name) === get_pconfig($uid, 'system', 'default_permcat', 'default'),
+        ]);
+    }
+
+    // Bulk-assigns a role to every member of a privacy group, reusing the same
+    // Permcat::assign() + bulk abook_role UPDATE pattern already used when a
+    // role's perms change (createPermcat) or a role is deleted (deletePermcat).
+    private function assignPermcatToGroup(int $uid): never
+    {
+        $body = Auth::$parsedBody;
+        $name = trim((string) ($body['name'] ?? ''));
+        $gid  = intval($body['gid'] ?? 0);
+
+        if (!$name) Response::error(400, 'Role name is required');
+        if (!$gid)  Response::error(400, 'gid is required');
+
+        require_once 'include/channel.php';
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+
+        $group = q(
+            "SELECT id FROM pgrp WHERE id = %d AND uid = %d AND deleted = 0 LIMIT 1",
+            intval($gid),
+            intval($uid)
+        );
+        if (!$group) Response::error(404, 'Group not found');
+
+        $members = \Zotlabs\Lib\AccessList::members($uid, $gid);
+        $hashes  = array_column($members ?? [], 'xchan_hash');
+
+        if ($hashes) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                \Zotlabs\Lib\Permcat::assign($channel, $pc['name'], $hashes);
+            }
+            $in = implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes));
+            q(
+                "UPDATE abook SET abook_role = '%s' WHERE abook_channel = %d AND abook_xchan IN ($in)",
+                dbesc($pc['name']),
+                intval($uid)
+            );
+        }
+
+        Response::send(['assigned' => count($hashes), 'name' => $pc['name'], 'gid' => $gid]);
+    }
+
+    private function getPermcatDetail(int $uid, string $name): never
+    {
+        require_once 'include/channel.php';
+        require_once 'include/permissions.php';
+
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+
+        $global_perms = \Zotlabs\Access\Permissions::Perms();
+        $raw_perms    = $pc['raw_perms'] ?? [];
+
+        $perms = [];
+        foreach ($global_perms as $key => $label) {
+            $limit = \Zotlabs\Access\PermissionLimits::Get($uid, $key);
+            $perms[] = [
+                'key'       => $key,
+                'label'     => $label,
+                'value'     => (bool) ($raw_perms[$key] ?? false),
+                // true when the channel's privacy settings force this permission
+                // open/closed regardless of what the role grants
+                'inherited' => !($limit & PERMS_SPECIFIC),
+            ];
+        }
+
+        Response::send([
+            'name'   => $pc['name'],
+            'label'  => $pc['localname'],
+            'system' => (bool) intval($pc['system'] ?? 0),
+            'perms'  => $perms,
+        ]);
+    }
+
+    private function deletePermcat(int $uid, string $name): never
+    {
+        if (!$name) Response::error(400, 'Role name is required');
+        if ($name === 'default') Response::error(400, 'Cannot delete the default role');
+
+        require_once 'include/channel.php';
+        $pcat = new \Zotlabs\Lib\Permcat($uid);
+        $pc   = $pcat->fetch($name);
+        if (isset($pc['error'])) Response::error(404, 'Role not found');
+        if (intval($pc['system'] ?? 0)) Response::error(403, 'Cannot delete a built-in role');
+
+        $exact_name = $pc['name'];
+
+        // If this was the default-for-new-contacts role, fall back to 'default'
+        if (get_pconfig($uid, 'system', 'default_permcat', 'default') === $exact_name) {
+            set_pconfig($uid, 'system', 'default_permcat', 'default');
+        }
+
+        // Reassign contacts that had this role to 'default' before deleting
+        $affected = q(
+            "SELECT abook_xchan FROM abook WHERE abook_channel = %d AND abook_role = '%s'",
+            intval($uid),
+            dbesc($exact_name)
+        );
+        if ($affected) {
+            $channel = channelx_by_n($uid);
+            if ($channel) {
+                \Zotlabs\Lib\Permcat::assign($channel, 'default', array_column($affected, 'abook_xchan'));
+            }
+            q(
+                "UPDATE abook SET abook_role = 'default' WHERE abook_channel = %d AND abook_role = '%s'",
+                intval($uid),
+                dbesc($exact_name)
+            );
+        }
+
+        \Zotlabs\Lib\Permcat::delete($uid, $exact_name);
+        Response::send(['deleted' => true, 'name' => $exact_name]);
+    }
+
+    private function getPerms(int $uid, int $abook_id): never
+    {
+        $row = q(
+            "SELECT abook_xchan, abook_incl, abook_excl
+             FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$row) Response::error(404, 'Connection not found');
+        $abook = $row[0];
+
+        require_once 'include/permissions.php';
+        $global_perms = \Zotlabs\Access\Permissions::Perms();
+        $my_perms     = get_all_perms($uid, $abook['abook_xchan'], false);
+
+        $theirs_raw = q(
+            "SELECT k, v FROM abconfig WHERE chan = %d AND xchan = '%s' AND cat = 'their_perms'",
+            intval($uid),
+            dbesc($abook['abook_xchan'])
+        );
+        $their_perms = [];
+        if ($theirs_raw) {
+            foreach ($theirs_raw as $t) {
+                $their_perms[$t['k']] = intval($t['v']);
+            }
+        }
+
+        $perms = [];
+        foreach ($global_perms as $key => $label) {
+            $perms[] = [
+                'key'   => $key,
+                'label' => $label,
+                'their' => (bool) ($their_perms[$key] ?? false),
+                'my'    => (bool) ($my_perms[$key]    ?? false),
+            ];
+        }
+
+        Response::send([
+            'incl'  => $abook['abook_incl'] ?? '',
+            'excl'  => $abook['abook_excl'] ?? '',
+            'perms' => $perms,
+        ]);
+    }
+
+    private function getConnectionGroups(int $uid, int $abook_id): never
+    {
+        $row = q(
+            "SELECT abook_xchan FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$row) Response::error(404, 'Connection not found');
+
+        $xchan_hash = $row[0]['abook_xchan'];
+
+        $rows = q(
+            "SELECT pgrp.id FROM pgrp
+             INNER JOIN pgrp_member ON pgrp_member.gid = pgrp.id
+             WHERE pgrp.uid = %d AND pgrp.deleted = 0 AND pgrp_member.xchan = '%s'",
+            intval($uid),
+            dbesc($xchan_hash)
+        );
+
+        Response::send(array_map(fn($g) => intval($g['id']), $rows ?? []));
+    }
+
+    private function getConnectionProfile(int $uid, int $abook_id): never
+    {
+        $row = q(
+            "SELECT abook_profile FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            intval($abook_id),
+            intval($uid)
+        );
+        if (!$row) Response::error(404, 'Connection not found');
+
+        $profile_id = intval($row[0]['abook_profile'] ?? 0);
+        Response::send(['profile_id' => $profile_id > 0 ? $profile_id : null]);
+    }
+
+    // A contact none of whose live hublocs we can reach: every one is flagged
+    // hubloc_error or sits on a site core marked site_dead (Queue/Checksites
+    // set that after deliveries keep failing). No hubloc at all = a feed or
+    // an unresolved contact, not "unreachable".
+    private const UNREACHABLE_SQL = "EXISTS (SELECT 1 FROM hubloc hx WHERE hx.hubloc_hash = abook.abook_xchan AND hx.hubloc_deleted = 0)
+        AND NOT EXISTS (SELECT 1 FROM hubloc hl LEFT JOIN site ON site.site_url = hl.hubloc_url
+            WHERE hl.hubloc_hash = abook.abook_xchan AND hl.hubloc_deleted = 0
+              AND hl.hubloc_error = 0 AND COALESCE(site.site_dead, 0) = 0)";
+
+    private function filterClause(string $filter, int $uid = 0): string
+    {
+        $active = 'AND abook.abook_blocked = 0 AND abook.abook_ignored = 0
+                   AND abook.abook_hidden = 0 AND abook.abook_archived = 0
+                   AND abook.abook_not_here = 0';
+        $half_year = db_utcnow() . ' - INTERVAL ' . db_quoteinterval('180 DAY');
+        return match ($filter) {
+            'unreachable' => "$active AND abook.abook_pending = 0 AND " . self::UNREACHABLE_SQL,
+            // Connected over half a year ago and nothing from them since —
+            // neither authored nor (for a forum) owned. Both NOT INs are
+            // uncorrelated, so each materialises once off uid_created.
+            // ponytail: scans the channel's last 180 days of items per request; cache the active set if big hubs feel it
+            'inactive' => "$active AND abook.abook_pending = 0 AND abook.abook_created < $half_year
+                AND abook.abook_xchan NOT IN (SELECT author_xchan FROM item WHERE uid = " . intval($uid) . " AND created > $half_year)
+                AND abook.abook_xchan NOT IN (SELECT owner_xchan FROM item WHERE uid = " . intval($uid) . " AND created > $half_year)",
+            'active'  => $active,
+            'recent'  => "$active AND xchan.xchan_updated > UTC_TIMESTAMP() - INTERVAL 7 DAY",
+            'pending' => 'AND abook.abook_pending = 1 AND abook.abook_ignored = 0',
+            'blocked' => 'AND abook.abook_blocked = 1',
+            'ignored' => 'AND abook.abook_ignored = 1',
+            'hidden'  => 'AND abook.abook_hidden = 1',
+            'archived'=> 'AND (abook.abook_archived = 1 OR abook.abook_not_here = 1)',
+            // Connections carrying a message filter — the inbox rules overview.
+            'filtered'=> "AND (abook.abook_incl != '' OR abook.abook_excl != '')",
+            default   => '',  // 'all' or unknown
+        };
+    }
+
+    private const PERM_KEYS = ['post_comments', 'send_stream', 'post_wall'];
+
+    // Per-row health for one page: `unreachable` (same rule as the filter)
+    // and `last_post` — the newest item they authored in this channel.
+    private function bulkHealth(int $uid, array $hashes): array
+    {
+        if (!$hashes) return [];
+        $in = "'" . implode("','", array_map('dbesc', $hashes)) . "'";
+
+        $out = [];
+        $hubs = dbq("SELECT hl.hubloc_hash,
+                            SUM(CASE WHEN hl.hubloc_error = 0 AND COALESCE(site.site_dead, 0) = 0 THEN 1 ELSE 0 END) AS alive
+                     FROM hubloc hl LEFT JOIN site ON site.site_url = hl.hubloc_url
+                     WHERE hl.hubloc_hash IN ($in) AND hl.hubloc_deleted = 0
+                     GROUP BY hl.hubloc_hash") ?: [];
+        foreach ($hubs as $h) $out[$h['hubloc_hash']]['unreachable'] = intval($h['alive']) === 0;
+
+        $posts = dbq("SELECT author_xchan, MAX(created) AS last_post FROM item
+                      WHERE uid = $uid AND author_xchan IN ($in) GROUP BY author_xchan") ?: [];
+        foreach ($posts as $p) $out[$p['author_xchan']]['last_post'] = $p['last_post'];
+
+        return $out;
+    }
+
+    private function permsClause(int $uid, string $param): string
+    {
+        $granted = fn(string $k) => "EXISTS (SELECT 1 FROM abconfig WHERE abconfig.chan = " . intval($uid)
+            . " AND abconfig.xchan = abook.abook_xchan AND abconfig.cat = 'their_perms'"
+            . " AND abconfig.k = '$k' AND abconfig.v = '1')";
+        $keys = explode(',', $param);
+        if (in_array('none', $keys, true)) {
+            return ' AND NOT (' . implode(' OR ', array_map($granted, self::PERM_KEYS)) . ') ';
+        }
+        $keys = array_intersect(self::PERM_KEYS, $keys);
+        return $keys ? ' AND ' . implode(' AND ', array_map($granted, $keys)) . ' ' : '';
+    }
+
+    // Bulk-fetches the 'their_perms' abconfig rows for a batch of xchans in a single
+    // query, avoiding a get_all_perms()-style per-row lookup on the connections list.
+    private function bulkTheirPerms(int $uid, array $hashes): array
+    {
+        if (!$hashes) return [];
+
+        $in = implode(',', array_map(fn($h) => "'" . dbesc($h) . "'", $hashes));
+        $rows = q(
+            "SELECT xchan, k, v FROM abconfig WHERE chan = %d AND cat = 'their_perms' AND xchan IN ($in)",
+            intval($uid)
+        );
+
+        $out = [];
+        foreach ($rows ?: [] as $row) {
+            $out[$row['xchan']][$row['k']] = (bool) intval($row['v']);
+        }
+        return $out;
+    }
+
+    private function formatRow(array $row, array $theirPerms = []): array
+    {
+        $status = array_values(array_filter([
+            intval($row['abook_pending'])  ? 'pending'  : null,
+            intval($row['abook_blocked'])  ? 'blocked'  : null,
+            intval($row['abook_ignored'])  ? 'ignored'  : null,
+            intval($row['abook_hidden'])   ? 'hidden'   : null,
+            intval($row['abook_archived']) ? 'archived' : null,
+            intval($row['abook_not_here']) ? 'not_here' : null,
+        ]));
+
+        // Mirrors classic Hubzilla's connections "traffic light": these 3 their_perms
+        // keys indicate what the contact has granted the local channel.
+        $grantedPerms = array_values(array_filter(self::PERM_KEYS, fn($k) => !empty($theirPerms[$k])));
+
+        $raw_profile = intval($row['abook_profile'] ?? 0);
+        return [
+            'id'             => intval($row['abook_id']),
+            'xchan_hash'     => $row['xchan_hash'],
+            'name'           => Response::decodeEntities($row['xchan_name']),
+            'address'        => $row['xchan_addr'],
+            'url'            => $row['xchan_url'],
+            'photo'          => $row['xchan_photo_m'],
+            'network'        => $row['xchan_network'],
+            'is_forum'       => (bool) intval($row['xchan_pubforum']),
+            'connected'      => $row['abook_created'],
+            'closeness'      => intval($row['abook_closeness']),
+            'role'           => $row['abook_role'] ?? '',
+            'status'         => $status,
+            'pending'        => (bool) intval($row['abook_pending']),
+            'profile_id'     => $raw_profile > 0 ? $raw_profile : null,
+            'granted_perms'  => $grantedPerms,
+            // Message filters. Only the paginated list selects these; the
+            // single-row lookups leave them empty, which is what a caller that
+            // didn't ask for them should see.
+            'incl'           => $row['abook_incl'] ?? '',
+            'excl'           => $row['abook_excl'] ?? '',
+        ];
+    }
+
+    // GET /spa/connections/birthdays — connections with a birthday in the next
+    // 30 days. abook_dob is only filled when the contact's profile shares a
+    // dob with us (Libzot import), holds the *next* birthday in UTC, and core
+    // bumps its year once update_birthdays() has made the calendar event — so
+    // only the month-day means anything; the year (and so an age) never leaves.
+    private function getBirthdays(int $uid): never
+    {
+        $r = q("SELECT abook_id, abook_dob, xchan_hash, xchan_name, xchan_photo_s, xchan_addr
+                FROM abook JOIN xchan ON xchan_hash = abook_xchan
+                WHERE abook_channel = %d AND abook_self = 0 AND abook_blocked = 0
+                  AND abook_archived = 0 AND abook_pending = 0 AND xchan_deleted = 0
+                  AND abook_dob > '0001-01-02 00:00:00'",
+            intval($uid)) ?: [];
+
+        $tz    = date_default_timezone_get();
+        $today = new \DateTimeImmutable('today', new \DateTimeZone($tz));
+        $out   = [];
+        foreach ($r as $row) {
+            [$m, $d] = array_map('intval', explode('-', datetime_convert('UTC', $tz, $row['abook_dob'], 'm-d')));
+            $y = intval($today->format('Y'));
+            // Feb 29 falls on Feb 28 in a common year.
+            $next = fn($y) => $today->setDate($y, $m, checkdate($m, $d, $y) ? $d : 28);
+            $when = $next($y) < $today ? $next($y + 1) : $next($y);
+            $days = intval($today->diff($when)->days);
+            if ($days > 30) continue;
+            $out[] = [
+                'id'    => intval($row['abook_id']),
+                'name'  => $row['xchan_name'],
+                'photo' => $row['xchan_photo_s'],
+                'hash'  => $row['xchan_hash'],
+                'addr'  => $row['xchan_addr'],
+                'date'  => $when->format('m-d'),
+                'days'  => $days,
+            ];
+        }
+        usort($out, fn($a, $b) => $a['days'] <=> $b['days']);
+        Response::send($out);
+    }
+}

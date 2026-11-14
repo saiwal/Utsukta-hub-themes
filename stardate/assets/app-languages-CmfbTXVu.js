@@ -1,0 +1,1 @@
+var e=`en.es.pt.fr.de.it.nl.pl.ro.el.ru.uk.cs.sk.hu.bg.sr.hr.sl.sv.da.nb.fi.et.lv.lt.tr.ar.he.fa.hi.bn.ur.th.vi.id.ms.zh.ja.ko.sw.am.ka.hy.sq.eu.ca.gl.is.ga`.split(`.`);function t(e,t){if(!e)return``;try{return new Intl.DisplayNames([t??navigator.language],{type:`language`}).of(e)??e}catch{return e}}export{t as n,e as t};

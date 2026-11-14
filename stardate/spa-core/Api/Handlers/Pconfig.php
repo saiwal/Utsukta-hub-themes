@@ -1,0 +1,164 @@
+<?php
+namespace Utsukta\SpaCore\Api\Handlers;
+
+use Utsukta\SpaCore\Api\ColorSchemes;
+use Utsukta\SpaCore\Api\HubDefaults;
+use Utsukta\SpaCore\Api\Response;
+use Utsukta\SpaCore\Api\SpaFeatures;
+
+class Pconfig
+{
+    private static function channelSpa(string $nick): ?array
+    {
+        $ch = channelx_by_nick($nick);
+        if (!$ch || !empty($ch['channel_removed'])) return null;
+
+        $cuid = intval($ch['channel_id']);
+
+        $color_scheme = get_pconfig($cuid, 'spa', 'color_scheme', null);
+
+        $result = [
+            'bg_url'        => (string) get_pconfig($cuid, 'spa', 'bg_url', HubDefaults::value('bg_url')),
+            'bg_fit'        => HubDefaults::pref($cuid, 'bg_fit'),
+            'font_size'     => HubDefaults::pref($cuid, 'font_size'),
+            'font_family'   => HubDefaults::pref($cuid, 'font_family'),
+            'color_scheme'  => ColorSchemes::valid($color_scheme) ? $color_scheme : HubDefaults::value('color_scheme'),
+            'corner_radius' => HubDefaults::pref($cuid, 'corner_radius'),
+            'widget_shell'  => HubDefaults::pref($cuid, 'widget_shell'),
+            'glass_ui'      => HubDefaults::pref($cuid, 'glass_ui'),
+        ];
+
+        if ($result['color_scheme'] === 'custom') {
+            // Falls back to the hub's set when the scheme itself is the hub default
+            $stored = get_pconfig($cuid, 'spa', 'custom_theme_colors', '') ?: HubDefaults::customColors();
+            if ($stored) $result['custom_theme_colors'] = $stored;
+        }
+
+        // The owner's widget arrangement also applies to visitors of their pages
+        $widget_layout = get_pconfig($cuid, 'spa', 'widget_layout', '');
+        if ($widget_layout) $result['widget_layout'] = (string) $widget_layout;
+
+        // Layout templates a page may be assigned to — visitors need these to
+        // render the same widgets the owner assigned, not just the owner
+        // themself.
+        $widget_templates = get_pconfig($cuid, 'spa', 'widget_templates', '');
+        if ($widget_templates) $result['widget_templates'] = (string) $widget_templates;
+
+        return $result;
+    }
+
+    /**
+     * Site and observer facts every branch returns. bbcode's [sitename],
+     * [baseurl] and the [observer…] conditionals are resolved client-side, and
+     * this boot request is the only place the SPA learns any of them.
+     */
+    private static function siteBlock(): array
+    {
+        $o = \App::get_observer();
+        return [
+            'sitename' => (string) \Zotlabs\Lib\Config::Get('system', 'sitename'),
+            'baseurl'  => z_root(),
+            'observer' => ($o && !empty($o['xchan_hash'])) ? [
+                'xchan_url'     => (string) ($o['xchan_url'] ?? ''),
+                'xchan_name'    => (string) ($o['xchan_name'] ?? ''),
+                'xchan_addr'    => (string) ($o['xchan_addr'] ?? ''),
+                'xchan_photo_l' => (string) ($o['xchan_photo_l'] ?? ''),
+            ] : null,
+        ];
+    }
+
+    public function get(): void
+    {
+        $channel_param = isset($_GET['channel']) ? notags(trim($_GET['channel'])) : '';
+
+        if (local_channel()) {
+            $uid     = local_channel();
+            $channel = \App::get_channel();
+            $nick    = $channel['channel_address'] ?? '';
+
+            $rows = q('SELECT cat, k, v FROM pconfig WHERE uid = %d', intval($uid));
+            $config = [];
+            foreach (($rows ?: []) as $row) {
+                $config[$row['cat']][$row['k']] = $row['v'];
+            }
+
+            $nsfw_installed = \Zotlabs\Lib\Apps::system_app_installed($uid, 'NSFW');
+
+            require_once 'include/features.php';
+            $features = [];
+            foreach (SpaFeatures::merge(get_features(false)) as $cat) {
+                foreach ($cat as $item) {
+                    if (is_array($item)) {
+                        $features[$item[0]] = SpaFeatures::enabled($uid, $item[0]);
+                    }
+                }
+            }
+
+            $response = [
+                'uid'      => $uid,
+                'channel'  => $nick,
+                // Identical on every clone, unlike xchan_addr (which names the
+                // primary hub) — the only reliable "is this me?" key.
+                'hash'     => (string) ($channel['channel_hash'] ?? ''),
+                // zidify_links() equivalent on the client needs the observer's
+                // webbie to reach ACL-restricted media on other hubs.
+                'my_address' => (string) (get_my_address() ?: channel_reddress($channel)),
+                'is_admin' => is_site_admin(),
+                // Site-wide 'Allow Feeds as Connections' (admin/site); gates the RSS filters.
+                'feed_contacts' => (bool) intval(\Zotlabs\Lib\Config::Get('system', 'feed_contacts')),
+                'system'   => $config['system']  ?? [],
+                'spa'      => ($config['spa'] ?? []) + HubDefaults::get(),
+                'features' => $features,
+                'nsfw'     => [
+                    'words' => $nsfw_installed ? (string) ($config['nsfw']['words'] ?? 'nsfw,contentwarning') : '',
+                ],
+            ];
+
+            // Include the visited channel's display prefs so the SPA can theme per-channel
+            if ($channel_param !== '') {
+                $page_spa = self::channelSpa($channel_param);
+                if ($page_spa !== null) {
+                    $response['page_spa'] = $page_spa;
+                }
+            }
+
+            Response::send($response + self::siteBlock());
+        }
+
+        // Remote-authenticated visitor
+        $observer = \App::get_observer();
+        if ($observer && !empty($observer['xchan_hash'])) {
+            $base = [
+                'uid'        => 0,
+                'channel'    => '',
+                'is_remote'  => true,
+                'my_address' => (string) (get_my_address() ?: ''),
+            ];
+            if ($channel_param !== '') {
+                $page_spa = self::channelSpa($channel_param);
+                if ($page_spa !== null) $base['spa'] = $page_spa + HubDefaults::get();
+            }
+            $base['spa'] = $base['spa'] ?? HubDefaults::get();
+            Response::send($base + self::siteBlock());
+        }
+
+        // Anonymous visitor on a channel page — expose only public spa display prefs
+        if ($channel_param !== '') {
+            $page_spa = self::channelSpa($channel_param);
+            if ($page_spa !== null) {
+                Response::send([
+                    'uid'     => 0,
+                    'channel' => $channel_param,
+                    'spa'     => $page_spa + HubDefaults::get(),
+                ] + self::siteBlock());
+            }
+        }
+
+        // Unauthenticated, no channel context
+        Response::send([
+            'uid'     => 0,
+            'channel' => '',
+            'spa'     => HubDefaults::get(),
+        ] + self::siteBlock());
+    }
+}

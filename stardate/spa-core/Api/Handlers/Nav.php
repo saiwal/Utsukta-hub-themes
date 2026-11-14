@@ -1,0 +1,502 @@
+<?php
+namespace Utsukta\SpaCore\Api\Handlers;
+
+use App;
+use Utsukta\SpaCore\Api\Response;
+
+require_once 'include/security.php';
+require_once 'include/conversation.php';
+require_once 'include/menu.php';
+require_once 'include/features.php';
+
+class Nav
+{
+    public function get(): void
+    {
+        $observer = App::get_observer();
+        $ob_hash = $observer ? $observer['xchan_hash'] : '';
+        $is_local = (bool) local_channel();
+        $uid = local_channel() ?: 0;
+        $channel = $is_local ? App::get_channel() : null;
+
+        $is_remote = (!$is_local && $ob_hash !== '');
+
+        // True when the local user owns the subject channel being viewed.
+        // No subject (channel_nick absent) means the viewer is in their own context.
+        $subject_nick = trim($_GET['channel_nick'] ?? '');
+        $is_owner = $is_local && (
+            $subject_nick === '' ||
+            (($channel['channel_address'] ?? '') === $subject_nick)
+        );
+
+        // Small cover for the desktop rail's user card; the hub default when the
+        // channel never set one, empty for remote/anonymous viewers.
+        $cover = $is_local ? self::coverUrl($uid) : '';
+
+        $viewer = [
+            'is_local'    => $is_local,
+            'is_remote'   => $is_remote,
+            'is_admin'    => $is_local && is_site_admin(),
+            'is_owner'    => $is_owner,
+            'nick'        => $channel['channel_address'] ?? '',
+            // The observer's own xchan hash. "Only me" is stored as
+            // allow_cid = <this>, so without it the client cannot tell an
+            // owner-private ACL from a one-contact custom one.
+            'hash'        => $ob_hash,
+            'name'        => Response::decodeEntities($observer['xchan_name'] ?? ''),
+            'addr'        => $observer['xchan_addr'] ?? '',
+            'avatar'      => $observer['xchan_photo_m'] ?? '',
+            'avatar_s'    => $observer['xchan_photo_s'] ?? '',
+            'avatar_l'    => $observer['xchan_photo_l'] ?? '',
+            'avatar_mime' => $observer['xchan_photo_mimetype'] ?? '',
+            'cover'       => $cover,
+            'forum'       => (bool)($observer['xchan_pubforum'] ?? false),
+            'url'         => $observer['xchan_url'] ?? '',
+            'uid'         => $uid,
+            'baseurl'     => z_root(),
+            'location'    => $channel['channel_location'] ?? '',
+            'theme'       => $channel['channel_theme'] ?? '',
+            'timezone'    => $channel['channel_timezone'] ?? '',
+            'startpage'   => $channel['channel_startpage'] ?? '',
+        ];
+
+        $actions = [];
+
+        $my_url = get_my_url();
+        if (!$my_url)
+            $my_url = $observer ? ($observer['xchan_url'] ?? '') : '';
+
+        $homelink_arr = parse_url($my_url);
+        $homelink = ($homelink_arr['scheme'] ?? '') . '://' . ($homelink_arr['host'] ?? '');
+
+        if ($is_local) {
+            $nick = $channel['channel_address'] ?? '';
+            $actions['profile'] = z_root() . '/profile/' . $nick;
+            $actions['profiles'] = z_root() . '/profiles';
+            $actions['settings'] = z_root() . '/settings';
+            $actions['manage'] = z_root() . '/manage';
+            $actions['navhome'] = $homelink;
+            $actions['logout'] = z_root() . '/logout';
+        } elseif ($is_remote) {
+            $actions['navhome'] = $homelink;
+            $actions['logout'] = z_root() . '/logout';
+        } else {
+            $actions['login'] = z_root() . '/login';
+            $actions['remote_login'] = z_root() . '/rmagic';
+            $reg = \Zotlabs\Lib\Config::Get('system', 'register_policy');
+            if ($reg == REGISTER_OPEN || $reg == REGISTER_APPROVE)
+                $actions['register'] = z_root() . '/register';
+        }
+
+        // Site banner
+        $banner = \Zotlabs\Lib\Config::Get('system', 'banner');
+        if ($banner === false)
+            $banner = \Zotlabs\Lib\Config::Get('system', 'sitename');
+
+        // Site logo (admin-uploaded, falls back to the static app icon client-side)
+        $sitelogo = \Zotlabs\Lib\Config::Get('system', 'sitelogo_192');
+
+        // Current channel reddress or site @hostname for visitors
+        $sitelocation = '';
+        if (!$is_local)
+            $sitelocation = isset(App::$profile['reddress'])
+                ? App::$profile['reddress']
+                : '@' . App::get_hostname();
+
+        // "Navigation Channel Select" feature — expands the nav "channels" entry
+        // into an inline multi-channel switcher instead of linking to /manage.
+        $nav_channel_select = $is_local ? (bool) feature_enabled($uid, 'nav_channel_select') : false;
+
+        // Multi-channel switcher — only for local users without a delegate session
+        $channels = [];
+        if ($is_local && empty($_SESSION['delegate'])) {
+            $chans = q(
+                "SELECT channel_name, channel_id, channel_address
+                 FROM channel
+                 WHERE channel_account_id = %d AND channel_removed = 0
+                 ORDER BY channel_name",
+                intval(get_account_id())
+            );
+            foreach (($chans ?: []) as $ch) {
+                $channels[] = [
+                    'id'   => intval($ch['channel_id']),
+                    'nick' => $ch['channel_address'],
+                    'name' => Response::decodeEntities($ch['channel_name']),
+                ];
+            }
+        }
+
+        $baseurl = z_root();
+        $pinned = [];
+
+        if ($is_local) {
+            if (get_pconfig($uid, 'system', 'import_system_apps') !==
+                    datetime_convert('UTC', 'UTC', 'now', 'Y-m-d')) {
+                \Zotlabs\Lib\Apps::import_system_apps();
+                set_pconfig($uid, 'system', 'import_system_apps',
+                    datetime_convert('UTC', 'UTC', 'now', 'Y-m-d'));
+            }
+            if (get_pconfig($uid, 'system', 'force_import_system_apps') !== STD_VERSION) {
+                \Zotlabs\Lib\Apps::import_system_apps();
+                set_pconfig($uid, 'system', 'force_import_system_apps', STD_VERSION);
+            }
+
+            $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_pinned_app']);
+            foreach (($list ?: []) as $li)
+                $pinned[] = \Zotlabs\Lib\Apps::app_encode($li);
+
+            \Zotlabs\Lib\Apps::translate_system_apps($pinned);
+            usort($pinned, 'Zotlabs\Lib\Apps::app_name_compare');
+            $pinned = \Zotlabs\Lib\Apps::app_order($uid, $pinned, 'nav_pinned_app');
+
+            $nav_order_raw = get_pconfig($uid, 'spa', 'nav_order', '');
+            if ($nav_order_raw) {
+                $nav_order = json_decode($nav_order_raw, true);
+                if (is_array($nav_order) && count($nav_order) > 0) {
+                    $order_idx = array_flip($nav_order);
+                    $n = count($nav_order);
+                    usort($pinned, function ($a, $b) use ($order_idx, $n) {
+                        $ia = $order_idx[$a['name'] ?? ''] ?? $n;
+                        $ib = $order_idx[$b['name'] ?? ''] ?? $n;
+                        return $ia - $ib;
+                    });
+                }
+            }
+        } else {
+            // translate=false — $app['name'] is matched below against literal
+            // canonical names; a translated name would silently drop these
+            // links from a non-English visitor's pinned nav.
+            $system = \Zotlabs\Lib\Apps::get_system_apps(false);
+
+            $public_names = ['Directory', 'Help'];
+            if (can_view_public_stream())
+                $public_names[] = 'Public Stream';
+
+            foreach ($system as $app) {
+                if (in_array($app['name'] ?? '', $public_names, true))
+                    $pinned[] = $app;
+            }
+
+            usort($pinned, function ($a, $b) use ($public_names) {
+                $ia = array_search($a['name'] ?? '', $public_names);
+                $ib = array_search($b['name'] ?? '', $public_names);
+                return $ia - $ib;
+            });
+        }
+
+        // featured = user's personal nav_featured_app selection (empty for non-local users)
+        $featured = [];
+        if ($is_local) {
+            $list = \Zotlabs\Lib\Apps::app_list($uid, false, ['nav_featured_app']);
+            foreach (($list ?: []) as $li)
+                $featured[] = \Zotlabs\Lib\Apps::app_encode($li);
+            // useNav.ts matches featured[].url_raw against the installed_apps set
+            // (both are the raw app_url of the same app row) — url, unlike name,
+            // is never translated and survives even a stale/translated app_name
+            // left over from an old install.
+            usort($featured, 'Zotlabs\Lib\Apps::app_name_compare');
+            $featured = \Zotlabs\Lib\Apps::app_order($uid, $featured, 'nav_featured_app');
+        }
+
+        // system_apps = full built-in app list (syslist), visible to all users.
+        // Apps requiring a local channel are excluded for visitors.
+        $sys_raw = \Zotlabs\Lib\Apps::get_system_apps(true);
+        \Zotlabs\Lib\Apps::translate_system_apps($sys_raw);
+        if (!$is_local)
+            $sys_raw = array_values(array_filter($sys_raw, fn($a) =>
+                empty($a['requires']) || strpos($a['requires'], 'local_channel') === false));
+        usort($sys_raw, 'Zotlabs\Lib\Apps::app_name_compare');
+
+        $viewer_nick = $channel['channel_address'] ?? '';
+        $app_shape = function (array $app) use ($baseurl, $viewer_nick): array {
+            $url = $app['app_url'] ?? ($app['url'] ?? '');
+            $url = str_replace(['$baseurl', '$nick'], [$baseurl, $viewer_nick], $url);
+            return [
+                'name'     => $app['name'] ?? '',
+                'label'    => $app['label'] ?? ($app['name'] ?? ''),
+                'url'      => $url,
+                'photo'    => $app['photo'] ?? '',
+                'requires' => $app['requires'] ?? '',
+                // Core's app categories (.apd "categories:" / term rows) minus
+                // its nav_pinned_app/nav_featured_app markers; the mobile app
+                // drawer groups apps it has no curated category for by these.
+                'categories' => array_values(array_filter(
+                    array_map('trim', explode(',', (string) ($app['categories'] ?? ''))),
+                    fn($c) => $c !== '' && !str_starts_with($c, 'nav_')
+                )),
+            ];
+        };
+
+        $pinned       = array_map($app_shape, $pinned);
+        $featured     = array_map($app_shape, $featured);
+        $system_apps  = array_map($app_shape, $sys_raw);
+
+        $channel_tabs = [];
+        $subject_card = null;
+
+        if ($subject_nick !== '') {
+            $subject = channelx_by_nick($subject_nick);
+
+            if ($subject && !($subject['channel_removed'] ?? false)) {
+                $puid = intval($subject['channel_id']);
+                $p = get_all_perms($puid, $ob_hash);
+
+                // Identity card for anyone but the owner (a local user on
+                // someone else's channel too) — gated like the profile page.
+                if (!$is_owner && !empty($p['view_profile'])) {
+                    $subject_card = [
+                        'nick'   => $subject_nick,
+                        'name'   => Response::decodeEntities($subject['xchan_name'] ?? ''),
+                        'addr'   => $subject['xchan_addr'] ?? '',
+                        'avatar' => $subject['xchan_photo_m'] ?? '',
+                        'cover'  => self::coverUrl($puid),
+                    ];
+                }
+
+                // First url segment of every app the owner shows in their own
+                // nav (pinned or featured) — an app tab appears for visitors
+                // only when the owner has that app switched on in nav.
+                $owner_nav = [];
+                $nav_list = \Zotlabs\Lib\Apps::app_list($puid, false, ['nav_pinned_app', 'nav_featured_app']);
+                foreach (($nav_list ?: []) as $li) {
+                    $u = trim(explode(',', (string) ($li['app_url'] ?? ''))[0]);
+                    $u = str_replace(['$baseurl', z_root()], '', $u);
+                    $owner_nav[explode('/', ltrim($u, '/'))[0]] = true;
+                }
+
+                $channel_tabs[] = [
+                    'id' => 'stream',
+                    'url' => z_root() . '/channel/' . $subject_nick,
+                    'icon' => 'home',
+                ];
+
+                if (!empty($p['view_profile']))
+                    $channel_tabs[] = [
+                        'id'    => 'profile',
+                        'url'   => z_root() . '/profile/' . $subject_nick,
+                        'icon'  => 'person',
+                    ];
+
+                if (!empty($p['view_stream']) &&
+                    \Zotlabs\Lib\Apps::system_app_installed($puid, 'Articles'))
+                    $channel_tabs[] = [
+                        'id' => 'articles-tab',
+                        'url' => z_root() . '/articles/' . $subject_nick,
+                        'icon' => 'articles',
+                    ];
+
+                if (!empty($p['view_pages']) &&
+                    \Zotlabs\Lib\Apps::addon_app_installed($puid, 'cards'))
+                    $channel_tabs[] = [
+                        'id' => 'cards-tab',
+                        'url' => z_root() . '/cards/' . $subject_nick,
+                        'icon' => 'cards',
+                    ];
+
+                if (!empty($p['view_storage'])) {
+                    $channel_tabs[] = [
+                        'id' => 'photos',
+                        'url' => z_root() . '/photos/' . $subject_nick,
+                        'icon' => 'image',
+                    ];
+                    $channel_tabs[] = [
+                        'id' => 'files',
+                        'url' => z_root() . '/cloud/' . $subject_nick,
+                        'icon' => 'folder',
+                    ];
+                }
+
+                if (!empty($p['view_stream'])) {
+                    $channel_tabs[] = [
+                        'id' => 'calendar',
+                        'url' => z_root() . '/cal/' . $subject_nick,
+                        'icon' => 'calendar',
+                    ];
+                }
+
+                // Messenger: a visitor's DMs with this channel and the rooms it
+                // lets them into (the owner has it in their nav). Anonymous
+                // visitors get it too — the route sends them to log in.
+                if (!$is_owner)
+                    $channel_tabs[] = [
+                        'id' => 'messenger',
+                        'url' => z_root() . '/messenger/' . $subject_nick,
+                        'icon' => 'chat',
+                    ];
+
+                if ($is_owner) {
+                    $has_bookmarks = menu_list_count($uid, '', MENU_BOOKMARK)
+                                   + menu_list_count($uid, '', MENU_SYSTEM | MENU_BOOKMARK);
+                    if ($has_bookmarks)
+                        $channel_tabs[] = [
+                            'id'    => 'bookmarks',
+                            'url'   => z_root() . '/bookmarks',
+                            'icon'  => 'bookmark',
+                        ];
+                }
+
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Webpages'))
+                    $channel_tabs[] = [
+                        'id' => 'webpages',
+                        'url' => z_root() . '/page/' . $subject_nick . '/home',
+                        'icon' => 'webpages',
+                    ];
+
+                if (\Zotlabs\Lib\Apps::system_app_installed($puid, 'Wiki'))
+                    $channel_tabs[] = [
+                        'id' => 'wiki',
+                        'url' => z_root() . '/wiki/' . $subject_nick,
+                        'icon' => 'wiki',
+                    ];
+
+                // Graph is an SPA frontend feature, not a Hubzilla app: the tab
+                // follows the owner's Settings → Integrations switch.
+                if (Links::enabledFor($puid))
+                    $channel_tabs[] = [
+                        'id'   => 'graph',
+                        'url'  => z_root() . '/graph/' . $subject_nick,
+                        'icon' => 'graph',
+                    ];
+
+                $skulist = get_pconfig($puid, 'cart-manualcat', 'skulist') ?: [];
+                if (!empty($skulist))
+                    $channel_tabs[] = [
+                        'id'    => 'shop',
+                        'url'   => z_root() . '/cart/' . $subject_nick,
+                        'icon'  => 'cart',
+                    ];
+
+                // Tab id → url segment of the app that backs it. Tabs not
+                // listed here (stream, profile, messenger, bookmarks, shop)
+                // aren't per-app nav toggles and stay permission-gated only.
+                $tab_app = [
+                    'articles-tab' => 'articles', 'cards-tab' => 'cards',
+                    'photos' => 'photos', 'files' => 'cloud', 'calendar' => 'cdav',
+                    'webpages' => 'webpages', 'wiki' => 'wiki',
+                ];
+                $channel_tabs = array_values(array_filter($channel_tabs, fn($tab) =>
+                    !isset($tab_app[$tab['id']]) || isset($owner_nav[$tab_app[$tab['id']]])));
+            }
+        }
+
+        // Names of all apps installed on the subject being viewed. When a
+        // channel_nick is present this must reflect THAT channel's installs,
+        // not the viewer's own — otherwise a visitor whose own account never
+        // installed e.g. Wiki gets bounced off a page where the owner has it
+        // enabled (the SPA's ModuleGuard treats absence here as "feature
+        // unavailable" and redirects away). Falls back to the viewer's own
+        // account when there's no subject (own dashboard-style pages).
+        $installed_apps = [];
+        $apps_channel_id = (!empty($subject) && !($subject['channel_removed'] ?? false))
+            ? intval($subject['channel_id'])
+            : ($is_local ? $uid : 0);
+        if ($apps_channel_id) {
+            $all = \Zotlabs\Lib\Apps::app_list($apps_channel_id, false) ?: [];
+            foreach ($all as $app) {
+                $enc = \Zotlabs\Lib\Apps::app_encode($app);
+                // Match by url, not name: app_name can be a translated string
+                // frozen at install time on old/non-English channels and never
+                // reconciled (only base apps self-heal on re-import); app_url
+                // is never translated, so it stays a stable match target.
+                if (!empty($enc['url']))
+                    $installed_apps[] = $enc['url'];
+            }
+        }
+
+        // Site config of the openstreetmap addon, or null when it isn't enabled
+        // — the SPA's map feature keys off this being present. Deliberately NOT
+        // a pseudo-entry in $installed_apps: that list is per-channel and
+        // isModuleActive() reads an empty set as "not loaded yet", so a
+        // site-level entry would make the set non-empty for anonymous/
+        // subject-less requests and wrongly gate off every other app module.
+        // The tile server travels with it because sysadmins may self-host one,
+        // and the SPA must embed maps from that same server.
+        $osm = null;
+        if (plugin_is_installed('openstreetmap')) {
+            $osm = [
+                'tmsserver' => (string) (get_config('openstreetmap', 'tmsserver', 'https://www.openstreetmap.org') ?: 'https://www.openstreetmap.org'),
+                'zoom'      => intval(get_config('openstreetmap', 'zoom', 16)),
+                'marker'    => intval(get_config('openstreetmap', 'marker', 1)),
+            ];
+        }
+
+        // The Invite app's UI is a section of the directory (/directory/invite),
+        // reached from the directory's own sidebar, so an app tile for it would
+        // be a second door to the same page. Drop it from the lists the nav
+        // renders — but NOT from installed_apps, which is what gates that
+        // sidebar entry (requiresApp: "/invite").
+        $notInvite = fn($url) => !str_contains((string) $url, '/invite');
+        foreach (['pinned', 'featured', 'system_apps'] as $listName) {
+            $$listName = array_values(array_filter(
+                $$listName ?: [],
+                fn($app) => $notInvite($app['url'] ?? '')
+            ));
+        }
+
+        // Chatrooms open in Messenger (it serves /chat/*), which has its own
+        // nav item, so a Chatrooms tile would be a second door to it. Nav
+        // lists only: the app stays in system_apps/installed_apps, since being
+        // installed is what turns on Messenger's Rooms tab.
+        foreach (['pinned', 'featured'] as $listName) {
+            $$listName = array_values(array_filter(
+                $$listName,
+                fn($app) => !preg_match('#/chat(/|$)#', (string) parse_url($app['url'] ?? '', PHP_URL_PATH))
+            ));
+        }
+
+        // With invitations switched off site-wide the section goes too:
+        // Handlers/Invite.php refuses every call and core's own page answers
+        // "Invites not proposed by configuration", so the entry would open onto
+        // an error. The app stays installed — this is a site-level capability,
+        // not an uninstall.
+        if (!(get_config('system', 'invitation_only') || get_config('system', 'invitation_also')))
+            $installed_apps = array_values(array_filter($installed_apps, $notInvite));
+
+        Response::send([
+            'viewer'           => $viewer,
+            'actions'          => $actions,
+            'banner'           => (string)($banner ?: ''),
+            'sitelogo'         => (string)($sitelogo ?: ''),
+            'sitelocation'     => $sitelocation,
+            'channels'         => $channels,
+            'nav_channel_select' => $nav_channel_select,
+            'pinned'           => $pinned,
+            // Favorites that aren't Hubzilla apps (SPA-only modules like
+            // messenger/inbox): nav paths in pconfig spa/pinned_paths.
+            'pinned_paths'     => $is_owner
+                ? (json_decode((string) get_pconfig($uid, 'spa', 'pinned_paths', '[]'), true) ?: [])
+                : [],
+            'featured'         => $featured,
+            'system_apps'      => $system_apps,
+            'channel_tabs'     => $channel_tabs,
+            'subject'          => $subject_card,
+            'has_public_stream' => (bool) can_view_public_stream(),
+            // Admin landing pages (admin/site): 'frontpage' for visitors,
+            // 'startpage' for logged-in members — the SPA's "/" honours both,
+            // as core's Home.php does.
+            'frontpage'        => (string) get_config('system', 'frontpage'),
+            'startpage'        => (string) get_config('system', 'startpage'),
+            'installed_apps'   => $installed_apps,
+            // The visited owner's frontend-feature overrides, for channelScoped
+            // SPA modules (the graph). null on your own pages: the SPA already
+            // holds yours, fresher than this cached response.
+            'subject_frontend_overrides' => (!empty($subject) && !$is_owner)
+                ? Links::frontendOverrides(intval($subject['channel_id']))
+                : null,
+            'osm'              => $osm,
+            // Effective language for this request/session — browser-detected
+            // (get_best_language()) or explicitly set via classic redbasic's
+            // language selector ($_SESSION['language']). Lets the SPA seed its
+            // own locale from whatever classic Hubzilla is already using.
+            'language'         => (string) App::$language,
+        ]);
+    }
+
+    /** 425px cover of a channel, or the hub's default cover when it has none. */
+    private static function coverUrl(int $uid): string
+    {
+        $c = get_cover_photo($uid, 'array', PHOTO_RES_COVER_425);
+        return $c ? $c['url'] : z_root() . '/images/default_cover_photos/'
+            . \Zotlabs\Lib\Config::Get('system', 'default_cover_photo', 'hubzilla') . '/425.png';
+    }
+}

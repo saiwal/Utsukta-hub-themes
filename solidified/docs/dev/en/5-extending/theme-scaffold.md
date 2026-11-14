@@ -167,6 +167,45 @@ module-specific is scaffolded; you write `src/modules/<id>/index.ts` +
 `@utsukta/spa-core` imports for data/logic. Start with a small number of
 modules, not all of them at once.
 
+## Overlay themes (same app, different frame)
+
+When a theme wants solidified's whole app (every module, widget and view)
+with a different frame or look, it doesn't need a scaffold package. Build
+solidified's own `src/` under another slug, with a folder of replacement
+files:
+
+```bash
+THEME=<slug> vite build && THEME=<slug> node build-sw.mjs   # e.g. npm run build:stardate
+```
+
+- `theme.config.mjs` reads `THEME` (default `solidified`), so asset paths, the
+  out dir (`utsukta-themes/<slug>/`), the SW path and the PHP slug rewrite
+  follow it. **Check that the slug isn't already a theme folder**, because the
+  build writes into `utsukta-themes/<slug>/`. Use letters, digits and `_`
+  only, since the slug becomes PHP function names (`<slug>_init`).
+- `themes/<slug>/src/` mirrors `src/`. The `srcShadow` plugin
+  (`@utsukta/spa-ui/vite-plugin`) swaps any module that resolves into `src/`
+  for the file at the same path there, if one exists. That covers relative
+  imports, `@/` aliases and CSS imported from JS. `@ui/X` overrides go in
+  `themes/<slug>/src/ui/`.
+- Overlay files import base code through `@/…`, never `./…`, so `tsc`
+  (which includes `themes/*/src`) resolves them the same way.
+- An overlay `index.css` `@import`s `../../../src/index.css` as its first
+  statement and adds rules after it.
+- `themes/<slug>/php/` is copied next to `src/php`'s files in the deployed
+  theme. `php/fixed_settings.php` (returning an array of keys) drops those
+  hub defaults from the theme's `/admin/themes` page. To hide one in
+  Settings → Display, hide its `hz-setting-*` hook class in the overlay CSS.
+- Deploying for the first time needs the `core/view/theme/<slug>` symlink
+  (like the other Utsukta themes) and `composer install` in the deployed
+  theme folder.
+
+`stardate` is the reference. It overrides `Layout.tsx` (an elbow
+frame around solidified's `DesktopMenu`) and `index.css`, which carries the
+theme's whole palette and its font (bundled from `themes/stardate/src/fonts`).
+Nothing about it lives in solidified's `src/`, `public/` or spa-core: keep an
+overlay's look inside its own folder.
+
 ## Same CSS framework, different Solid.js code — not needed
 
 If the new theme is staying on Tailwind and Solid.js, and only the branding
