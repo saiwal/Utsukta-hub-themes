@@ -122,8 +122,13 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 | | `GET /cart/:nick/(payment-settings\|orders[/:hash]\|summary\|subscribers\|groups)` | Owner: provider settings (secrets masked), orders, sales figures, subscribers, privacy groups for the product form | cart data |
 | | `POST /cart/:nick/item[/qty\|/remove\|/options]`, `POST /cart/:nick/checkout`, `POST /cart/:nick/(paypal\|razorpay\|cashfree)/…` | Buyer (local or remote): edit the cart, place the order, pay | the cart / `{ paid }` |
 | | `POST /cart/:nick/catalog[/toggle\|/delete]`, `POST /cart/:nick/orders/:hash/(markpaid\|note\|items/:id/fulfill\|items/:id/cancel)`, `POST /cart/:nick/subscribers/:id/(extend\|revoke)`, `POST /cart/:nick/payment-settings` | Owner: products, order fulfilment, subscriptions, provider settings. Full table: [Cart](cart) | updated resource |
-| **portability** | `GET /portability/:datatype` | Export options / current export status | export info |
-| | `POST /portability/:datatype` | Trigger export, import an identity backup, or migrate from another server (rate-limited) | `{ status, ... }` |
+| **portability** | `GET /portability` | Export options: sections, content years, whole-cloud zip URL, own CalDAV/CardDAV export links | export info |
+| | `GET /portability/export?sections=a,b` | Identity export JSON (`identity_basic_export`; the SPA-only `extras` section adds `spa_extra`: sources, profile field values, shop orders) | JSON file |
+| | `GET /portability/export/items?year=YYYY` | Content zip, one JSON per month as classic `/uexport/<year>` (posts, DMs, articles, cards, notes), plus `<nick>-<year>-drafts.json` | zip file |
+| | `POST /portability/import` | Import an identity backup as a new channel | `{ status, channel_id, nick, redirect }` |
+| | `POST /portability/import/items` | Import content (`.json` or yearly `.zip`, also section-only exports) into the current channel | `{ status, items }` |
+| | `POST /portability/migrate` | Migrate from another server (rate-limited) | `{ status, ... }` |
+| **files** | `GET /files/:nick/download` (no hash) | Owner only: the whole cloud as one zip | zip file |
 | **settings** | `GET /settings[/display\|profile\|features\|account\|privacy\|channel\|apps\|notifications\|integrations\|danger\|locations]` | Read one settings section (defaults to `display`) | section object |
 | | `POST /settings[/<same sections>]` | Save one settings section | `{ status }` |
 | **admin** | `GET /admin[/summary\|site\|accounts\|channels\|security\|features\|addons\|themes\|inspect-queue\|queueworker\|profile-fields\|db-updates\|logs]` | Admin dashboard data per section (admin only) | section data |
