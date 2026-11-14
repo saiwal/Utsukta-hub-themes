@@ -82,11 +82,22 @@ GET /spa/links/resolve?nick=&title= → { url | null }
 
 ## Unified search: `Handlers/Find.php`
 
-`GET /spa/find?term=&types=&tag=&dbegin=&dend=&limit=` (local channel only)
+`GET /spa/find?term=&types=&tag=&dbegin=&dend=&limit=&channel=`
 searches posts (everything in your item table), articles, cards, webpages, notes, the
 latest wiki revisions, files (`attach.filename`) and bookmarks (`menu_item`).
 A tag matches hashtags *and* categories, and skips files/bookmarks; a date range
 skips bookmarks. Bookmarks pointing into this hub come back as SPA paths.
+
+Without `channel` it needs a local login and searches your own content. With
+`channel=<nick>` anyone may call it (local, remote or anonymous) and gets what
+they may see of that channel: **wall** posts only (`item_wall = 1` — the item
+table also holds everything delivered to the channel), articles/cards/webpages,
+wiki pages and files, each type behind its `view_stream` / `view_pages` /
+`view_wiki` / `view_storage` permission plus `item_permissions_sql` /
+`permissions_sql`; a file also needs every ancestor folder visible
+(`Find::visiblePath`). Notes and bookmarks are never returned. The frontend
+picks the scope in `useSearchScope()` (`search/search.ts`): on a page whose URL
+names another channel it searches that channel, everywhere else your own.
 
 UI (`src/shared/views/search/`): `search.ts` (`useContentSearch`, debounced,
 plus the palette open signal), `ResultList`, `SearchFilters`, and
