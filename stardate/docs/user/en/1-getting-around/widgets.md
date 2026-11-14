@@ -82,6 +82,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | links list            | any                                            | right, footer                              | -      | ✅       |
 | menu_bar              | any                                            | header                                     | -      | ✅       |
 | menu_tree             | any                                            | right, footer                              | -      | ✅       |
+| my subscriptions      | cart*, channel, profile                        | right                                      | -      | -        |
 | navigation tree       | help*                                          | right                                      | -      | -        |
 | newspaper feed        | channel                                        | contentTop                                 | -      | -        |
 | notices panel         | hq                                             | contentTop                                    | -      | -        |
@@ -101,6 +102,7 @@ Every change (add, remove, reorder, or configure) saves immediately - there's no
 | scrapbook feed        | channel                                        | contentTop                                 | -      | -        |
 | service_classes       | siteinfo*                                      | contentTop                                 | -      | -        |
 | shop item card        | channel, profile, cart                         | right                                      | -      | ✅       |
+| shop subscribers      | cart*, channel                                 | right                                      | -      | -        |
 | tags                  | articles, cards, channel, profile, notepad     | right, footer                              | -      | -        |
 | themes info           | siteinfo*                                      | contentTop                                 | -      | -        |
 | timeline feed         | channel                                        | contentTop                                 | -      | -        |
@@ -279,6 +281,11 @@ Horizontal navigation bar built from one of your saved menus, meant for the top-
 ### Menu List
 
 Vertical, multi-level menu card built from one of your saved menus, meant for the sidebar. Submenu items expand as an indented accordion.
+<!-- my_subscriptions -->
+
+### My Subscriptions
+
+Your own subscriptions at the shop of the channel you're viewing: what you're subscribed to, until when, and a **Renew** button. It only appears when you have (or had) a subscription there. See [Cart](cart).
 <!-- navigation_tree -->
 
 ### Navigation
@@ -374,6 +381,11 @@ Displays the hub's available service classes and their storage, channel, and con
 ### Shop Item Card
 
 A showcase card for a single item from the channel's shop, with an add-to-cart button. Add one per item you want to feature.
+<!-- shop_subscribers -->
+
+### Shop Subscribers
+
+For the shop owner only: the number of live subscribers and the ones whose paid period runs out soonest, with a link to My Shop. Visitors never see it. See [Cart](cart).
 <!-- tags -->
 
 ### Tags

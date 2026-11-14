@@ -39,6 +39,7 @@ This is the developer reference for **hubzilla-spa**, a Solid.js single-page app
 - [Drafts](drafts): Draft storage, the composer autosave/pending-draft mechanism, and the HQ DraftsWidget
 - [Cards and kanban](cards-kanban): Card metadata, the card face, and the kanban board (boards as categories, columns as decks)
 - [Stream sorting](stream-sorting): Post sort orders, the ranked (top/hot/discussed/controversial) algorithms, and the shared SortSelect control
+- [Cart](cart): The shop on the cart addon's storage: access products (privacy groups), subscriptions and their cron, tax, buyer options, payment settlement
 - [Chat federation](chat-federation): Unread dots for bookmarked rooms on other SPA hubs: signed subscribe/notice between hubs, storage, throttle
 - [Post import](post-import): Importing a federated post by URL: Zot vs ActivityPub, ancestor and reply discovery, the Lemmy fallback
 - [Cloud module](cloud-module): Cloud/Files: folder paths as URLs, the folder-hash resolver, and the SabreDAV CSP workaround
