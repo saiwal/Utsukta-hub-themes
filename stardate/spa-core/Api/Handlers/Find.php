@@ -5,11 +5,14 @@ use Utsukta\SpaCore\Api\Auth;
 use Utsukta\SpaCore\Api\Response;
 
 /**
- * Unified search for the command palette (local channel only — it searches
- * your own item table, files and bookmarks).
+ * Unified search for the command palette: your own item table, files and
+ * bookmarks — or, with `channel=<nick>`, what the observer (local, remote or
+ * anonymous) may see of that channel: wall posts, articles, cards, webpages,
+ * wiki pages and files, each behind its view_* permission and the row ACLs.
+ * Notes and bookmarks are never anyone else's.
  *
  *   GET /spa/find?term=&types=post,article,card,webpage,wiki,note,file,bookmark
- *                &tag=&dbegin=YYYY-MM-DD&dend=YYYY-MM-DD&limit=
+ *                &tag=&dbegin=YYYY-MM-DD&dend=YYYY-MM-DD&limit=&channel=
  *   → { results: [{ type, id, title, snippet, url, created, external? }] }
  *
  * (`term`, not `q`: Hubzilla routes on $_GET['q'].) Up to `limit` hits per
@@ -24,16 +27,39 @@ class Find
     {
         require_once 'include/items.php';
         require_once 'include/taxonomy.php';
-        Auth::requireLocalGet();
+        require_once 'include/security.php';
+        require_once 'include/permissions.php';
 
-        $uid     = local_channel();
-        $nick    = \App::get_channel()['channel_address'];
+        $nick = trim((string) ($_GET['channel'] ?? ''));
+        if ($nick === '') {
+            Auth::requireLocalGet();
+            $channel = \App::get_channel();
+        } else {
+            $channel = channelx_by_nick($nick);
+            if (!$channel || $channel['channel_removed']) {
+                Response::error(404, 'Channel not found');
+            }
+        }
+        $uid     = intval($channel['channel_id']);
+        $nick    = $channel['channel_address'];
+        $owner   = local_channel() === $uid;
+        $ob      = get_observer_hash();
         $term    = trim((string) ($_GET['term'] ?? ''));
         $tag     = trim((string) ($_GET['tag'] ?? ''));
         $limit   = min(20, max(1, intval($_GET['limit'] ?? 6)));
         $types   = array_values(array_intersect(self::TYPES, explode(',', (string) ($_GET['types'] ?? '')))) ?: self::TYPES;
         $dbegin  = $this->date('dbegin');
         $dend    = $this->date('dend');
+
+        if (!$owner) {
+            if (observer_prohibited()) {
+                Response::error(403, 'Permission denied');
+            }
+            $perms = get_all_perms($uid, $ob);
+            $need  = ['post' => 'view_stream', 'article' => 'view_pages', 'card' => 'view_pages',
+                'webpage' => 'view_pages', 'wiki' => 'view_wiki', 'file' => 'view_storage'];
+            $types = array_values(array_filter($types, fn($t) => isset($need[$t]) && !empty($perms[$need[$t]])));
+        }
 
         if (mb_strlen($term) < 2 && $tag === '') {
             Response::send(['results' => []]);
@@ -47,17 +73,21 @@ class Find
         if ($tag !== '')    $itemSql .= term_query('item', $tag, TERM_HASHTAG, TERM_CATEGORY);
         if ($dbegin)        $itemSql .= " AND item.created >= '" . dbesc($dbegin) . "'";
         if ($dend)          $itemSql .= " AND item.created <= '" . dbesc($dend) . "'";
+        if (!$owner)        $itemSql .= item_permissions_sql($uid, $ob);
+        // A channel's item rows include everything ever delivered to it; a
+        // visitor searches only what it published on its own wall.
+        $wall = $owner ? '' : ' AND item.item_wall = 1';
 
         $out = [];
         foreach ($types as $type) {
             $rows = match ($type) {
-                'post'    => $this->items($uid, ITEM_TYPE_POST, $itemSql, $limit, false),
+                'post'    => $this->items($uid, ITEM_TYPE_POST, $itemSql . $wall, $limit, false),
                 'article' => $this->items($uid, ITEM_TYPE_ARTICLE, $itemSql, $limit, true),
                 'card'    => $this->items($uid, ITEM_TYPE_CARD, $itemSql, $limit, true),
                 'webpage' => $this->items($uid, ITEM_TYPE_WEBPAGE, $itemSql, $limit, true),
                 'note'    => $this->items($uid, ITEM_TYPE_CUSTOM, $itemSql, $limit, true),
                 'wiki'    => $this->wikiPages($uid, $itemSql, $limit),
-                'file'    => $tag === '' && $like !== null ? $this->files($uid, $like, $dbegin, $dend, $limit) : [],
+                'file'    => $tag === '' && $like !== null ? $this->files($uid, $like, $dbegin, $dend, $limit, $owner ? null : $ob) : [],
                 'bookmark'=> $tag === '' && $like !== null && !$dbegin && !$dend ? $this->bookmarks($uid, $like, $limit) : [],
             };
             foreach ($rows as $r) {
@@ -101,14 +131,40 @@ class Find
         return $rows;
     }
 
-    private function files(int $uid, string $like, string $dbegin, string $dend, int $limit): array
+    /** $ob null = the owner; otherwise the observer the ACLs are checked for. */
+    private function files(int $uid, string $like, string $dbegin, string $dend, int $limit, ?string $ob): array
     {
         $sql = '';
         if ($dbegin) $sql .= " AND created >= '" . dbesc($dbegin) . "'";
         if ($dend)   $sql .= " AND created <= '" . dbesc($dend) . "'";
-        return dbq("SELECT id, hash, filename, display_path, is_dir, created FROM attach
-            WHERE uid = $uid AND LOWER(filename) LIKE '$like' $sql
-            ORDER BY created DESC LIMIT $limit") ?: [];
+        if ($ob === null) {
+            return dbq("SELECT id, hash, filename, display_path, is_dir, created FROM attach
+                WHERE uid = $uid AND LOWER(filename) LIKE '$like' $sql
+                ORDER BY created DESC LIMIT $limit") ?: [];
+        }
+
+        // As in Files::search(): the ACL is per row, so a hit only counts when
+        // every ancestor folder is visible too — its path is in the result.
+        // ponytail: filters the newest 200 matches, so a visitor can get fewer
+        // than $limit when most hits are hidden; page the query if that bites.
+        $acl  = permissions_sql($uid, $ob, 'attach');
+        $hits = dbq("SELECT id, hash, filename, display_path, is_dir, created, folder FROM attach
+            WHERE uid = $uid AND LOWER(filename) LIKE '$like' $sql $acl
+            ORDER BY created DESC LIMIT 200") ?: [];
+        if (!$hits) return [];
+        $dirs = array_column(dbq("SELECT hash, folder FROM attach WHERE uid = $uid AND is_dir = 1 $acl") ?: [], 'folder', 'hash');
+        return array_slice(array_filter($hits, fn($r) => self::visiblePath((string) $r['folder'], $dirs)), 0, $limit);
+    }
+
+    /** Does the folder chain from $parent up to the root stay inside $dirs (hash => parent)? */
+    public static function visiblePath(string $parent, array $dirs): bool
+    {
+        // Bounded by count($dirs) so a corrupt folder cycle can't spin.
+        for ($i = 0; $parent !== '' && $i <= count($dirs); $i++) {
+            if (!isset($dirs[$parent])) return false;
+            $parent = (string) $dirs[$parent];
+        }
+        return $parent === '';
     }
 
     private function bookmarks(int $uid, string $like, int $limit): array

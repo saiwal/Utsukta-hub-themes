@@ -505,6 +505,12 @@ class Files
 
     private function download(int $uid, string $ob_hash, string $hash, array $channel): void
     {
+        // No hash = the whole cloud (Settings → Export data). Owner only: it
+        // is the heaviest request this handler has.
+        if (!$hash && intval(local_channel()) === $uid) {
+            @set_time_limit(0);
+            $this->downloadZip($uid, $ob_hash, ['hash' => '', 'filename' => $channel['channel_address'] . '-files'], $channel);
+        }
         if (!$hash) Response::error(400, 'Hash required');
 
         $sql_extra = permissions_sql($uid, $ob_hash, 'attach');

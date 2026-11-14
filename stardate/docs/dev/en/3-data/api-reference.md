@@ -118,10 +118,17 @@ All mutation endpoints (POST/DELETE) require CSRF protection (see `csrf` endpoin
 | | `POST /cal/:nick/:action/:id` (`toggle`/`edit`/`delete`/`share`/`unshare`) | Manage calendar visibility/sharing, edit or delete an event | `{ status }` |
 | **chat** | `GET /chat/:nick[/acl-options\|:room_id]` | Room list, ACL picker options, or one room's detail + presence. Each listed room carries `last_msg` and `last_other` (newest message *not* by the observer — what the SPA's unread dot compares against its per-browser `hz-chat-seen` timestamps, see `src/modules/chat/unread.ts`) | rooms / room detail |
 | | `POST /chat/:nick/:room_id/(send\|messages\|join\|leave\|drop)`, `POST /chat/:nick/new` | Send/fetch messages, join/leave presence, create/delete a room (owner). `messages` carries `bookmark_url` for a visitor from another hub — their own hub's `/rbmark` link | message(s) / `{ status }` |
-| **cart** | `GET /cart/:nick/(catalog\|order\|payment-config\|payment-settings\|orders)` | Storefront catalog/order data; seller views for settings & orders | cart data |
-| | `POST /cart/:nick/:action` | Place order / update seller payment config | `{ status }` |
-| **portability** | `GET /portability/:datatype` | Export options / current export status | export info |
-| | `POST /portability/:datatype` | Trigger export, import an identity backup, or migrate from another server (rate-limited) | `{ status, ... }` |
+| **cart** | `GET /cart/:nick/(catalog\|order\|payment-config\|my-orders\|my-subscriptions)` | Storefront: catalog, the buyer's open cart, enabled payment providers, the buyer's placed orders and subscriptions | cart data |
+| | `GET /cart/:nick/(payment-settings\|orders[/:hash]\|summary\|subscribers\|groups)` | Owner: provider settings (secrets masked), orders, sales figures, subscribers, privacy groups for the product form | cart data |
+| | `POST /cart/:nick/item[/qty\|/remove\|/options]`, `POST /cart/:nick/checkout`, `POST /cart/:nick/(paypal\|razorpay\|cashfree)/…` | Buyer (local or remote): edit the cart, place the order, pay | the cart / `{ paid }` |
+| | `POST /cart/:nick/catalog[/toggle\|/delete]`, `POST /cart/:nick/orders/:hash/(markpaid\|note\|items/:id/fulfill\|items/:id/cancel)`, `POST /cart/:nick/subscribers/:id/(extend\|revoke)`, `POST /cart/:nick/payment-settings` | Owner: products, order fulfilment, subscriptions, provider settings. Full table: [Cart](cart) | updated resource |
+| **portability** | `GET /portability` | Export options: sections, content years, whole-cloud zip URL, own CalDAV/CardDAV export links | export info |
+| | `GET /portability/export?sections=a,b` | Identity export JSON (`identity_basic_export`; the SPA-only `extras` section adds `spa_extra`: sources, profile field values, shop orders) | JSON file |
+| | `GET /portability/export/items?year=YYYY` | Content zip, one JSON per month as classic `/uexport/<year>` (posts, DMs, articles, cards, notes), plus `<nick>-<year>-drafts.json` | zip file |
+| | `POST /portability/import` | Import an identity backup as a new channel | `{ status, channel_id, nick, redirect }` |
+| | `POST /portability/import/items` | Import content (`.json` or yearly `.zip`, also section-only exports) into the current channel | `{ status, items }` |
+| | `POST /portability/migrate` | Migrate from another server (rate-limited) | `{ status, ... }` |
+| **files** | `GET /files/:nick/download` (no hash) | Owner only: the whole cloud as one zip | zip file |
 | **settings** | `GET /settings[/display\|profile\|features\|account\|privacy\|channel\|apps\|notifications\|integrations\|danger\|locations]` | Read one settings section (defaults to `display`) | section object |
 | | `POST /settings[/<same sections>]` | Save one settings section | `{ status }` |
 | **admin** | `GET /admin[/summary\|site\|accounts\|channels\|security\|features\|addons\|themes\|inspect-queue\|queueworker\|profile-fields\|db-updates\|logs]` | Admin dashboard data per section (admin only) | section data |
