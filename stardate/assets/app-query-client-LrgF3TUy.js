@@ -1,0 +1,1 @@
+import{i as e}from"./app-store-jLadAaFW.js";import{a as t,c as n}from"./app-query-Bhtd4Uv6.js";var r=new t({defaultOptions:{queries:{staleTime:6e4,gcTime:3e5,retry:(e,t)=>!t.redirect&&e<2,refetchOnWindowFocus:!0,refetchOnReconnect:!0,reconcile:(t,r)=>n(e(t),r),networkMode:`offlineFirst`}}});export{r as t};
