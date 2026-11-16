@@ -863,7 +863,12 @@ class Item
                 return $acl;
 
             default:   // 'contacts' — omit the keys entirely, see above
-                return [];
+                // …but a public channel's default ACL is empty, so that alone
+                // posted "Connections" publicly. public_policy makes it mean
+                // connections there; core drops it again when the default ACL
+                // is non-empty. Own channel only — on someone else's wall the
+                // audience is the wall owner's to decide.
+                return $profileUid === intval(local_channel()) ? ['public_policy' => 'contacts'] : [];
         }
     }
 
