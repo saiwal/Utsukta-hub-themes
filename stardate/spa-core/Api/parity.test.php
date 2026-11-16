@@ -390,6 +390,14 @@ function runCases(string $nick, string $pass): void
             ['scope' => 'public'],
         ],
     ];
+    if (!(new \Zotlabs\Access\AccessList(channelx_by_n($uid)))->is_private()) {
+        // "Connections" on a channel with no default ACL must not post public.
+        $audiences['connections (no default ACL)'] = [
+            ['contact_allow' => [], 'group_allow' => [], 'contact_deny' => [], 'group_deny' => [],
+             'public_policy' => 'contacts'],
+            ['scope' => 'contacts'],
+        ];
+    }
     if ($otherHash) {
         $audiences['custom (one contact)'] = [
             ['contact_allow' => [$otherHash]],

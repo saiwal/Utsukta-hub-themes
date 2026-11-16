@@ -43,6 +43,13 @@ class Nav
             // allow_cid = <this>, so without it the client cannot tell an
             // owner-private ACL from a one-contact custom one.
             'hash'        => $ob_hash,
+            // What classic's editor preselects: "public" when the channel has
+            // no default ACL and view_stream is public, else "contacts" (which
+            // the item API expands to the default ACL / public_policy).
+            'default_scope' => ($is_local
+                && !(new \Zotlabs\Access\AccessList($channel))->is_private()
+                && intval(\Zotlabs\Access\PermissionLimits::Get($uid, 'view_stream')) === PERMS_PUBLIC)
+                ? 'public' : 'contacts',
             'name'        => Response::decodeEntities($observer['xchan_name'] ?? ''),
             'addr'        => $observer['xchan_addr'] ?? '',
             'avatar'      => $observer['xchan_photo_m'] ?? '',
