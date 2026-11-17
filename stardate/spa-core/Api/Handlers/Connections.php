@@ -54,12 +54,13 @@ class Connections
                 "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
                         abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                         abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
-                        abook.abook_role, abook.abook_profile,
+                        abook.abook_role, abook.abook_profile, ap.id AS abook_profile_id,
                         xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                         xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                         xchan.xchan_pubforum
                  FROM abook
                  LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                 LEFT JOIN profile ap ON ap.uid = abook.abook_channel AND ap.profile_guid = abook.abook_profile AND abook.abook_profile != ''
                  WHERE abook.abook_channel = %d
                    AND abook.abook_self   = 0
                    AND xchan.xchan_deleted = 0
@@ -81,12 +82,13 @@ class Connections
                 "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
                         abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                         abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
-                        abook.abook_role, abook.abook_profile,
+                        abook.abook_role, abook.abook_profile, ap.id AS abook_profile_id,
                         xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                         xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                         xchan.xchan_pubforum
                  FROM abook
                  LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+                 LEFT JOIN profile ap ON ap.uid = abook.abook_channel AND ap.profile_guid = abook.abook_profile AND abook.abook_profile != ''
                  WHERE abook.abook_channel = %d
                    AND abook.abook_self   = 0
                    AND xchan.xchan_deleted = 0
@@ -176,13 +178,14 @@ class Connections
             "SELECT abook.abook_id, abook.abook_created, abook.abook_pending,
                     abook.abook_blocked, abook.abook_ignored, abook.abook_hidden,
                     abook.abook_archived, abook.abook_not_here, abook.abook_closeness,
-                    abook.abook_role, abook.abook_profile,
+                    abook.abook_role, abook.abook_profile, ap.id AS abook_profile_id,
                     abook.abook_incl, abook.abook_excl,
                     xchan.xchan_hash, xchan.xchan_name, xchan.xchan_addr,
                     xchan.xchan_url, xchan.xchan_photo_m, xchan.xchan_network,
                     xchan.xchan_pubforum, xchan.xchan_updated
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
+             LEFT JOIN profile ap ON ap.uid = abook.abook_channel AND ap.profile_guid = abook.abook_profile AND abook.abook_profile != ''
              $base_where
              ORDER BY $sql_order, abook.abook_id
              LIMIT %d OFFSET %d",
@@ -473,7 +476,17 @@ class Connections
         if ($hidden     !== null) $flag_sets[] = sprintf("abook_hidden = %d",   intval($hidden));
         if ($incl       !== null) $flag_sets[] = sprintf("abook_incl = '%s'",   dbesc($incl));
         if ($excl       !== null) $flag_sets[] = sprintf("abook_excl = '%s'",   dbesc($excl));
-        if ($profile_id !== null) $flag_sets[] = sprintf("abook_profile = %d",  intval($profile_id));
+        // abook_profile holds the profile_guid (core reads it that way: profile_load,
+        // vp.<guid> ACL groups); the wire speaks profile ids.
+        if ($profile_id !== null) {
+            $guid = '';
+            if ($profile_id > 0) {
+                $p = q("SELECT profile_guid FROM profile WHERE id = %d AND uid = %d LIMIT 1", intval($profile_id), intval($uid));
+                if (!$p) Response::error(404, 'Profile not found');
+                $guid = $p[0]['profile_guid'];
+            }
+            $flag_sets[] = "abook_profile = '" . dbesc($guid) . "'";
+        }
         if ($flag_sets) {
             q(
                 "UPDATE abook SET " . implode(', ', $flag_sets) . " WHERE abook_id = %d AND abook_channel = %d",
@@ -786,13 +799,15 @@ class Connections
     private function getConnectionProfile(int $uid, int $abook_id): never
     {
         $row = q(
-            "SELECT abook_profile FROM abook WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
+            "SELECT ap.id AS abook_profile_id FROM abook
+             LEFT JOIN profile ap ON ap.uid = abook.abook_channel AND ap.profile_guid = abook.abook_profile AND abook.abook_profile != ''
+             WHERE abook_id = %d AND abook_channel = %d LIMIT 1",
             intval($abook_id),
             intval($uid)
         );
         if (!$row) Response::error(404, 'Connection not found');
 
-        $profile_id = intval($row[0]['abook_profile'] ?? 0);
+        $profile_id = intval($row[0]['abook_profile_id'] ?? 0);
         Response::send(['profile_id' => $profile_id > 0 ? $profile_id : null]);
     }
 
@@ -904,7 +919,7 @@ class Connections
         // keys indicate what the contact has granted the local channel.
         $grantedPerms = array_values(array_filter(self::PERM_KEYS, fn($k) => !empty($theirPerms[$k])));
 
-        $raw_profile = intval($row['abook_profile'] ?? 0);
+        $raw_profile = intval($row['abook_profile_id'] ?? 0);
         return [
             'id'             => intval($row['abook_id']),
             'xchan_hash'     => $row['xchan_hash'],

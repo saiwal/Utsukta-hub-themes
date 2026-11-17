@@ -333,7 +333,7 @@ class Profiles
     private function getProfileContacts(int $uid, int $profile_id): void
     {
         $profile = q(
-            "SELECT id FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            "SELECT profile_guid FROM profile WHERE id = %d AND uid = %d LIMIT 1",
             intval($profile_id),
             intval($uid)
         );
@@ -345,12 +345,12 @@ class Profiles
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
              WHERE abook.abook_channel = %d
-               AND abook.abook_profile = %d
+               AND abook.abook_profile = '%s'
                AND abook.abook_self    = 0
                AND xchan.xchan_deleted = 0
              ORDER BY xchan.xchan_name ASC",
             intval($uid),
-            intval($profile_id)
+            dbesc($profile[0]['profile_guid'])
         );
 
         Response::send(array_map(fn($r) => [
@@ -365,12 +365,15 @@ class Profiles
     private function toggleProfileContact(int $uid, int $profile_id, array $data): void
     {
         $profile = q(
-            "SELECT id, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            "SELECT profile_guid, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1",
             intval($profile_id),
             intval($uid)
         );
         if (!$profile) Response::error(404, 'Profile not found');
         if ($profile[0]['is_default']) Response::error(400, 'Cannot assign contacts to the default profile');
+
+        if (array_key_exists('role', $data) || array_key_exists('gid', $data))
+            $this->bulkProfileContacts($uid, $profile_id, $profile[0]['profile_guid'], $data);
 
         $abook_id = intval($data['abook_id'] ?? 0);
         if (!$abook_id) Response::error(400, 'abook_id required');
@@ -383,22 +386,86 @@ class Profiles
         );
         if (!$abook) Response::error(404, 'Connection not found');
 
-        // Toggle: clear if already assigned to this profile, otherwise assign
-        $currently = intval($abook[0]['abook_profile']) === $profile_id;
+        // abook_profile stores the profile_guid, as core expects (profile_load,
+        // vp.<guid> ACL groups). Toggle: clear if already this profile, else assign.
+        $guid      = $profile[0]['profile_guid'];
+        $currently = $abook[0]['abook_profile'] === $guid;
         $new_id    = $currently ? 0 : $profile_id;
 
         q(
-            "UPDATE abook SET abook_profile = %d WHERE abook_id = %d AND abook_channel = %d",
-            intval($new_id),
+            "UPDATE abook SET abook_profile = '%s' WHERE abook_id = %d AND abook_channel = %d",
+            dbesc($currently ? '' : $guid),
             intval($abook_id),
             intval($uid)
         );
+
+        // Clone sync, as core's Connedit does after every abook edit
+        $clone = q("SELECT * FROM abook WHERE abook_id = %d LIMIT 1", intval($abook_id));
+        if ($clone) {
+            $clone = $clone[0];
+            unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+            $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+            if ($abconfig) $clone['abconfig'] = $abconfig;
+            \Zotlabs\Lib\Libsync::build_sync_packet($uid, ['abook' => [$clone]], true);
+        }
 
         Response::send([
             'abook_id'   => $abook_id,
             'profile_id' => $new_id > 0 ? $new_id : null,
             'assigned'   => $new_id > 0,
         ]);
+    }
+
+    /**
+     * Assign (mode "add") or unassign (mode "remove") every member of a contact
+     * role or privacy group at once. Add moves members off whatever profile
+     * they had; remove only clears those currently on *this* profile.
+     * dry_run returns the counts without writing, so the UI can warn first.
+     */
+    private function bulkProfileContacts(int $uid, int $profile_id, string $guid, array $data): never
+    {
+        if (array_key_exists('gid', $data)) {
+            $gid = intval($data['gid']);
+            if (!q("SELECT id FROM pgrp WHERE id = %d AND uid = %d AND deleted = 0", $gid, $uid))
+                Response::error(404, 'Privacy group not found');
+            $members = "abook_xchan IN (SELECT xchan FROM pgrp_member WHERE gid = " . $gid . " AND uid = " . $uid . ")";
+        } else {
+            $role = trim((string) $data['role']);
+            if ($role === '') Response::error(400, 'role required');
+            $members = "abook_role = '" . protect_sprintf(dbesc($role)) . "'";
+        }
+
+        $add  = ($data['mode'] ?? 'add') !== 'remove';
+        $rows = q(
+            "SELECT abook_id, abook_profile FROM abook
+             WHERE abook_channel = %d AND abook_self = 0 AND $members",
+            $uid
+        ) ?: [];
+
+        $targets = array_values(array_filter($rows, fn($r) => $add
+            ? $r['abook_profile'] !== $guid
+            : $r['abook_profile'] === $guid));
+        $moved = $add ? count(array_filter($targets, fn($r) => $r['abook_profile'] !== '')) : 0;
+        $ids   = array_map(fn($r) => intval($r['abook_id']), $targets);
+
+        if ($ids && empty($data['dry_run'])) {
+            $in = implode(',', $ids);
+            q(
+                "UPDATE abook SET abook_profile = '%s' WHERE abook_channel = %d AND abook_id IN ($in)",
+                dbesc($add ? $guid : ''),
+                $uid
+            );
+            $clones = [];
+            foreach (q("SELECT * FROM abook WHERE abook_channel = %d AND abook_id IN ($in)", $uid) ?: [] as $c) {
+                unset($c['abook_id'], $c['abook_account'], $c['abook_channel']);
+                $abconfig = load_abconfig($uid, $c['abook_xchan']);
+                if ($abconfig) $c['abconfig'] = $abconfig;
+                $clones[] = $c;
+            }
+            if ($clones) \Zotlabs\Lib\Libsync::build_sync_packet($uid, ['abook' => $clones], true);
+        }
+
+        Response::send(['profile_id' => $profile_id, 'changed' => count($ids), 'moved' => $moved]);
     }
 
     private function deleteProfile(int $uid, int $id): void
