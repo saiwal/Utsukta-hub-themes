@@ -333,7 +333,7 @@ class Profiles
     private function getProfileContacts(int $uid, int $profile_id): void
     {
         $profile = q(
-            "SELECT id FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            "SELECT profile_guid FROM profile WHERE id = %d AND uid = %d LIMIT 1",
             intval($profile_id),
             intval($uid)
         );
@@ -345,12 +345,12 @@ class Profiles
              FROM abook
              LEFT JOIN xchan ON abook.abook_xchan = xchan.xchan_hash
              WHERE abook.abook_channel = %d
-               AND abook.abook_profile = %d
+               AND abook.abook_profile = '%s'
                AND abook.abook_self    = 0
                AND xchan.xchan_deleted = 0
              ORDER BY xchan.xchan_name ASC",
             intval($uid),
-            intval($profile_id)
+            dbesc($profile[0]['profile_guid'])
         );
 
         Response::send(array_map(fn($r) => [
@@ -365,7 +365,7 @@ class Profiles
     private function toggleProfileContact(int $uid, int $profile_id, array $data): void
     {
         $profile = q(
-            "SELECT id, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1",
+            "SELECT profile_guid, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1",
             intval($profile_id),
             intval($uid)
         );
@@ -383,16 +383,28 @@ class Profiles
         );
         if (!$abook) Response::error(404, 'Connection not found');
 
-        // Toggle: clear if already assigned to this profile, otherwise assign
-        $currently = intval($abook[0]['abook_profile']) === $profile_id;
+        // abook_profile stores the profile_guid, as core expects (profile_load,
+        // vp.<guid> ACL groups). Toggle: clear if already this profile, else assign.
+        $guid      = $profile[0]['profile_guid'];
+        $currently = $abook[0]['abook_profile'] === $guid;
         $new_id    = $currently ? 0 : $profile_id;
 
         q(
-            "UPDATE abook SET abook_profile = %d WHERE abook_id = %d AND abook_channel = %d",
-            intval($new_id),
+            "UPDATE abook SET abook_profile = '%s' WHERE abook_id = %d AND abook_channel = %d",
+            dbesc($currently ? '' : $guid),
             intval($abook_id),
             intval($uid)
         );
+
+        // Clone sync, as core's Connedit does after every abook edit
+        $clone = q("SELECT * FROM abook WHERE abook_id = %d LIMIT 1", intval($abook_id));
+        if ($clone) {
+            $clone = $clone[0];
+            unset($clone['abook_id'], $clone['abook_account'], $clone['abook_channel']);
+            $abconfig = load_abconfig($uid, $clone['abook_xchan']);
+            if ($abconfig) $clone['abconfig'] = $abconfig;
+            \Zotlabs\Lib\Libsync::build_sync_packet($uid, ['abook' => [$clone]], true);
+        }
 
         Response::send([
             'abook_id'   => $abook_id,
