@@ -100,11 +100,11 @@ class Profile
                 intval($uid),
                 dbesc($effective_hash)
             );
-            if ($abook_row && intval($abook_row[0]['abook_profile']) > 0) {
-                $assigned_id = intval($abook_row[0]['abook_profile']);
+            // abook_profile is a profile_guid, as in core's profile_load()
+            if ($abook_row && $abook_row[0]['abook_profile'] !== '') {
                 $assigned = q(
-                    "SELECT * FROM profile WHERE id = %d AND uid = %d LIMIT 1",
-                    intval($assigned_id),
+                    "SELECT * FROM profile WHERE profile_guid = '%s' AND uid = %d LIMIT 1",
+                    dbesc($abook_row[0]['abook_profile']),
                     intval($uid)
                 );
                 if ($assigned) {

@@ -32,6 +32,22 @@ class Avatar
         require_once('include/photos.php');
         require_once('include/photo/photo_driver.php');
 
+        // Which profile the avatar is for (core: Profile_photo.php:60-78).
+        // Only the default profile's photo is the channel avatar; any other
+        // profile keeps its own photo, visible only to that profile's viewers.
+        $profile = null;
+        if ($type === 'avatar') {
+            $pid  = intval($_GET['profile'] ?? 0);
+            $rows = $pid
+                ? q("SELECT id, is_default FROM profile WHERE id = %d AND uid = %d LIMIT 1", $pid, intval($uid))
+                : q("SELECT id, is_default FROM profile WHERE is_default = 1 AND uid = %d LIMIT 1", intval($uid));
+            if (!$rows) {
+                Response::error(404, 'Profile not found.');
+            }
+            $profile = $rows[0];
+        }
+        $isDefault = !$profile || intval($profile['is_default']);
+
         $hash  = photo_new_resource();
         $album = ($type === 'avatar') ? t('Profile Photos') : t('Cover Photos');
 
@@ -79,12 +95,12 @@ class Avatar
             'album'        => $album,
             'os_path'      => $base['os_path'] ?? '',
             'display_path' => $base['display_path'] ?? '',
-            'photo_usage'  => ($type === 'avatar') ? PHOTO_PROFILE : PHOTO_COVER,
+            'photo_usage'  => ($type === 'cover') ? PHOTO_COVER : ($isDefault ? PHOTO_PROFILE : PHOTO_NORMAL),
             'edited'       => dbescdate($base['edited']),
         ];
 
         if ($type === 'avatar') {
-            $this->processAvatar($uid, $channel, $im, $p, $hash);
+            $this->processAvatar($uid, $channel, $im, $p, $hash, intval($profile['id']), $isDefault);
         } else {
             $this->processCover($uid, $channel, $im, $p, $hash);
         }
@@ -125,11 +141,8 @@ class Avatar
         }
     }
 
-    private function processAvatar(int $uid, array $channel, $im, array $p, string $hash): void
+    private function processAvatar(int $uid, array $channel, $im, array $p, string $hash, int $profileId, bool $isDefault): void
     {
-        q("UPDATE photo SET photo_usage = %d WHERE photo_usage = %d AND resource_id != '%s' AND uid = %d",
-            intval(PHOTO_NORMAL), intval(PHOTO_PROFILE), dbesc($hash), intval($uid));
-
         $im->scaleImageSquare(300);
         $r1 = $im->storeThumbnail($p, PHOTO_RES_PROFILE_300);
         $im->scaleImageSquare(80);
@@ -144,10 +157,19 @@ class Avatar
             Response::error(500, 'Image resize failed.');
         }
 
-        q("UPDATE profile SET photo = '%s', thumb = '%s' WHERE is_default = 1 AND uid = %d",
-            dbesc(z_root() . '/photo/profile/l/' . $uid),
-            dbesc(z_root() . '/photo/profile/m/' . $uid),
-            intval($uid));
+        if ($isDefault) {
+            q("UPDATE photo SET photo_usage = %d WHERE photo_usage = %d AND resource_id != '%s' AND uid = %d",
+                intval(PHOTO_NORMAL), intval(PHOTO_PROFILE), dbesc($hash), intval($uid));
+            q("UPDATE profile SET photo = '%s', thumb = '%s' WHERE is_default = 1 AND uid = %d",
+                dbesc(z_root() . '/photo/profile/l/' . $uid),
+                dbesc(z_root() . '/photo/profile/m/' . $uid),
+                intval($uid));
+        } else {
+            q("UPDATE profile SET photo = '%s', thumb = '%s' WHERE id = %d AND uid = %d",
+                dbesc(z_root() . '/photo/' . $hash . '-' . PHOTO_RES_PROFILE_300),
+                dbesc(z_root() . '/photo/' . $hash . '-' . PHOTO_RES_PROFILE_80),
+                intval($profileId), intval($uid));
+        }
 
         q("UPDATE xchan SET xchan_photo_mimetype = '%s', xchan_photo_date = '%s',
                xchan_photo_l = '%s', xchan_photo_m = '%s', xchan_photo_s = '%s'
@@ -159,10 +181,7 @@ class Avatar
             dbesc(z_root() . '/photo/profile/s/' . $uid),
             dbesc($channel['xchan_hash']));
 
-        $def = q("SELECT id FROM profile WHERE uid = %d AND is_default = 1 LIMIT 1", intval($uid));
-        if ($def) {
-            photo_profile_setperms($uid, $hash, intval($def[0]['id']));
-        }
+        photo_profile_setperms($uid, $hash, $profileId);
 
         // Same deferred sync as the photo uploads: attach_store ran with
         // nosync because the scales are written afterwards. Core pairs the
@@ -177,6 +196,12 @@ class Avatar
 
         $_SESSION['reload_avatar'] = true;
         \Zotlabs\Daemon\Master::Summon(['Directory', $uid]);
+
+        if (!$isDefault) {
+            Response::send([
+                'avatar_l' => z_root() . '/photo/' . $hash . '-' . PHOTO_RES_PROFILE_300,
+            ]);
+        }
 
         Response::send([
             'avatar_l' => z_root() . '/photo/profile/l/' . $uid . '?t=' . time(),
