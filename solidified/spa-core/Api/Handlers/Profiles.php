@@ -83,7 +83,11 @@ class Profiles
 
         if ($uid) {
             require_once('include/channel.php');
-            $avatar_l  = z_root() . '/photo/profile/l/' . $uid;
+            // A non-default profile has its own photo (core stores it in
+            // profile.photo); only the default one is the channel avatar.
+            $avatar_l  = (!intval($p['is_default']) && !empty($p['photo']))
+                ? $p['photo']
+                : z_root() . '/photo/profile/l/' . $uid;
             $cover     = get_cover_photo($uid, 'array', PHOTO_RES_COVER_1200);
             $def_cover = \Zotlabs\Lib\Config::Get('system', 'default_cover_photo', 'hubzilla');
             $cover_url = $cover
