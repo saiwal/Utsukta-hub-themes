@@ -1,1 +1,0 @@
-import{f as e}from"./app-solid-HdCE-Du-.js";import{t}from"./app-PopularPostsWidget-DKk-L75y.js";import{i as n}from"./app-site-config-BJ_Ye6v2.js";function r(){return e(t,{get channelNick(){return n()()},type:`cards`})}export{r as default};
