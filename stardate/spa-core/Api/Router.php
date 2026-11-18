@@ -11,6 +11,7 @@ class Router
         'manifest' => Handlers\Manifest::class,
         'csrf' => Handlers\Csrf::class,
         'siteinfo' => Handlers\Siteinfo::class,
+        'emoji-groups' => Handlers\EmojiGroups::class,
         'settings' => Handlers\Settings::class,
         'portability' => Handlers\Portability::class,
         'userconfig' => Handlers\UserConfig::class,

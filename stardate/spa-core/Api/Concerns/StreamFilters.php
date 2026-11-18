@@ -136,6 +136,18 @@ class StreamFilters
             ) ";
         }
 
+        // Every forum connection (forums=1). Resolved to a hash list up front,
+        // like pf below, so MySQL doesn't run it per candidate row. owner_xchan
+        // is the forum on its posts and on every comment in their threads.
+        if (intval($q['forums'] ?? 0)) {
+            $fr = q("SELECT abook_xchan FROM abook
+                     JOIN xchan ON xchan_hash = abook_xchan
+                     WHERE abook_channel = %d AND abook_blocked = 0 AND xchan_pubforum = 1",
+                $uid);
+            $in = $fr ? "'" . implode("','", array_map('dbesc', array_column($fr, 'abook_xchan'))) . "'" : "''";
+            $sql_extra .= " AND $a.owner_xchan IN ($in) ";
+        }
+
         // xchan — comma-separated: one identity can own several xchan rows
         // (a zot6 channel also known over ActivityPub), and its items sit
         // under whichever hash delivered them.
