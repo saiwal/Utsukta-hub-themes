@@ -48,13 +48,17 @@ Shows your next events from the Calendar app — anything in the next 30 days. E
 
 ## Messages Widget
 
-Shows recent private direct messages. Click a message to open the full conversation in the Network view (DM filter).
+Your latest messages in tabs: **All**, **Direct**, **Notices** and **Folders**. Click a message to open the conversation, or **View all** to go to the Inbox.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: choose the **Default tab** it opens on.
 
 ![Messages widget showing message previews](hq/messages.png)
 
 ## Performance Widget
 
 Admin-only. Shows live server performance: load average (1/5/15 min), database query rate, and outbound/work queue sizes, each with a short rolling sparkline. Polls every few seconds; not shown to non-admin users.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: choose the **Plot style**: area, line, steps, bars or dots.
 
 ![Performance widget with sparkline cards](hq/perfcard.png)
 

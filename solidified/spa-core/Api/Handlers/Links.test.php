@@ -69,4 +69,14 @@ check('webpage path needs a page link', Links::refFromUrl('/page/me', null) === 
 check('untitled snippet keeps wikilink text', Links::title(['title' => '', 'body' => 'To do: write [[Fermentation]] and [[card:Brine|the brine]]']) === 'To do: write Fermentation and the brine');
 check('untitled snippet strips bbcode', Links::title(['title' => '', 'body' => '[b]Hello[/b] **world**']) === 'Hello world');
 
+// withoutDrafts: drafts, their edges and the [[missing]] only they wrote go; shared missing stays.
+$g = Links::withoutDrafts(['index' => [], 'nodes' => [
+    ['id' => 'a', 'type' => 'article'], ['id' => 'd', 'type' => 'post', 'draft' => true],
+    ['id' => 'missing:x', 'type' => 'missing'], ['id' => 'missing:y', 'type' => 'missing'],
+], 'edges' => [
+    ['source' => 'd', 'target' => 'a'], ['source' => 'd', 'target' => 'missing:x'],
+    ['source' => 'd', 'target' => 'missing:y'], ['source' => 'a', 'target' => 'missing:y'],
+]]);
+check('drafts stripped', array_column($g['nodes'], 'id') === ['a', 'missing:y'] && count($g['edges']) === 1);
+
 exit($fail ? 1 : 0);

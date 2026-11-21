@@ -48,13 +48,35 @@ optional). It's applied throughout the app — nav items, widget headers, and
 composer buttons (`NavUtilities.tsx`, `WidgetArrangementEditor.tsx`,
 `layout/CoverCard.tsx`, `Slot.tsx`, `PostComposer.tsx`, `DMComposer.tsx`, and others).
 
+## Nested Targets
+
+Targets nest: a widget wrapper holds a toolbar that holds a button. The
+**innermost** element with a non-empty target wins, both for the hover
+outline and for the click — `helpable` listens in the capture phase and
+steps aside when a deeper target is under the pointer. An element whose
+target is empty doesn't count, so an unset optional `helpTarget` never
+shadows its parent. While armed it also swallows `mousedown`/`pointerdown`,
+since editor toolbar buttons act on press, before the click arrives.
+
+Shared hooks cover whole areas without per-call-site wiring:
+
+- `SubPageLayout`'s `help={(path) => target}` puts a target on each nav row
+  and on the open section's page (settings → `settings.<path>`, admin →
+  `admin.<path>`, directory → `connections.<path>`, inbox).
+- Settings `Group` takes `help="settings.<slug>"` for its card.
+- `ComposerModal`'s `helpTarget` also adds a help-mode button to the dialog
+  header — the dialog is modal, so the nav's button can't be clicked.
+- `EditorToolbar`'s `Btn` takes `help`; the toolbar itself, `AclPicker`,
+  `ComposerActionBar`, PostCard's action bars and ⋯ menu, the widget
+  edit-mode controls and the stream sort/view switchers carry their own.
+
 ## Resolving a Target to a Doc Section
 
 `helpTarget` strings resolve the same way in two places:
 
 - `NavItemDef.helpTarget` / the default derived from a nav item's path
   (`navItemHelpTarget()` in `useNav.ts`).
-- `WidgetDef.helpTarget`, defaulting to `widgets.<id>` when unset.
+- `WidgetDef.helpTarget`, defaulting to `widgets.<id>` with dots as underscores (`hq.delivery_health` → `widgets.hq_delivery_health`) — a target splits on its first dot only, so a dotted id would otherwise lose its name.
 
 Given a target like `"channel.connections_widget"`:
 
@@ -108,3 +130,9 @@ target's section, or the modal falls back to showing the whole document. If
 the doc is translated into other locales, add a matching
 `<!-- section_slug -->` anchor comment above the heading in each
 translation so the section still resolves there.
+
+`node scripts/check-help-targets.mjs` (`npm run check:help`) resolves every
+literal target, every widget's `helpTarget` (or its `widgets.<id>`
+fallback) and every SubPageLayout section against the English docs, and
+fails on any that would fall back to the whole page. Run it after adding a
+target or renaming a heading.

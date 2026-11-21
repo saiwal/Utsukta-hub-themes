@@ -43,6 +43,8 @@ After that, your **[HQ](hq)** is your home page, and the **[Network](network)** 
 - [Notifications](notifications): the bell, and staying on top of replies and mentions
 - [Widgets](widgets): arranging the panels around each page
 - [Settings](settings): display, profile, privacy, notifications and account
+- [Manage channels](manage): switching between, creating and delegating channels
+- [Site administration](admin): the admin area, for hub administrators
 
 ### Social
 
@@ -63,6 +65,7 @@ After that, your **[HQ](hq)** is your home page, and the **[Network](network)** 
 - [Wiki](wiki): pages you write alone or together
 - [Webpages](webpages): static pages on your channel
 - [Notepad](notepad): a private scratchpad
+- [Bookmarks](bookmarks): links you've saved, in folders
 - [Calendar](calendar): events and invitations
 - [Links and graph](links-and-graph): `[[links]]` between your pages, "Linked from", and a map of how it all connects
 

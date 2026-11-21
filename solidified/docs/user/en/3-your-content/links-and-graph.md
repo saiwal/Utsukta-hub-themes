@@ -38,7 +38,7 @@ These work everywhere: in wiki pages, articles, cards, notes, webpages and posts
 
 **In posts and comments**, a `[[ ]]` that matches something is turned into an ordinary full link (`https://your-hub/…`) when you save. Posts are sent to other hubs, which can't look up your titles, so this keeps the link working for everyone, including people using classic Hubzilla. A `[[ ]]` that matches nothing yet is left as you wrote it. Links to notes aren't converted, since nobody else can open your notes.
 
-If nothing has that title yet, clicking the link shows a "no page called … yet" message, and the Graph shows it as a grey, outlined dot. That's a handy reminder of pages you meant to write.
+If nothing has that title yet, clicking the link shows a "no page called … yet" message, and the Graph can show it as a *Not yet written* item (see *Drafts and Not yet written* below). That's a handy reminder of pages you meant to write.
 
 ### By pasting a link
 
@@ -50,7 +50,7 @@ Links to other people's channels, or to other websites, don't count. The graph i
 
 ## "Linked from"
 
-On a wiki page, article, card or post, the **Linked from** widget in the right sidebar lists everything that links to it. Click an entry to go there. The coloured dot tells you what kind of item it is. The widget is hidden when nothing links to the page.
+On a wiki page, article, card or post, the **Linked from** widget in the right sidebar lists everything that links to it. Click an entry to go there. The shape next to it tells you what kind of item it is (see *Shapes* below). The widget is hidden when nothing links to the page.
 
 You can move or remove it like any other widget (see [Widgets](widgets)), and also place it in a page's footer.
 
@@ -58,24 +58,48 @@ You can move or remove it like any other widget (see [Widgets](widgets)), and al
 
 The Graph is an optional feature. Switch it on in **Settings → Integrations**; it then appears in your menu and as a **Graph** tab on your channel. Open **Graph** from the menu, or click the **Graph** link at the bottom of the *Linked from* widget. You'll see a map of your writing:
 
-- Each **dot** is a wiki page, article, card, webpage, note or post, coloured by kind. The bigger the dot, the more links it has.
+- Each **shape** is a wiki page, article, card, webpage, note or post (see *Shapes* below). The bigger the shape, the more links it has.
 - Each **line** is a link between two of them.
 - Wiki pages, articles, cards, webpages, notes and your 500 most recent posts always appear, even with no links yet. Older posts appear when they link to something or something links to them.
-- **Drafts** never appear; only published writing does.
 - Switch off the **Unlinked posts** chip to hide posts that have no links (counting only links to kinds you're showing).
-- When only a few dots are showing, every one is named. In a bigger graph only the most-linked are, so the names don't pile up. Zoom in or hover to see the rest.
+- When only a few items are showing, every one is named. In a bigger graph only the most-linked are, so the names don't pile up. Zoom in or hover to see the rest.
 
 | To… | Do this |
 |-----|---------|
-| See an item's details | Click its dot. A small panel shows what it links to and what links to it; click a name there to jump to that dot, or **Open** to go to the item. **Esc** or **×** closes it. |
-| See an item's neighbours | Hover over its dot. Its links light up, everything else fades, and its name appears just above the dot. |
-| Move things around | Drag a dot |
+| See an item's details | Click it. A small panel shows what it links to and what links to it; click a name there to jump to it, or **Open** to go to the item. **Esc** or **×** closes it. |
+| See an item's neighbours | Hover over it. Its links light up, everything else fades, and its name appears just above it. |
+| Move things around | Drag an item |
 | Pan | Drag the empty background |
-| Zoom | Scroll the mouse wheel. Names appear for every dot when you zoom in. |
-| See everything | Click **Fit all** (top right of the map) to zoom so every dot fits |
+| Zoom | Scroll the mouse wheel. Names appear for every item when you zoom in. |
+| See everything | Click **Fit all** (top right of the map) to zoom so everything fits |
 | Start over | Click **Reset view**, next to Fit all |
-| Show only some kinds | Click the coloured chips above the map to switch kinds on and off. Your choice is remembered in this browser. |
-| Find something | Type in **Find in graph…**. Matching dots stay bright and the rest fade. |
+| Show only some kinds | Click the chips above the map to switch kinds on and off. Your choice is remembered in this browser. *Not yet written* starts switched off. |
+| Find something | Type in **Find in graph…**. Matching items stay bright and the rest fade. |
+
+### Shapes
+
+Each kind of item has its own shape, and its own colour too:
+
+| Shape | Kind |
+|-------|------|
+| Circle | Post |
+| Square | Article |
+| Diamond | Card |
+| Hexagon | Webpage |
+| Triangle | Note |
+| Star | Wiki page |
+| Dashed grey ring | Not yet written |
+
+A **filled** shape is published. A **hollow** shape (just the outline) is a draft.
+
+### Drafts and Not yet written
+
+These two can look alike, but they are different things.
+
+- A **draft** is a real item you've started and saved but not published yet: a post, article, card, webpage, note or wiki page. It has a title and text, so any links in it show up as lines going *out* from it. Drafts are yours alone: they appear only on your own graph, and only when you switch on the **Drafts** chip (it starts off). Visitors never see them, and they never appear in *Linked from*. **Open** takes you to the page where that kind of draft is listed, e.g. your Articles page for an article draft.
+- **Not yet written** isn't an item at all. It's a title that something links to with `[[Title]]` when nothing with that title exists yet. It has no text, so lines only ever come *into* it, and there's nothing to open. As soon as you write something with that title, it turns into that item.
+
+For example, if a draft article *Brewing notes* contains `[[Fermentation]]` and you have nothing called *Fermentation*, the graph shows a hollow square (the draft) with a line to a dashed grey ring (*Fermentation*, not yet written). A *Not yet written* item can come from published writing too, not just drafts.
 
 ## What visitors see
 

@@ -18,6 +18,25 @@ Messages are grouped by age (Just now, Today, Yesterday, This week, Older), and 
 
 The search box filters by author. It needs a connection — searching runs on the server, not on your saved copy.
 
+## Message Rules
+
+**Rules** (at the bottom of the section list) shows everything that decides
+which posts reach you and where they land, in three groups:
+
+- **Everything I receive** — channel-wide rules that **keep** or **skip** an incoming post. They apply when a post arrives, so a change affects new posts only.
+- **Per connection** — the same kind of rule set on a single connection (in its connection settings). If you see *Connection filtering is off*, these are ignored until you click **Turn on**.
+- **File automatically** — auto-filing rules that move matching mail into one of your folders.
+
+Click **Edit** or **Add rule** to open the rule builder. Choose **Match any of
+these** or **all of these**, then **Add condition** for each test: body text, a
+pattern, a hashtag, a mention, a category, a language, the sender's name or
+address, or a date the rule runs **Only until**. **Edit as text** shows the same
+rule as an expression, for advanced filters.
+
+Auto-filing runs when the inbox loads and applies to mail that arrives from
+then on. **Run on existing mail** files what you already have too — posts you
+took out of a folder by hand may be filed again.
+
 ## What gets saved for offline
 
 **Opening Inbox is what builds your offline copy.** While it is open, Solidified quietly downloads your messages in the background: first the list of every section and folder, then the messages themselves, starting with the ones you kept — starred and filed. Leave it open for a minute or two on a good connection before you expect to read offline.

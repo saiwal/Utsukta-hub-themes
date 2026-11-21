@@ -76,6 +76,7 @@ Videos your browser can't play directly are converted by your server on the fly 
 
 Shared screenshots and clips are uploaded to your hub, so everyone can see them without access to your Jellyfin.
 
+<!-- now_playing -->
 ## Sharing what you're playing
 
 **Share** (on the player, albums, playlists, films and episodes) opens a new post with the cover and a line like "🎵 Listening to …" — edit it and choose who sees it before posting. Nothing is ever posted without you.

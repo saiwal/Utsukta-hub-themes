@@ -8,7 +8,7 @@ The right sidebar (and a few other regions, like above content, header, footer) 
 
 ## Entering Edit Mode
 
-On any page you own, look for the **pencil icon** in the right sidebar header and click it. Each widget now shows a small toolbar with move, remove, and (for some widgets) settings controls, plus an **Add widget** button at the bottom of the list.
+On any page you own, click the **pencil icon** (**Edit layout**) among the icons at the top of the page (on a phone, in the app drawer). Every widget region gets a dashed outline, and each widget shows a small toolbar with width, move, remove, and (for some widgets) settings controls, plus an **Add widget** button at the bottom of the list. Click the **✓** (**Done editing**) when you're finished.
 
 ![Right sidebar in edit mode with per-widget toolbars and an Add widget button](widgets/edit-mode.png)
 
@@ -16,7 +16,7 @@ Only the owner of a page can edit its widgets - visitors and other users always 
 
 ## Adding a Widget
 
-Click **Add widget** to see every widget available on the current page. Click one to drop it in at the end of the list. Eligible widgets are shown when you click onn **Add widget**.
+Click **Add widget** to see every widget available on the current page. Click one to drop it in at the end of the list. Only widgets that fit on this page and in this region are offered.
 
 ![Add widget picker list](widgets/picker.png)
 
@@ -27,6 +27,10 @@ Click the **✕** on a widget's toolbar to take it off the page. It's not delete
 ## Reordering Widgets
 
 Use the **↑ / ↓** arrows on a widget's toolbar to move it up or down in the stack. The topmost widget renders first.
+
+## Widget Width
+
+Widgets in the regions above and below the page content (header, above content, footer) sit on a 12-column grid. The **Width** menu on a widget's toolbar sets how much of a row it takes: full, three quarters, two thirds, half, a third or a quarter. Narrower widgets sit side by side, so two "half" widgets share a row. Sidebar widgets are always full width.
 
 ## Widgets with Multiple Instances
 
@@ -49,6 +53,9 @@ If you've customized a page, a **Reset to defaults** button appears below the wi
 Every change (add, remove, reorder, or configure) saves immediately - there's no separate save button. Your layout is stored on the server, so it follows you across devices, and if you're viewing your own channel, visitors see the same arrangement you've set up.
 
 <!-- widget_overview -->
+
+Widgets with a ⚙ in edit mode have their own settings: Categories, Tags, Archive, Article Teaser, RSS Feed, HTML Block, Clock, Pomodoro, Weather, Embed, Menu Bar, Menu List, Link List, Event Card, Card Showcase, Shop Item Card, Newspaper Feed, Chatroom Card, Photo Album Strip, Photo Slideshow, Saved Search Posts, Filtered Posts, Messages and Performance. Each one's description below says what you can set.
+
 
 ## Widget overview
 
@@ -136,11 +143,21 @@ Displays a list of addons active on the hub.
 ### Admin Info
 
 Displays information about the administrator of the hub and how they can be contacted.
+<!-- photo_slideshow -->
+
+### Photo Slideshow
+
+Shows your photos one at a time, changing every few seconds. Add it from the picker, as many times as you like.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick an **Album** (or **All albums**) and the **Seconds per photo**.
 <!-- album_strip -->
 
 ### Photo Album Strip
 
 Shows the latest thumbnails from one photo album you pick, in a small grid that links out to the full gallery. Add one per album you want to feature; place several to showcase more than one.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Album** to show.
+
 <!-- albums -->
 
 ### Photos
@@ -156,6 +173,9 @@ Browse the channel's history by date. The widget's **Style** setting picks the l
 - **Calendar** — a month grid with a dot under each day that has a post, plus prev/next month and year controls. Clicking a dotted day filters to that single day.
 
 Clicking the active month or day again clears the date filter.
+
+These settings are under the widget's ⚙ (**Configure**) in edit mode. Each copy of the widget keeps its own.
+
 <!-- article_series -->
 
 ### Article Series
@@ -166,6 +186,19 @@ Lists the channel's article series with an entry count for each. Unlike category
 ### Article Teaser
 
 A single-article preview card showing the title, a short excerpt, and a read-more link. Add one per article you want to highlight.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Article** to feature.
+
+<!-- birthdays -->
+
+### Birthdays
+
+Your connections' birthdays in the next 30 days, soonest first, with "today" marked. It only knows birthdays that people share with you, and hides itself when there are none. Add it from the picker on HQ, Network or Calendar.
+<!-- bookmarked_files -->
+
+### Bookmarked Files
+
+Shortcuts to the files and folders you've bookmarked in your cloud storage. Click one to open it, or **Remove bookmark** to drop it. Only you see this widget.
 <!-- bookmarked_rooms -->
 
 ### Bookmarked Rooms
@@ -181,6 +214,9 @@ Lists the channel's card decks with a count for each, drawn as a small stack. Cl
 ### Card Showcase
 
 A single card, rendered as the real thing rather than a text preview — it flips to its back on hover, or on tap where there's no pointer. Add one per card you want to highlight.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Card** to show.
+
 <!-- categories -->
 
 ### Categories
@@ -191,11 +227,22 @@ The categories used across the channel's posts. Clicking one filters to it; clic
 - **Rainbow colours** — gives every category name its own colour, derived from the name so it stays the same each visit.
 
 In the Notepad this widget is called **Notebooks**, since a note's categories are its notebooks.
+
+These settings are under the widget's ⚙ (**Configure**) in edit mode. Each copy of the widget keeps its own.
+
+<!-- channel_activities -->
+
+### Channel Activity
+
+Your latest articles, cards, webpages, wiki pages, files and photos in one place, one tab per kind. Click an entry to open it, or the tab's heading to open that app. Tabs for apps you haven't installed are hidden.
 <!-- chat_room_card -->
 
 ### Chatroom Card
 
 A single-room showcase card showing the room name and who's currently inside, with a link to join. Add one per room you want to spotlight.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Chatroom** to show.
+
 <!-- chatrooms_list -->
 
 ### Chatrooms
@@ -206,6 +253,9 @@ Lists the channel's chatrooms with how many people are in each, and a dot on any
 ### Clock Card Widget
 
 Shows the current time (and optionally date) for a timezone you choose. Add one per timezone you want to track.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: choose the **Mode**: **Clock** (one **Timezone**), **Countdown** (to a **Target date & time**), or **World Clock** (**Add timezone** for each city, each with its own label). **Label** is optional.
+
 <!-- connections -->
 
 ### Connections
@@ -226,6 +276,13 @@ The channel's default post stream, ordered by date, with a switcher to toggle be
 ### Direct Message Panel
 
 Shows the private (direct) message conversations in your dashboard message feed, separate from the general activity feed and site notices.
+<!-- delivery_health -->
+
+### Delivery Health
+
+How well your recent posts reached other hubs: the share of recent deliveries that arrived (Hubzilla keeps about ten days of delivery reports), and a list of **Failing sites** with how many deliveries to each failed. "No failing sites" means everything got through. The widget stays hidden until there's something to report.
+
+A site that keeps failing is usually down, has closed, or is refusing your hub. People there won't see your posts until it recovers. To check a single post, use **Delivery report** in that post's **⋮** menu.
 <!-- drafts -->
 
 ### Drafts
@@ -236,16 +293,32 @@ Lists saved drafts across post, article, webpage, wiki, and note composers in on
 ### Embed Widget
 
 Embeds an external http(s) page in a sandboxed iframe of a height you set, so the embedded content can't script or navigate the parent page.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: paste the **Embed URL** (an https page or video), and optionally a **Title** and **Height** in pixels.
+
 <!-- event_card -->
 
 ### Event Card
 
 A single-event showcase card with date, time, and location for one upcoming calendar event. Add one per event you want to highlight.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Event** to show.
+
+<!-- file_categories -->
+
+### File Categories
+
+The categories used on your files. Click one to show only the files in the open folder (and its subfolders) that carry it.
 <!-- federation -->
 
 ### Federation
 
 Shows which federation protocol(s) power the hub and links to the underlying project, so visitors can see how the hub connects to the wider network.
+<!-- filter_posts -->
+
+### Filtered Posts
+
+A small list of posts from your stream that match one filter, such as **Starred**, **Following**, **Conversations**, **Direct messages**, **Events**, **Polls** or **RSS feeds**. Add it several times for several filters. In edit mode, the gear sets the **Filter**, what to **Limit to** (everyone, one privacy group, all forums or one forum), how many **Posts shown**, and **Unread only**.
 <!-- filters -->
 
 ### Stream Filters
@@ -261,6 +334,9 @@ Lists the interactive, step-by-step tours available in the app. Click **Start** 
 ### HTML Block Widget
 
 Shows a block of raw HTML you write yourself. Useful for embedding a badge, custom links, or anything else the built-in widgets don't cover.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: give it an optional **Title** and choose the **Content source**: **Custom HTML** (typed into **HTML content**; scripts are removed) or a **Saved block** from Webpages → Blocks.
+
 <!-- backlinks -->
 
 ### Linked From
@@ -271,16 +347,25 @@ Lists the wiki pages, articles, cards, notes and posts that link to the one you'
 ### Link List Widget
 
 A short, hand-curated list of links with labels - handy for a "resources" or "elsewhere" box in your sidebar.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: give it an optional **Title**, then add **Links**: a **Label** and address for each. **Add link** adds a row, and **Remove** deletes one.
+
 <!-- menu_bar -->
 
 ### Menu Bar
 
 Horizontal navigation bar built from one of your saved menus, meant for the top-of-page slot. Submenu items open as click-to-open dropdowns on desktop and collapse into a hamburger menu on narrow screens.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Menu** to show (menus are made under Webpages → Menus), with an optional **Title**.
+
 <!-- menu_tree -->
 
 ### Menu List
 
 Vertical, multi-level menu card built from one of your saved menus, meant for the sidebar. Submenu items expand as an indented accordion.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the **Menu** to show (menus are made under Webpages → Menus), with an optional **Title**.
+
 <!-- my_subscriptions -->
 
 ### My Subscriptions
@@ -296,6 +381,9 @@ Collapsible table-of-contents tree for browsing documentation sections and pages
 ### Newspaper Feed
 
 Displays the channel's posts grouped into category sections, each showing its latest few posts — like a newspaper front page laid out by topic instead of a single chronological list.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: tick the categories to show as **Sections**. They appear in the order you tick them.
+
 <!-- notices_panel -->
 
 ### Notices Panel
@@ -311,6 +399,14 @@ Live feed of your notifications (mentions, likes, comments, connection requests,
 ### Pomodoro Widget
 
 A simple work/break timer for the page owner. Since it's a personal productivity tool rather than page content, it's never shown to visitors.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: set the **Focus minutes** and **Break minutes**.
+
+<!-- places -->
+
+### Places
+
+A map of the channel's posts that have a location attached. Click a marker to open the post. Add it to a channel or profile page from the picker.
 <!-- popular_posts -->
 
 ### Popular Posts
@@ -356,11 +452,19 @@ Shows a channel's most recent posts pulled in from a remote connection, giving v
 ### RSS Feed Widget
 
 Displays recent items from an RSS or Atom feed you configure. Add several copies to follow more than one feed.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: set the **Feed URL** (an RSS or Atom address) and how many **Items to show**.
+
 <!-- saved_searches -->
 
 ### Saved Searches
 
 Lists network stream searches you've saved, so you can re-run a filtered search with one click and remove ones you no longer need.
+<!-- saved_search_posts -->
+
+### Saved Search Posts
+
+The latest posts matching one of your saved searches (save one from the Network page first). Add it several times, one per search. The gear picks the **Saved search**, how many **Posts shown**, and **Unread only**.
 <!-- scheduled_posts -->
 
 ### Scheduled Posts
@@ -381,11 +485,24 @@ Displays the hub's available service classes and their storage, channel, and con
 ### Shop Item Card
 
 A showcase card for a single item from the channel's shop, with an add-to-cart button. Add one per item you want to feature.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: pick the shop **Item** to show.
+
 <!-- shop_subscribers -->
 
 ### Shop Subscribers
 
 For the shop owner only: the number of live subscribers and the ones whose paid period runs out soonest, with a link to My Shop. Visitors never see it. See [Cart](cart).
+<!-- themes_info -->
+
+### Themes Info
+
+Lists the themes installed on this hub.
+<!-- tasks -->
+
+### Tasks
+
+Your to-do list: your channel's tasks plus the to-dos in your CalDAV calendars, which you can switch between with **List**. Type in **Add a task…** to add one. Tick a task to complete it, and **Done** shows the finished ones. **Edit task** sets a **Due date** and **Priority**. Only you see it.
 <!-- tags -->
 
 ### Tags
@@ -394,6 +511,9 @@ The hashtags used across the channel's posts. Clicking one filters to it; clicki
 
 - **Style** — *Cloud* shows pills sized by how often each tag is used. *List* shows rows with counts and usage bars, scrolling inside the widget once there are more than fit.
 - **Rainbow colours** — gives every tag its own colour, derived from the tag name so it stays the same each visit.
+
+These settings are under the widget's ⚙ (**Configure**) in edit mode. Each copy of the widget keeps its own.
+
 <!-- timeline_feed -->
 
 ### Timeline Feed
@@ -420,6 +540,9 @@ channel never see it.
 ### Weather
 
 Shows current conditions for a location you set, including temperature, wind, and a condition icon, in your choice of Celsius or Fahrenheit.
+
+In edit mode, click the widget's ⚙ (**Configure**) to change it: set the **Location** and the **Units** (Celsius or Fahrenheit).
+
 <!-- wiki_list -->
 
 ### Wiki List

@@ -7,9 +7,13 @@ One build pass over a channel's **own** writing produces the whole graph:
 - **Nodes**: articles, cards, webpages (`ITEM_TYPE_WEBPAGE`, not blocks or
   layouts; url from the `system`/`WEBPAGE` page link), notes (`ITEM_TYPE_CUSTOM`), wiki pages and the
   `RECENT_POSTS` (500) newest own top-level wall posts always; older posts only
-  when they link or are linked. Drafts and anything else unpublished
+  when they link or are linked. Anything unpublished
   (`item_unpublished = 1`, except wiki pages, which are always stored that
-  way) are left out entirely. Every query excludes
+  way) is left out — except the owner's drafts (`resource_type = 'draft'`,
+  scope post/article/card/webpage/note/wiki), added as `draft: true` link
+  *sources* that are never indexed, so no `[[Title]]` or permalink resolves to
+  one. `Links::withoutDrafts()` strips them (and any missing node only a draft
+  wrote) everywhere except the owner's own `/spa/links/graph`. Every query excludes
   `verb = 'Add'`: each article/card create or edit stores an empty
   collection-sync `Add` row flagged thread-top, which otherwise shows up as a
   blank item. Wiki pages store
@@ -54,8 +58,11 @@ GET /spa/links/resolve?nick=&title= → { url | null }
 ## Frontend: `src/modules/graph`
 
 - `/graph/:nick`: d3-force on a canvas, with pan/zoom/drag, Fit all and Reset
-  view, type chips (hidden types saved in localStorage `hz-graph-hidden`) and a
-  find-in-graph field. Clicking a dot selects it and opens a details panel
+  view, type chips (hidden types saved in localStorage `hz-graph-hidden-v2`; "Not yet written" hidden until first toggle) and a
+  find-in-graph field. Each type has its own shape (`NodeShape.tsx`, also on
+  the canvas via `Path2D`); published items are filled, drafts hollow, missing
+  titles a dashed ring, behind an owner-only Drafts chip (off by default, `hz-graph-drafts`).
+  Clicking a node selects it and opens a details panel
   (links to / linked from, Open); it never navigates on its own. Labels are
   placed greedily by priority with an overlap test, all of them below
   `SMALL_GRAPH` (40) visible nodes; the focused node's label goes above its dot,

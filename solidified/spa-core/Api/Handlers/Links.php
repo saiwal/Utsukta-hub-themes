@@ -36,9 +36,9 @@ class Links
     {
         // Bumped whenever the node set changes shape (v2: `draft` flag; v3:
         // collection `Add` activities excluded; v4: unlinked recent posts; v5:
-        // wn:/at:/ct: target keys; v7: webpages; v8: no drafts), so
-        // stale graphs drop at once.
-        return 'spa:links:v8:' . $uid;
+        // wn:/at:/ct: target keys; v7: webpages; v8: no drafts; v9: owner-only
+        // draft nodes), so stale graphs drop at once.
+        return 'spa:links:v9:' . $uid;
     }
 
     /**
@@ -80,7 +80,8 @@ class Links
                 if (!self::enabledFor(intval($channel['channel_id']))) {
                     Response::error(404, 'Graph is not enabled for this channel');
                 }
-                $g = $this->visibleGraph($channel);
+                // The owner's drafts ride along; the view's Drafts toggle hides them.
+                $g = $this->visibleGraph($channel, local_channel() === intval($channel['channel_id']));
                 Response::send(['nodes' => $g['nodes'], 'edges' => $g['edges']]);
 
             case 'backlinks':
@@ -209,10 +210,12 @@ class Links
 
     // ── Visibility ───────────────────────────────────────────────────────────
 
-    private function visibleGraph(array $channel): array
+    /** $drafts keeps the owner's draft nodes (graph endpoint only — never backlinks or [[resolve]]). */
+    private function visibleGraph(array $channel, bool $drafts = false): array
     {
         $uid = intval($channel['channel_id']);
         $g   = $this->graph($channel);
+        if (!$drafts) $g = self::withoutDrafts($g);
 
         if (local_channel() !== $uid) {
             $ob    = get_observer_hash();
@@ -258,6 +261,21 @@ class Links
         }
 
         $g['nodes'] = array_map(function ($n) { unset($n['iid']); return $n; }, $g['nodes']);
+        return $g;
+    }
+
+    /** Drop draft nodes, their edges, and any missing [[Title]] only a draft wrote. */
+    public static function withoutDrafts(array $g): array
+    {
+        $drop = [];
+        foreach ($g['nodes'] as $n) {
+            if (!empty($n['draft'])) $drop[$n['id']] = true;
+        }
+        if (!$drop) return $g;
+        $g['edges'] = array_values(array_filter($g['edges'], fn($e) => !isset($drop[$e['source']]) && !isset($drop[$e['target']])));
+        $used = array_flip(array_merge(array_column($g['edges'], 'source'), array_column($g['edges'], 'target')));
+        $g['nodes'] = array_values(array_filter($g['nodes'], fn($n) => empty($n['draft'])
+            && ($n['type'] !== 'missing' || isset($used[$n['id']]))));
         return $g;
     }
 
@@ -384,6 +402,22 @@ class Links
                 OR body LIKE '%/display/%' OR body LIKE '%/item/%' OR body LIKE '%/articles/%'
                 OR body LIKE '%/cards/%' OR body LIKE '%/page/%' OR body LIKE '%/wiki/%')") ?: [] as $p) {
             $post($p);
+        }
+
+        // The owner's drafts: link sources only. Never indexed, so no [[Title]]
+        // or permalink resolves to one; withoutDrafts() strips them for
+        // everything but the owner's own graph. A draft opens where its
+        // module's drafts widget lives.
+        $draftUrl = ['post' => '/hq', 'article' => "/articles/$nick", 'card' => "/cards/$nick",
+            'webpage' => '/webpages', 'note' => '/notepad', 'wiki' => null];
+        foreach (dbq("SELECT id, uuid, title, body, route FROM item WHERE uid = $uid
+                AND resource_type = 'draft' AND item_unpublished = 1 AND item_deleted = 0") ?: [] as $d) {
+            $scope = json_decode((string) $d['route'], true)['scope'] ?? '';
+            $type  = explode(':', is_string($scope) ? $scope : '')[0];
+            if (!array_key_exists($type, $draftUrl)) continue; // dm/chat/event/… drafts aren't graph content
+            $nodes[$d['uuid']] = ['id' => $d['uuid'], 'iid' => intval($d['id']), 'type' => $type,
+                'title' => self::title($d), 'url' => $draftUrl[$type], 'draft' => true,
+                'body' => (string) $d['body'], 'wiki' => null];
         }
 
         // Extract refs.

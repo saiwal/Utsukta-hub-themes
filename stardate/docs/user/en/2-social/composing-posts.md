@@ -10,18 +10,19 @@ Click the text area to open the full composer. Type your post in the text area. 
 
 ### Formatting Toolbar
 
-| Button | What it does | BBCode |
-|--------|-------------|--------|
-| **B** | Bold | `[b]text[/b]` |
-| *I* | Italic | `[i]text[/i]` |
-| U | Underline | `[u]text[/u]` |
-| S | Strikethrough | `[s]text[/s]` |
-| `< >` | Code (inline or block) | `[code]…[/code]` |
-| 🔗 | Insert link | `[url=…]label[/url]` |
-| 🖼 | Insert image URL | `[img]…[/img]` |
-| Spoiler | Collapsible spoiler block | `[spoiler]…[/spoiler]` |
+The toolbar sits under the text. Hover any button to see its name and
+keyboard shortcut.
 
-Select text first, then click a button to wrap the selection. If nothing is selected, a placeholder is inserted.
+- **Text styles**: bold, italic, underline, strikethrough, highlight, and in the full editor text color, font, size, superscript and subscript.
+- **Structure**: headings, lists, quote, code block, horizontal rule, and in the full editor tables and spoilers (a section readers click to open).
+- **Insert**: a link (**Ctrl+K**), an image, video or audio link, and the attachment, equation, diagram, card, drawing and map buttons described below.
+- **More formatting** (the **›** button) shows the less common tools. Click it again for fewer.
+- In the full editor: **Outline** (jump to a heading), **Find and replace** (**Ctrl+F**), **Undo**/**Redo**, and **Clear formatting**.
+
+Select text first, then click a button to format it. If nothing is selected,
+the button applies to what you type next. Type `/` at the start of a line for
+a quick menu of the same tools. Which buttons appear depends on the format
+you're writing in. Plain text has none, for example.
 
 ![Composer toolbar with button labels](composing-posts/toolbar.png)
 
@@ -94,6 +95,63 @@ Click the privacy picker to change the setting. For Custom, a selector opens whe
 
 ![Privacy picker dropdown with options](composing-posts/privacy.png)
 
+## Attachments
+
+- **Attach file from device** (paperclip): uploads a file to your cloud storage and adds it to the post. Images and videos show inline, other files as a download link. You can also drag files onto the composer or paste an image.
+- **Browse existing files and photos**: picks something you've already uploaded.
+- **Capture photo or video**: uses your camera. On a phone, **Use device camera app** opens the phone's own camera instead.
+
+Attached files get the same audience as the post, so people who can see the
+post can open them.
+
+## Math and LaTeX
+
+**Insert LaTeX equation** (Σ) writes a formula in LaTeX, e.g.
+`e^{i\pi} + 1 = 0`. Choose **Inline** (inside a sentence) or **Block
+equation** (on its own line), check the **Preview**, then **Insert**. In posts
+the equation is added as an image, so it shows correctly on every Hubzilla
+theme and other platforms. Turn the button on in **Settings → Features →
+Editor**.
+
+## Embedding Cards and Posts
+
+**Insert a card** picks one of your cards and embeds it in the post as a
+compact preview with a link. Embedding someone else's post works the same
+way: use **Share → Share as post** in that post's menu. Private posts can't be embedded.
+
+## Maps
+
+**Insert map** adds a map: search a **Place** (or **Use my location**), set the
+**Zoom**, and click **Insert**. Readers see an interactive map.
+
+## Post Options
+
+The buttons at the bottom right of the composer:
+
+- **Post** publishes. The 🗑 button (**Discard**) closes the composer and keeps a draft, and the eraser (**Clear composer**) empties it.
+- The **⌃** next to Post (**More options**) opens the extra options for this post:
+  - **Location**: adds a place name, or exact coordinates with **Use browser location** or **Pick on map**.
+  - **Set publish date**: schedules the post. It stays hidden until then (needs the *Delayed Posting* feature).
+  - **Expires**: deletes the post at a date you choose (needs *Content Expiration*).
+  - **Disable comments**: nobody can reply (needs *Disable Comments*).
+  - **Local only (don't deliver)**: the post keeps its audience but isn't sent anywhere. Readers have to visit your channel (turn it on in **Settings → Privacy**).
+  - **Add poll**: adds options people vote on. Set when it **Expires in**, and whether to **Allow multiple answers**.
+  - **Encrypt**: locks the post with a password. Readers need the password (tell them separately) and see your optional **Hint**. To change it later, use **Decrypt to edit**.
+
+Features are switched on in **Settings → Features**. An option you don't see
+probably needs one turned on.
+
+## Direct Messages
+
+The **New message** composer sends a private message to the people you add
+under **To**. Only connections who are allowed to receive private messages
+from you can be added; if someone isn't allowed, the composer tells you before
+anything is sent.
+
+**Add Bcc** sends each Bcc recipient their own separate copy, so they don't see
+each other or the people under To. Direct messages can be scheduled and saved
+as drafts like any other post, and they show up in your **Inbox**.
+
 ## Submitting
 
 Click **Post** (or press the keyboard shortcut configured in Display Settings) to publish. A draft is auto-saved as you type so you won't lose work.
@@ -106,20 +164,42 @@ If you close the composer without posting, the content is saved as a draft. Acce
 
 ## Reacting to Posts
 
-Every post in the stream has action buttons at the bottom:
+Every post has a row of buttons at the bottom:
 
 ![Post action bar with reaction buttons](composing-posts/actions.png)
 
-| Action | Description |
+| Button | What it does |
 |--------|-------------|
-| 👍 Like | Express approval. Click again to unlike. |
-| 👎 Dislike | Express disapproval. Click again to remove. |
-| 🔁 Repeat | Reshare the post to your followers. Click again to un-repeat. |
-| 💬 Comment | Open the comment thread and write a reply. |
-| ⭐ Star | Bookmark the post. Starred posts appear in the Starred filter. |
-| 🗑 Delete | Delete the post (only available on your own posts). |
+| ♥ **Like** / **Dislike** | Reacts to the post. Click again to take it back. The number is how many people reacted. |
+| 🔁 **Repeat** | Shares the post with your followers as it is. To avoid accidents, it needs two taps: the first shows *Tap again to repeat*. |
+| ⭐ **Star** | Marks the post for later. Starred posts appear in the stream's Starred filter and in Inbox → Starred. |
+| 📁 **Save to folder** | Files the post into one of your Inbox folders. |
+| 💬 **Toggle comments** | Shows or hides the replies. |
+| ↩ **Reply** | Opens the reply composer. A crossed-out speech bubble means *Comments are closed*. |
+| **View in context** | Opens the whole conversation this reply belongs to. |
+| **Pending reactions** | On your own posts, if you moderate reactions: likes and comments waiting for your approval. |
+| **Import** | On a post from an RSS feed: saves the full article as a post. |
+| **⋮** | **More actions**. See the post menu below. |
 
-Like and Dislike counts are shown next to each button. Click the count to see a list of who reacted.
+Some buttons only appear where they apply. For example, you can't react
+to a post you only have read access to.
+
+<!-- post_menu -->
+## Post Menu
+
+The **⋮** (**More actions**) button on a post:
+
+- **Share**: **Copy** the post's link, **Share as post** (quote it in a new post of yours), **Email** it, or use your device's **Share…** sheet. For a restricted post you can add **Guest access**, so the link works for someone without an account.
+- **Follow** / **Unfollow**: get notified about new replies to this conversation, or stop.
+- **Statistics**: who liked, disliked and repeated the post.
+- **View source**: the post's raw text (BBCode or Markdown) and its technical details.
+- **Original post**: opens the post on the hub it came from.
+- **Refresh**: reloads the post and its replies.
+- **Delivery report**: for your own posts, which hubs received it and which failed.
+- **Add to calendar**: on an event, copies it into your calendar.
+- **Pin to top** / **Unpin**: keeps one of your posts at the top of your channel.
+- **Edit**: changes your post. The edit is sent to everyone who received it.
+- **Delete**: removes the post (click twice to confirm). Deleting your own post also asks the other hubs to delete their copies.
 
 ## Commenting
 
