@@ -65,9 +65,8 @@ render once and freeze. The host publishes its own instances instead:
 
 ```ts
 window.__spa = {
-  solid,          // solid-js
-  solidStore,     // solid-js/store
-  solidWeb,       // solid-js/web
+  solid,          // solid-js (Solid 2: stores live here too)
+  solidWeb,       // @solidjs/web
   registerModule, // @utsukta/spa-core/module-registry
   getLazy,        //   "
   useI18n,        // @utsukta/spa-core/i18n
@@ -127,7 +126,7 @@ exist in the CSS. Stick to classes used elsewhere in the SPA, or ship a
 
 ## Writing an addon with JSX
 
-Not yet packaged. The shape is a normal Vite + `vite-plugin-solid` build in
+Not yet packaged. The shape is a normal Vite + `@solidjs/vite-plugin` build in
 `lib` mode, with everything the host provides marked external and resolved
 against `window.__spa`:
 
@@ -137,7 +136,7 @@ build: {
   lib: { entry: "src/entry.tsx", formats: ["es"], fileName: () => "entry.js" },
   outDir: "spa",
   rollupOptions: {
-    external: ["solid-js", "solid-js/web", "solid-js/store"],
+    external: ["solid-js", "@solidjs/web"],
   },
 },
 ```

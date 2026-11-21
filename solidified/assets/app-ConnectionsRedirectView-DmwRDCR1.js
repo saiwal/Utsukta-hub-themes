@@ -1,0 +1,1 @@
+import{_ as e,g as t}from"./app-routing-D1iFzXRQ.js";import{it as n}from"./app-solid-CrEvjDmY.js";import{t as r}from"./app-notifyLink-LpMr70PP.js";function i(){let i=t(),a=r(`/connections`+n(()=>i.hash));return e()(a?`/directory/connections?open=${a}`:`/directory/connections`,{replace:!0}),null}export{i as default};

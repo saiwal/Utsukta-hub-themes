@@ -95,11 +95,14 @@ Returns the nick to use for API calls:
 
 ## Module-Level Stores
 
-Each module typically has its own `store/store.ts` using `createResource` for data fetching:
+Each module typically has its own `store/store.ts`. Stores that fetch at module level use `createResource` from `@utsukta/spa-core/lib/resource` — a signal-based port of Solid 1's, since Solid 2 removed it:
 
 ```typescript
 // Example pattern — module-level stores stay on createResource because they
-// have no component context. Inside components, prefer createQueryResource.
+// have no component context. Inside components, prefer createQueryResource
+// or createAsyncResource (see data-fetching.md).
+import { createResource } from "@utsukta/spa-core/lib/resource";
+
 const [posts, { refetch }] = createResource(
   () => `/spa/network?start=${offset()}`,
   async (url) => {
@@ -109,5 +112,7 @@ const [posts, { refetch }] = createResource(
   },
 );
 ```
+
+Store functions that components call from effects (`loadCalendar`, `loadWikis`, `loadWebpages`) read their "already loaded?" guards inside `untrack`: those reads are checks, not dependencies. Imperative state that is written and read back in one step uses `createSyncSignal` (`lib/syncSignal.ts`), because Solid 2 batches writes.
 
 Keep module stores inside the module folder. Do not share mutable state across modules via global signals unless it truly belongs in the shared layer.

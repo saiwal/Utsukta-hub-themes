@@ -95,11 +95,14 @@ API कॉल के लिए उपयोग होने वाला nick �
 
 ## मॉड्यूल-लेवल स्टोर
 
-हर मॉड्यूल में आमतौर पर डेटा फ़ेचिंग के लिए `createResource` उपयोग करने वाला `store/store.ts` होता है:
+हर मॉड्यूल में आमतौर पर एक `store/store.ts` होता है। मॉड्यूल-लेवल पर फ़ेच करने वाले स्टोर `@utsukta/spa-core/lib/resource` का `createResource` उपयोग करते हैं — Solid 2 ने इसे हटा दिया, यह उसका सिग्नल-आधारित पोर्ट है:
 
 ```typescript
 // उदाहरण पैटर्न — मॉड्यूल-लेवल स्टोर createResource पर रहते हैं क्योंकि उनके पास
-// कंपोनेंट कॉन्टेक्स्ट नहीं होता। कंपोनेंट के अंदर createQueryResource पसंद करें।
+// कंपोनेंट कॉन्टेक्स्ट नहीं होता। कंपोनेंट के अंदर createQueryResource या
+// createAsyncResource पसंद करें (देखें data-fetching.md)।
+import { createResource } from "@utsukta/spa-core/lib/resource";
+
 const [posts, { refetch }] = createResource(
   () => `/spa/network?start=${offset()}`,
   async (url) => {

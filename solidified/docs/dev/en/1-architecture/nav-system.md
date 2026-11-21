@@ -247,8 +247,8 @@ own way. Tabs are navigation, not actions — they stay in the header.
   floating slot. Either way it calls `form.requestSubmit()`.
 - `Layout.tsx` calls `setMobileNavAvailable(!hidesNavChrome())`: chrome modes
   that hide the nav (`focus`, `compact`) keep the desktop rendering.
-- All registries write in `onMount` (`useRegistration`): the router renders
-  the next page inside a transition, and a write there could resurrect the
-  outgoing page's entries.
+- All registries write in `onSettled` (`useRegistration`), which returns the
+  removal as its cleanup: the router renders the next page inside a
+  transition, and a write there could resurrect the outgoing page's entries.
 - Adding actions to a new module = one `<PageActions actions={…} />` in its
   header; no registry entry needed.

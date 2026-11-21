@@ -1,0 +1,1 @@
+import{u as e}from"./app-solid-CrEvjDmY.js";import{_ as t,y as n}from"./app-routing-D1iFzXRQ.js";import{d as r}from"./app-modal-host-Dn7dK2yJ.js";function i(){let i=n(),a=t();return e(()=>i.uuid,e=>{e&&(r(e),a(`/hq`,{replace:!0}))}),null}export{i as default};

@@ -13,7 +13,7 @@ File: `packages/spa-core/src/lib/query-client.ts` — a single shared `QueryClie
 | Option | Value | Meaning |
 |---|---|---|
 | `staleTime` | 60 s | Data younger than this is served from cache with **no network request**. Older data still renders instantly but triggers a background refetch on next use. |
-| `gcTime` | 30 min | Unused cache entries are garbage-collected after this. Returning later means a cold fetch. |
+| `gcTime` | 5 min | Unused cache entries are garbage-collected after this — short for low-RAM devices; `offline-fallback.ts` (IndexedDB) still covers back-navigation. Returning later means a cold fetch. |
 | `retry` | 2 | Failed queries retry twice with exponential backoff before erroring. |
 | `refetchOnWindowFocus` | true | Stale data refetches when the tab regains focus. |
 | `refetchOnReconnect` | true | Stale data refetches when the network comes back. |
@@ -56,7 +56,51 @@ Semantics (mirroring `createResource`):
 
 **Key naming:** kebab-case, unique per data shape. Reusing a name across call sites is deliberate cache sharing — only do it when the fetcher and result shape are identical (e.g. `files-folder` is shared by `FilesView` and the editor's `FilesPicker`).
 
-`createQueryResource` needs component context (it calls `useQuery` internally). New code may also use `useQuery` from `@tanstack/solid-query` directly — pass options as a function: `useQuery(() => ({ queryKey: [...], queryFn: ... }))`.
+`createQueryResource` needs component context (it calls `useQuery` internally). New code may also use `useQuery` directly — pass options as a function: `useQuery(() => ({ queryKey: [...], queryFn: ... }))` — but import it from `@utsukta/spa-core/lib/query`, **never** `@tanstack/solid-query`. In solid-query 6 `query.data` is a suspending async read; the `lib/query.ts` wrapper gives it the v5 behaviour this section describes (undefined until it lands, never suspends, errors stay on `.error`) by reading the cache keyed off the status fields. That matters beyond looks: Router 2 holds a navigation until every pending async read it touches settles, so a raw `data` read on a disabled or churning query freezes route changes.
+
+A `queryFn` takes its inputs from `queryKey`, not from signals: it runs inside the query's effect, where a signal read is an untracked read (`STRICT_READ_UNTRACKED` in the dev runtime).
+
+## Reading Data Natively: createAsyncResource
+
+File: `packages/spa-core/src/lib/createAsyncResource.ts`
+
+The Solid 2 way: the same call shape and cache keys as `createQueryResource`, but `data()` is an async read that suspends until the data lands. Render it inside `<AsyncBoundary>` (`src/shared/views/AsyncBoundary.tsx`, an `<Errored>` + `<Loading>` pair):
+
+```tsx
+const [albums, { refetch, pending, peek }] =
+  createAsyncResource("photo-albums", () => props.nick, fetchAlbums);
+
+<AsyncBoundary fallback={<Skeleton />}>
+  <div classList={{ "opacity-60": pending() }}>
+    <For each={albums()}>{(a) => <AlbumCard album={a} />}</For>
+  </div>
+</AsyncBoundary>
+```
+
+- The first load shows `fallback`. A later source change or refetch keeps the old content on screen; `pending()` is true meanwhile, for dimming.
+- An error shows an `ErrorState` with a retry. `error` replaces it (JSX, or `(err) => JSX` — a widget's own "unavailable" line); `quiet` hides the boundary on error.
+- A `null`/`undefined`/`false` source means no data: `data()` is `undefined` and never suspends. (A *disabled* native query would stay pending forever, hiding its boundary and holding navigations.)
+- `refetch()` invalidates the key and resolves once the new data has landed. `peek()` is a non-suspending cache read, for a count in a widget header or footer that sits outside the boundary.
+- The raw hook is `useAsyncQuery` (`lib/query.ts`); route views using it pin their params — `createMemo((prev) => params.x || prev)` — so the leaving view's key doesn't change mid-navigation.
+
+**When not to use it:** data read in effects, event handlers or form seeding (a read throws while pending), and data passed as a prop that a child reads at setup (`PENDING_ASYNC_UNTRACKED_READ`). Those stay on `createQueryResource`.
+
+### Optimistic writes
+
+Native reads pair with Solid 2 actions. `createOptimistic` (or `createOptimisticStore` for lists edited in place) derives a view from the query; an `action` writes to the view at once, awaits the request, and ends by refetching. If the request throws, the view drops back to the confirmed data. `TasksWidget.tsx` is the reference:
+
+```typescript
+const [view, setView] = createOptimistic((): Task[] => tasks() ?? []);
+
+const run = action(function* (show: (list: Task[]) => Task[], fn: () => Promise<unknown>) {
+  setView(show);                       // shown at once
+  try { yield fn(); }                  // the request
+  catch { toast.error(...); return; }  // rolled back
+  yield refetch();                     // confirmed
+});
+```
+
+Writes are batched in Solid 2: inside an action, build the new state yourself instead of reading derived UI back right after a write. Other references: `DraftsWidgetBase.tsx` (delete), `CardView.tsx` (reactions, comments), `KanbanBoard.tsx` (drag moves).
 
 ## Writing Data: Mutations
 
@@ -87,7 +131,7 @@ const save = useMutation(() => ({
 
 ## What NOT to Convert
 
-Some code intentionally stays on plain `createResource`:
+Some code intentionally stays on `createResource` — Solid 2 dropped it, so these import the signal-based port in `packages/spa-core/src/lib/resource.ts` (`.loading`/`.error`/`.latest`, `refetch`, `mutate`; never suspends):
 
 | Code | Why |
 |---|---|

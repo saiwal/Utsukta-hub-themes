@@ -1,0 +1,1 @@
+import{_ as e}from"./app-solid-CrEvjDmY.js";function t(t){let n=t,[r,i]=e(0);return[()=>(r(),n),e=>{let t=typeof e==`function`?e(n):e;return Object.is(t,n)||(n=t,i(e=>e+1)),n}]}export{t};

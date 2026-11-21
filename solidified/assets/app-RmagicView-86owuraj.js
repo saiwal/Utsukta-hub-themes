@@ -1,0 +1,1 @@
+import{_ as e}from"./app-routing-D1iFzXRQ.js";function t(){return e()(`/login`,{replace:!0}),null}export{t as default};

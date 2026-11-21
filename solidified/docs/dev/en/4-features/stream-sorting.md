@@ -356,7 +356,7 @@ The orders are explained for end users under **Sort Order** in
 controversial rankings behave) and `src/docs/user/en/channel.md` (the five a
 wall offers, and why the other two are missing).
 
-`SortSelect` is `use:helpable`, so those sections open in the help overlay when
+`SortSelect` carries a `helpable` ref, so those sections open in the help overlay when
 a user clicks the control in help mode. The target defaults to
 `network.sort_order`; channel passes `help="channel.sort_order"`. Both headings
 carry a `<!-- sort_order -->` anchor comment so they keep resolving once the

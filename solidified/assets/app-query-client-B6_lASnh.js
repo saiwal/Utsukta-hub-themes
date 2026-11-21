@@ -1,0 +1,1 @@
+import{i as e}from"./app-query-DyrKJMZf.js";var t=new e({defaultOptions:{queries:{staleTime:6e4,gcTime:3e5,retry:(e,t)=>!t.redirect&&e<2,refetchOnWindowFocus:!0,refetchOnReconnect:!0,networkMode:`offlineFirst`}}}),n=e=>t.invalidateQueries({queryKey:e});export{t as n,n as t};

@@ -57,8 +57,8 @@ const ModuleGuard: ParentComponent<{ moduleId: string }> = (props) => {
     isModuleActive(props.moduleId, installedApps(), disabledFrontendModules()),
   );
 
-  createEffect(() => {
-    if (!active()) navigate("/", { replace: true });
+  createEffect(active, (on) => {
+    if (!on) navigate("/", { replace: true });
   });
 
   return <Show when={active()}>{props.children}</Show>;

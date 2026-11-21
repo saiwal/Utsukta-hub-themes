@@ -8,15 +8,15 @@
 
 | Layer | Technology |
 |-------|-----------|
-| UI framework | Solid.js v1.9 |
-| Routing | @solidjs/router v1 |
-| Data fetching | @tanstack/solid-query v5, @tanstack/solid-virtual v3 |
+| UI framework | Solid.js v2 (`solid-js` + `@solidjs/web`) |
+| Routing | @solidjs/router v2 |
+| Data fetching | @tanstack/solid-query v6 (rc), read through `lib/query.ts` |
 | Styling | Tailwind CSS v4 |
-| Build | Vite v8 + vite-plugin-solid |
+| Build | Vite v8 + @solidjs/vite-plugin |
 | i18n | @solid-primitives/i18n (lazy-loaded per-locale dictionaries) |
 | Markup | BBCode → HTML (bbcodeToHtml), DOMPurify sanitisation, marked (Markdown), turndown (HTML → BBCode) |
 | Icons | solid-icons (Iconify-based) |
-| Animations | solid-motionone |
+| Animations | `lib/motion-presets.ts` (Web Animations API) |
 | Math | KaTeX (LaTeX rendering in the composer) |
 | Media | plyr (video/audio player), photoswipe (image lightbox), filerobot-image-editor (in-browser image editing) |
 | Crypto | libsodium-wrappers (end-to-end encrypted DMs) |

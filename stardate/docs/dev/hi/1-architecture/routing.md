@@ -49,8 +49,8 @@ const ModuleGuard: ParentComponent<{ moduleId: string }> = (props) => {
   const navigate = useNavigate();
   const active = createMemo(() => isModuleActive(props.moduleId, installedApps()));
 
-  createEffect(() => {
-    if (!active()) navigate("/", { replace: true });
+  createEffect(active, (on) => {
+    if (!on) navigate("/", { replace: true });
   });
 
   return <Show when={active()}>{props.children}</Show>;

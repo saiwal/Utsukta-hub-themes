@@ -1,0 +1,1 @@
+import{_ as e,u as t}from"./app-solid-CrEvjDmY.js";import{a as n,r}from"./app-hydrateLatex-DPkV5qEL.js";function i(i){let[a,o]=e();return t(()=>[i(),a()],([,e])=>{e&&(r(e),n(e))}),e=>{o(()=>e)}}export{i as t};

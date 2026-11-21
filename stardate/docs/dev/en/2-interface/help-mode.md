@@ -28,7 +28,7 @@ export function useHelpMode() {
 
 ## Marking an Element Helpable
 
-The `use:helpable` directive (`packages/spa-core/src/lib/helpable.ts`) wires an element
+The `helpable` ref factory (`packages/spa-core/src/lib/helpable.ts`) wires an element
 up to help mode: while help mode is armed, hovering the element outlines it
 and hovering shows a "help" cursor; clicking it calls `pick(target)` instead
 of the element's normal click behavior (stopped via `preventDefault` /
@@ -36,13 +36,14 @@ of the element's normal click behavior (stopped via `preventDefault` /
 
 ```tsx
 import { helpable } from "@utsukta/spa-core/lib/helpable";
-// Solid strips unused imports for JSX-only directives — this keeps it live:
-void helpable;
 
-<button use:helpable={"channel.connections_widget"}>...</button>
+<button ref={helpable(() => "channel.connections_widget")}>...</button>
+// with another ref too: ref={[myRef, helpable(() => target())]}
 ```
 
-The directive accessor is any string in `"<module>.<section>"` form (section
+Solid 2 has no `use:` directives: a ref directive is a factory called during
+render (where its setup and cleanup run) that returns the element callback.
+The target accessor returns any string in `"<module>.<section>"` form (section
 optional). It's applied throughout the app — nav items, widget headers, and
 composer buttons (`NavUtilities.tsx`, `WidgetArrangementEditor.tsx`,
 `layout/CoverCard.tsx`, `Slot.tsx`, `PostComposer.tsx`, `DMComposer.tsx`, and others).
@@ -100,7 +101,7 @@ clears both `helpMode` and `helpTarget`.
 ## Adding Help to a New Widget or Nav Item
 
 Nothing beyond setting `helpTarget` (or relying on the default) and wrapping
-the relevant element with `use:helpable={target}` is required — there's no
+the relevant element with `ref={helpable(() => target)}` is required — there's no
 central registry to update. Make sure the target's module doc
 (`src/docs/user/en/<module>.md`) actually has a heading matching the
 target's section, or the modal falls back to showing the whole document. If

@@ -8,14 +8,15 @@
 
 | लेयर | टेक्नोलॉजी |
 |------|-----------|
-| UI फ्रेमवर्क | Solid.js v1.9 |
-| रूटिंग | @solidjs/router v1 |
+| UI फ्रेमवर्क | Solid.js v2 (`solid-js` + `@solidjs/web`) |
+| रूटिंग | @solidjs/router v2 |
+| डेटा फ़ेचिंग | @tanstack/solid-query v6 (rc), `lib/query.ts` के ज़रिए |
 | स्टाइलिंग | Tailwind CSS v4 |
-| बिल्ड | Vite + vite-plugin-solid |
+| बिल्ड | Vite + @solidjs/vite-plugin |
 | i18n | @solid-primitives/i18n |
 | मार्कअप | BBCode → HTML (bbcodeToHtml), DOMPurify सैनिटाइज़ेशन |
 | आइकन | solid-icons (Iconify-आधारित) |
-| एनिमेशन | solid-motionone |
+| एनिमेशन | `lib/motion-presets.ts` (Web Animations API) |
 | बैकएंड | PHP 8 (Hubzilla थीम के अंदर) |
 
 ## प्रोजेक्ट संरचना

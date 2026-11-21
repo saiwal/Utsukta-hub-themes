@@ -1,0 +1,1 @@
+import{_ as e,y as t}from"./app-routing-D1iFzXRQ.js";import{M as n}from"./app-solid-CrEvjDmY.js";function r(){let r=t(),i=e();return n(()=>{i(`/wiki/${r.nick}/${r.wikiName}/Home`,{replace:!0})}),null}export{r as default};

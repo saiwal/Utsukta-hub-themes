@@ -1,0 +1,1 @@
+import{c as e,r as t}from"./app-solid-CrEvjDmY.js";var n=n=>r=>e(t,{get children(){return e(n,r)}});export{n as t};

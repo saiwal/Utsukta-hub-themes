@@ -224,11 +224,12 @@ needed only two changes to support this:
   template is used by more than one page (`templateUsageCount(id) > 1`), naming the template and
   how many pages share it (`widgets.template_shared_notice`). This needs
   `useTemplateUsage()` populated, which — unlike a template's own
-  name/entries — isn't part of the boot payload (see below), so `Layout.tsx`
-  fires `loadTemplates()` once when edit mode starts on a templated page:
+  name/entries — isn't part of the boot payload (see below), so
+  `useLayoutChrome.ts` fires `loadTemplates()` once when edit mode starts on a
+  templated page:
   ```typescript
-  createEffect(() => {
-    if (pageTemplateId() && editingWidgets()) void loadTemplates();
+  createEffect(() => !!pageTemplateId() && editingWidgets(), (need) => {
+    if (need) void loadTemplates();
   });
   ```
 
@@ -260,7 +261,7 @@ the *currently selected* template's widgets, live, entirely for free:
 ```typescript
 // WebpageComposer.tsx
 const [layoutTemplate, setLayoutTemplate] = createSignal(props.initial?.layout_template ?? "");
-createEffect(() => setCurrentPageTemplateId(layoutTemplate() || null));
+createEffect(() => layoutTemplate() || null, (id) => { setCurrentPageTemplateId(id); });
 onCleanup(() => setCurrentPageTemplateId(null));
 ```
 
@@ -307,9 +308,8 @@ binding and set `select.value` imperatively inside a plain `createEffect`
 list and the assigned id so it force-syncs on every relevant change:
 ```typescript
 let selectRef: HTMLSelectElement | undefined;
-createEffect(() => {
-  templateList(); // track — re-sync once the matching <option> exists
-  const val = layoutTemplate();
+// templateList tracked too — re-sync once the matching <option> exists
+createEffect(() => [templateList(), layoutTemplate()] as const, ([, val]) => {
   if (selectRef && selectRef.value !== val) selectRef.value = val;
 });
 // <select ref={selectRef} onChange={...}> — no `value` prop
