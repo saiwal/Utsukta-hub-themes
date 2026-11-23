@@ -16,7 +16,7 @@ Sections run down the left on desktop, and appear as a list you tap into on mobi
 
 Messages are grouped by age (Just now, Today, Yesterday, This week, Older), and unread ones are highlighted with a count of unread replies. Click any message to open the full thread. Scrolling to the bottom loads more.
 
-The search box filters by author. It needs a connection — searching runs on the server, not on your saved copy.
+To filter, use the **Inbox filters** panel in the right sidebar (the panel button on mobile). It works like the network's: *Show* flags (Unread, Mentions me, Following, Has attachment) each narrow the list, *Post type* matches any of Events and Polls, *From* is one connection, group or forum at a time, and *Narrow down* adds tag, language and dates. Its search box also takes typed operators — `from:alice`, `is:liked`, `in:"folder 1"`, `after:2026-01-01`. Filtering needs a connection — it runs on the server, not on your saved copy.
 
 ## Message Rules
 
@@ -53,7 +53,7 @@ Elsewhere in Solidified — HQ and your Network stream — nothing is downloaded
 
 ## Reading offline
 
-When you lose connection, an **Offline** badge appears next to the search box and the message lists keep working from your saved copy.
+When you lose connection, an **Offline** badge appears in the toolbar above the list and the message lists keep working from your saved copy.
 
 What you can do offline:
 

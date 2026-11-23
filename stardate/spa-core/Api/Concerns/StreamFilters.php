@@ -173,18 +173,19 @@ class StreamFilters
                 dbesc(protect_sprintf('%' . $search . '%'))
             );
         }
+        // Comma-separated values are alternatives (Events + Polls = either):
+        // filters in one group OR, groups AND. ".X" names an object type
+        // created by the post, a bare name a verb.
         if ($verb) {
-            if (str_starts_with($verb, '.')) {
-                $sql_extra .= sprintf(
-                    " AND $a.obj_type = '%s' AND $a.verb IN ('Create','Update','Invite') ",
-                    dbesc(protect_sprintf(substr($verb, 1)))
-                );
-            } else {
-                $sql_extra .= sprintf(
-                    " AND $a.verb = '%s' ",
-                    dbesc(protect_sprintf($verb))
-                );
+            $types = $verbs = [];
+            foreach (array_filter(array_map('trim', explode(',', $verb))) as $v) {
+                if (str_starts_with($v, '.')) $types[] = "'" . dbesc(protect_sprintf(substr($v, 1))) . "'";
+                else $verbs[] = "'" . dbesc(protect_sprintf($v)) . "'";
             }
+            $or = [];
+            if ($types) $or[] = "($a.obj_type IN (" . implode(',', $types) . ") AND $a.verb IN ('Create','Update','Invite'))";
+            if ($verbs) $or[] = "$a.verb IN (" . implode(',', $verbs) . ")";
+            if ($or) $sql_extra .= ' AND (' . implode(' OR ', $or) . ') ';
         }
         if ($file) {
             $sql_extra .= term_query($a, $file, TERM_FILE);
@@ -216,10 +217,13 @@ class StreamFilters
             ['cid', 'star', 'conv', 'file', 'verb', 'cat', 'search'],
             $set
         );
-        if (!$dismiss_privacy_filter) {
-            $sql_extra .= $dm
-                ? " AND $a.item_private = 2 "
-                : " AND $a.item_private IN (0, 1) ";
+        // dm=1 is a filter the user picked, so it always applies; only the
+        // default "no DMs in the stream" fence steps aside for the filters
+        // above (dm + star once listed every starred post, public included).
+        if ($dm) {
+            $sql_extra .= " AND $a.item_private = 2 ";
+        } elseif (!$dismiss_privacy_filter) {
+            $sql_extra .= " AND $a.item_private IN (0, 1) ";
         }
 
         // Conversation (mentions + authored)

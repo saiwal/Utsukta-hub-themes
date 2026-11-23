@@ -89,17 +89,18 @@ Hot has no time range because its freshness bonus already is one.
 
 ## Quick Filter Toggles
 
-These icon buttons are always visible in the filter bar. They can be combined freely.
+The **Filters** panel in the right sidebar groups its filters by how they
+combine. Each group's heading says so on the right:
 
-| Button | What it shows |
-|--------|--------------|
-| ★ Star | Only your starred posts |
-| 🔔 Following | Posts in threads you are following |
-| 👤 Conversations | Threads where you have commented, liked, or reacted |
-| ✉ DMs | Direct messages only |
-| 📅 Events | Event posts only |
+| Group | Filters | How they combine |
+|-------|---------|------------------|
+| **Show** | ★ Starred, 🔔 Following, 👤 Conversations, ✉ Direct messages | *Match all* — each one narrows the stream further |
+| **Post type** | 📅 Events, 📊 Polls | *Any of* — both on shows events **and** polls |
+| **From** | a connection, a privacy group, a forum (or all forums), RSS feeds | *One at a time* — picking one replaces the other |
+| **Narrow down** | folder, tag, language, date range, closeness | *Match all* |
 
-Click a toggle again to turn it off. An active toggle is highlighted in accent colour.
+So **Direct messages + Starred** shows your starred DMs, and **Events + Polls**
+shows both kinds. Click a filter again to turn it off.
 
 ![Filter bar with a couple of toggles active](network/filters-active.png)
 
