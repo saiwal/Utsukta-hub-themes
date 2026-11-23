@@ -185,7 +185,7 @@ follow you to any device you log in on.
 - **Corner roundness**: how rounded cards, buttons and panels are.
 - **Background**: a preset image or pattern, or a **Custom URL**. **Clear** removes it.
 - **Widget style**: how sidebar and page widgets are framed (card, section, rail, fold and more). Visitors to your pages see your choice.
-- **Translucent surfaces**: lets your background show through cards and sidebars. The blur can slow scrolling on low-end phones.
+- **Surfaces**: how cards, panels and sidebars sit over your background image. *Solid* (the default) hides it, *See-through* lets it show faintly through a tint at no performance cost, and *Frosted glass* blurs it. Blur is heavy on slower devices, so low-end phones get See-through instead.
 - **Theme**: the classic Hubzilla server theme. It needs a page reload.
 
 **Reading**

@@ -34,7 +34,7 @@ final class HubDefaults
         'post_mode'     => ['modal', 'dock', 'page'],
         'thread_mode'   => ['threaded', 'flat'],
         'widget_shell'  => ['card', 'section', 'banded', 'rail', 'glass', 'legend', 'tab', 'compact', 'fold'],
-        'glass_ui'      => ['0', '1'],
+        'glass_ui'      => ['0', '1', '2'], // solid, frosted, see-through
     ];
 
     public const BUILTIN = [

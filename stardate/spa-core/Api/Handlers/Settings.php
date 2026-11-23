@@ -1084,7 +1084,7 @@ class Settings
             set_pconfig($uid, 'spa', 'widget_shell', $data['widget_shell']);
 
         if (isset($data['glass_ui']))
-            set_pconfig($uid, 'spa', 'glass_ui', intval($data['glass_ui']) ? '1' : '0');
+            set_pconfig($uid, 'spa', 'glass_ui', HubDefaults::clean('glass_ui', (string) intval($data['glass_ui'])) ?? '0');
 
         if (isset($data['comment_order']) && in_array($data['comment_order'], ['oldest_first', 'newest_first'], true))
             set_pconfig($uid, 'spa', 'comment_order', $data['comment_order']);
