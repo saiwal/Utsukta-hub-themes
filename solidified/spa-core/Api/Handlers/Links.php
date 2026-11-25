@@ -15,6 +15,8 @@ use Zotlabs\Lib\Cache;
  * recent top-level posts, and any older post that links or is linked. Edges come from [[wikilinks]]
  * and internal permalinks (/display, /item, /articles, /cards, /page, /wiki) in the
  * body. An unresolved [[Title]] becomes a `missing` node, as in Obsidian.
+ * Hashtags and categories are hub nodes (`tag`/`category`), joined by
+ * `kind: 'tag'` edges from each item that carries them.
  *
  * The whole graph is built in one pass and cached per channel; every endpoint
  * slices it, so the widget, the map and [[link]] resolution can't disagree.
@@ -31,14 +33,17 @@ class Links
     // renderer (WebGL) or server-side layout.
     private const RECENT_POSTS = 500;
 
+    /** Node types that exist only because some item points at them. */
+    private const SOURCED = ['missing', 'tag', 'category'];
+
     /** Router drops this on every SPA write by the channel, so own edits show at once. */
     public static function cacheKey(int $uid): string
     {
         // Bumped whenever the node set changes shape (v2: `draft` flag; v3:
         // collection `Add` activities excluded; v4: unlinked recent posts; v5:
         // wn:/at:/ct: target keys; v7: webpages; v8: no drafts; v9: owner-only
-        // draft nodes), so stale graphs drop at once.
-        return 'spa:links:v9:' . $uid;
+        // draft nodes; v10: tag/category nodes), so stale graphs drop at once.
+        return 'spa:links:v10:' . $uid;
     }
 
     /**
@@ -251,8 +256,8 @@ class Links
             $edges = [];
             foreach ($g['edges'] as $e) {
                 if (!isset($keep[$e['source']])) continue;
-                // A missing target is only a title written in a visible source.
-                if (str_starts_with($e['target'], 'missing:')) $keep[$e['target']] = true;
+                // A missing title, tag or category exists only through a visible source.
+                if (preg_match('/^(missing|tag|cat):/', $e['target'])) $keep[$e['target']] = true;
                 if (isset($keep[$e['target']])) $edges[] = $e;
             }
             $g['nodes'] = array_values(array_filter($g['nodes'], fn($n) => isset($keep[$n['id']])));
@@ -264,7 +269,7 @@ class Links
         return $g;
     }
 
-    /** Drop draft nodes, their edges, and any missing [[Title]] only a draft wrote. */
+    /** Drop draft nodes, their edges, and any missing [[Title]], tag or category only a draft used. */
     public static function withoutDrafts(array $g): array
     {
         $drop = [];
@@ -275,7 +280,7 @@ class Links
         $g['edges'] = array_values(array_filter($g['edges'], fn($e) => !isset($drop[$e['source']]) && !isset($drop[$e['target']])));
         $used = array_flip(array_merge(array_column($g['edges'], 'source'), array_column($g['edges'], 'target')));
         $g['nodes'] = array_values(array_filter($g['nodes'], fn($n) => empty($n['draft'])
-            && ($n['type'] !== 'missing' || isset($used[$n['id']]))));
+            && (!in_array($n['type'], self::SOURCED, true) || isset($used[$n['id']]))));
         return $g;
     }
 
@@ -457,6 +462,32 @@ class Links
                 }
                 if ($tgt === null || $tgt === $src) continue;
                 $edges["$src $tgt"] = ['source' => $src, 'target' => $tgt];
+            }
+        }
+
+        // Hashtags and categories: one hub node per term, an item → term edge
+        // per use (kind 'tag'), never pairwise item ↔ item — a tag on 100 posts
+        // is 100 edges, not 4950. Never indexed, so no [[Title]] or backlink
+        // ever reaches one. The view hides terms with fewer than two items.
+        $byIid = [];
+        foreach ($nodes as $id => $n) {
+            if ($n['iid'] > 0) $byIid[$n['iid']] = $id;
+        }
+        if ($byIid) {
+            $terms = dbq("SELECT oid, ttype, term FROM term WHERE uid = $uid AND otype = " . TERM_OBJ_POST
+                . " AND ttype IN (" . TERM_HASHTAG . ',' . TERM_COMMUNITYTAG . ',' . TERM_CATEGORY . ")
+                  AND oid IN (" . implode(',', array_keys($byIid)) . ")") ?: [];
+            foreach ($terms as $t) {
+                $name = trim((string) $t['term']);
+                $src  = $byIid[intval($t['oid'])] ?? null;
+                if ($name === '' || $src === null) continue;
+                $cat = intval($t['ttype']) === TERM_CATEGORY;
+                $tgt = ($cat ? 'cat:' : 'tag:') . mb_strtolower($name);
+                $nodes[$tgt] ??= ['id' => $tgt, 'iid' => 0, 'type' => $cat ? 'category' : 'tag',
+                    'title' => $cat ? $name : '#' . $name,
+                    'url' => "/channel/$nick?" . ($cat ? 'cat=' : 'tag=') . rawurlencode($name),
+                    'body' => '', 'wiki' => null];
+                $edges["$src $tgt"] = ['source' => $src, 'target' => $tgt, 'kind' => 'tag'];
             }
         }
 

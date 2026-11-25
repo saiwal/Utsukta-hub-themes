@@ -23,6 +23,13 @@ One build pass over a channel's **own** writing produces the whole graph:
   `/cards/<nick>/<slug|uuid>`, `/page/<nick>/<page link>`, `/wiki/<nick>/<wiki>/<page>` (absolute, or
   relative after `=`, `(`, a quote or a space). Links into another channel's
   content are ignored. Reshares count, since a share block carries a link.
+- **Hashtags and categories**: one `term` query over the node items adds a
+  hub node per term (`tag:<lower>` type `tag`, `cat:<lower>` type `category`,
+  url = the channel stream filtered by it) and an item → term edge with
+  `kind: "tag"` per use. Hubs, not pairwise item ↔ item edges: a tag on 100
+  posts is 100 edges, not 4,950. Terms are never indexed (no `[[Title]]` or
+  backlink reaches one); like missing titles they exist only through a
+  visible source, for visitors and in `withoutDrafts()`.
 - `[[target]]` forms, parsed once by `Links::parseTarget()` into index keys
   tried in order (case-insensitive except slugs):
   `[[article:X]]` / `[[card:X]]` / `[[page:X]]` → `a:`/`c:`/`p:` slug, then
@@ -58,15 +65,23 @@ GET /spa/links/resolve?nick=&title= → { url | null }
 ## Frontend: `src/modules/graph`
 
 - `/graph/:nick`: d3-force on a canvas, with pan/zoom/drag, Fit all and Reset
-  view, type chips (hidden types saved in localStorage `hz-graph-hidden-v2`; "Not yet written" hidden until first toggle) and a
-  find-in-graph field. Each type has its own shape (`NodeShape.tsx`, also on
+  view and a find-in-graph field. Filters live in the locked right-sidebar
+  widget `graph.filters` (`widgets/GraphFiltersWidget.tsx`): item-type chips,
+  Unlinked posts, a Hashtags and a Categories switch each with per-term chips,
+  and Drafts. State is module-level in `filters.ts`, shared with the view: one
+  hidden set of types, `unlinked` and term node ids, saved in localStorage
+  `hz-graph-hidden-v3` (v2 choices carry over; "Not yet written", hashtags and
+  categories start hidden). A term on fewer than two *visible* items is
+  dropped — it connects nothing. Term edges are dashed, fainter, longer and pull
+  a third as hard, so a busy tag gathers its items without crushing the link
+  structure. Each type has its own shape (`NodeShape.tsx`, also on
   the canvas via `Path2D`); published items are filled, drafts hollow, missing
   titles a dashed ring, behind an owner-only Drafts chip (off by default, `hz-graph-drafts`).
   Clicking a node selects it and opens a details panel
   (links to / linked from, Open); it never navigates on its own. Labels are
   placed greedily by priority with an overlap test, all of them below
   `SMALL_GRAPH` (40) visible nodes; the focused node's label goes above its dot,
-  clear of the cursor. Pseudo-filter chip: **Unlinked posts** (off = drop posts with no *visible* link). The
+  clear of the cursor. Pseudo-filter chip: **Unlinked posts** (off = drop posts with no *visible* link or shared term). The
   canvas is `aria-hidden`; the same nodes are also an `sr-only` link list.
 - **Toggle**: a `frontendFeature` (off by default, Settings → Integrations)
   with `channelScoped: true`. On someone else's channel the *owner's* switch

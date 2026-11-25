@@ -342,6 +342,11 @@ In edit mode, click the widget's ⚙ (**Configure**) to change it: give it an op
 ### Linked From
 
 Lists the wiki pages, articles, cards, notes and posts that link to the one you're reading, through a `[[Title]]` or a pasted link. It's hidden on pages nothing links to, and visitors only see entries they're allowed to see. The **Graph** link at the bottom opens the map of the whole channel. See [Links and graph](links-and-graph).
+<!-- graph_filters -->
+
+### Graph Filters
+
+Sits beside the Graph and decides what it shows: chips for each kind of item, **Unlinked posts**, switches for **Hashtags** and **Categories** (with **Choose which** to hide single ones), and **Show my drafts** on your own graph. It can be moved but not removed, since the Graph has no other place for these settings. See [Links and graph](links-and-graph).
 <!-- link_list -->
 
 ### Link List Widget

@@ -79,4 +79,14 @@ $g = Links::withoutDrafts(['index' => [], 'nodes' => [
 ]]);
 check('drafts stripped', array_column($g['nodes'], 'id') === ['a', 'missing:y'] && count($g['edges']) === 1);
 
+// ...and so do the tags/categories only a draft carried.
+$g = Links::withoutDrafts(['index' => [], 'nodes' => [
+    ['id' => 'a', 'type' => 'article'], ['id' => 'd', 'type' => 'post', 'draft' => true],
+    ['id' => 'tag:x', 'type' => 'tag'], ['id' => 'cat:y', 'type' => 'category'], ['id' => 'tag:z', 'type' => 'tag'],
+], 'edges' => [
+    ['source' => 'd', 'target' => 'tag:x', 'kind' => 'tag'], ['source' => 'd', 'target' => 'cat:y', 'kind' => 'tag'],
+    ['source' => 'a', 'target' => 'tag:z', 'kind' => 'tag'],
+]]);
+check('draft-only terms stripped', array_column($g['nodes'], 'id') === ['a', 'tag:z']);
+
 exit($fail ? 1 : 0);

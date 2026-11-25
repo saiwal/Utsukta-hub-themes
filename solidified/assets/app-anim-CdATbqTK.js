@@ -1,1 +1,0 @@
-import{F as e,I as t,L as n,P as r}from"./app-CL_jKRAo.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(r),s=a(e),c=a(t),l=a(n);export{l as i,s as n,c as r,o as t};

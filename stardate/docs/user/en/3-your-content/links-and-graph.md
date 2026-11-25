@@ -60,8 +60,9 @@ The Graph is an optional feature. Switch it on in **Settings → Integrations**;
 
 - Each **shape** is a wiki page, article, card, webpage, note or post (see *Shapes* below). The bigger the shape, the more links it has.
 - Each **line** is a link between two of them.
+- Switch on **Hashtags** or **Categories** in the *Graph filters* panel to see what your writing shares: each hashtag or category becomes its own shape, with a dashed line to every item that carries it, so related items gather around it. A hashtag or category on only one item isn't shown, since it connects nothing. Click one to list its items, or **Open** to see your channel's posts filtered by it.
 - Wiki pages, articles, cards, webpages, notes and your 500 most recent posts always appear, even with no links yet. Older posts appear when they link to something or something links to them.
-- Switch off the **Unlinked posts** chip to hide posts that have no links (counting only links to kinds you're showing).
+- Switch off the **Unlinked posts** chip to hide posts that have no links (counting only links to kinds you're showing, and hashtags or categories while those are on).
 - When only a few items are showing, every one is named. In a bigger graph only the most-linked are, so the names don't pile up. Zoom in or hover to see the rest.
 
 | To… | Do this |
@@ -73,7 +74,7 @@ The Graph is an optional feature. Switch it on in **Settings → Integrations**;
 | Zoom | Scroll the mouse wheel. Names appear for every item when you zoom in. |
 | See everything | Click **Fit all** (top right of the map) to zoom so everything fits |
 | Start over | Click **Reset view**, next to Fit all |
-| Show only some kinds | Click the chips above the map to switch kinds on and off. Your choice is remembered in this browser. *Not yet written* starts switched off. |
+| Show only some kinds | Use the **Graph filters** panel in the right sidebar (on a phone, open it with **Panel** in the bottom bar). Click a chip to switch a kind on or off; under Hashtags and Categories, **Choose which** lets you hide single ones (a tag on everything, say). Your choices are remembered in this browser. *Not yet written*, Hashtags and Categories start switched off. |
 | Find something | Type in **Find in graph…**. Matching items stay bright and the rest fade. |
 
 ### Shapes
@@ -89,6 +90,8 @@ Each kind of item has its own shape, and its own colour too:
 | Triangle | Note |
 | Star | Wiki page |
 | Dashed grey ring | Not yet written |
+| Plus | Hashtag |
+| Pentagon | Category |
 
 A **filled** shape is published. A **hollow** shape (just the outline) is a draft.
 
@@ -96,7 +99,7 @@ A **filled** shape is published. A **hollow** shape (just the outline) is a draf
 
 These two can look alike, but they are different things.
 
-- A **draft** is a real item you've started and saved but not published yet: a post, article, card, webpage, note or wiki page. It has a title and text, so any links in it show up as lines going *out* from it. Drafts are yours alone: they appear only on your own graph, and only when you switch on the **Drafts** chip (it starts off). Visitors never see them, and they never appear in *Linked from*. **Open** takes you to the page where that kind of draft is listed, e.g. your Articles page for an article draft.
+- A **draft** is a real item you've started and saved but not published yet: a post, article, card, webpage, note or wiki page. It has a title and text, so any links in it show up as lines going *out* from it. Drafts are yours alone: they appear only on your own graph, and only when you switch on **Show my drafts** in the Graph filters panel (it starts off). Visitors never see them, and they never appear in *Linked from*. **Open** takes you to the page where that kind of draft is listed, e.g. your Articles page for an article draft.
 - **Not yet written** isn't an item at all. It's a title that something links to with `[[Title]]` when nothing with that title exists yet. It has no text, so lines only ever come *into* it, and there's nothing to open. As soon as you write something with that title, it turns into that item.
 
 For example, if a draft article *Brewing notes* contains `[[Fermentation]]` and you have nothing called *Fermentation*, the graph shows a hollow square (the draft) with a line to a dashed grey ring (*Fermentation*, not yet written). A *Not yet written* item can come from published writing too, not just drafts.
