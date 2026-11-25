@@ -1,0 +1,1 @@
+import{F as e,I as t,N as n,P as r}from"./app-CARyG_Np.js";var i=typeof matchMedia<`u`&&matchMedia(`(prefers-reduced-motion: reduce)`).matches,a=e=>i?{...e,transition:{duration:0}}:e,o=a(n),s=a(r),c=a(e),l=a(t);export{l as i,s as n,c as r,o as t};
